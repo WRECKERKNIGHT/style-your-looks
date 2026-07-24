@@ -1,0 +1,246 @@
+import { FaceLandmarker, FilesetResolver, type FaceLandmarkerResult } from "@mediapipe/tasks-vision";
+
+let faceLandmarker: FaceLandmarker | null = null;
+
+export async function initializeFaceLandmarker(): Promise<FaceLandmarker> {
+  if (faceLandmarker) return faceLandmarker;
+
+  const vision = await FilesetResolver.forVisionTasks(
+    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
+  );
+
+  faceLandmarker = await FaceLandmarker.createFromOptions(vision, {
+    baseOptions: {
+      modelAssetPath:
+        "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
+      delegate: "GPU",
+    },
+    runningMode: "IMAGE",
+    numFaces: 1,
+    outputFaceBlendshapes: true,
+    outputFacialTransformationMatrixes: true,
+  });
+
+  return faceLandmarker;
+}
+
+export function getFaceSymmetry(result: FaceLandmarkerResult): number {
+  if (!result.faceLandmarks || result.faceLandmarks.length === 0) return 0;
+
+  const landmarks = result.faceLandmarks[0];
+
+  const symmetryPairs = [
+    { left: 33, right: 263 },   // eye inner corners
+    { left: 133, right: 362 },  // eye outer corners
+    { left: 159, right: 386 },  // eye top
+    { left: 145, right: 374 },  // eye bottom
+    { left: 61, right: 291 },   // mouth corners
+    { left: 48, right: 278 },   // lips
+    { left: 127, right: 356 },  // cheekbones
+    { left: 234, right: 454 },  // jaw
+    { left: 93, right: 323 },   // forehead
+    { left: 172, right: 397 },  // mid cheek
+  ];
+
+  const noseX = landmarks[1].x;
+
+  let totalSymmetry = 0;
+  let count = 0;
+
+  for (const pair of symmetryPairs) {
+    const leftDist = Math.abs(landmarks[pair.left].x - noseX);
+    const rightDist = Math.abs(landmarks[pair.right].x - noseX);
+    const maxDist = Math.max(leftDist, rightDist);
+    if (maxDist > 0) {
+      totalSymmetry += 1 - Math.abs(leftDist - rightDist) / maxDist;
+      count++;
+    }
+  }
+
+  return Math.min(10, (totalSymmetry / count) * 10);
+}
+
+export function getFaceProportions(result: FaceLandmarkerResult): number {
+  if (!result.faceLandmarks || result.faceLandmarks.length === 0) return 0;
+
+  const lm = result.faceLandmarks[0];
+
+  const forehead = lm[10].y;
+  const chin = lm[152].y;
+  const browLine = lm[9].y;
+  const noseBottom = lm[2].y;
+
+  const faceLength = chin - forehead;
+  if (faceLength === 0) return 0;
+
+  const upperThird = (browLine - forehead) / faceLength;
+  const middleThird = (noseBottom - browLine) / faceLength;
+  const lowerThird = (chin - noseBottom) / faceLength;
+
+  const idealRatio = 1 / 3;
+  const deviation =
+    Math.abs(upperThird - idealRatio) +
+    Math.abs(middleThird - idealRatio) +
+    Math.abs(lowerThird - idealRatio);
+
+  const score = Math.max(0, 10 - deviation * 20);
+  return Math.min(10, score);
+}
+
+export function getJawlineScore(result: FaceLandmarkerResult): number {
+  if (!result.faceLandmarks || result.faceLandmarks.length === 0) return 0;
+
+  const lm = result.faceLandmarks[0];
+
+  const leftJaw1 = lm[127];
+  const leftJaw2 = lm[134];
+  const rightJaw1 = lm[356];
+  const rightJaw2 = lm[363];
+  const chin = lm[152];
+
+  const jawWidth = Math.sqrt(
+    Math.pow(rightJaw1.x - leftJaw1.x, 2) + Math.pow(rightJaw1.y - leftJaw1.y, 2)
+  );
+
+  const faceLength = Math.sqrt(
+    Math.pow(lm[10].x - chin.x, 2) + Math.pow(lm[10].y - chin.y, 2)
+  );
+
+  const jawRatio = jawWidth / faceLength;
+
+  const jawAngle = Math.abs(
+    Math.atan2(leftJaw2.y - chin.y, leftJaw2.x - chin.x) -
+    Math.atan2(rightJaw2.y - chin.y, rightJaw2.x - chin.x)
+  ) * (180 / Math.PI);
+
+  let score = 5;
+  if (jawRatio > 0.7 && jawRatio < 0.85) score += 2;
+  if (jawAngle > 100 && jawAngle < 130) score += 2;
+  if (Math.abs(leftJaw1.y - rightJaw1.y) < 0.01) score += 1;
+
+  return Math.min(10, Math.max(0, score));
+}
+
+export function getEyeSpacingScore(result: FaceLandmarkerResult): number {
+  if (!result.faceLandmarks || result.faceLandmarks.length === 0) return 0;
+
+  const lm = result.faceLandmarks[0];
+
+  const leftEyeInner = lm[133];
+  const rightEyeInner = lm[362];
+  const leftEyeOuter = lm[33];
+  const rightEyeOuter = lm[263];
+
+  const eyeWidth = Math.sqrt(
+    Math.pow(leftEyeOuter.x - leftEyeInner.x, 2) +
+    Math.pow(leftEyeOuter.y - leftEyeInner.y, 2)
+  );
+
+  const eyeGap = Math.sqrt(
+    Math.pow(rightEyeInner.x - leftEyeInner.x, 2) +
+    Math.pow(rightEyeInner.y - leftEyeInner.y, 2)
+  );
+
+  const ratio = eyeGap / eyeWidth;
+
+  const idealRatio = 1.0;
+  const deviation = Math.abs(ratio - idealRatio);
+
+  const score = Math.max(0, 10 - deviation * 15);
+  return Math.min(10, score);
+}
+
+export function getSkinClarity(
+  canvas: HTMLCanvasElement,
+  result: FaceLandmarkerResult
+): number {
+  if (!result.faceLandmarks || result.faceLandmarks.length === 0) return 0;
+
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return 5;
+
+  const lm = result.faceLandmarks[0];
+  const imgWidth = canvas.width;
+  const imgHeight = canvas.height;
+
+  const samplePoints = [
+    lm[50], lm[101], lm[118], lm[330], lm[280],
+    lm[4], lm[1],
+  ];
+
+  let totalVariance = 0;
+  let samples = 0;
+
+  for (const point of samplePoints) {
+    const x = Math.floor(point.x * imgWidth);
+    const y = Math.floor(point.y * imgHeight);
+    const radius = 8;
+
+    try {
+      const imageData = ctx.getImageData(
+        Math.max(0, x - radius),
+        Math.max(0, y - radius),
+        radius * 2,
+        radius * 2
+      );
+      const pixels = imageData.data;
+      const values: number[] = [];
+
+      for (let i = 0; i < pixels.length; i += 4) {
+        const brightness = (pixels[i] + pixels[i + 1] + pixels[i + 2]) / 3;
+        values.push(brightness);
+      }
+
+      const mean = values.reduce((a, b) => a + b, 0) / values.length;
+      const variance = values.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / values.length;
+      totalVariance += Math.sqrt(variance);
+      samples++;
+    } catch {
+      continue;
+    }
+  }
+
+  if (samples === 0) return 5;
+
+  const avgVariance = totalVariance / samples;
+  const score = Math.max(0, Math.min(10, 10 - avgVariance / 10));
+  return score;
+}
+
+export function getFacialShape(result: FaceLandmarkerResult): string {
+  if (!result.faceLandmarks || result.faceLandmarks.length === 0) return "Unknown";
+
+  const lm = result.faceLandmarks[0];
+
+  const faceWidth = Math.abs(lm[234].x - lm[454].x);
+  const jawWidth = Math.abs(lm[127].x - lm[356].x);
+  const cheekboneWidth = Math.abs(lm[123].x - lm[352].x);
+  const faceLength = Math.abs(lm[10].y - lm[152].y);
+  const foreheadWidth = Math.abs(lm[109].x - lm[338].x);
+
+  const jawToForehead = jawWidth / foreheadWidth;
+  const widthToLength = faceWidth / faceLength;
+  const cheekToJaw = cheekboneWidth / jawWidth;
+
+  if (jawToForehead > 0.9 && widthToLength > 0.75) return "Round";
+  if (widthToLength < 0.55 && jawToForehead > 0.85) return "Oblong";
+  if (jawToForehead > 0.95 && cheekToJaw > 1.05) return "Square";
+  if (jawToForehead < 0.75 && widthToLength > 0.65) return "Heart";
+  if (cheekToJaw > 1.15 && jawToForehead < 0.8) return "Diamond";
+  if (jawToForehead < 0.8 && widthToLength > 0.6) return "Triangle";
+  return "Oval";
+}
+
+export async function analyzeFace(
+  imageSource: HTMLImageElement | HTMLVideoElement | HTMLCanvasElement,
+  onProgress?: (progress: number) => void
+): Promise<FaceLandmarkerResult> {
+  onProgress?.(10);
+  const landmarker = await initializeFaceLandmarker();
+  onProgress?.(30);
+
+  const result = landmarker.detect(imageSource);
+  onProgress?.(100);
+
+  return result;
+}
