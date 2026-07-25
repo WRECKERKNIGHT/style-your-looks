@@ -13,6 +13,8 @@ import {
   Home,
   Layers,
   Palette,
+  Dna,
+  Droplets,
   ChevronLeft,
   Menu,
   X,
@@ -20,15 +22,17 @@ import {
 import { useState } from "react";
 
 const navItems = [
-  { href: "/dashboard", label: "Home", icon: Home },
-  { href: "/dashboard/face-analysis", label: "Face Analysis", icon: ScanFace },
-  { href: "/dashboard/body-analysis", label: "Body Analysis", icon: Layers },
-  { href: "/dashboard/virtual-tryon", label: "Virtual Try-On", icon: Shirt },
-  { href: "/dashboard/mannequin", label: "Color Studio", icon: Palette },
-  { href: "/dashboard/grooming", label: "Grooming", icon: Scissors },
-  { href: "/dashboard/recommendations", label: "Outfit Picks", icon: Sparkles },
-  { href: "/dashboard/community", label: "Community", icon: Users },
-  { href: "/dashboard/profile", label: "Profile", icon: User },
+  { href: "/dashboard", label: "HOME", icon: Home },
+  { href: "/dashboard/face-analysis", label: "FACE IQ", icon: ScanFace },
+  { href: "/dashboard/body-analysis", label: "BODY + TONE", icon: Layers },
+  { href: "/dashboard/style-dna", label: "STYLE DNA", icon: Dna },
+  { href: "/dashboard/color-analysis", label: "COLOR ANALYSIS", icon: Droplets },
+  { href: "/dashboard/virtual-tryon", label: "TRY-ON", icon: Shirt },
+  { href: "/dashboard/mannequin", label: "COLOR LAB", icon: Palette },
+  { href: "/dashboard/grooming", label: "GROOMING", icon: Scissors },
+  { href: "/dashboard/recommendations", label: "OUTFITS", icon: Sparkles },
+  { href: "/dashboard/community", label: "FEED", icon: Users },
+  { href: "/dashboard/profile", label: "PROFILE", icon: User },
 ];
 
 export default function DashboardLayout({
@@ -40,47 +44,50 @@ export default function DashboardLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7]">
+    <div className="min-h-screen bg-parchment">
       {/* Mobile top bar */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-white/80 backdrop-blur-xl border-b border-[#E8E0D8]/50 z-50 flex items-center px-4">
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-cream/95 backdrop-blur-xl border-b border-tan z-50 flex items-center px-4">
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="p-2 hover:bg-[#F4EFEA] rounded-lg transition-colors"
+          className="p-2 hover:bg-tan/10 rounded-lg transition-colors"
         >
           {sidebarOpen ? (
-            <X className="w-5 h-5 text-[#3C2A21]" />
+            <X className="w-5 h-5 text-espresso" />
           ) : (
-            <Menu className="w-5 h-5 text-[#3C2A21]" />
+            <Menu className="w-5 h-5 text-espresso" />
           )}
         </button>
-        <div className="flex items-center gap-2 ml-2">
-          <div className="w-7 h-7 rounded-lg bg-[#3C2A21] flex items-center justify-center">
-            <Sparkles className="w-3.5 h-3.5 text-[#C89D7C]" />
+        <div className="flex items-center gap-2.5 ml-3">
+          <div className="w-7 h-7 bg-amber flex items-center justify-center rounded-sm">
+            <Sparkles className="w-3.5 h-3.5 text-cream" />
           </div>
-          <span className="font-bold text-[#3C2A21]">AuraStyle</span>
+          <span className="text-sm font-display font-bold text-espresso tracking-wider">AURASTYLE</span>
         </div>
       </div>
 
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed top-0 left-0 bottom-0 w-64 bg-white border-r border-[#E8E0D8] z-40 transition-transform duration-300",
+          "fixed top-0 left-0 bottom-0 w-64 bg-cream border-r border-tan z-40 transition-transform duration-300 flex flex-col",
           "lg:translate-x-0",
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <div className="p-6">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-[#3C2A21] flex items-center justify-center">
-              <Sparkles className="w-4 h-4 text-[#C89D7C]" />
+        {/* Logo */}
+        <div className="p-6 border-b border-tan">
+          <Link href="/" className="flex items-center gap-3">
+            <div className="w-9 h-9 bg-amber flex items-center justify-center rounded-sm shadow-gold">
+              <Sparkles className="w-4 h-4 text-cream" />
             </div>
-            <span className="text-lg font-bold text-[#3C2A21]">
-              Aura<span className="text-[#C89D7C]">Style</span>
-            </span>
+            <div>
+              <span className="text-base font-display font-bold text-espresso tracking-wider block leading-none">AURASTYLE</span>
+              <span className="text-[10px] font-mono text-coffee tracking-widest uppercase">Gentleman&apos;s Journal</span>
+            </div>
           </Link>
         </div>
 
-        <nav className="px-3 space-y-1">
+        {/* Nav */}
+        <nav className="flex-1 px-3 py-5 space-y-1 overflow-y-auto">
           {navItems.map((item) => {
             const isActive =
               item.href === "/dashboard"
@@ -93,10 +100,10 @@ export default function DashboardLayout({
                 href={item.href}
                 onClick={() => setSidebarOpen(false)}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all",
+                  "flex items-center gap-3 px-4 py-3 text-xs font-body font-semibold tracking-wider transition-all border-l-2 rounded-r-sm",
                   isActive
-                    ? "bg-[#3C2A21] text-white"
-                    : "text-[#8B7D6B] hover:bg-[#F4EFEA] hover:text-[#3C2A21]"
+                    ? "bg-amber/10 text-amber border-amber"
+                    : "text-coffee hover:bg-tan/10 hover:text-espresso border-transparent"
                 )}
               >
                 <item.icon className="w-4.5 h-4.5" />
@@ -106,13 +113,14 @@ export default function DashboardLayout({
           })}
         </nav>
 
-        <div className="absolute bottom-6 left-3 right-3">
+        {/* Bottom */}
+        <div className="p-5 border-t border-tan">
           <Link
             href="/"
-            className="flex items-center gap-2 px-3 py-2 text-sm text-[#8B7D6B] hover:text-[#3C2A21] transition-colors"
+            className="flex items-center gap-2 text-[11px] font-body text-coffee hover:text-espresso transition-colors tracking-widest uppercase"
           >
-            <ChevronLeft className="w-4 h-4" />
-            Back to Home
+            <ChevronLeft className="w-3.5 h-3.5" />
+            Back to Site
           </Link>
         </div>
       </aside>
@@ -120,14 +128,14 @@ export default function DashboardLayout({
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div
-          className="lg:hidden fixed inset-0 bg-black/20 z-30"
+          className="lg:hidden fixed inset-0 bg-espresso/30 backdrop-blur-sm z-30"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Main content */}
-      <main className="lg:ml-64 pt-14 lg:pt-0 min-h-screen">
-        <div className="p-6 lg:p-8 max-w-6xl">{children}</div>
+      <main className="lg:ml-64 pt-16 lg:pt-0 min-h-screen">
+        <div className="p-6 lg:p-10 max-w-7xl">{children}</div>
       </main>
     </div>
   );
