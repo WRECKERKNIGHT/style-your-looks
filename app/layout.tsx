@@ -1,20 +1,14 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  display: "swap",
-});
+import { SmoothScroll } from "@/components/providers/SmoothScroll";
 
 export const metadata: Metadata = {
   title: {
-    default: "AuraStyle - AI-Powered Personal Style Intelligence",
-    template: "%s | AuraStyle",
+    default: "AURASTYLE — AI-Powered Style Intelligence",
+    template: "%s | AURASTYLE",
   },
   description:
-    "Discover your perfect style with advanced facial analysis, virtual try-on, and personalized outfit recommendations. All AI runs in your browser.",
+    "AI-powered facial analysis, virtual try-on, and outfit recommendations. All analysis runs in your browser. Your photos never leave your device.",
   keywords: [
     "face analysis",
     "style recommendations",
@@ -25,25 +19,25 @@ export const metadata: Metadata = {
     "grooming",
     "beard simulator",
   ],
-  authors: [{ name: "AuraStyle" }],
+  authors: [{ name: "AURASTYLE" }],
   openGraph: {
     type: "website",
     locale: "en_US",
-    siteName: "AuraStyle",
-    title: "AuraStyle - AI-Powered Personal Style Intelligence",
+    siteName: "AURASTYLE",
+    title: "AURASTYLE — AI-Powered Style Intelligence",
     description:
-      "Discover your perfect style with advanced facial analysis, virtual try-on, and personalized outfit recommendations.",
+      "AI-powered facial analysis, virtual try-on, and outfit recommendations. All analysis runs in your browser.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "AuraStyle - AI-Powered Personal Style Intelligence",
+    title: "AURASTYLE — AI-Powered Style Intelligence",
     description:
-      "Discover your perfect style with advanced facial analysis, virtual try-on, and personalized outfit recommendations.",
+      "AI-powered facial analysis, virtual try-on, and outfit recommendations. All analysis runs in your browser.",
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#3C2A21",
+  themeColor: "#F5F0E8",
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
@@ -55,8 +49,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={inter.variable}>
-      <body className="antialiased">{children}</body>
+    <html lang="en">
+      <body className="antialiased grain vignette">
+        <SmoothScroll>{children}</SmoothScroll>
+      </body>
     </html>
   );
 }
