@@ -111,11 +111,14 @@ export const COLOR_PALETTES = {
 
 export const SCORE_METRICS = {
   face: [
-    { key: "symmetry", label: "Facial Symmetry", description: "Balance between left and right sides" },
-    { key: "proportions", label: "Facial Proportions", description: "Thirds rule and golden ratio adherence" },
-    { key: "jawline", label: "Jawline Definition", description: "Jaw angle and chin prominence" },
-    { key: "eyeSpacing", label: "Eye Spacing", description: "Interpupillary distance ratio" },
-    { key: "skinClarity", label: "Skin Clarity", description: "Texture smoothness and evenness" },
-    { key: "facialShape", label: "Facial Harmony", description: "Overall shape balance and attractiveness" },
+    { key: "symmetry", label: "Facial Symmetry", description: "Balance between left and right sides", weight: 0.18 },
+    { key: "goldenRatio", label: "Golden Ratio", description: "How closely your proportions match φ (1.618)", weight: 0.15 },
+    { key: "jawline", label: "Jawline Definition", description: "Jaw angle sharpness and chin prominence", weight: 0.15 },
+    { key: "proportions", label: "Proportional Harmony", description: "Upper, middle, and lower third balance", weight: 0.12 },
+    { key: "skinClarity", label: "Skin Clarity", description: "Surface smoothness and tone evenness", weight: 0.12 },
+    { key: "eyeSpacing", label: "Eye Spacing", description: "Interpupillary distance ratio", weight: 0.10 },
+    { key: "cheekboneDefinition", label: "Cheekbone Definition", description: "Cheek prominence relative to jaw", weight: 0.08 },
+    { key: "lipFullness", label: "Lip Proportion", description: "Upper-to-lower lip ratio and fullness", weight: 0.05 },
+    { key: "noseProfile", label: "Nose Profile", description: "Nose width relative to face width", weight: 0.05 },
   ],
 } as const;
