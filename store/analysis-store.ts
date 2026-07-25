@@ -1,5 +1,14 @@
 import { create } from "zustand";
 
+export interface FacialMetric {
+  label: string;
+  score: number;
+  weight: number;
+  description: string;
+  rating: string;
+  tip: string;
+}
+
 export interface FaceAnalysisResult {
   overallScore: number;
   symmetry: number;
@@ -15,6 +24,19 @@ export interface FaceAnalysisResult {
   emotionDetected: string;
   groomingSuggestions: string[];
   landmarks: number[][];
+
+  goldenRatio: number;
+  lipFullness: number;
+  noseProfile: number;
+  foreheadBalance: number;
+  cheekboneDefinition: number;
+  facialHarmony: number;
+  breakdown: FacialMetric[];
+  overallRating: string;
+  detailedAnalysis: string;
+  strengths: string[];
+  improvements: string[];
+  styleProfile: string;
 }
 
 export interface BodyAnalysisResult {
@@ -26,6 +48,10 @@ export interface BodyAnalysisResult {
   waistWidth: number;
   hipWidth: number;
   recommendations: string[];
+  shoulderToWaistRatio?: number;
+  waistToHipRatio?: number;
+  bodyProportionScore?: number;
+  bodySymmetry?: number;
 }
 
 export interface OutfitRecommendation {
@@ -36,12 +62,27 @@ export interface OutfitRecommendation {
   occasion: string;
   mannequinPreview: string[];
   reasoning: string;
+  keyPieces: string[];
+  season?: string;
+  styleType?: string;
+}
+
+export interface ColorAnalysisResult {
+  seasonalType: string;
+  subType: string;
+  bestColors: string[];
+  worstColors: string[];
+  neutralColors: string[];
+  metalPreference: string;
+  patternRecommendation: string;
+  description: string;
 }
 
 interface AnalysisState {
   faceResult: FaceAnalysisResult | null;
   bodyResult: BodyAnalysisResult | null;
   outfitRecommendations: OutfitRecommendation[];
+  colorAnalysis: ColorAnalysisResult | null;
   uploadedImage: string | null;
   fullBodyImage: string | null;
   isAnalyzing: boolean;
@@ -52,6 +93,7 @@ interface AnalysisState {
   setFaceResult: (result: FaceAnalysisResult) => void;
   setBodyResult: (result: BodyAnalysisResult) => void;
   setOutfitRecommendations: (recs: OutfitRecommendation[]) => void;
+  setColorAnalysis: (analysis: ColorAnalysisResult | null) => void;
   setUploadedImage: (image: string | null) => void;
   setFullBodyImage: (image: string | null) => void;
   setIsAnalyzing: (val: boolean) => void;
@@ -65,6 +107,7 @@ export const useAnalysisStore = create<AnalysisState>((set) => ({
   faceResult: null,
   bodyResult: null,
   outfitRecommendations: [],
+  colorAnalysis: null,
   uploadedImage: null,
   fullBodyImage: null,
   isAnalyzing: false,
@@ -75,6 +118,7 @@ export const useAnalysisStore = create<AnalysisState>((set) => ({
   setFaceResult: (result) => set({ faceResult: result }),
   setBodyResult: (result) => set({ bodyResult: result }),
   setOutfitRecommendations: (recs) => set({ outfitRecommendations: recs }),
+  setColorAnalysis: (analysis) => set({ colorAnalysis: analysis }),
   setUploadedImage: (image) => set({ uploadedImage: image }),
   setFullBodyImage: (image) => set({ fullBodyImage: image }),
   setIsAnalyzing: (val) => set({ isAnalyzing: val }),
@@ -86,6 +130,7 @@ export const useAnalysisStore = create<AnalysisState>((set) => ({
       faceResult: null,
       bodyResult: null,
       outfitRecommendations: [],
+      colorAnalysis: null,
       uploadedImage: null,
       fullBodyImage: null,
       isAnalyzing: false,
