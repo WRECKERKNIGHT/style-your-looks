@@ -19,32 +19,37 @@ export function MetricBar({
 }: MetricBarProps) {
   const percentage = (score / maxScore) * 100;
 
-  let color = "#C89D7C";
-  if (percentage >= 80) color = "#4CAF50";
-  else if (percentage >= 60) color = "#C89D7C";
-  else if (percentage >= 40) color = "#FF9800";
-  else color = "#F44336";
+  let color = "#B8860B";
+  if (percentage >= 80) color = "#B8860B";
+  else if (percentage >= 60) color = "#556B2F";
+  else if (percentage >= 40) color = "#722F37";
+  else color = "#2C1810";
 
   return (
-    <div className={cn("space-y-2", className)}>
+    <div className={cn("space-y-3", className)}>
       <div className="flex justify-between items-baseline">
-        <span className="text-sm font-medium text-[#3C2A21]">{label}</span>
-        <span className="text-sm font-bold text-[#3C2A21]">
+        <span className="text-sm font-body font-bold text-espresso">{label}</span>
+        <span className="text-lg font-display font-bold text-espresso">
           {score.toFixed(1)}
-          <span className="text-[#8B7D6B] font-normal">/{maxScore}</span>
+          <span className="text-coffee font-body font-normal text-sm">/{maxScore}</span>
         </span>
       </div>
-      <div className="h-2 bg-[#F4EFEA] rounded-full overflow-hidden">
+      <div className="relative h-6 bg-[#E8E0D8] overflow-hidden rounded-full">
         <div
-          className="h-full rounded-full transition-all duration-700 ease-out"
+          className="absolute inset-y-0 left-0 transition-all duration-1000 ease-out rounded-full"
           style={{
             width: `${percentage}%`,
             backgroundColor: color,
           }}
         />
+        {percentage > 15 && (
+          <span className="absolute inset-0 flex items-center justify-center text-xs font-mono font-bold text-cream mix-blend-difference">
+            {Math.round(percentage)}%
+          </span>
+        )}
       </div>
       {description && (
-        <p className="text-xs text-[#8B7D6B]">{description}</p>
+        <p className="text-sm text-coffee font-body">{description}</p>
       )}
     </div>
   );
