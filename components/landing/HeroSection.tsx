@@ -7,11 +7,11 @@ import { AnimatedCounter } from "@/components/shared/AnimatedCounter";
 import { MagneticButton } from "@/components/shared/MagneticButton";
 
 const headline = [
-  { word: "Stop", size: "text-[clamp(2.5rem,5vw,4.5rem)]", weight: "font-normal", italic: true },
-  { word: "dressing", size: "text-[clamp(3.5rem,9vw,8rem)]", weight: "font-bold", italic: false },
-  { word: "like", size: "text-[clamp(2rem,4vw,3.5rem)]", weight: "font-light", italic: true },
-  { word: "an", size: "text-[clamp(2rem,4vw,3.5rem)]", weight: "font-light", italic: false },
-  { word: "algorithm", size: "text-[clamp(3.5rem,9vw,8rem)]", weight: "font-bold", italic: false, gold: true },
+  { word: "Stop", size: "text-[clamp(2.5rem,5vw,4.5rem)]", weight: "font-normal", italic: true, depth: 2 },
+  { word: "dressing", size: "text-[clamp(3.5rem,9vw,8rem)]", weight: "font-bold", italic: false, depth: 1 },
+  { word: "like", size: "text-[clamp(2rem,4vw,3.5rem)]", weight: "font-light", italic: true, depth: 3 },
+  { word: "an", size: "text-[clamp(2rem,4vw,3.5rem)]", weight: "font-light", italic: false, depth: 3 },
+  { word: "algorithm", size: "text-[clamp(3.5rem,9vw,8rem)]", weight: "font-bold", italic: false, gold: true, depth: 1 },
 ];
 
 export function HeroSection() {
@@ -21,21 +21,51 @@ export function HeroSection() {
     offset: ["start start", "end start"],
   });
 
-  const bgY = useTransform(scrollYProgress, [0, 1], [0, 300]);
-  const textY = useTransform(scrollYProgress, [0, 1], [0, 120]);
-  const textOpacity = useTransform(scrollYProgress, [0, 0.4], [1, 0]);
-  const visualScale = useTransform(scrollYProgress, [0, 0.5], [1, 0.9]);
+  // Z-Axis Depth Parallax — each layer moves at different speed
+  // Background layers (slow) → midground → foreground (fast)
+  const bgY = useTransform(scrollYProgress, [0, 1], [0, 80]);
+  const gridScale = useTransform(scrollYProgress, [0, 1], [1, 1.15]);
+  const glowY = useTransform(scrollYProgress, [0, 1], [0, 150]);
+  const watermarkY = useTransform(scrollYProgress, [0, 1], [0, 250]);
+  const watermarkScale = useTransform(scrollYProgress, [0, 0.6], [1, 1.4]);
+  const watermarkOpacity = useTransform(scrollYProgress, [0, 0.5], [0.04, 0]);
+
+  // Headline layers — different depths create tunnel feel
+  const headlineDeepY = useTransform(scrollYProgress, [0, 1], [0, 60]);
+  const headlineMidY = useTransform(scrollYProgress, [0, 1], [0, 120]);
+  const headlineCloseY = useTransform(scrollYProgress, [0, 1], [0, 200]);
+
+  const subtitleY = useTransform(scrollYProgress, [0, 1], [0, 160]);
+  const subtitleOpacity = useTransform(scrollYProgress, [0, 0.35], [1, 0]);
+
+  const ctaY = useTransform(scrollYProgress, [0, 1], [0, 180]);
+  const ctaOpacity = useTransform(scrollYProgress, [0, 0.3], [1, 0]);
+
+  // Right visual — accelerates away (closest to camera)
+  const visualY = useTransform(scrollYProgress, [0, 1], [0, 350]);
+  const visualScale = useTransform(scrollYProgress, [0, 0.5], [1, 0.85]);
   const visualOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
+
+  // Stat cards — each at different depth
+  const card1Y = useTransform(scrollYProgress, [0, 1], [0, 300]);
+  const card2Y = useTransform(scrollYProgress, [0, 1], [0, 400]);
+  const card3Y = useTransform(scrollYProgress, [0, 1], [0, 350]);
+
+  const depthMap = {
+    1: headlineDeepY,
+    2: headlineMidY,
+    3: headlineCloseY,
+  };
 
   return (
     <section ref={ref} className="relative min-h-[115vh] overflow-hidden bg-section-hero">
-      {/* Subtle grid — offset, not centered */}
+      {/* Subtle grid — background layer (moves slowest) */}
       <motion.div
-        style={{ y: bgY }}
-        className="absolute inset-0 opacity-[0.025]"
+        style={{ y: bgY, scale: gridScale }}
+        className="absolute inset-0 opacity-[0.025] origin-center"
       >
         <div
-          className="w-full h-full origin-top-left"
+          className="w-full h-full"
           style={{
             backgroundImage:
               "linear-gradient(#C4A882 1px, transparent 1px), linear-gradient(90deg, #C4A882 1px, transparent 1px)",
@@ -45,17 +75,17 @@ export function HeroSection() {
         />
       </motion.div>
 
-      {/* Warm glow — asymmetric placement */}
-      <div className="absolute inset-0 pointer-events-none">
+      {/* Warm glow — mid-depth layer */}
+      <motion.div
+        style={{ y: glowY }}
+        className="absolute inset-0 pointer-events-none"
+      >
         <div className="absolute top-[15%] right-[10%] w-[500px] h-[500px] rounded-full bg-amber/[0.04] blur-[150px]" />
         <div className="absolute bottom-[20%] left-[5%] w-[300px] h-[300px] rounded-full bg-burgundy/[0.03] blur-[100px]" />
-      </div>
+      </motion.div>
 
       {/* Main content — two-column asymmetric layout */}
-      <motion.div
-        style={{ y: textY, opacity: textOpacity }}
-        className="relative z-10 h-full flex flex-col justify-center px-8 md:px-16 lg:px-24 pt-20"
-      >
+      <div className="relative z-10 h-full flex flex-col justify-center px-8 md:px-16 lg:px-24 pt-20">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           {/* Left — headline */}
           <div className="lg:col-span-7">
@@ -64,17 +94,19 @@ export function HeroSection() {
               initial={{ opacity: 0, x: -30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 1, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              style={{ y: headlineDeepY }}
               className="flex items-center gap-4 mb-10"
             >
               <div className="section-divider" />
               <span className="type-label text-amber/80">Est. MMXXVI</span>
             </motion.div>
 
-            {/* Staggered headline — each word has its own personality */}
+            {/* Staggered headline — each word at different Z-depth */}
             <div className="space-y-0">
               {headline.map((item, i) => (
                 <div key={i} className="overflow-hidden">
                   <motion.span
+                    style={{ y: depthMap[item.depth as keyof typeof depthMap] }}
                     className={`block ${item.size} ${item.weight} ${
                       item.italic ? "italic" : ""
                     } tracking-tight text-espresso leading-[0.92] ${
@@ -94,8 +126,9 @@ export function HeroSection() {
               ))}
             </div>
 
-            {/* Subtitle — conversational, not corporate */}
+            {/* Subtitle — mid-depth */}
             <motion.p
+              style={{ y: subtitleY, opacity: subtitleOpacity }}
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.9, delay: 1.2, ease: [0.16, 1, 0.3, 1] }}
@@ -105,8 +138,9 @@ export function HeroSection() {
               device — we just tell you what works and what doesn&apos;t.
             </motion.p>
 
-            {/* CTAs */}
+            {/* CTAs — near layer */}
             <motion.div
+              style={{ y: ctaY, opacity: ctaOpacity }}
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.9, delay: 1.5, ease: [0.16, 1, 0.3, 1] }}
@@ -126,25 +160,24 @@ export function HeroSection() {
             </motion.div>
           </div>
 
-          {/* Right — visual element: oversized number + stats */}
+          {/* Right — visual element: closest layer (moves fastest) */}
           <motion.div
-            style={{ scale: visualScale, opacity: visualOpacity }}
+            style={{ y: visualY, scale: visualScale, opacity: visualOpacity }}
             className="lg:col-span-5 relative hidden lg:flex items-center justify-center"
           >
-            {/* Giant watermark number */}
+            {/* Giant watermark number — mid-depth, scales up as you scroll */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 1.5, delay: 0.8, ease: [0.16, 1, 0.3, 1] }}
+              style={{ y: watermarkY, scale: watermarkScale, opacity: watermarkOpacity }}
               className="absolute select-none pointer-events-none"
             >
-              <span className="text-[clamp(12rem,20vw,22rem)] font-display font-bold text-amber/[0.04] leading-none">
+              <span className="text-[clamp(12rem,20vw,22rem)] font-display font-bold text-amber leading-none">
                 478
               </span>
             </motion.div>
 
-            {/* Floating stat cards — asymmetric positions */}
+            {/* Floating stat cards — each at different depth */}
             <motion.div
+              style={{ y: card1Y }}
               initial={{ opacity: 0, x: 40 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8, delay: 1.8 }}
@@ -159,6 +192,7 @@ export function HeroSection() {
             </motion.div>
 
             <motion.div
+              style={{ y: card2Y }}
               initial={{ opacity: 0, x: -40 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8, delay: 2.0 }}
@@ -173,6 +207,7 @@ export function HeroSection() {
             </motion.div>
 
             <motion.div
+              style={{ y: card3Y }}
               initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 2.2 }}
@@ -186,7 +221,7 @@ export function HeroSection() {
               </div>
             </motion.div>
 
-            {/* Decorative line */}
+            {/* Decorative line — foreground layer */}
             <motion.div
               initial={{ scaleY: 0 }}
               animate={{ scaleY: 1 }}
@@ -195,9 +230,9 @@ export function HeroSection() {
             />
           </motion.div>
         </div>
-      </motion.div>
+      </div>
 
-      {/* Scroll indicator — minimal, on the edge */}
+      {/* Scroll indicator */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -220,7 +255,7 @@ export function HeroSection() {
         />
       </motion.div>
 
-      {/* Corner ornaments — asymmetric, only two */}
+      {/* Corner ornaments */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
