@@ -48,19 +48,21 @@ export function HowItWorksSection() {
     if (!section || !track || stepsEls.length === 0) return;
 
     const ctx = gsap.context(() => {
-      // Horizontal scroll: pin section, translate track left
-      const trackWidth = track.scrollWidth - window.innerWidth + 120;
+      // Calculate track width dynamically
+      const getTrackWidth = () => track.scrollWidth - window.innerWidth + 120;
 
-      gsap.to(track, {
-        x: -trackWidth,
+      // Main horizontal scroll tween
+      const horizontalTween = gsap.to(track, {
+        x: () => -getTrackWidth(),
         ease: "none",
         scrollTrigger: {
           trigger: section,
           start: "top top",
-          end: () => `+=${trackWidth}`,
+          end: () => `+=${getTrackWidth()}`,
           pin: true,
-          scrub: 0.8,
+          scrub: 0.6,
           anticipatePin: 1,
+          invalidateOnRefresh: true,
         },
       });
 
@@ -72,17 +74,17 @@ export function HowItWorksSection() {
           scrollTrigger: {
             trigger: section,
             start: "top top",
-            end: () => `+=${trackWidth}`,
+            end: () => `+=${getTrackWidth()}`,
             scrub: 0.3,
           },
         });
       }
 
-      // Each step card fades/slides in as it enters the viewport
+      // Per-step animations — use the main tween as containerAnimation
       stepsEls.forEach((step, i) => {
         gsap.fromTo(
           step,
-          { opacity: 0, y: 50, scale: 0.95 },
+          { opacity: 0, y: 40, scale: 0.96 },
           {
             opacity: 1,
             y: 0,
@@ -91,15 +93,25 @@ export function HowItWorksSection() {
             duration: 1,
             scrollTrigger: {
               trigger: step,
-              containerAnimation: gsap.getById?.("howHorizontal"),
-              start: "left 85%",
-              end: "left 50%",
+              containerAnimation: horizontalTween,
+              start: "left 90%",
+              end: "left 60%",
               scrub: 0.5,
-              horizontal: true,
             },
           }
         );
       });
+
+      // Handle resize
+      const handleResize = () => {
+        ScrollTrigger.refresh();
+      };
+      const resizeObserver = new ResizeObserver(handleResize);
+      resizeObserver.observe(section);
+
+      return () => {
+        resizeObserver.disconnect();
+      };
     }, section);
 
     return () => ctx.revert();
@@ -111,10 +123,10 @@ export function HowItWorksSection() {
       className="relative overflow-hidden bg-section-gradient"
       id="how-it-works"
     >
-      {/* Sticky viewport */}
-      <div className="sticky top-0 h-screen flex flex-col justify-center overflow-hidden">
+      {/* No CSS sticky — GSAP pin handles this */}
+      <div className="h-screen flex flex-col justify-center overflow-hidden">
         <div className="max-w-[1400px] mx-auto px-8 md:px-16 lg:px-24 w-full">
-          {/* Header — stays fixed while steps scroll */}
+          {/* Header */}
           <div className="mb-12 md:mb-16">
             <span className="type-label text-amber/80">04 // Process</span>
             <h2 className="mt-3 type-display text-espresso">
@@ -134,7 +146,9 @@ export function HowItWorksSection() {
             {steps.map((step, index) => (
               <div
                 key={step.number}
-                ref={(el: HTMLDivElement | null) => { stepsRef.current[index] = el; }}
+                ref={(el: HTMLDivElement | null) => {
+                  stepsRef.current[index] = el;
+                }}
                 className="flex-shrink-0 w-[85vw] md:w-[60vw] lg:w-[42vw]"
               >
                 <div className="relative bg-cream/70 backdrop-blur-sm border border-tan/20 p-10 md:p-14 h-full flex flex-col justify-between min-h-[420px] md:min-h-[480px]">
@@ -172,7 +186,9 @@ export function HowItWorksSection() {
                     <div className="mt-10 flex items-center gap-3">
                       <div className="h-px flex-1 bg-gradient-to-r from-tan/30 to-transparent max-w-[200px]" />
                       <span className="type-mono text-[0.55rem] text-amber/50 tracking-widest">
-                        {index < steps.length - 1 ? "NEXT →" : "GET STARTED →"}
+                        {index < steps.length - 1
+                          ? "NEXT →"
+                          : "GET STARTED →"}
                       </span>
                     </div>
                   </div>
@@ -182,7 +198,7 @@ export function HowItWorksSection() {
           </div>
         </div>
 
-        {/* Progress bar — bottom of viewport */}
+        {/* Progress bar */}
         <div className="max-w-[1400px] mx-auto px-8 md:px-16 lg:px-24 w-full mt-8">
           <div className="h-px w-full bg-tan/15 relative overflow-hidden">
             <div

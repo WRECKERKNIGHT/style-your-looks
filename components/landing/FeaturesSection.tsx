@@ -97,57 +97,67 @@ const accentMap = {
 
 export function FeaturesSection() {
   const sectionRef = useRef<HTMLDivElement>(null);
-  const cardsContainerRef = useRef<HTMLDivElement>(null);
+  const innerRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
     const section = sectionRef.current;
-    const cardsContainer = cardsContainerRef.current;
+    const inner = innerRef.current;
     const cards = cardRefs.current.filter(Boolean) as HTMLDivElement[];
-    if (!section || !cardsContainer || cards.length === 0) return;
+    if (!section || !inner || cards.length === 0) return;
 
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: section,
           start: "top top",
-          end: "+=200%",
+          end: "+=250%",
           pin: true,
-          scrub: 0.8,
+          scrub: 0.6,
           anticipatePin: 1,
         },
       });
 
-      // Each card enters with a staggered reveal
-      cards.forEach((card, i) => {
-        const enterStart = i === 0 ? 0 : (i - 1) / (cards.length - 1) * 0.85;
-        const enterEnd = i === 0 ? 0.05 : enterStart + 0.15;
+      // Header fades out slightly as cards begin
+      const header = inner.querySelector(".features-header");
+      if (header) {
+        tl.to(
+          header,
+          { opacity: 0.4, y: -20, ease: "power2.inOut", duration: 0.1 },
+          0
+        );
+      }
 
+      // Each card enters sequentially
+      cards.forEach((card, i) => {
+        const position = i / cards.length;
+
+        // Card enters
         tl.fromTo(
           card,
-          { opacity: 0, y: 80, scale: 0.96 },
+          { opacity: 0, y: 60, scale: 0.97 },
           {
             opacity: 1,
             y: 0,
             scale: 1,
             ease: "power3.out",
-            duration: 0.15,
+            duration: 1 / cards.length,
           },
-          enterStart
+          position
         );
 
-        // Subtle scale-down stacking feel on earlier cards as new ones arrive
+        // Earlier cards compress slightly as new ones arrive
         if (i < cards.length - 1) {
-          const stackStart = (i + 1) / (cards.length - 1) * 0.85;
+          const nextPosition = (i + 1) / cards.length;
           tl.to(
             card,
             {
-              scale: 0.97,
-              y: -8,
+              scale: 0.98,
+              y: -4,
               ease: "power2.inOut",
-              duration: 0.2,
+              duration: 0.5 / cards.length,
             },
-            stackStart
+            nextPosition
           );
         }
       });
@@ -162,10 +172,14 @@ export function FeaturesSection() {
       className="relative bg-section-warm"
       id="features"
     >
-      <div className="sticky top-0 h-screen flex flex-col justify-center px-8 md:px-16 lg:px-24 py-16 overflow-hidden">
+      {/* No CSS sticky — GSAP pin handles this */}
+      <div
+        ref={innerRef}
+        className="h-screen flex flex-col justify-center px-8 md:px-16 lg:px-24 py-16 overflow-hidden"
+      >
         <div className="max-w-[1400px] mx-auto w-full">
           {/* Header */}
-          <div className="mb-10 md:mb-14">
+          <div className="features-header mb-10 md:mb-14">
             <span className="type-label text-amber/80">03 // Arsenal</span>
             <h2 className="mt-3 type-display text-espresso">
               WHAT WE{" "}
@@ -174,10 +188,7 @@ export function FeaturesSection() {
           </div>
 
           {/* Card stack container */}
-          <div
-            ref={cardsContainerRef}
-            className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-5"
-          >
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-5">
             {features.map((feature, index) => {
               const colors = accentMap[feature.accent];
               const colSpans = [
@@ -193,8 +204,10 @@ export function FeaturesSection() {
               return (
                 <div
                   key={feature.number}
-                  ref={(el: HTMLDivElement | null) => { cardRefs.current[index] = el; }}
-                  className={`${colSpans[index]} opacity-0`}
+                  ref={(el: HTMLDivElement | null) => {
+                    cardRefs.current[index] = el;
+                  }}
+                  className={`${colSpans[index]}`}
                 >
                   <div
                     className={`relative bg-cream/80 backdrop-blur-sm border ${colors.border} p-7 md:p-9 flex flex-col justify-between group cursor-default transition-shadow duration-500 hover:shadow-elegant-lg min-h-[260px] md:min-h-[300px]`}
@@ -209,7 +222,9 @@ export function FeaturesSection() {
                       <div
                         className={`w-11 h-11 flex items-center justify-center border ${colors.border} ${colors.bg} mb-5`}
                       >
-                        <feature.icon className={`w-4.5 h-4.5 ${colors.text}`} />
+                        <feature.icon
+                          className={`w-4.5 h-4.5 ${colors.text}`}
+                        />
                       </div>
                       <h3 className="type-heading text-espresso mb-2.5 text-xl md:text-2xl">
                         {feature.title}
