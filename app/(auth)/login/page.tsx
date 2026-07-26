@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Mail, Lock, Eye, EyeOff, Sparkles } from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -10,7 +11,12 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex">
       {/* Left - Visual */}
-      <div className="hidden lg:flex flex-1 bg-linen items-center justify-center p-12 relative overflow-hidden">
+      <motion.div
+        initial={{ opacity: 0, x: -30 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        className="hidden lg:flex flex-1 bg-linen items-center justify-center p-12 relative overflow-hidden"
+      >
         {/* Decorative diagonal lines */}
         <div className="absolute inset-0 opacity-[0.04] pointer-events-none" style={{
           backgroundImage: "repeating-linear-gradient(45deg, #B8860B 0, #B8860B 1px, transparent 0, transparent 50%)",
@@ -48,10 +54,15 @@ export default function LoginPage() {
         {/* Corner ornaments */}
         <div className="absolute top-6 left-6 w-6 h-6 border-l-2 border-t-2 border-amber/40" />
         <div className="absolute bottom-6 right-6 w-6 h-6 border-r-2 border-b-2 border-amber/40" />
-      </div>
+      </motion.div>
 
       {/* Right - Form */}
-      <div className="flex-1 flex items-center justify-center p-6 bg-parchment">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+        className="flex-1 flex items-center justify-center p-6 bg-parchment"
+      >
         <div className="w-full max-w-sm">
           <Link href="/" className="flex items-center gap-2 mb-10">
             <div className="w-7 h-7 bg-amber flex items-center justify-center">
@@ -121,7 +132,7 @@ export default function LoginPage() {
             </Link>
           </p>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }
