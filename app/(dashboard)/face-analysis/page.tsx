@@ -8,7 +8,7 @@ import { useAnalysisStore } from "@/store/analysis-store";
 import { useMediaPipe } from "@/hooks/useMediaPipe";
 import { useWebcam } from "@/hooks/useWebcam";
 import { motion, AnimatePresence } from "framer-motion";
-import { ScanFace, Camera, Loader2, AlertCircle, Eye } from "lucide-react";
+import { ScanFace, Camera, Loader2, AlertCircle, Eye, Save, CheckCircle } from "lucide-react";
 
 export default function FaceAnalysisPage() {
   const { uploadedImage, setUploadedImage, isAnalyzing, analysisProgress, faceResult } =
@@ -17,6 +17,7 @@ export default function FaceAnalysisPage() {
   const { videoRef, isStreaming, startWebcam, stopWebcam, captureFrame } = useWebcam();
   const [error, setError] = useState<string | null>(null);
   const [showLandmarks, setShowLandmarks] = useState(true);
+  const [saved, setSaved] = useState(false);
   const imageRef = useRef<HTMLImageElement>(null);
 
   const handleImageUpload = useCallback(
@@ -142,6 +143,25 @@ export default function FaceAnalysisPage() {
 
       {faceResult && (
         <div className="space-y-8">
+          {/* Save / Share Bar */}
+          <div className="flex gap-4">
+            <button
+              onClick={() => {
+                useAnalysisStore.getState().saveCurrentAnalysis();
+                setSaved(true);
+                setTimeout(() => setSaved(false), 3000);
+              }}
+              className={`flex items-center gap-2 py-3 px-6 font-body text-base tracking-wider uppercase transition-all rounded-sm ${
+                saved
+                  ? "bg-olive text-cream"
+                  : "bg-amber hover:bg-amber-light text-cream shadow-gold"
+              }`}
+            >
+              {saved ? <CheckCircle className="w-5 h-5" /> : <Save className="w-5 h-5" />}
+              {saved ? "SAVED TO HISTORY" : "SAVE ANALYSIS"}
+            </button>
+          </div>
+
           {uploadedImage && (
             <div className="bg-cream border border-tan overflow-hidden rounded-sm relative">
               {/* eslint-disable-next-line @next/next/no-img-element */}

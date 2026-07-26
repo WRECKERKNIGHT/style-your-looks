@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { saveToHistory, type AnalysisEntry } from "@/lib/history";
 
 export interface FacialMetric {
   label: string;
@@ -114,6 +115,7 @@ interface AnalysisState {
   analysisProgress: number;
   selectedBeardStyle: string;
   selectedMustacheStyle: string;
+  lastSavedEntry: AnalysisEntry | null;
 
   setFaceResult: (result: FaceAnalysisResult) => void;
   setBodyResult: (result: BodyAnalysisResult) => void;
@@ -125,10 +127,11 @@ interface AnalysisState {
   setAnalysisProgress: (val: number) => void;
   setSelectedBeardStyle: (style: string) => void;
   setSelectedMustacheStyle: (style: string) => void;
+  saveCurrentAnalysis: (label?: string) => AnalysisEntry;
   reset: () => void;
 }
 
-export const useAnalysisStore = create<AnalysisState>((set) => ({
+export const useAnalysisStore = create<AnalysisState>((set, get) => ({
   faceResult: null,
   bodyResult: null,
   outfitRecommendations: [],
@@ -139,6 +142,7 @@ export const useAnalysisStore = create<AnalysisState>((set) => ({
   analysisProgress: 0,
   selectedBeardStyle: "clean-shaven",
   selectedMustacheStyle: "none",
+  lastSavedEntry: null,
 
   setFaceResult: (result) => set({ faceResult: result }),
   setBodyResult: (result) => set({ bodyResult: result }),
@@ -150,6 +154,21 @@ export const useAnalysisStore = create<AnalysisState>((set) => ({
   setAnalysisProgress: (val) => set({ analysisProgress: val }),
   setSelectedBeardStyle: (style) => set({ selectedBeardStyle: style }),
   setSelectedMustacheStyle: (style) => set({ selectedMustacheStyle: style }),
+
+  saveCurrentAnalysis: (label?: string) => {
+    const state = get();
+    const entry = saveToHistory({
+      faceResult: state.faceResult,
+      bodyResult: state.bodyResult,
+      colorAnalysis: state.colorAnalysis,
+      outfitRecommendations: state.outfitRecommendations,
+      thumbnailUrl: state.uploadedImage,
+      label: label || (state.faceResult ? `${state.faceResult.facialShape} Face — ${state.faceResult.overallRating}` : "Untitled Analysis"),
+    });
+    set({ lastSavedEntry: entry });
+    return entry;
+  },
+
   reset: () =>
     set({
       faceResult: null,
@@ -162,5 +181,6 @@ export const useAnalysisStore = create<AnalysisState>((set) => ({
       analysisProgress: 0,
       selectedBeardStyle: "clean-shaven",
       selectedMustacheStyle: "none",
+      lastSavedEntry: null,
     }),
 }));
