@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
-import { Upload, Camera, Image as ImageIcon } from "lucide-react";
+import { Upload, Camera } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ImageUploaderProps {
@@ -60,15 +60,15 @@ export function ImageUploader({
           <img
             src={preview}
             alt="Uploaded"
-            className="w-full rounded-2xl object-cover max-h-[500px]"
+            className="w-full object-cover max-h-[560px] rounded-sm"
           />
           <button
             onClick={() => {
               setPreview(null);
             }}
-            className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm rounded-full p-2 hover:bg-white transition-colors shadow-lg"
+            className="absolute top-4 right-4 bg-cream/95 backdrop-blur-sm p-2.5 hover:bg-parchment transition-colors border border-tan rounded-full shadow-elegant"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 text-espresso" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -77,34 +77,34 @@ export function ImageUploader({
         <div
           {...getRootProps()}
           className={cn(
-            "border-2 border-dashed rounded-2xl p-12 text-center cursor-pointer transition-all duration-300",
-            "hover:border-[#C89D7C] hover:bg-[#FDFBF7]",
+            "border-2 border-dashed p-16 text-center cursor-pointer transition-all duration-300 rounded-sm",
+            "hover:border-amber/50 hover:bg-parchment",
             isDragActive
-              ? "border-[#C89D7C] bg-[#FDFBF7] scale-[1.02]"
-              : "border-[#E8E0D8] bg-[#F4EFEA]/50"
+              ? "border-amber bg-amber/5 scale-[1.01]"
+              : "border-tan bg-cream"
           )}
         >
           <input {...getInputProps()} />
-          <div className="flex flex-col items-center gap-4">
+          <div className="flex flex-col items-center gap-5">
             <div
               className={cn(
-                "w-16 h-16 rounded-2xl flex items-center justify-center transition-colors",
-                isDragActive ? "bg-[#C89D7C]/20" : "bg-[#F4EFEA]"
+                "w-20 h-20 flex items-center justify-center transition-colors rounded-full",
+                isDragActive ? "bg-amber/15" : "bg-parchment border border-tan"
               )}
             >
               <Upload
                 className={cn(
-                  "w-7 h-7 transition-colors",
-                  isDragActive ? "text-[#C89D7C]" : "text-[#8B7D6B]"
+                  "w-9 h-9 transition-colors",
+                  isDragActive ? "text-amber" : "text-coffee"
                 )}
               />
             </div>
             <div>
-              <p className="text-lg font-medium text-[#3C2A21]">{label}</p>
-              <p className="text-sm text-[#8B7D6B] mt-1">{acceptHint}</p>
+              <p className="text-xl font-display font-bold text-espresso tracking-wider">{label}</p>
+              <p className="text-base text-coffee font-body mt-2">{acceptHint}</p>
             </div>
             {isDragActive && (
-              <p className="text-sm text-[#C89D7C] font-medium">Drop your photo here</p>
+              <p className="text-base text-amber font-body font-semibold">DROP YOUR PHOTO HERE</p>
             )}
           </div>
         </div>
@@ -113,10 +113,10 @@ export function ImageUploader({
       {onWebcamCapture && !preview && (
         <button
           onClick={onWebcamCapture}
-          className="mt-4 w-full flex items-center justify-center gap-2 py-3 px-4 bg-[#F4EFEA] hover:bg-[#EDE5DC] rounded-xl text-[#3C2A21] font-medium transition-colors"
+          className="mt-5 w-full flex items-center justify-center gap-2 py-4 px-6 bg-parchment hover:bg-tan/20 text-espresso font-body text-base tracking-wider uppercase transition-colors border border-tan rounded-sm"
         >
           <Camera className="w-5 h-5" />
-          Use Webcam Instead
+          USE WEBCAM INSTEAD
         </button>
       )}
     </div>
