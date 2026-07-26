@@ -9,6 +9,27 @@ export interface FacialMetric {
   tip: string;
 }
 
+export interface BlendshapeAnalysis {
+  emotion: string;
+  emotionConfidence: number;
+  eyeOpenness: number;
+  mouthOpenness: number;
+  browRaise: number;
+  smileIntensity: number;
+  headTilt: number;
+}
+
+export interface PercentileRanking {
+  overall: number;
+  symmetry: number;
+  goldenRatio: number;
+  jawline: number;
+  skinClarity: number;
+  harmony: number;
+  bracket: string;
+  comparisonText: string;
+}
+
 export interface FaceAnalysisResult {
   overallScore: number;
   symmetry: number;
@@ -37,6 +58,10 @@ export interface FaceAnalysisResult {
   strengths: string[];
   improvements: string[];
   styleProfile: string;
+  blendshapes: BlendshapeAnalysis;
+  percentile: PercentileRanking;
+  beautyIndex: number;
+  faceShapeDetails: { description: string; characteristics: string[]; idealHairstyles: string[]; idealGlasses: string[] };
 }
 
 export interface BodyAnalysisResult {

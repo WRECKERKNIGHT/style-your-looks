@@ -111,7 +111,7 @@ export function useMediaPipe() {
           undertone: skinTone?.undertone || "Neutral",
           ageEstimation: 25,
           genderEstimation: "Unknown",
-          emotionDetected: "Neutral",
+          emotionDetected: scoreResult.blendshapes.emotion,
           groomingSuggestions,
           landmarks: faceResult.faceLandmarks?.[0]?.map((l) => [l.x, l.y, l.z]) || [],
           goldenRatio: scoreResult.goldenRatio,
@@ -126,6 +126,10 @@ export function useMediaPipe() {
           strengths: scoreResult.strengths,
           improvements: scoreResult.improvements,
           styleProfile: scoreResult.styleProfile,
+          blendshapes: scoreResult.blendshapes,
+          percentile: scoreResult.percentile,
+          beautyIndex: scoreResult.beautyIndex,
+          faceShapeDetails: scoreResult.faceShapeDetails,
         });
 
         setAnalysisProgress(100);
