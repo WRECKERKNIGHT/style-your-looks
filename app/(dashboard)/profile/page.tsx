@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { User, Camera, Star, History, Settings, Shield, LogOut } from "lucide-react";
+import { motion } from "framer-motion";
 import { useAnalysisStore } from "@/store/analysis-store";
 
 export default function ProfilePage() {
@@ -11,7 +12,12 @@ export default function ProfilePage() {
   return (
     <div className="space-y-8">
       {/* Profile Header */}
-      <div className="bg-cream p-8 border border-tan vintage-border rounded-sm">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        className="bg-cream p-8 border border-tan vintage-border rounded-sm"
+      >
         <span className="section-number">EST. MMXXIV // PROFILE</span>
         <div className="flex items-center gap-5 mt-3">
           <div className="w-20 h-20 bg-amber/15 flex items-center justify-center border border-amber/25 rounded-full">
@@ -45,7 +51,7 @@ export default function ProfilePage() {
             <p className="text-sm text-coffee font-body mt-1">Face Shape</p>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Tabs */}
       <div className="flex gap-3">
