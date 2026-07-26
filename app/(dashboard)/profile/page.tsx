@@ -9,112 +9,113 @@ export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState<"history" | "settings">("history");
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Profile Header */}
-      <div className="bg-white rounded-2xl p-6 border border-[#E8E0D8]">
-        <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-2xl bg-[#C89D7C]/20 flex items-center justify-center">
-            <User className="w-8 h-8 text-[#C89D7C]" />
+      <div className="bg-cream p-8 border border-tan vintage-border rounded-sm">
+        <span className="section-number">EST. MMXXIV // PROFILE</span>
+        <div className="flex items-center gap-5 mt-3">
+          <div className="w-20 h-20 bg-amber/15 flex items-center justify-center border border-amber/25 rounded-full">
+            <User className="w-10 h-10 text-amber" />
           </div>
           <div className="flex-1">
-            <h1 className="text-xl font-bold text-[#3C2A21]">Your Profile</h1>
-            <p className="text-sm text-[#8B7D6B]">View your analysis history and settings</p>
+            <h1 className="text-2xl font-display font-bold text-espresso tracking-wider">YOUR PROFILE</h1>
+            <p className="text-base text-coffee font-body mt-1">View your analysis history and settings</p>
           </div>
         </div>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-3 gap-3 mt-6">
-          <div className="bg-[#FDFBF7] rounded-xl p-3 text-center">
-            <Star className="w-4 h-4 text-[#C89D7C] mx-auto mb-1" />
-            <span className="text-lg font-bold text-[#3C2A21]">
+        <div className="grid grid-cols-3 gap-4 mt-8">
+          <div className="bg-parchment p-5 text-center border border-tan rounded-sm">
+            <Star className="w-5 h-5 text-amber mx-auto mb-2" />
+            <span className="text-2xl font-display font-bold text-espresso">
               {faceResult ? faceResult.overallScore.toFixed(1) : "--"}
             </span>
-            <p className="text-xs text-[#8B7D6B]">FaceIQ</p>
+            <p className="text-sm text-coffee font-body mt-1">FaceIQ</p>
           </div>
-          <div className="bg-[#FDFBF7] rounded-xl p-3 text-center">
-            <span className="text-lg font-bold text-[#3C2A21]">
+          <div className="bg-parchment p-5 text-center border border-tan rounded-sm">
+            <span className="text-2xl font-display font-bold text-espresso">
               {bodyResult ? bodyResult.bodyType.split(" ")[0] : "--"}
             </span>
-            <p className="text-xs text-[#8B7D6B]">Body Type</p>
+            <p className="text-sm text-coffee font-body mt-1">Body Type</p>
           </div>
-          <div className="bg-[#FDFBF7] rounded-xl p-3 text-center">
-            <span className="text-lg font-bold text-[#3C2A21]">
+          <div className="bg-parchment p-5 text-center border border-tan rounded-sm">
+            <span className="text-2xl font-display font-bold text-espresso">
               {faceResult ? faceResult.facialShape : "--"}
             </span>
-            <p className="text-xs text-[#8B7D6B]">Face Shape</p>
+            <p className="text-sm text-coffee font-body mt-1">Face Shape</p>
           </div>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2">
+      <div className="flex gap-3">
         <button
           onClick={() => setActiveTab("history")}
-          className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all ${
+          className={`flex-1 py-3.5 text-base font-body font-semibold tracking-wider uppercase transition-all rounded-sm ${
             activeTab === "history"
-              ? "bg-[#3C2A21] text-white"
-              : "bg-white text-[#3C2A21] border border-[#E8E0D8]"
+              ? "bg-amber text-cream shadow-gold"
+              : "bg-cream text-espresso border border-tan hover:bg-tan/10"
           }`}
         >
-          <History className="w-4 h-4 inline mr-1.5" />
-          History
+          <History className="w-4 h-4 inline mr-2" />
+          HISTORY
         </button>
         <button
           onClick={() => setActiveTab("settings")}
-          className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all ${
+          className={`flex-1 py-3.5 text-base font-body font-semibold tracking-wider uppercase transition-all rounded-sm ${
             activeTab === "settings"
-              ? "bg-[#3C2A21] text-white"
-              : "bg-white text-[#3C2A21] border border-[#E8E0D8]"
+              ? "bg-amber text-cream shadow-gold"
+              : "bg-cream text-espresso border border-tan hover:bg-tan/10"
           }`}
         >
-          <Settings className="w-4 h-4 inline mr-1.5" />
-          Settings
+          <Settings className="w-4 h-4 inline mr-2" />
+          SETTINGS
         </button>
       </div>
 
       {activeTab === "history" && (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {faceResult && (
-            <div className="bg-white rounded-xl p-4 border border-[#E8E0D8]">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#C89D7C]/20 flex items-center justify-center">
-                  <span className="text-sm font-bold text-[#C89D7C]">
+            <div className="bg-cream p-6 border border-tan rounded-sm card-hover">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 bg-amber/15 flex items-center justify-center border border-amber/25 rounded-full">
+                  <span className="text-lg font-display font-bold text-amber">
                     {faceResult.overallScore.toFixed(1)}
                   </span>
                 </div>
                 <div className="flex-1">
-                  <h4 className="text-sm font-medium text-[#3C2A21]">Face Analysis</h4>
-                  <p className="text-xs text-[#8B7D6B]">
+                  <h4 className="text-base font-display font-bold text-espresso tracking-wider">FACE ANALYSIS</h4>
+                  <p className="text-sm text-coffee font-body mt-1">
                     {faceResult.facialShape} face shape | {faceResult.skinTone} skin
                   </p>
                 </div>
-                <span className="text-xs text-[#8B7D6B]">Just now</span>
+                <span className="text-sm text-coffee font-body">Just now</span>
               </div>
             </div>
           )}
 
           {bodyResult && (
-            <div className="bg-white rounded-xl p-4 border border-[#E8E0D8]">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#4CAF50]/20 flex items-center justify-center">
-                  <span className="text-xs font-bold text-[#4CAF50]">Body</span>
+            <div className="bg-cream p-6 border border-tan rounded-sm card-hover">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 bg-amber/10 flex items-center justify-center border border-amber/25 rounded-full">
+                  <span className="text-sm font-display font-bold text-amber">Body</span>
                 </div>
                 <div className="flex-1">
-                  <h4 className="text-sm font-medium text-[#3C2A21]">Body Analysis</h4>
-                  <p className="text-xs text-[#8B7D6B]">
+                  <h4 className="text-base font-display font-bold text-espresso tracking-wider">BODY ANALYSIS</h4>
+                  <p className="text-sm text-coffee font-body mt-1">
                     {bodyResult.bodyType} | {bodyResult.undertone} undertone
                   </p>
                 </div>
-                <span className="text-xs text-[#8B7D6B]">Just now</span>
+                <span className="text-sm text-coffee font-body">Just now</span>
               </div>
             </div>
           )}
 
           {!faceResult && !bodyResult && (
-            <div className="bg-white rounded-xl p-8 border border-[#E8E0D8] text-center">
-              <History className="w-10 h-10 text-[#C89D7C]/40 mx-auto mb-3" />
-              <p className="text-sm text-[#8B7D6B]">No analysis history yet</p>
-              <p className="text-xs text-[#8B7D6B] mt-1">
+            <div className="bg-cream p-10 border border-tan rounded-sm text-center">
+              <History className="w-12 h-12 text-amber/40 mx-auto mb-4" />
+              <p className="text-base text-coffee font-body">No analysis history yet</p>
+              <p className="text-sm text-coffee mt-2 font-body">
                 Complete your first face or body analysis to see it here
               </p>
             </div>
@@ -123,36 +124,36 @@ export default function ProfilePage() {
       )}
 
       {activeTab === "settings" && (
-        <div className="space-y-3">
-          <div className="bg-white rounded-xl p-4 border border-[#E8E0D8]">
-            <div className="flex items-center gap-3">
-              <Shield className="w-5 h-5 text-[#8B7D6B]" />
+        <div className="space-y-4">
+          <div className="bg-cream p-6 border border-tan rounded-sm card-hover">
+            <div className="flex items-center gap-4">
+              <Shield className="w-5 h-5 text-coffee" />
               <div className="flex-1">
-                <h4 className="text-sm font-medium text-[#3C2A21]">Privacy</h4>
-                <p className="text-xs text-[#8B7D6B]">All analysis runs in your browser. Photos never leave your device.</p>
+                <h4 className="text-base font-display font-bold text-espresso tracking-wider">PRIVACY</h4>
+                <p className="text-sm text-coffee font-body mt-1">All analysis runs in your browser. Photos never leave your device.</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl p-4 border border-[#E8E0D8]">
-            <div className="flex items-center gap-3">
-              <Camera className="w-5 h-5 text-[#8B7D6B]" />
+          <div className="bg-cream p-6 border border-tan rounded-sm card-hover">
+            <div className="flex items-center gap-4">
+              <Camera className="w-5 h-5 text-coffee" />
               <div className="flex-1">
-                <h4 className="text-sm font-medium text-[#3C2A21]">Camera Permission</h4>
-                <p className="text-xs text-[#8B7D6B]">Manage webcam access for live analysis</p>
+                <h4 className="text-base font-display font-bold text-espresso tracking-wider">CAMERA PERMISSION</h4>
+                <p className="text-sm text-coffee font-body mt-1">Manage webcam access for live analysis</p>
               </div>
-              <button className="text-xs bg-[#F4EFEA] text-[#3C2A21] px-3 py-1.5 rounded-lg">
-                Manage
+              <button className="text-sm bg-parchment text-espresso px-4 py-2 font-body tracking-wider uppercase border border-tan hover:bg-tan/20 transition-colors rounded-sm">
+                MANAGE
               </button>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl p-4 border border-[#E8E0D8]">
-            <div className="flex items-center gap-3">
-              <LogOut className="w-5 h-5 text-red-500" />
+          <div className="bg-cream p-6 border border-tan rounded-sm card-hover">
+            <div className="flex items-center gap-4">
+              <LogOut className="w-5 h-5 text-burgundy" />
               <div className="flex-1">
-                <h4 className="text-sm font-medium text-red-600">Sign Out</h4>
-                <p className="text-xs text-[#8B7D6B]">Sign out of your account</p>
+                <h4 className="text-base font-display font-bold text-burgundy tracking-wider">SIGN OUT</h4>
+                <p className="text-sm text-coffee font-body mt-1">Sign out of your account</p>
               </div>
             </div>
           </div>

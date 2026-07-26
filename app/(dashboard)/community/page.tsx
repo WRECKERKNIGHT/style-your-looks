@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { COMMUNITY_CATEGORIES } from "@/lib/constants";
-import { Users, Star, MessageCircle, Camera, X, Upload } from "lucide-react";
+import { Users, Star, Camera, X, Upload } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface Post {
@@ -28,7 +28,7 @@ const SAMPLE_POSTS: Post[] = [
     avgRating: 8.2,
     ratingCount: 24,
     comments: [
-      { user: "StylePro", text: "Great color combo! The blazer fits perfectly.", rating: 9 },
+      { user: "StylePro", text: "Great colour combo! The blazer fits perfectly.", rating: 9 },
       { user: "FashionFan", text: "Try rolling the sleeves for a more relaxed vibe.", rating: 7 },
     ],
     createdAt: "2h ago",
@@ -95,32 +95,35 @@ export default function CommunityPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <div className="flex items-center gap-3 mb-1">
-            <Users className="w-6 h-6 text-[#C89D7C]" />
-            <h1 className="text-2xl font-bold text-[#3C2A21]">Community</h1>
+          <span className="section-number">EST. MMXXIV // FEED</span>
+          <div className="flex items-center gap-3 mt-3 mb-2">
+            <Users className="w-7 h-7 text-amber" />
+            <h1 className="text-4xl md:text-5xl font-display font-bold text-espresso tracking-tight">
+              COMMUNITY <span className="text-gradient-gold">FEED.</span>
+            </h1>
           </div>
-          <p className="text-[#8B7D6B]">Share your looks and get honest feedback.</p>
+          <p className="text-coffee font-body text-lg max-w-lg">Share your looks and get honest feedback.</p>
         </div>
         <button
           onClick={() => setShowCreatePost(true)}
-          className="flex items-center gap-2 px-4 py-2.5 bg-[#3C2A21] text-white rounded-xl text-sm font-medium hover:bg-[#2B1E16] transition-colors"
+          className="flex items-center gap-2 px-6 py-3 bg-amber text-cream text-base font-body tracking-wider uppercase hover:bg-amber-light transition-colors rounded-sm shadow-gold"
         >
           <Camera className="w-4 h-4" />
-          Share Look
+          SHARE LOOK
         </button>
       </div>
 
       {/* Category Filter */}
-      <div className="flex gap-2 overflow-x-auto pb-1">
+      <div className="flex gap-3 overflow-x-auto pb-1">
         <button
           onClick={() => setActiveCategory("all")}
-          className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
+          className={`px-5 py-2.5 text-base font-body font-semibold whitespace-nowrap transition-all rounded-sm ${
             activeCategory === "all"
-              ? "bg-[#3C2A21] text-white"
-              : "bg-white text-[#3C2A21] border border-[#E8E0D8]"
+              ? "bg-amber text-cream shadow-gold"
+              : "bg-cream text-espresso border border-tan hover:bg-tan/10"
           }`}
         >
           All
@@ -129,10 +132,10 @@ export default function CommunityPage() {
           <button
             key={cat.id}
             onClick={() => setActiveCategory(cat.id)}
-            className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
+            className={`px-5 py-2.5 text-base font-body font-semibold whitespace-nowrap transition-all rounded-sm ${
               activeCategory === cat.id
-                ? "bg-[#3C2A21] text-white"
-                : "bg-white text-[#3C2A21] border border-[#E8E0D8]"
+                ? "bg-amber text-cream shadow-gold"
+                : "bg-cream text-espresso border border-tan hover:bg-tan/10"
             }`}
           >
             {cat.label}
@@ -141,56 +144,56 @@ export default function CommunityPage() {
       </div>
 
       {/* Posts Feed */}
-      <div className="space-y-4">
+      <div className="space-y-6">
         {filteredPosts.map((post, i) => (
           <motion.div
             key={post.id}
-            initial={{ opacity: 0, y: 15 }}
+            initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: i * 0.08 }}
-            className="bg-white rounded-2xl border border-[#E8E0D8] overflow-hidden"
+            transition={{ duration: 0.4, delay: i * 0.08 }}
+            className="bg-cream border border-tan overflow-hidden rounded-sm card-hover vintage-border"
           >
             {/* Post Header */}
-            <div className="flex items-center gap-3 p-4 pb-2">
-              <div className="w-9 h-9 rounded-full bg-[#C89D7C]/20 flex items-center justify-center">
-                <span className="text-sm font-bold text-[#C89D7C]">
+            <div className="flex items-center gap-3 p-5 pb-3">
+              <div className="w-11 h-11 bg-amber/15 flex items-center justify-center rounded-full border border-amber/25">
+                <span className="text-base font-display font-bold text-amber">
                   {post.user.name.charAt(0)}
                 </span>
               </div>
               <div className="flex-1">
-                <span className="text-sm font-medium text-[#3C2A21]">{post.user.name}</span>
-                <span className="text-xs text-[#8B7D6B] ml-2">{post.createdAt}</span>
+                <span className="text-base font-body font-bold text-espresso">{post.user.name}</span>
+                <span className="text-sm text-coffee ml-2 font-body">{post.createdAt}</span>
               </div>
-              <span className="text-xs bg-[#F4EFEA] text-[#8B7D6B] px-2.5 py-1 rounded-full capitalize">
+              <span className="text-xs font-body bg-parchment text-coffee px-3 py-1.5 uppercase tracking-wider border border-tan rounded-sm">
                 {post.category}
               </span>
             </div>
 
             {/* Post Image Placeholder */}
-            <div className="w-full h-64 bg-[#F4EFEA] flex items-center justify-center">
+            <div className="w-full h-72 bg-parchment flex items-center justify-center">
               <div className="text-center">
-                <Camera className="w-10 h-10 text-[#C89D7C]/40 mx-auto mb-2" />
-                <p className="text-sm text-[#8B7D6B]">{post.title}</p>
+                <Camera className="w-12 h-12 text-amber/40 mx-auto mb-3" />
+                <p className="text-base text-coffee font-body">{post.title}</p>
               </div>
             </div>
 
-            <div className="p-4 space-y-3">
-              <p className="text-sm text-[#3C2A21]">{post.description}</p>
+            <div className="p-6 space-y-4">
+              <p className="text-base text-espresso font-body">{post.description}</p>
 
               {/* Rating */}
               <div className="flex items-center gap-4">
-                <div className="flex items-center gap-1">
-                  <Star className="w-4 h-4 text-[#C89D7C] fill-[#C89D7C]" />
-                  <span className="font-bold text-[#3C2A21]">{post.avgRating}</span>
-                  <span className="text-xs text-[#8B7D6B]">({post.ratingCount})</span>
+                <div className="flex items-center gap-1.5">
+                  <Star className="w-5 h-5 text-amber fill-amber" />
+                  <span className="font-display font-bold text-espresso text-lg">{post.avgRating}</span>
+                  <span className="text-sm text-coffee font-body">({post.ratingCount})</span>
                 </div>
               </div>
 
               {/* Rate Slider */}
-              <div className="bg-[#FDFBF7] rounded-xl p-3">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs text-[#8B7D6B]">Rate this look</span>
-                  <span className="text-sm font-bold text-[#C89D7C]">
+              <div className="bg-parchment p-4 border border-tan rounded-sm">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-sm text-coffee font-body font-semibold">RATE THIS LOOK</span>
+                  <span className="text-lg font-display font-bold text-amber">
                     {newRating[post.id] || 5}/10
                   </span>
                 </div>
@@ -200,9 +203,9 @@ export default function CommunityPage() {
                   max="10"
                   value={newRating[post.id] || 5}
                   onChange={(e) => handleRate(post.id, parseInt(e.target.value))}
-                  className="w-full h-2 bg-[#F4EFEA] rounded-full appearance-none cursor-pointer accent-[#C89D7C]"
+                  className="w-full h-2.5 bg-[#E8E0D8] appearance-none cursor-pointer rounded-full accent-amber"
                 />
-                <div className="flex justify-between text-[10px] text-[#8B7D6B] mt-1">
+                <div className="flex justify-between text-xs text-coffee mt-2 font-body">
                   <span>1</span>
                   <span>5</span>
                   <span>10</span>
@@ -210,17 +213,17 @@ export default function CommunityPage() {
               </div>
 
               {/* Comments */}
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {post.comments.map((comment, j) => (
-                  <div key={j} className="bg-[#FDFBF7] rounded-xl p-3">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-medium text-[#3C2A21]">{comment.user}</span>
-                      <div className="flex items-center gap-0.5">
-                        <Star className="w-3 h-3 text-[#C89D7C] fill-[#C89D7C]" />
-                        <span className="text-xs text-[#8B7D6B]">{comment.rating}</span>
+                  <div key={j} className="bg-parchment p-4 border border-tan rounded-sm">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <span className="text-sm font-body font-bold text-espresso">{comment.user}</span>
+                      <div className="flex items-center gap-1">
+                        <Star className="w-3.5 h-3.5 text-amber fill-amber" />
+                        <span className="text-sm text-coffee font-body">{comment.rating}</span>
                       </div>
                     </div>
-                    <p className="text-xs text-[#8B7D6B]">{comment.text}</p>
+                    <p className="text-sm text-coffee font-body">{comment.text}</p>
                   </div>
                 ))}
               </div>
@@ -236,39 +239,39 @@ export default function CommunityPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 bg-espresso/30 backdrop-blur-sm z-50 flex items-center justify-center p-4"
             onClick={() => setShowCreatePost(false)}
           >
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-2xl p-6 w-full max-w-md"
+              className="bg-cream p-8 w-full max-w-lg border border-tan rounded-sm shadow-elegant-lg"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-semibold text-[#3C2A21]">Share Your Look</h2>
+              <div className="flex items-center justify-between mb-8">
+                <h2 className="text-lg font-display font-bold text-espresso tracking-wider">SHARE YOUR LOOK</h2>
                 <button
                   onClick={() => setShowCreatePost(false)}
-                  className="p-1 hover:bg-[#F4EFEA] rounded-lg transition-colors"
+                  className="p-2 hover:bg-tan/10 transition-colors rounded-sm"
                 >
-                  <X className="w-5 h-5 text-[#8B7D6B]" />
+                  <X className="w-5 h-5 text-coffee" />
                 </button>
               </div>
 
-              <div className="space-y-4">
-                <div className="border-2 border-dashed border-[#E8E0D8] rounded-xl p-8 text-center">
-                  <Upload className="w-8 h-8 text-[#C89D7C] mx-auto mb-2" />
-                  <p className="text-sm text-[#8B7D6B]">Drop your photo here</p>
+              <div className="space-y-5">
+                <div className="border-2 border-dashed border-tan p-10 text-center rounded-sm hover:border-amber/40 transition-colors">
+                  <Upload className="w-10 h-10 text-amber mx-auto mb-3" />
+                  <p className="text-base text-coffee font-body">Drop your photo here</p>
                 </div>
 
                 <div>
-                  <label className="text-sm text-[#8B7D6B] mb-1 block">Category</label>
+                  <label className="text-xs font-body text-coffee tracking-widest uppercase mb-2 block font-semibold">Category</label>
                   <div className="flex gap-2">
                     {COMMUNITY_CATEGORIES.map((cat) => (
                       <button
                         key={cat.id}
-                        className="flex-1 py-2 rounded-xl text-xs font-medium bg-[#F4EFEA] text-[#3C2A21] hover:bg-[#EDE5DC] transition-colors"
+                        className="flex-1 py-2.5 text-sm font-body font-semibold bg-parchment text-espresso hover:bg-tan/20 transition-colors border border-tan rounded-sm"
                       >
                         {cat.label}
                       </button>
@@ -279,17 +282,17 @@ export default function CommunityPage() {
                 <input
                   type="text"
                   placeholder="Give your look a title"
-                  className="w-full px-4 py-3 bg-[#FDFBF7] border border-[#E8E0D8] rounded-xl text-sm text-[#3C2A21] placeholder:text-[#8B7D6B] focus:outline-none focus:border-[#C89D7C]"
+                  className="w-full px-5 py-3.5 bg-parchment border border-tan text-base text-espresso placeholder:text-coffee font-body focus:outline-none focus:border-amber rounded-sm"
                 />
 
                 <textarea
                   placeholder="Describe your look..."
                   rows={3}
-                  className="w-full px-4 py-3 bg-[#FDFBF7] border border-[#E8E0D8] rounded-xl text-sm text-[#3C2A21] placeholder:text-[#8B7D6B] focus:outline-none focus:border-[#C89D7C] resize-none"
+                  className="w-full px-5 py-3.5 bg-parchment border border-tan text-base text-espresso placeholder:text-coffee font-body focus:outline-none focus:border-amber resize-none rounded-sm"
                 />
 
-                <button className="w-full py-3 bg-[#3C2A21] text-white rounded-xl font-medium hover:bg-[#2B1E16] transition-colors">
-                  Share Look
+                <button className="w-full py-4 bg-amber text-cream font-body text-base tracking-wider uppercase hover:bg-amber-light transition-colors rounded-sm shadow-gold">
+                  SHARE LOOK
                 </button>
               </div>
             </motion.div>
