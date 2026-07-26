@@ -1,6 +1,7 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useRef } from "react";
+import { motion, useInView } from "framer-motion";
 import { Star, TrendingUp, MessageCircle } from "lucide-react";
 
 const posts = [
@@ -39,6 +40,9 @@ const posts = [
 ];
 
 export function CommunitySection() {
+  const marqueeRef = useRef<HTMLDivElement>(null);
+  const marqueeInView = useInView(marqueeRef, { amount: 0.3 });
+
   return (
     <section className="relative py-32 md:py-44 overflow-hidden bg-section-warm" id="community">
       {/* Diagonal lines — very subtle */}
@@ -75,9 +79,12 @@ export function CommunitySection() {
           </motion.div>
         </div>
 
-        {/* Marquee */}
-        <div className="marquee-container mb-16 md:mb-20 py-5 border-y border-tan/20">
-          <div className="marquee-content">
+        {/* Marquee — pauses when off-screen */}
+        <div ref={marqueeRef} className="marquee-container mb-16 md:mb-20 py-5 border-y border-tan/20">
+          <div
+            className="marquee-content"
+            style={{ animationPlayState: marqueeInView ? "running" : "paused" }}
+          >
             {[...Array(2)].map((_, i) => (
               <div key={i} className="flex items-center gap-10 mr-10">
                 {["FACE", "BODY", "STYLE", "GROOMING", "COLOR", "FIT", "VIBE", "LOOKS"].map(

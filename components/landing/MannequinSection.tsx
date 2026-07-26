@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform, MotionValue } from "framer-motion";
 import { Mannequin3D } from "./Mannequin3D";
 
 const features = [
@@ -62,6 +62,58 @@ const features = [
     side: "right" as const,
   },
 ];
+
+function FeatureLabel({
+  feature,
+  index,
+  total,
+  scrollYProgress,
+}: {
+  feature: (typeof features)[number];
+  index: number;
+  total: number;
+  scrollYProgress: MotionValue<number>;
+}) {
+  const labelStart = 0.1 + (index / total) * 0.6;
+  const labelEnd = labelStart + 0.15;
+  const labelOpacity = useTransform(
+    scrollYProgress,
+    [labelStart, labelEnd, 0.85, 0.95],
+    [0, 1, 1, 0]
+  );
+  const labelX = useTransform(
+    scrollYProgress,
+    [labelStart, labelEnd],
+    [feature.side === "left" ? -40 : 40, 0]
+  );
+  const labelScale = useTransform(
+    scrollYProgress,
+    [labelStart, labelEnd],
+    [0.92, 1]
+  );
+
+  return (
+    <motion.div
+      className="feature-label"
+      style={{
+        left: feature.x,
+        top: feature.y,
+        opacity: labelOpacity,
+        x: labelX,
+        scale: labelScale,
+        transform:
+          feature.side === "left" ? "translateX(-100%)" : "none",
+      }}
+    >
+      <div className="flex flex-col">
+        <span>{feature.label}</span>
+        <span className="text-coffee/70 text-[0.5rem] font-body font-normal tracking-normal normal-case">
+          {feature.sublabel}
+        </span>
+      </div>
+    </motion.div>
+  );
+}
 
 export function MannequinSection() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -140,38 +192,15 @@ export function MannequinSection() {
           <Mannequin3D interactive className="w-[280px] md:w-[340px]" />
         </motion.div>
 
-        {/* Feature labels — fly in from edges */}
+        {/* Feature labels — tied to scroll progress ranges */}
         {features.map((feature, index) => (
-          <motion.div
+          <FeatureLabel
             key={feature.id}
-            className="feature-label"
-            style={{
-              left: feature.x,
-              top: feature.y,
-              transform:
-                feature.side === "left" ? "translateX(-100%)" : "none",
-            }}
-            initial={{
-              opacity: 0,
-              x: feature.side === "left" ? -50 : 50,
-              scale: 0.92,
-            }}
-            whileInView={{ opacity: 1, x: 0, scale: 1 }}
-            viewport={{ once: true, margin: "-80px" }}
-            transition={{
-              type: "spring",
-              stiffness: 80,
-              damping: 14,
-              delay: 0.3 + index * 0.08,
-            }}
-          >
-            <div className="flex flex-col">
-              <span>{feature.label}</span>
-              <span className="text-coffee/70 text-[0.5rem] font-body font-normal tracking-normal normal-case">
-                {feature.sublabel}
-              </span>
-            </div>
-          </motion.div>
+            feature={feature}
+            index={index}
+            total={features.length}
+            scrollYProgress={scrollYProgress}
+          />
         ))}
 
         {/* Connector lines */}

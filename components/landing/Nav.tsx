@@ -10,9 +10,35 @@ export function Nav() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
+    // Use Lenis scroll event for reactive detection
+    // Falls back to native scroll if Lenis not yet initialized
     const handleScroll = () => setScrolled(window.scrollY > 40);
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+
+    // Also try to hook into Lenis if available
+    const checkLenis = () => {
+      const lenisEl = document.querySelector("[data-lenis-prevent]");
+      if (lenisEl) {
+        // Lenis is active — use requestAnimationFrame for smooth detection
+        let ticking = false;
+        const onScroll = () => {
+          if (!ticking) {
+            requestAnimationFrame(() => {
+              setScrolled(window.scrollY > 40);
+              ticking = false;
+            });
+            ticking = true;
+          }
+        };
+        window.addEventListener("scroll", onScroll, { passive: true });
+        return () => window.removeEventListener("scroll", onScroll);
+      }
+      // Fallback: direct scroll listener
+      window.addEventListener("scroll", handleScroll, { passive: true });
+      return () => window.removeEventListener("scroll", handleScroll);
+    };
+
+    const cleanup = checkLenis();
+    return cleanup;
   }, []);
 
   return (
