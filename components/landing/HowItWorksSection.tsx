@@ -1,8 +1,11 @@
 "use client";
 
-import { useRef } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { useRef, useEffect } from "react";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Camera, Cpu, Shirt } from "lucide-react";
+
+gsap.registerPlugin(ScrollTrigger);
 
 const steps = [
   {
@@ -32,106 +35,169 @@ const steps = [
 ];
 
 export function HowItWorksSection() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start end", "end start"],
-  });
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const stepsRef = useRef<(HTMLDivElement | null)[]>([]);
+  const progressRef = useRef<HTMLDivElement>(null);
 
-  const lineProgress = useTransform(scrollYProgress, [0.1, 0.8], [0, 1]);
-  const lineHeight = useTransform(lineProgress, [0, 1], ["0%", "100%"]);
+  useEffect(() => {
+    const section = sectionRef.current;
+    const track = trackRef.current;
+    const stepsEls = stepsRef.current.filter(Boolean) as HTMLDivElement[];
+    const progress = progressRef.current;
+    if (!section || !track || stepsEls.length === 0) return;
+
+    const ctx = gsap.context(() => {
+      // Horizontal scroll: pin section, translate track left
+      const trackWidth = track.scrollWidth - window.innerWidth + 120;
+
+      gsap.to(track, {
+        x: -trackWidth,
+        ease: "none",
+        scrollTrigger: {
+          trigger: section,
+          start: "top top",
+          end: () => `+=${trackWidth}`,
+          pin: true,
+          scrub: 0.8,
+          anticipatePin: 1,
+        },
+      });
+
+      // Progress line fills as you scroll
+      if (progress) {
+        gsap.to(progress, {
+          scaleX: 1,
+          ease: "none",
+          scrollTrigger: {
+            trigger: section,
+            start: "top top",
+            end: () => `+=${trackWidth}`,
+            scrub: 0.3,
+          },
+        });
+      }
+
+      // Each step card fades/slides in as it enters the viewport
+      stepsEls.forEach((step, i) => {
+        gsap.fromTo(
+          step,
+          { opacity: 0, y: 50, scale: 0.95 },
+          {
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            ease: "power3.out",
+            duration: 1,
+            scrollTrigger: {
+              trigger: step,
+              containerAnimation: gsap.getById?.("howHorizontal"),
+              start: "left 85%",
+              end: "left 50%",
+              scrub: 0.5,
+              horizontal: true,
+            },
+          }
+        );
+      });
+    }, section);
+
+    return () => ctx.revert();
+  }, []);
 
   return (
     <section
-      ref={containerRef}
-      className="relative py-32 md:py-44 overflow-hidden bg-section-gradient"
+      ref={sectionRef}
+      className="relative overflow-hidden bg-section-gradient"
       id="how-it-works"
     >
-      <div className="relative z-10 max-w-[1400px] mx-auto px-8 md:px-16 lg:px-24">
-        {/* Header */}
-        <div className="mb-24 md:mb-32">
-          <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-          >
+      {/* Sticky viewport */}
+      <div className="sticky top-0 h-screen flex flex-col justify-center overflow-hidden">
+        <div className="max-w-[1400px] mx-auto px-8 md:px-16 lg:px-24 w-full">
+          {/* Header — stays fixed while steps scroll */}
+          <div className="mb-12 md:mb-16">
             <span className="type-label text-amber/80">04 // Process</span>
             <h2 className="mt-3 type-display text-espresso">
               HOW IT{" "}
               <span className="text-gradient-gold italic">WORKS.</span>
             </h2>
-          </motion.div>
+          </div>
         </div>
 
-        {/* Steps — architectural layout */}
-        <div className="relative">
-          {/* Connecting line — draws itself */}
-          <div className="absolute left-[52px] md:left-1/2 top-0 bottom-0 w-px bg-tan/15 hidden md:block">
-            <motion.div
-              className="w-full bg-gradient-to-b from-amber/40 via-amber/20 to-transparent origin-top"
-              style={{ height: lineHeight }}
-            />
-          </div>
-
-          <div className="space-y-24 md:space-y-36">
-            {steps.map((step, index) => {
-              const isEven = index % 2 === 0;
-              return (
-                <motion.div
-                  key={step.number}
-                  className={`grid grid-cols-1 md:grid-cols-12 gap-10 md:gap-16 items-center`}
-                  initial={{
-                    opacity: 0,
-                    x: isEven ? -60 : 60,
-                  }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true, margin: "-80px" }}
-                  transition={{
-                    duration: 0.9,
-                    ease: [0.16, 1, 0.3, 1],
-                  }}
-                >
-                  {/* Number + icon side */}
-                  <div
-                    className={`md:col-span-5 ${
-                      isEven ? "md:text-right md:pr-16" : "md:col-start-8 md:pl-16"
-                    }`}
-                  >
-                    <div className={`flex items-center gap-8 ${isEven ? "md:justify-end" : ""}`}>
-                      <div className="text-[clamp(5rem,10vw,9rem)] font-display font-bold text-amber/[0.08] leading-none select-none">
-                        {step.number}
-                      </div>
-                      <div className="w-14 h-14 border border-amber/20 bg-cream/60 flex items-center justify-center shrink-0">
-                        <step.icon className="w-6 h-6 text-amber/70" />
-                      </div>
-                    </div>
+        {/* Horizontal scrolling track */}
+        <div className="overflow-hidden">
+          <div
+            ref={trackRef}
+            className="flex gap-8 md:gap-12 pl-8 md:pl-16 lg:pl-24 pr-24"
+            style={{ width: "max-content" }}
+          >
+            {steps.map((step, index) => (
+              <div
+                key={step.number}
+                ref={(el: HTMLDivElement | null) => { stepsRef.current[index] = el; }}
+                className="flex-shrink-0 w-[85vw] md:w-[60vw] lg:w-[42vw]"
+              >
+                <div className="relative bg-cream/70 backdrop-blur-sm border border-tan/20 p-10 md:p-14 h-full flex flex-col justify-between min-h-[420px] md:min-h-[480px]">
+                  {/* Large background number */}
+                  <div className="absolute top-6 right-8 font-display text-[7rem] md:text-[10rem] font-bold text-amber/[0.06] leading-none select-none">
+                    {step.number}
                   </div>
 
-                  {/* Content side */}
-                  <div
-                    className={`md:col-span-6 ${
-                      isEven
-                        ? "md:col-start-7"
-                        : "md:col-start-1 md:row-start-1"
-                    }`}
-                  >
-                    <h3 className="text-3xl md:text-5xl font-display font-bold text-espresso tracking-tight mb-5">
+                  {/* Step number + icon */}
+                  <div className="relative z-10 mb-10">
+                    <div className="flex items-center gap-6 mb-8">
+                      <div className="w-14 h-14 border border-amber/20 bg-parchment/80 flex items-center justify-center shrink-0">
+                        <step.icon className="w-6 h-6 text-amber/70" />
+                      </div>
+                      <span className="type-mono text-[0.65rem] text-amber/60 tracking-[0.3em]">
+                        STEP {step.number}
+                      </span>
+                    </div>
+
+                    <h3 className="text-4xl md:text-6xl font-display font-bold text-espresso tracking-tight mb-5">
                       {step.title}
                     </h3>
-                    <p className="text-lg text-coffee leading-relaxed max-w-lg mb-5 font-body">
+                  </div>
+
+                  {/* Content */}
+                  <div className="relative z-10">
+                    <p className="text-lg md:text-xl text-coffee leading-relaxed max-w-lg mb-5 font-body">
                       {step.description}
                     </p>
                     <p className="type-mono text-[0.7rem] text-coffee/40 max-w-md">
                       {step.detail}
                     </p>
 
-                    {/* Decorative line */}
-                    <div className="mt-10 h-px border-t border-dashed border-tan/20 w-full max-w-sm" />
+                    {/* Connector arrow */}
+                    <div className="mt-10 flex items-center gap-3">
+                      <div className="h-px flex-1 bg-gradient-to-r from-tan/30 to-transparent max-w-[200px]" />
+                      <span className="type-mono text-[0.55rem] text-amber/50 tracking-widest">
+                        {index < steps.length - 1 ? "NEXT →" : "GET STARTED →"}
+                      </span>
+                    </div>
                   </div>
-                </motion.div>
-              );
-            })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Progress bar — bottom of viewport */}
+        <div className="max-w-[1400px] mx-auto px-8 md:px-16 lg:px-24 w-full mt-8">
+          <div className="h-px w-full bg-tan/15 relative overflow-hidden">
+            <div
+              ref={progressRef}
+              className="h-full bg-amber/50 origin-left"
+              style={{ transform: "scaleX(0)" }}
+            />
+          </div>
+          <div className="mt-3 flex justify-between">
+            <span className="type-mono text-[0.5rem] text-coffee/40 tracking-widest">
+              {steps.length} STEPS
+            </span>
+            <span className="type-mono text-[0.5rem] text-coffee/40 tracking-widest">
+              SCROLL →
+            </span>
           </div>
         </div>
       </div>
