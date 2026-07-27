@@ -22,6 +22,7 @@ import {
   Clock,
   GitCompareArrows,
   Glasses,
+  ClipboardList,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -40,6 +41,7 @@ const navItems = [
   { href: "/dashboard/accessories", label: "GLASSES", icon: Glasses },
   { href: "/dashboard/hair-preview", label: "HAIR COLOR", icon: Palette },
   { href: "/dashboard/recommendations", label: "OUTFITS", icon: Sparkles },
+  { href: "/dashboard/style-quiz", label: "STYLE QUIZ", icon: ClipboardList },
   { href: "/dashboard/community", label: "FEED", icon: Users },
   { href: "/dashboard/history", label: "HISTORY", icon: Clock },
   { href: "/dashboard/profile", label: "PROFILE", icon: User },
