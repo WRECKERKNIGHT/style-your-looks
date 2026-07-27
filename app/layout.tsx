@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { SmoothScroll } from "@/components/providers/SmoothScroll";
+import { ToastProvider } from "@/components/shared/Toast";
+import { PageTransition } from "@/components/shared/PageTransition";
 
 export const metadata: Metadata = {
   title: {
@@ -51,7 +53,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased grain vignette">
-        <SmoothScroll>{children}</SmoothScroll>
+        <ToastProvider>
+          <SmoothScroll>
+            <PageTransition />
+            {children}
+          </SmoothScroll>
+        </ToastProvider>
       </body>
     </html>
   );
