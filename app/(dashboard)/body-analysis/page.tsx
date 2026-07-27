@@ -5,7 +5,7 @@ import { ImageUploader } from "@/components/shared/ImageUploader";
 import { useAnalysisStore } from "@/store/analysis-store";
 import { useMediaPipe } from "@/hooks/useMediaPipe";
 import { motion, AnimatePresence } from "framer-motion";
-import { Layers, Loader2, AlertCircle, Shirt, Droplets, Ruler, TrendingUp } from "lucide-react";
+import { Layers, Loader2, AlertCircle, Shirt, Droplets, Ruler, TrendingUp, Activity } from "lucide-react";
 
 const stagger = {
   hidden: { opacity: 0 },
@@ -15,6 +15,63 @@ const fadeUp = {
   hidden: { opacity: 0, y: 20 },
   show: { opacity: 1, y: 0, transition: { duration: 0.5 } },
 };
+
+function BodyProportionViz({ shoulderWidth, waistWidth, hipWidth }: { shoulderWidth: number; waistWidth: number; hipWidth: number }) {
+  const maxVal = Math.max(shoulderWidth, waistWidth, hipWidth);
+  const scale = (v: number) => (v / maxVal) * 100;
+
+  return (
+    <div className="flex flex-col items-center gap-6 py-4">
+      <svg viewBox="0 0 200 120" className="w-full max-w-[280px]">
+        {/* Shoulder */}
+        <line x1={100 - scale(shoulderWidth)} y1="15" x2={100 + scale(shoulderWidth)} y2="15" stroke="#B8860B" strokeWidth="3" strokeLinecap="round" />
+        <circle cx={100 - scale(shoulderWidth)} cy="15" r="3" fill="#B8860B" />
+        <circle cx={100 + scale(shoulderWidth)} cy="15" r="3" fill="#B8860B" />
+        <text x="100" y="8" textAnchor="middle" className="fill-coffee" fontSize="7" fontFamily="DM Sans">SHOULDER</text>
+
+        {/* Waist */}
+        <line x1={100 - scale(waistWidth)} y1="55" x2={100 + scale(waistWidth)} y2="55" stroke="#C08E62" strokeWidth="3" strokeLinecap="round" />
+        <circle cx={100 - scale(waistWidth)} cy="55" r="3" fill="#C08E62" />
+        <circle cx={100 + scale(waistWidth)} cy="55" r="3" fill="#C08E62" />
+        <text x="100" y="48" textAnchor="middle" className="fill-coffee" fontSize="7" fontFamily="DM Sans">WAIST</text>
+
+        {/* Hip */}
+        <line x1={100 - scale(hipWidth)} y1="95" x2={100 + scale(hipWidth)} y2="95" stroke="#8B7355" strokeWidth="3" strokeLinecap="round" />
+        <circle cx={100 - scale(hipWidth)} cy="95" r="3" fill="#8B7355" />
+        <circle cx={100 + scale(hipWidth)} cy="95" r="3" fill="#8B7355" />
+        <text x="100" y="88" textAnchor="middle" className="fill-coffee" fontSize="7" fontFamily="DM Sans">HIP</text>
+
+        {/* Connecting lines */}
+        <line x1={100 - scale(shoulderWidth)} y1="15" x2={100 - scale(waistWidth)} y2="55" stroke="#C4A882" strokeWidth="1" strokeDasharray="3,3" />
+        <line x1={100 + scale(shoulderWidth)} y1="15" x2={100 + scale(waistWidth)} y2="55" stroke="#C4A882" strokeWidth="1" strokeDasharray="3,3" />
+        <line x1={100 - scale(waistWidth)} y1="55" x2={100 - scale(hipWidth)} y2="95" stroke="#C4A882" strokeWidth="1" strokeDasharray="3,3" />
+        <line x1={100 + scale(waistWidth)} y1="55" x2={100 + scale(hipWidth)} y2="95" stroke="#C4A882" strokeWidth="1" strokeDasharray="3,3" />
+      </svg>
+
+      <div className="grid grid-cols-3 gap-4 w-full max-w-[320px]">
+        {[
+          { label: "Shoulder", value: shoulderWidth, color: "#B8860B" },
+          { label: "Waist", value: waistWidth, color: "#C08E62" },
+          { label: "Hip", value: hipWidth, color: "#8B7355" },
+        ].map((m) => (
+          <div key={m.label} className="text-center">
+            <div className="h-24 bg-parchment border border-tan rounded-sm relative overflow-hidden flex items-end justify-center mb-2">
+              <motion.div
+                initial={{ height: 0 }}
+                animate={{ height: `${(m.value / maxVal) * 100}%` }}
+                transition={{ duration: 1, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                className="w-full rounded-sm"
+                style={{ backgroundColor: m.color }}
+              />
+            </div>
+            <span className="text-xs font-body text-coffee">{m.label}</span>
+            <p className="font-display font-bold text-espresso text-lg">{(m.value * 100).toFixed(0)}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function BodySilhouette({ bodyType }: { bodyType: string }) {
   const silhouettes: Record<string, string> = {
@@ -175,29 +232,15 @@ export default function BodyAnalysisPage() {
           {/* Body Measurements */}
           <motion.div variants={fadeUp} className="bg-cream p-10 border border-tan vintage-border rounded-sm">
             <div className="flex items-center gap-3 mb-8">
-              <Ruler className="w-5 h-5 text-amber" />
+              <Activity className="w-5 h-5 text-amber" />
               <h3 className="text-lg font-display font-bold text-espresso tracking-wider">BODY PROPORTIONS</h3>
             </div>
-            <div className="grid grid-cols-3 gap-5">
-              <div className="bg-parchment p-5 text-center border border-tan rounded-sm">
-                <span className="text-xs text-coffee font-body uppercase tracking-wider">Shoulder</span>
-                <p className="font-display font-bold text-espresso text-2xl mt-1">
-                  {(bodyResult.shoulderWidth * 100).toFixed(0)}
-                </p>
-              </div>
-              <div className="bg-parchment p-5 text-center border border-tan rounded-sm">
-                <span className="text-xs text-coffee font-body uppercase tracking-wider">Waist</span>
-                <p className="font-display font-bold text-espresso text-2xl mt-1">
-                  {(bodyResult.waistWidth * 100).toFixed(0)}
-                </p>
-              </div>
-              <div className="bg-parchment p-5 text-center border border-tan rounded-sm">
-                <span className="text-xs text-coffee font-body uppercase tracking-wider">Hip</span>
-                <p className="font-display font-bold text-espresso text-2xl mt-1">
-                  {(bodyResult.hipWidth * 100).toFixed(0)}
-                </p>
-              </div>
-            </div>
+
+            <BodyProportionViz
+              shoulderWidth={bodyResult.shoulderWidth}
+              waistWidth={bodyResult.waistWidth}
+              hipWidth={bodyResult.hipWidth}
+            />
 
             {/* Ratios */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-8">
