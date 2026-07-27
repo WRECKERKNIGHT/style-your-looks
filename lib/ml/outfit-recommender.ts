@@ -442,34 +442,107 @@ const OUTFIT_DATABASE: OutfitRecommendation[] = [
   },
 ];
 
+function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result
+    ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) }
+    : null;
+}
+
+function colorDistance(c1: { r: number; g: number; b: number }, c2: { r: number; g: number; b: number }): number {
+  return Math.sqrt(
+    Math.pow(c1.r - c2.r, 2) + Math.pow(c1.g - c2.g, 2) + Math.pow(c1.b - c2.b, 2)
+  );
+}
+
+function colorHarmonyScore(outfitColors: string[], skinHex: string, undertone: "Warm" | "Cool" | "Neutral"): number {
+  const skinRgb = hexToRgb(skinHex);
+  if (!skinRgb) return 50;
+
+  let score = 50;
+
+  const hasWarmAccent = outfitColors.some((c) => {
+    const rgb = hexToRgb(c);
+    return rgb && rgb.r > rgb.b + 30;
+  });
+  const hasCoolAccent = outfitColors.some((c) => {
+    const rgb = hexToRgb(c);
+    return rgb && rgb.b > rgb.r + 30;
+  });
+  const hasNeutrals = outfitColors.filter((c) => {
+    const rgb = hexToRgb(c);
+    if (!rgb) return false;
+    const max = Math.max(rgb.r, rgb.g, rgb.b);
+    const min = Math.min(rgb.r, rgb.g, rgb.b);
+    return max - min < 40;
+  });
+
+  if (undertone === "Warm" && hasWarmAccent) score += 15;
+  if (undertone === "Cool" && hasCoolAccent) score += 15;
+  if (undertone === "Neutral" && hasNeutrals.length >= 2) score += 10;
+
+  const avgDist = outfitColors.reduce((sum, c) => {
+    const rgb = hexToRgb(c);
+    return sum + (rgb ? colorDistance(rgb, skinRgb) : 200);
+  }, 0) / outfitColors.length;
+
+  if (avgDist > 80 && avgDist < 200) score += 10;
+  if (avgDist < 60) score -= 5;
+
+  return Math.min(100, Math.max(0, score));
+}
+
 function getWarmColorRecommendations(skinToneHex: string): string[] {
-  return [
+  const base = [
     "#8B4513", "#CD853F", "#DAA520", "#B8860B",
     "#D2691E", "#A0522D", "#D4A574", "#C89D7C",
-    "#1a1a2e", "#2c3e50", "#34495e", "#2d3436",
   ];
+  const skinRgb = hexToRgb(skinToneHex);
+  if (!skinRgb) return base;
+
+  const warmComplement = skinRgb.r > skinRgb.b
+    ? ["#1b2838", "#2c3e50", "#34495e"]
+    : ["#5c3d2e", "#3c2a21", "#8b7355"];
+
+  return [...base, ...warmComplement];
 }
 
 function getCoolColorRecommendations(skinToneHex: string): string[] {
-  return [
+  const base = [
     "#4682B4", "#5F9EA0", "#6A5ACD", "#7B68EE",
     "#9370DB", "#20B2AA", "#48D1CC", "#006400",
-    "#1a1a2e", "#2c3e50", "#0c0c0c", "#1a1a1a",
   ];
+  const skinRgb = hexToRgb(skinToneHex);
+  if (!skinRgb) return base;
+
+  const coolComplement = skinRgb.b > skinRgb.r
+    ? ["#1a1a2e", "#2c3e50", "#0c0c0c"]
+    : ["#4a0e2a", "#2c1e4a", "#1a1a1a"];
+
+  return [...base, ...coolComplement];
 }
 
 function getNeutralColorRecommendations(skinToneHex: string): string[] {
-  return [
+  const base = [
     "#8B8682", "#A9A9A9", "#696969", "#778899",
     "#B0C4DE", "#D3D3D3", "#C0C0C0", "#DCDCDC",
-    "#2c3e50", "#1a1a2e", "#f4efea", "#3c2a21",
   ];
+  const skinRgb = hexToRgb(skinToneHex);
+  if (!skinRgb) return base;
+
+  const balance = skinRgb.r + skinRgb.g + skinRgb.b;
+  const neutralComplement = balance > 380
+    ? ["#2c3e50", "#1a1a2e", "#3c2a21"]
+    : ["#f4efea", "#f5f0e8", "#ecf0f1"];
+
+  return [...base, ...neutralComplement];
 }
 
 export function generateRecommendations(
   undertone: "Warm" | "Cool" | "Neutral",
   bodyType: string,
-  occasion?: string
+  occasion?: string,
+  skinToneHex?: string
 ): OutfitRecommendation[] {
   let pool = [...OUTFIT_DATABASE];
 
@@ -477,6 +550,7 @@ export function generateRecommendations(
     pool = pool.filter((o) => o.occasion === occasion);
   }
 
+  const hex = skinToneHex || "#c89d7c";
   const colorFn =
     undertone === "Warm"
       ? getWarmColorRecommendations
@@ -484,12 +558,25 @@ export function generateRecommendations(
       ? getCoolColorRecommendations
       : getNeutralColorRecommendations;
 
-  const recommendedColors = colorFn("#c89d7c");
+  const recommendedColors = colorFn(hex);
 
-  return pool.map((outfit) => ({
-    ...outfit,
-    reasoning: `${outfit.reasoning} The ${undertone.toLowerCase()} palette enhances your natural coloring.`,
-  }));
+  const scored = pool.map((outfit) => {
+    const harmony = colorHarmonyScore(outfit.colors, hex, undertone);
+    const colorMatch = outfit.colors.filter((c) => recommendedColors.includes(c)).length;
+    const totalScore = harmony + colorMatch * 8;
+
+    const updatedReasoning = `${outfit.reasoning} The ${undertone.toLowerCase()} palette enhances your natural coloring. Color harmony score: ${harmony}/100.`;
+
+    return {
+      ...outfit,
+      reasoning: updatedReasoning,
+      _score: totalScore,
+    };
+  });
+
+  scored.sort((a, b) => b._score - a._score);
+
+  return scored.map(({ _score, ...outfit }) => outfit);
 }
 
 export function getRecommendedPalette(

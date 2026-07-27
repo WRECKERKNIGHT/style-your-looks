@@ -207,7 +207,7 @@ export function useMediaPipe() {
         });
 
         if (skinTone?.undertone) {
-          const recs = generateRecommendations(skinTone.undertone, bodyType);
+          const recs = generateRecommendations(skinTone.undertone, bodyType, undefined, skinTone.monkScale.hex);
           setOutfitRecommendations(
             recs.map((r) => ({
               ...r,

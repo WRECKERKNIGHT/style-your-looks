@@ -14,8 +14,8 @@ export default function RecommendationsPage() {
   const [selectedOccasion, setSelectedOccasion] = useState<string>("");
 
   const recommendations = useMemo(
-    () => generateRecommendations(selectedUndertone, bodyResult?.bodyType || "Unknown", selectedOccasion || undefined),
-    [selectedUndertone, bodyResult, selectedOccasion]
+    () => generateRecommendations(selectedUndertone, bodyResult?.bodyType || "Unknown", selectedOccasion || undefined, faceResult?.skinToneValue || undefined),
+    [selectedUndertone, bodyResult, selectedOccasion, faceResult]
   );
 
   const palettes = getRecommendedPalette(selectedUndertone);
