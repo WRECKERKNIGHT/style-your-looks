@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import { generateRecommendations, getRecommendedPalette } from "@/lib/ml/outfit-recommender";
 import { useAnalysisStore } from "@/store/analysis-store";
 import { OCCASIONS, UNDERTONES } from "@/lib/constants";
-import { Sparkles, Filter } from "lucide-react";
+import { Sparkles, Filter, Target } from "lucide-react";
 
 export default function RecommendationsPage() {
   const { faceResult, bodyResult } = useAnalysisStore();
@@ -14,7 +14,7 @@ export default function RecommendationsPage() {
   const [selectedOccasion, setSelectedOccasion] = useState<string>("");
 
   const recommendations = useMemo(
-    () => generateRecommendations(selectedUndertone, bodyResult?.bodyType || "Unknown", selectedOccasion || undefined, faceResult?.skinToneValue || undefined),
+    () => generateRecommendations(selectedUndertone, bodyResult?.bodyType || "Unknown", selectedOccasion || undefined, faceResult?.skinToneValue || undefined, faceResult?.facialShape),
     [selectedUndertone, bodyResult, selectedOccasion, faceResult]
   );
 
@@ -152,9 +152,20 @@ export default function RecommendationsPage() {
                     <h3 className="text-lg font-display font-bold text-espresso tracking-wider">{rec.name}</h3>
                     <p className="text-sm text-coffee font-body mt-1">{rec.description}</p>
                   </div>
-                  <span className="text-xs font-body bg-parchment text-coffee px-3 py-1.5 tracking-wider uppercase border border-tan rounded-sm">
-                    {OCCASIONS.find((o) => o.id === rec.occasion)?.label || rec.occasion}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    {rec.confidence && (
+                      <span className={`text-xs font-mono px-2 py-1 rounded-sm border ${
+                        rec.confidence >= 85 ? "bg-olive/10 text-olive border-olive/30" :
+                        rec.confidence >= 70 ? "bg-amber/10 text-amber border-amber/30" :
+                        "bg-parchment text-coffee border-tan"
+                      }`}>
+                        {rec.confidence}% match
+                      </span>
+                    )}
+                    <span className="text-xs font-body bg-parchment text-coffee px-3 py-1.5 tracking-wider uppercase border border-tan rounded-sm">
+                      {OCCASIONS.find((o) => o.id === rec.occasion)?.label || rec.occasion}
+                    </span>
+                  </div>
                 </div>
 
                 <p className="text-base text-espresso bg-parchment p-4 mb-4 font-body leading-relaxed border border-tan rounded-sm">
