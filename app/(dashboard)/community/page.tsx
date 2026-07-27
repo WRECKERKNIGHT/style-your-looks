@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { COMMUNITY_CATEGORIES } from "@/lib/constants";
-import { Users, Star, Camera, X, Upload, MessageSquare, Send } from "lucide-react";
+import { Users, Star, Camera, X, Upload, MessageSquare, Send, TrendingUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { ScrollReveal, ScrollRevealItem, ScrollProgress } from "@/components/shared/ScrollReveal";
 
 interface Comment {
   id: string;
@@ -28,7 +29,9 @@ interface Post {
   showComments: boolean;
 }
 
-const INITIAL_POSTS: Post[] = [
+const STORAGE_KEY = "aurastyle_community";
+
+const DEFAULT_POSTS: Post[] = [
   {
     id: "1",
     imageUrl: "",
@@ -97,11 +100,39 @@ const INITIAL_POSTS: Post[] = [
   },
 ];
 
+function loadPosts(): Post[] {
+  if (typeof window === "undefined") return DEFAULT_POSTS;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return DEFAULT_POSTS;
+    return JSON.parse(raw);
+  } catch {
+    return DEFAULT_POSTS;
+  }
+}
+
+function savePosts(posts: Post[]) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(posts));
+  } catch {}
+}
+
 export default function CommunityPage() {
   const [activeCategory, setActiveCategory] = useState("all");
   const [showCreatePost, setShowCreatePost] = useState(false);
-  const [posts, setPosts] = useState(INITIAL_POSTS);
+  const [posts, setPosts] = useState<Post[]>(DEFAULT_POSTS);
   const [newRating, setNewRating] = useState<Record<string, number>>({});
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    setPosts(loadPosts());
+    setLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (loaded) savePosts(posts);
+  }, [posts, loaded]);
 
   const filteredPosts =
     activeCategory === "all"
@@ -130,6 +161,28 @@ export default function CommunityPage() {
     setNewRating((prev) => ({ ...prev, [postId]: 5 }));
   };
 
+  const addComment = (postId: string, text: string) => {
+    if (!text.trim()) return;
+    setPosts((prev) =>
+      prev.map((p) => {
+        if (p.id !== postId) return p;
+        return {
+          ...p,
+          comments: [
+            ...p.comments,
+            {
+              id: `c_${Date.now()}`,
+              user: "You",
+              text: text.trim(),
+              rating: 0,
+              createdAt: "just now",
+            },
+          ],
+        };
+      })
+    );
+  };
+
   const toggleComments = (postId: string) => {
     setPosts((prev) =>
       prev.map((p) => (p.id === postId ? { ...p, showComments: !p.showComments } : p))
@@ -138,169 +191,217 @@ export default function CommunityPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <span className="section-number">EST. MMXXIV // FEED</span>
-          <div className="flex items-center gap-3 mt-3 mb-2">
-            <Users className="w-7 h-7 text-amber" />
-            <h1 className="text-4xl md:text-5xl font-display font-bold text-espresso tracking-tight">
-              COMMUNITY <span className="text-gradient-gold">FEED.</span>
-            </h1>
+      <ScrollReveal>
+        <div className="flex items-center justify-between">
+          <div>
+            <span className="section-number">EST. MMXXIV // FEED</span>
+            <div className="flex items-center gap-3 mt-3 mb-2">
+              <Users className="w-7 h-7 text-amber" />
+              <h1 className="text-4xl md:text-5xl font-display font-bold text-espresso tracking-tight">
+                COMMUNITY <span className="text-gradient-gold">FEED.</span>
+              </h1>
+            </div>
+            <p className="text-coffee font-body text-lg max-w-lg">Share your looks and get honest feedback.</p>
           </div>
-          <p className="text-coffee font-body text-lg max-w-lg">Share your looks and get honest feedback.</p>
+          <button
+            onClick={() => setShowCreatePost(true)}
+            className="flex items-center gap-2 px-6 py-3 bg-amber text-cream text-base font-body tracking-wider uppercase hover:bg-amber-light transition-colors rounded-sm shadow-gold"
+          >
+            <Camera className="w-4 h-4" />
+            SHARE LOOK
+          </button>
         </div>
-        <button
-          onClick={() => setShowCreatePost(true)}
-          className="flex items-center gap-2 px-6 py-3 bg-amber text-cream text-base font-body tracking-wider uppercase hover:bg-amber-light transition-colors rounded-sm shadow-gold"
-        >
-          <Camera className="w-4 h-4" />
-          SHARE LOOK
-        </button>
-      </div>
+      </ScrollReveal>
 
       {/* Category Filter */}
-      <div className="flex gap-3 overflow-x-auto pb-1">
-        <button
-          onClick={() => setActiveCategory("all")}
-          className={`px-5 py-2.5 text-base font-body font-semibold whitespace-nowrap transition-all rounded-sm ${
-            activeCategory === "all"
-              ? "bg-amber text-cream shadow-gold"
-              : "bg-cream text-espresso border border-tan hover:bg-tan/10"
-          }`}
-        >
-          All
-        </button>
-        {COMMUNITY_CATEGORIES.map((cat) => (
+      <ScrollReveal delay={0.1}>
+        <div className="flex gap-3 overflow-x-auto pb-1">
           <button
-            key={cat.id}
-            onClick={() => setActiveCategory(cat.id)}
+            onClick={() => setActiveCategory("all")}
             className={`px-5 py-2.5 text-base font-body font-semibold whitespace-nowrap transition-all rounded-sm ${
-              activeCategory === cat.id
+              activeCategory === "all"
                 ? "bg-amber text-cream shadow-gold"
                 : "bg-cream text-espresso border border-tan hover:bg-tan/10"
             }`}
           >
-            {cat.label}
+            All
           </button>
-        ))}
-      </div>
+          {COMMUNITY_CATEGORIES.map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => setActiveCategory(cat.id)}
+              className={`px-5 py-2.5 text-base font-body font-semibold whitespace-nowrap transition-all rounded-sm ${
+                activeCategory === cat.id
+                  ? "bg-amber text-cream shadow-gold"
+                  : "bg-cream text-espresso border border-tan hover:bg-tan/10"
+              }`}
+            >
+              {cat.label}
+            </button>
+          ))}
+        </div>
+      </ScrollReveal>
+
+      <ScrollProgress />
 
       {/* Posts Feed */}
       <div className="space-y-6">
-        {filteredPosts.map((post, i) => (
-          <motion.div
-            key={post.id}
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-40px" }}
-            transition={{ duration: 0.6, delay: i * 0.08, ease: [0.16, 1, 0.3, 1] }}
-            className="bg-cream border border-tan overflow-hidden rounded-sm card-hover vintage-border"
-          >
-            {/* Post Header */}
-            <div className="flex items-center gap-3 p-5 pb-3">
-              <div className="w-11 h-11 bg-amber/15 flex items-center justify-center rounded-full border border-amber/25">
-                <span className="text-base font-display font-bold text-amber">
-                  {post.user.name.charAt(0)}
-                </span>
-              </div>
-              <div className="flex-1">
-                <span className="text-base font-body font-bold text-espresso">{post.user.name}</span>
-                <span className="text-sm text-coffee ml-2 font-body">{post.createdAt}</span>
-              </div>
-              <span className="text-xs font-body bg-parchment text-coffee px-3 py-1.5 uppercase tracking-wider border border-tan rounded-sm">
-                {post.category}
-              </span>
-            </div>
-
-            {/* Post Image */}
-            {post.imageUrl ? (
-              <img src={post.imageUrl} alt={post.title} className="w-full h-72 object-cover" />
-            ) : (
-              <div className="w-full h-72 bg-parchment flex items-center justify-center">
-                <div className="text-center">
-                  <Camera className="w-12 h-12 text-amber/40 mx-auto mb-3" />
-                  <p className="text-base text-coffee font-body">{post.title}</p>
-                </div>
-              </div>
-            )}
-
-            <div className="p-6 space-y-4">
-              <p className="text-base text-espresso font-body">{post.description}</p>
-
-              {/* Rating */}
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-1.5">
-                  <Star className="w-5 h-5 text-amber fill-amber" />
-                  <span className="font-display font-bold text-espresso text-lg">{post.avgRating}</span>
-                  <span className="text-sm text-coffee font-body">({post.ratingCount} ratings)</span>
-                </div>
-                <button
-                  onClick={() => toggleComments(post.id)}
-                  className="flex items-center gap-1.5 text-sm text-coffee hover:text-espresso transition-colors font-body"
-                >
-                  <MessageSquare className="w-4 h-4" />
-                  {post.comments.length}
-                </button>
-              </div>
-
-              {/* Rate Slider */}
-              <div className="bg-parchment p-4 border border-tan rounded-sm">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm text-coffee font-body font-semibold">RATE THIS LOOK</span>
-                  <span className="text-lg font-display font-bold text-amber">
-                    {newRating[post.id] || 5}/10
+        {filteredPosts.map((post) => (
+          <ScrollReveal key={post.id}>
+            <div className="bg-cream border border-tan overflow-hidden rounded-sm card-hover vintage-border">
+              {/* Post Header */}
+              <div className="flex items-center gap-3 p-5 pb-3">
+                <div className="w-11 h-11 bg-amber/15 flex items-center justify-center rounded-full border border-amber/25">
+                  <span className="text-base font-display font-bold text-amber">
+                    {post.user.name.charAt(0)}
                   </span>
                 </div>
-                <input
-                  type="range"
-                  min="1"
-                  max="10"
-                  value={newRating[post.id] || 5}
-                  onChange={(e) => handleRate(post.id, parseInt(e.target.value))}
-                  className="w-full h-2.5 bg-[#E8E0D8] appearance-none cursor-pointer rounded-full accent-amber"
-                />
-                <div className="flex justify-between text-xs text-coffee mt-2 font-body">
-                  <span>1</span>
-                  <span>5</span>
-                  <span>10</span>
+                <div className="flex-1">
+                  <span className="text-base font-body font-bold text-espresso">{post.user.name}</span>
+                  <span className="text-sm text-coffee ml-2 font-body">{post.createdAt}</span>
                 </div>
-                <button
-                  onClick={() => submitRating(post.id)}
-                  className="w-full mt-3 py-2.5 bg-amber text-cream font-body text-sm tracking-wider uppercase hover:bg-amber-light transition-colors rounded-sm"
-                >
-                  SUBMIT RATING
-                </button>
+                <span className="text-xs font-body bg-parchment text-coffee px-3 py-1.5 uppercase tracking-wider border border-tan rounded-sm">
+                  {post.category}
+                </span>
               </div>
 
-              {/* Comments */}
-              <AnimatePresence>
-                {post.showComments && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    className="space-y-3 overflow-hidden"
+              {/* Post Image */}
+              {post.imageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={post.imageUrl} alt={post.title} className="w-full h-72 object-cover" />
+              ) : (
+                <div className="w-full h-56 bg-parchment flex items-center justify-center gold-shimmer">
+                  <div className="text-center">
+                    <Camera className="w-12 h-12 text-amber/40 mx-auto mb-3" />
+                    <p className="text-base text-coffee font-body">{post.title}</p>
+                  </div>
+                </div>
+              )}
+
+              <div className="p-6 space-y-4">
+                <div>
+                  <h3 className="text-lg font-display font-bold text-espresso tracking-wider">{post.title}</h3>
+                  <p className="text-base text-coffee font-body mt-1">{post.description}</p>
+                </div>
+
+                {/* Rating */}
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-1.5">
+                    <Star className="w-5 h-5 text-amber fill-amber" />
+                    <span className="font-display font-bold text-espresso text-lg">{post.avgRating}</span>
+                    <span className="text-sm text-coffee font-body">({post.ratingCount} ratings)</span>
+                  </div>
+                  <button
+                    onClick={() => toggleComments(post.id)}
+                    className="flex items-center gap-1.5 text-sm text-coffee hover:text-espresso transition-colors font-body"
                   >
-                    {post.comments.map((comment) => (
-                      <div key={comment.id} className="bg-parchment p-4 border border-tan rounded-sm">
-                        <div className="flex items-center gap-2 mb-1.5">
-                          <span className="text-sm font-body font-bold text-espresso">{comment.user}</span>
-                          <div className="flex items-center gap-1">
-                            <Star className="w-3.5 h-3.5 text-amber fill-amber" />
-                            <span className="text-sm text-coffee font-body">{comment.rating}</span>
+                    <MessageSquare className="w-4 h-4" />
+                    {post.comments.length} comments
+                  </button>
+                </div>
+
+                {/* Rate Slider */}
+                <div className="bg-parchment p-4 border border-tan rounded-sm">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm text-coffee font-body font-semibold">RATE THIS LOOK</span>
+                    <span className="text-lg font-display font-bold text-amber">
+                      {newRating[post.id] || 5}/10
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="1"
+                    max="10"
+                    value={newRating[post.id] || 5}
+                    onChange={(e) => handleRate(post.id, parseInt(e.target.value))}
+                    className="w-full h-2.5 bg-[#E8E0D8] appearance-none cursor-pointer rounded-full accent-amber"
+                  />
+                  <div className="flex justify-between text-xs text-coffee mt-2 font-body">
+                    <span>1</span>
+                    <span>5</span>
+                    <span>10</span>
+                  </div>
+                  <button
+                    onClick={() => submitRating(post.id)}
+                    className="w-full mt-3 py-2.5 bg-amber text-cream font-body text-sm tracking-wider uppercase hover:bg-amber-light transition-colors rounded-sm"
+                  >
+                    SUBMIT RATING
+                  </button>
+                </div>
+
+                {/* Comments */}
+                <AnimatePresence>
+                  {post.showComments && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="space-y-3 overflow-hidden"
+                    >
+                      {post.comments.map((comment) => (
+                        <div key={comment.id} className="bg-parchment p-4 border border-tan rounded-sm">
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <span className="text-sm font-body font-bold text-espresso">{comment.user}</span>
+                            {comment.rating > 0 && (
+                              <div className="flex items-center gap-1">
+                                <Star className="w-3.5 h-3.5 text-amber fill-amber" />
+                                <span className="text-sm text-coffee font-body">{comment.rating}</span>
+                              </div>
+                            )}
+                            <span className="text-xs text-coffee/50 font-body ml-auto">{comment.createdAt}</span>
                           </div>
-                          <span className="text-xs text-coffee/50 font-body ml-auto">{comment.createdAt}</span>
+                          <p className="text-sm text-coffee font-body">{comment.text}</p>
                         </div>
-                        <p className="text-sm text-coffee font-body">{comment.text}</p>
+                      ))}
+
+                      {/* Add Comment */}
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          placeholder="Add a comment..."
+                          className="flex-1 px-4 py-2.5 bg-parchment border border-tan text-sm text-espresso placeholder:text-coffee/50 font-body focus:outline-none focus:border-amber rounded-sm"
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              addComment(post.id, (e.target as HTMLInputElement).value);
+                              (e.target as HTMLInputElement).value = "";
+                            }
+                          }}
+                        />
+                        <button
+                          onClick={(e) => {
+                            const input = (e.currentTarget.previousElementSibling as HTMLInputElement);
+                            addComment(post.id, input.value);
+                            input.value = "";
+                          }}
+                          className="px-4 py-2.5 bg-amber text-cream rounded-sm hover:bg-amber-light transition-colors"
+                        >
+                          <Send className="w-4 h-4" />
+                        </button>
                       </div>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
-          </motion.div>
+          </ScrollReveal>
         ))}
       </div>
+
+      {filteredPosts.length === 0 && (
+        <ScrollReveal>
+          <div className="bg-cream p-12 border border-tan rounded-sm text-center vintage-border">
+            <Users className="w-16 h-16 text-amber/30 mx-auto mb-4" />
+            <h2 className="text-xl font-display font-bold text-espresso mb-2">NO POSTS YET</h2>
+            <p className="text-coffee font-body mb-6">Be the first to share a look in this category.</p>
+            <button
+              onClick={() => setShowCreatePost(true)}
+              className="btn-gold inline-flex"
+            >
+              SHARE LOOK
+            </button>
+          </div>
+        </ScrollReveal>
+      )}
 
       {/* Create Post Modal */}
       <CreatePostModal
@@ -406,6 +507,7 @@ function CreatePostModal({
               />
               {imageUrl ? (
                 <div className="relative">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={imageUrl} alt="Preview" className="w-full h-48 object-cover rounded-sm" />
                   <button
                     onClick={() => setImageUrl("")}

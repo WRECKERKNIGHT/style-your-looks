@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { ScrollReveal, ScrollRevealItem, ScrollProgress, ParallaxText } from "@/components/shared/ScrollReveal";
 import {
   ScanFace,
   Layers,
@@ -12,6 +13,12 @@ import {
   Users,
   ArrowRight,
   Camera,
+  Target,
+  Droplets,
+  GitCompareArrows,
+  Dna,
+  Clock,
+  User,
 } from "lucide-react";
 
 const quickActions = [
@@ -23,11 +30,39 @@ const quickActions = [
     accent: "amber",
   },
   {
+    href: "/dashboard/pillar-analysis",
+    label: "4 PILLARS",
+    description: "Harmony, Angularity, Dimorphism, Health. Improvement roadmap.",
+    icon: Target,
+    accent: "burgundy",
+  },
+  {
+    href: "/dashboard/skin-health",
+    label: "SKIN HEALTH",
+    description: "5 skin metrics. Personalized AM/PM skincare routine.",
+    icon: Droplets,
+    accent: "olive",
+  },
+  {
     href: "/dashboard/body-analysis",
     label: "BODY + TONE",
     description: "Pose landmarks, body type, skin undertone detection.",
     icon: Layers,
     accent: "burgundy",
+  },
+  {
+    href: "/dashboard/style-dna",
+    label: "STYLE DNA",
+    description: "Your complete profile. Face, body, color unified.",
+    icon: Dna,
+    accent: "amber",
+  },
+  {
+    href: "/dashboard/color-analysis",
+    label: "COLOR ANALYSIS",
+    description: "Seasonal type. Best palettes. Harmony tester.",
+    icon: Palette,
+    accent: "olive",
   },
   {
     href: "/dashboard/virtual-tryon",
@@ -44,10 +79,10 @@ const quickActions = [
     accent: "amber",
   },
   {
-    href: "/dashboard/mannequin",
-    label: "COLOR LAB",
-    description: "Outfit palettes on SVG mannequins. Skin-tone matched.",
-    icon: Palette,
+    href: "/dashboard/face-comparison",
+    label: "COMPARE",
+    description: "Side-by-side metric breakdown. Track changes over time.",
+    icon: GitCompareArrows,
     accent: "burgundy",
   },
   {
@@ -60,20 +95,16 @@ const quickActions = [
 ];
 
 const accentColors: Record<string, { bg: string; text: string; border: string }> = {
-  amber: { bg: "bg-amber/10", text: "text-amber", border: "border-amber" },
-  burgundy: { bg: "bg-burgundy/10", text: "text-burgundy", border: "border-burgundy" },
-  olive: { bg: "bg-olive/10", text: "text-olive", border: "border-olive" },
+  amber: { bg: "bg-amber/10", text: "text-amber", border: "border-amber/30" },
+  burgundy: { bg: "bg-burgundy/10", text: "text-burgundy", border: "border-burgundy/30" },
+  olive: { bg: "bg-olive/10", text: "text-olive", border: "border-olive/30" },
 };
 
 export default function DashboardHome() {
   return (
-    <div className="space-y-10">
+    <div className="space-y-16">
       {/* Welcome */}
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
+      <ScrollReveal>
         <span className="section-number">EST. MMXXIV // DASHBOARD</span>
         <h1 className="mt-3 text-5xl md:text-6xl font-display font-bold text-espresso tracking-tight leading-tight">
           WELCOME <span className="text-gradient-gold">BACK.</span>
@@ -81,85 +112,86 @@ export default function DashboardHome() {
         <p className="text-coffee mt-3 font-body text-lg max-w-xl leading-relaxed">
           Pick a tool. All analysis runs on your device. Zero server calls.
         </p>
-      </motion.div>
+      </ScrollReveal>
+
+      <ScrollProgress />
 
       {/* Quick Actions Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {quickActions.map((action, i) => {
-          const colors = accentColors[action.accent];
-          return (
-            <motion.div
-              key={action.href}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-40px" }}
-              transition={{ duration: 0.6, delay: i * 0.08, ease: [0.16, 1, 0.3, 1] }}
-            >
-              <Link
-                href={action.href}
-                className="group block bg-cream border border-tan p-8 hover:border-amber/40 transition-all duration-300 h-full card-hover vintage-border rounded-sm"
-              >
-                <div className="flex items-start justify-between mb-5">
-                  <div className={`w-12 h-12 ${colors.bg} border ${colors.border} flex items-center justify-center rounded-sm`}>
-                    <action.icon className={`w-6 h-6 ${colors.text}`} />
+      <ScrollReveal stagger staggerChildren={0.06}>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {quickActions.map((action) => {
+            const colors = accentColors[action.accent];
+            return (
+              <ScrollRevealItem key={action.href}>
+                <Link
+                  href={action.href}
+                  className="group block bg-cream border border-tan p-7 hover:border-amber/40 transition-all duration-300 h-full card-hover vintage-border rounded-sm"
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div className={`w-11 h-11 ${colors.bg} border ${colors.border} flex items-center justify-center rounded-sm`}>
+                      <action.icon className={`w-5 h-5 ${colors.text}`} />
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-tan group-hover:text-amber group-hover:translate-x-1 transition-all" />
                   </div>
-                  <ArrowRight className="w-5 h-5 text-tan group-hover:text-amber group-hover:translate-x-1 transition-all" />
-                </div>
-                <h3 className="text-lg font-display font-bold text-espresso tracking-wider mb-2">
-                  {action.label}
-                </h3>
-                <p className="text-sm text-coffee font-body leading-relaxed">
-                  {action.description}
-                </p>
-              </Link>
-            </motion.div>
-          );
-        })}
-      </div>
+                  <h3 className="text-base font-display font-bold text-espresso tracking-wider mb-1.5">
+                    {action.label}
+                  </h3>
+                  <p className="text-xs text-coffee font-body leading-relaxed">
+                    {action.description}
+                  </p>
+                </Link>
+              </ScrollRevealItem>
+            );
+          })}
+        </div>
+      </ScrollReveal>
+
+      <ScrollProgress />
 
       {/* Getting Started */}
-      <motion.div
-        initial={{ opacity: 0, y: 18 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.5 }}
-        className="bg-cream border border-tan p-10 vintage-border rounded-sm"
-      >
-        <div className="flex items-center gap-3 mb-8">
-          <Camera className="w-5 h-5 text-amber" />
-          <h2 className="text-lg font-display font-bold text-espresso tracking-wider">QUICK START</h2>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {[
-            {
-              step: "I",
-              title: "CAPTURE",
-              desc: "Front-facing photo. Good lighting. Webcam or upload.",
-            },
-            {
-              step: "II",
-              title: "ANALYZE",
-              desc: "AI maps your face, body, and skin tone. All client-side.",
-            },
-            {
-              step: "III",
-              title: "STYLE",
-              desc: "Scores, palettes, outfits, grooming recs. All personalised.",
-            },
-          ].map((item) => (
-            <div key={item.step} className="flex gap-5">
-              <span className="text-4xl font-display font-bold text-amber/30 leading-none mt-1">{item.step}</span>
-              <div>
-                <h4 className="text-sm font-display font-bold text-espresso tracking-wider mb-2">
-                  {item.title}
-                </h4>
-                <p className="text-sm text-coffee font-body leading-relaxed">
-                  {item.desc}
-                </p>
-              </div>
+      <ScrollReveal>
+        <div className="bg-cream border border-tan p-10 vintage-border rounded-sm">
+          <div className="flex items-center gap-3 mb-8">
+            <Camera className="w-5 h-5 text-amber" />
+            <h2 className="text-lg font-display font-bold text-espresso tracking-wider">QUICK START</h2>
+          </div>
+          <ScrollReveal stagger staggerChildren={0.15}>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {[
+                {
+                  step: "I",
+                  title: "CAPTURE",
+                  desc: "Front-facing photo. Good lighting. Webcam or upload.",
+                },
+                {
+                  step: "II",
+                  title: "ANALYZE",
+                  desc: "AI maps your face, body, and skin tone. All client-side.",
+                },
+                {
+                  step: "III",
+                  title: "STYLE",
+                  desc: "Scores, palettes, outfits, grooming recs. All personalised.",
+                },
+              ].map((item) => (
+                <ScrollRevealItem key={item.step}>
+                  <div className="flex gap-5">
+                    <span className="text-4xl font-display font-bold text-amber/30 leading-none mt-1">{item.step}</span>
+                    <div>
+                      <h4 className="text-sm font-display font-bold text-espresso tracking-wider mb-2">
+                        {item.title}
+                      </h4>
+                      <p className="text-sm text-coffee font-body leading-relaxed">
+                        {item.desc}
+                      </p>
+                    </div>
+                  </div>
+                </ScrollRevealItem>
+              ))}
             </div>
-          ))}
+          </ScrollReveal>
         </div>
-      </motion.div>
+      </ScrollReveal>
     </div>
   );
 }
