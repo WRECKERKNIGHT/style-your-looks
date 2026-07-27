@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { generateRecommendations, getRecommendedPalette } from "@/lib/ml/outfit-recommender";
+import { generateRecommendations, getRecommendedPalette, generateCombos, type OutfitCombo } from "@/lib/ml/outfit-recommender";
 import { useAnalysisStore } from "@/store/analysis-store";
 import { OCCASIONS, UNDERTONES } from "@/lib/constants";
-import { Sparkles, Filter, Target } from "lucide-react";
+import { Sparkles, Filter, Target, Shuffle, ArrowRight } from "lucide-react";
 
 export default function RecommendationsPage() {
   const { faceResult, bodyResult } = useAnalysisStore();
@@ -16,6 +16,11 @@ export default function RecommendationsPage() {
   const recommendations = useMemo(
     () => generateRecommendations(selectedUndertone, bodyResult?.bodyType || "Unknown", selectedOccasion || undefined, faceResult?.skinToneValue || undefined, faceResult?.facialShape),
     [selectedUndertone, bodyResult, selectedOccasion, faceResult]
+  );
+
+  const combos = useMemo(
+    () => generateCombos(recommendations, 4),
+    [recommendations]
   );
 
   const palettes = getRecommendedPalette(selectedUndertone);
@@ -200,6 +205,72 @@ export default function RecommendationsPage() {
           </div>
         ))}
       </div>
+
+      {/* Combo Builder */}
+      {combos.length > 0 && (
+        <div className="space-y-6">
+          <div className="flex items-center gap-3">
+            <Shuffle className="w-6 h-6 text-amber" />
+            <h2 className="text-2xl font-display font-bold text-espresso tracking-tight">
+              MIX &amp; MATCH <span className="text-gradient-gold">COMBOS.</span>
+            </h2>
+          </div>
+          <p className="text-coffee font-body text-sm max-w-xl">
+            Cross-pair pieces from different outfits to create fresh combinations.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {combos.map((combo) => (
+              <ComboCard key={combo.id} combo={combo} />
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ComboCard({ combo }: { combo: OutfitCombo }) {
+  const pieces = [
+    { label: "TOP", ...combo.top },
+    { label: "BOTTOM", ...combo.bottom },
+    { label: "SHOES", ...combo.shoes },
+    { label: "ACCESSORY", ...combo.accessory },
+  ];
+
+  return (
+    <div className="bg-cream p-6 border border-tan hover:border-amber/40 transition-all duration-300 vintage-border rounded-sm">
+      <div className="flex items-center justify-between mb-4">
+        <h4 className="text-sm font-display font-bold text-espresso tracking-wider">{combo.name}</h4>
+        <div className="flex gap-1.5">
+          {combo.overallColor.slice(0, 4).map((c, i) => (
+            <div
+              key={i}
+              className="w-5 h-5 border border-tan rounded-sm"
+              style={{ backgroundColor: c }}
+            />
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-2.5">
+        {pieces.map((p) => (
+          <div key={p.label} className="flex items-center gap-3 bg-parchment px-3 py-2 rounded-sm">
+            <div
+              className="w-4 h-4 rounded-sm border border-tan flex-shrink-0"
+              style={{ backgroundColor: p.color }}
+            />
+            <div className="flex-1 min-w-0">
+              <span className="text-xs font-body text-coffee tracking-wider uppercase">{p.label}</span>
+              <p className="text-sm font-body text-espresso font-semibold truncate">{p.piece}</p>
+            </div>
+            <ArrowRight className="w-3 h-3 text-tan flex-shrink-0" />
+            <span className="text-[0.6rem] font-mono text-coffee truncate max-w-[120px]">{p.from}</span>
+          </div>
+        ))}
+      </div>
+
+      <p className="text-xs text-coffee font-body mt-3 leading-relaxed italic">{combo.reasoning}</p>
     </div>
   );
 }

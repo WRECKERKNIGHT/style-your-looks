@@ -696,3 +696,100 @@ export function getRecommendedPalette(
     { name: "Refined Grey", colors: ["#778899", "#C0C0C0", "#1B2838", "#DCDCDC", "#2B1E16"] },
   ];
 }
+
+export interface OutfitCombo {
+  id: string;
+  name: string;
+  top: { piece: string; color: string; from: string };
+  bottom: { piece: string; color: string; from: string };
+  shoes: { piece: string; color: string; from: string };
+  accessory: { piece: string; color: string; from: string };
+  overallColor: string[];
+  reasoning: string;
+}
+
+function pickTop(rec: OutfitRecommendation): { piece: string; color: string } {
+  const topKeywords = ["shirt", "blazer", "jacket", "tee", "turtleneck", "sweater", "polo", "hoodie", "cardigan", "vest", "top"];
+  const piece = rec.keyPieces.find((k) => topKeywords.some((w) => k.toLowerCase().includes(w))) || rec.keyPieces[0] || "Shirt";
+  return { piece, color: rec.colors[0] };
+}
+
+function pickBottom(rec: OutfitRecommendation): { piece: string; color: string } {
+  const bottomKeywords = ["trouser", "jean", "pant", "chino", "short", "corduroy", "slacks"];
+  const piece = rec.keyPieces.find((k) => bottomKeywords.some((w) => k.toLowerCase().includes(w))) || rec.keyPieces[1] || "Trousers";
+  return { piece, color: rec.colors[1] || rec.colors[0] };
+}
+
+function pickShoes(rec: OutfitRecommendation): { piece: string; color: string } {
+  const shoeKeywords = ["shoe", "sneaker", "boot", "loafer", "oxford", "derby", "sandal", "slipper"];
+  const piece = rec.keyPieces.find((k) => shoeKeywords.some((w) => k.toLowerCase().includes(w))) || "Clean sneakers";
+  return { piece, color: rec.colors[2] || rec.colors[0] };
+}
+
+function pickAccessory(rec: OutfitRecommendation): { piece: string; color: string } {
+  const accKeywords = ["watch", "belt", "chain", "ring", "bracelet", "scarf", "hat", "pocket square", "tie", "sunglasses"];
+  const piece = rec.keyPieces.find((k) => accKeywords.some((w) => k.toLowerCase().includes(w))) || "Watch";
+  return { piece, color: rec.colors[3] || rec.colors[0] };
+}
+
+function colorHarmonyScore(colors: string[]): number {
+  if (colors.length < 2) return 50;
+  let score = 60;
+  const allSame = colors.every((c) => c === colors[0]);
+  if (allSame) score += 15;
+  const allDifferent = new Set(colors).size === colors.length;
+  if (allDifferent) score += 10;
+  const avgLum = colors.reduce((sum, c) => {
+    const rgb = hexToRgb(c);
+    return rgb ? sum + (0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b) : sum;
+  }, 0) / colors.length;
+  if (avgLum > 80 && avgLum < 200) score += 5;
+  return Math.min(100, score);
+}
+
+export function generateCombos(
+  recommendations: OutfitRecommendation[],
+  maxCombos: number = 4
+): OutfitCombo[] {
+  if (recommendations.length < 2) return [];
+
+  const combos: OutfitCombo[] = [];
+  const used = new Set<string>();
+
+  for (let i = 0; i < Math.min(recommendations.length, 5); i++) {
+    for (let j = 0; j < Math.min(recommendations.length, 5); j++) {
+      if (i === j) continue;
+      const top = pickTop(recommendations[i]);
+      const bottom = pickBottom(recommendations[j]);
+      const shoes = pickShoes(recommendations[i]);
+      const accessory = pickAccessory(recommendations[j]);
+
+      const key = `${top.piece}|${bottom.piece}`;
+      if (used.has(key)) continue;
+      used.add(key);
+
+      const comboColors = [top.color, bottom.color, shoes.color, accessory.color];
+      const harmony = colorHarmonyScore(comboColors);
+
+      combos.push({
+        id: `combo-${combos.length + 1}`,
+        name: `${top.piece.split(" ").slice(-1)[0]} + ${bottom.piece.split(" ").slice(-1)[0]}`,
+        top: { ...top, from: recommendations[i].name },
+        bottom: { ...bottom, from: recommendations[j].name },
+        shoes: { ...shoes, from: recommendations[i].name },
+        accessory: { ...accessory, from: recommendations[j].name },
+        overallColor: comboColors,
+        reasoning: `Pairs the ${top.piece.toLowerCase()} from "${recommendations[i].name}" with ${bottom.piece.toLowerCase()} from "${recommendations[j].name}". Color harmony: ${harmony}/100.`,
+      });
+
+      if (combos.length >= maxCombos) break;
+    }
+    if (combos.length >= maxCombos) break;
+  }
+
+  return combos.sort((a, b) => {
+    const scoreA = colorHarmonyScore(a.overallColor);
+    const scoreB = colorHarmonyScore(b.overallColor);
+    return scoreB - scoreA;
+  });
+}
