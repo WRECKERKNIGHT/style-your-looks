@@ -1,8 +1,10 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useAnalysisStore } from "@/store/analysis-store";
 import { ScoreGauge } from "@/components/analysis/ScoreGauge";
 import { motion } from "framer-motion";
+import { getScoreTrends, type ScoreTrendPoint } from "@/lib/history";
 import {
   Dna,
   ScanFace,
@@ -13,6 +15,7 @@ import {
   Shirt,
   TrendingUp,
   Sparkles,
+  BarChart3,
 } from "lucide-react";
 
 const stagger = {
@@ -23,6 +26,131 @@ const fadeUp = {
   hidden: { opacity: 0, y: 20 },
   show: { opacity: 1, y: 0, transition: { duration: 0.5 } },
 };
+
+function ScoreTrendChart({ trends }: { trends: ScoreTrendPoint[] }) {
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+  const metrics = [
+    { key: "overall" as const, label: "Overall", color: "#B8860B" },
+    { key: "symmetry" as const, label: "Symmetry", color: "#C08E62" },
+    { key: "goldenRatio" as const, label: "Golden Ratio", color: "#8B7355" },
+    { key: "harmony" as const, label: "Harmony", color: "#6B7F59" },
+  ];
+
+  const w = 560;
+  const h = 200;
+  const pad = { top: 10, right: 20, bottom: 30, left: 30 };
+  const plotW = w - pad.left - pad.right;
+  const plotH = h - pad.top - pad.bottom;
+
+  const toPath = (values: number[]) => {
+    if (values.length < 2) return "";
+    const maxV = 10;
+    const minV = 0;
+    return values
+      .map((v, i) => {
+        const x = pad.left + (i / (values.length - 1)) * plotW;
+        const y = pad.top + plotH - ((v - minV) / (maxV - minV)) * plotH;
+        return `${i === 0 ? "M" : "L"}${x},${y}`;
+      })
+      .join(" ");
+  };
+
+  return (
+    <div className="w-full overflow-x-auto">
+      <svg viewBox={`0 0 ${w} ${h}`} className="w-full max-w-[560px]">
+        {[0, 2, 4, 6, 8, 10].map((v) => {
+          const y = pad.top + plotH - (v / 10) * plotH;
+          return (
+            <g key={v}>
+              <line x1={pad.left} y1={y} x2={w - pad.right} y2={y} stroke="#E8E0D8" strokeWidth="1" />
+              <text x={pad.left - 4} y={y + 3} textAnchor="end" className="fill-coffee" fontSize="8" fontFamily="DM Sans">{v}</text>
+            </g>
+          );
+        })}
+
+        {metrics.map((m) => {
+          const values = trends.map((t) => t[m.key]);
+          return (
+            <path
+              key={m.key}
+              d={toPath(values)}
+              fill="none"
+              stroke={m.color}
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          );
+        })}
+
+        {trends.map((t, i) => {
+          const x = pad.left + (i / (trends.length - 1)) * plotW;
+          return metrics.map((m) => {
+            const y = pad.top + plotH - (t[m.key] / 10) * plotH;
+            return (
+              <circle
+                key={`${m.key}-${i}`}
+                cx={x}
+                cy={y}
+                r={hoveredIdx === i ? 4 : 2.5}
+                fill={m.color}
+                className="transition-all duration-150 cursor-pointer"
+                onMouseEnter={() => setHoveredIdx(i)}
+                onMouseLeave={() => setHoveredIdx(null)}
+              />
+            );
+          });
+        })}
+
+        {hoveredIdx !== null && (
+          <g>
+            <line
+              x1={pad.left + (hoveredIdx / (trends.length - 1)) * plotW}
+              y1={pad.top}
+              x2={pad.left + (hoveredIdx / (trends.length - 1)) * plotW}
+              y2={pad.top + plotH}
+              stroke="#B8860B"
+              strokeWidth="1"
+              strokeDasharray="4,4"
+              opacity={0.5}
+            />
+            <text
+              x={pad.left + (hoveredIdx / (trends.length - 1)) * plotW}
+              y={h - 5}
+              textAnchor="middle"
+              className="fill-espresso"
+              fontSize="8"
+              fontFamily="DM Sans"
+            >
+              {trends[hoveredIdx].date.split(",")[0]}
+            </text>
+          </g>
+        )}
+
+        {trends.length > 1 && trends.map((t, i) => {
+          if (i === 0 || i === trends.length - 1) {
+            const x = pad.left + (i / (trends.length - 1)) * plotW;
+            return (
+              <text key={`label-${i}`} x={x} y={h - 15} textAnchor="middle" className="fill-coffee" fontSize="7" fontFamily="DM Sans">
+                {t.date.split(",")[0]}
+              </text>
+            );
+          }
+          return null;
+        })}
+      </svg>
+
+      <div className="flex flex-wrap justify-center gap-4 mt-4">
+        {metrics.map((m) => (
+          <div key={m.key} className="flex items-center gap-1.5">
+            <div className="w-3 h-1 rounded-full" style={{ backgroundColor: m.color }} />
+            <span className="text-xs font-body text-coffee">{m.label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function ScoreBadge({ label, score }: { label: string; score: number }) {
   let color = "bg-amber/15 text-amber border-amber/30";
@@ -40,6 +168,11 @@ function ScoreBadge({ label, score }: { label: string; score: number }) {
 
 export default function StyleDnaPage() {
   const { faceResult, bodyResult, colorAnalysis } = useAnalysisStore();
+  const [trends, setTrends] = useState<ScoreTrendPoint[]>([]);
+
+  useEffect(() => {
+    setTrends(getScoreTrends());
+  }, []);
 
   const hasData = faceResult || bodyResult;
 
@@ -168,6 +301,25 @@ export default function StyleDnaPage() {
                   <ScoreBadge label="Body" score={bodyResult.bodyProportionScore} />
                 )}
               </div>
+            </motion.div>
+          )}
+
+          {/* ═══════════════ SCORE TRENDS ═══════════════ */}
+          {faceResult && trends.length >= 2 && (
+            <motion.div
+              variants={fadeUp}
+              className="bg-cream p-10 border border-tan vintage-border rounded-sm"
+            >
+              <div className="flex items-center gap-3 mb-8">
+                <BarChart3 className="w-5 h-5 text-amber" />
+                <h3 className="text-lg font-display font-bold text-espresso tracking-wider">
+                  SCORE PROGRESS
+                </h3>
+              </div>
+              <p className="text-coffee font-body text-sm mb-6">
+                Tracking your analysis scores across {trends.length} sessions. Hover for details.
+              </p>
+              <ScoreTrendChart trends={trends} />
             </motion.div>
           )}
 

@@ -75,3 +75,53 @@ export function clearHistory(): void {
 export function getHistoryEntry(id: string): AnalysisEntry | undefined {
   return getHistory().find((e) => e.id === id);
 }
+
+export interface ScoreTrendPoint {
+  date: string;
+  timestamp: number;
+  overall: number;
+  symmetry: number;
+  proportions: number;
+  jawline: number;
+  skinClarity: number;
+  goldenRatio: number;
+  harmony: number;
+}
+
+export function getScoreTrends(): ScoreTrendPoint[] {
+  return getHistory()
+    .filter((e) => e.faceResult)
+    .sort((a, b) => a.timestamp - b.timestamp)
+    .map((e) => ({
+      date: e.date,
+      timestamp: e.timestamp,
+      overall: e.faceResult!.overallScore,
+      symmetry: e.faceResult!.symmetry,
+      proportions: e.faceResult!.proportions,
+      jawline: e.faceResult!.jawline,
+      skinClarity: e.faceResult!.skinClarity,
+      goldenRatio: e.faceResult!.goldenRatio,
+      harmony: e.faceResult!.facialHarmony,
+    }));
+}
+
+export interface BodyTrendPoint {
+  date: string;
+  timestamp: number;
+  shoulderToWaist: number;
+  waistToHip: number;
+  proportionScore: number;
+}
+
+export function getBodyTrends(): BodyTrendPoint[] {
+  return getHistory()
+    .filter((e) => e.bodyResult)
+    .sort((a, b) => a.timestamp - b.timestamp)
+    .map((e) => ({
+      date: e.date,
+      timestamp: e.timestamp,
+      shoulderToWaist: e.bodyResult!.shoulderToWaistRatio ?? 0,
+      waistToHip: e.bodyResult!.waistToHipRatio ?? 0,
+      proportionScore: e.bodyResult!.bodyProportionScore ?? 0,
+    }));
+}
