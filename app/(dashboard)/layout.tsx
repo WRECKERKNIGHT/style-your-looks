@@ -21,6 +21,7 @@ import {
   Target,
   Clock,
   GitCompareArrows,
+  Glasses,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -36,6 +37,8 @@ const navItems = [
   { href: "/dashboard/virtual-tryon", label: "TRY-ON", icon: Shirt },
   { href: "/dashboard/mannequin", label: "COLOR LAB", icon: Palette },
   { href: "/dashboard/grooming", label: "GROOMING", icon: Scissors },
+  { href: "/dashboard/accessories", label: "GLASSES", icon: Glasses },
+  { href: "/dashboard/hair-preview", label: "HAIR COLOR", icon: Palette },
   { href: "/dashboard/recommendations", label: "OUTFITS", icon: Sparkles },
   { href: "/dashboard/community", label: "FEED", icon: Users },
   { href: "/dashboard/history", label: "HISTORY", icon: Clock },
