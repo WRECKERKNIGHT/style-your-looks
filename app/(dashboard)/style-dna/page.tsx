@@ -16,6 +16,8 @@ import {
   TrendingUp,
   Sparkles,
   BarChart3,
+  Download,
+  Share2,
 } from "lucide-react";
 
 const stagger = {
@@ -475,10 +477,125 @@ export default function StyleDnaPage() {
               </div>
             </motion.div>
           )}
+
+          {/* Shareable Report */}
+          <motion.div
+            variants={fadeUp}
+            className="bg-cream p-10 border border-tan vintage-border rounded-sm"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <Share2 className="w-5 h-5 text-amber" />
+                <h3 className="text-lg font-display font-bold text-espresso tracking-wider">
+                  SHARE YOUR REPORT
+                </h3>
+              </div>
+            </div>
+            <p className="text-coffee font-body text-sm mb-6">
+              Generate a comprehensive style report card to share or save.
+            </p>
+            <button
+              onClick={() => generateReport(faceResult, bodyResult, colorAnalysis)}
+              className="flex items-center gap-2 px-6 py-3 bg-amber text-cream font-body text-sm font-bold tracking-wider rounded-sm hover:bg-amber/90 transition-colors"
+            >
+              <Download className="w-4 h-4" />
+              GENERATE REPORT CARD
+            </button>
+          </motion.div>
         </motion.div>
       )}
     </div>
   );
+}
+
+function generateReport(
+  face: any,
+  body: any,
+  color: any
+) {
+  const w = 640;
+  const h = 900;
+
+  const faceMetrics = face ? [
+    { label: "Overall", score: face.overallScore },
+    { label: "Symmetry", score: face.symmetry },
+    { label: "Golden Ratio", score: face.goldenRatio },
+    { label: "Jawline", score: face.jawline },
+    { label: "Skin", score: face.skinClarity },
+    { label: "Harmony", score: face.facialHarmony },
+  ] : [];
+
+  const bodyMetrics = body ? [
+    { label: "Body Type", value: body.bodyType },
+    { label: "Shoulder-Waist", value: body.shoulderToWaistRatio?.toFixed(2) || "—" },
+    { label: "Undertone", value: body.undertone },
+  ] : [];
+
+  const barY = 160;
+  const barH = 14;
+  const barMaxW = 200;
+
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+  svg.setAttribute("width", `${w}`);
+  svg.setAttribute("height", `${h}`);
+
+  svg.innerHTML = `
+    <rect width="${w}" height="${h}" fill="#F5F0EB"/>
+    <rect width="${w}" height="8" fill="#B8860B"/>
+    <text x="${w/2}" y="40" text-anchor="middle" font-family="Georgia, serif" font-size="12" fill="#8B7355" letter-spacing="4">A U R A S T Y L E</text>
+    <text x="${w/2}" y="68" text-anchor="middle" font-family="Georgia, serif" font-size="24" fill="#3C2A21" font-weight="bold">Style Analysis Report</text>
+    <text x="${w/2}" y="88" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#C08E62">${new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}</text>
+    <line x1="40" y1="100" x2="${w-40}" y2="100" stroke="#C4A882" stroke-width="1"/>
+
+    ${face ? `
+      <text x="40" y="125" font-family="Georgia, serif" font-size="14" fill="#3C2A21" font-weight="bold">FACE ANALYSIS</text>
+      <text x="40" y="145" font-family="Arial, sans-serif" font-size="10" fill="#8B7355">${face.facialShape} Shape · ${face.styleProfile} · ${face.overallRating}</text>
+      ${faceMetrics.map((m, i) => `
+        <text x="40" y="${barY + i * 32}" font-family="Arial, sans-serif" font-size="10" fill="#8B7355">${m.label}</text>
+        <rect x="130" y="${barY + i * 32 - 10}" width="${(m.score / 10) * barMaxW}" height="${barH}" rx="3" fill="${m.score >= 7 ? '#556B2F' : m.score >= 5 ? '#B8860B' : '#8B4513'}"/>
+        <text x="${135 + (m.score / 10) * barMaxW}" y="${barY + i * 32}" font-family="monospace" font-size="10" fill="#3C2A21" font-weight="bold">${m.score.toFixed(1)}</text>
+      `).join("")}
+    ` : ""}
+
+    ${body ? `
+      <text x="40" y="${barY + faceMetrics.length * 32 + 30}" font-family="Georgia, serif" font-size="14" fill="#3C2A21" font-weight="bold">BODY ANALYSIS</text>
+      ${bodyMetrics.map((m, i) => `
+        <text x="40" y="${barY + faceMetrics.length * 32 + 55 + i * 24}" font-family="Arial, sans-serif" font-size="10" fill="#8B7355">${m.label}:</text>
+        <text x="180" y="${barY + faceMetrics.length * 32 + 55 + i * 24}" font-family="Arial, sans-serif" font-size="11" fill="#3C2A21" font-weight="bold">${m.value}</text>
+      `).join("")}
+    ` : ""}
+
+    ${color ? `
+      <text x="40" y="${h - 180}" font-family="Georgia, serif" font-size="14" fill="#3C2A21" font-weight="bold">COLOR PALETTE</text>
+      <text x="40" y="${h - 160}" font-family="Arial, sans-serif" font-size="10" fill="#8B7355">${color.subType} · ${color.metalPreference} Metals</text>
+      ${color.bestColors.slice(0, 8).map((c: string, i: number) => `<rect x="${40 + i * 65}" y="${h - 145}" width="55" height="30" rx="4" fill="${c}" stroke="#C4A882" stroke-width="1"/>`).join("")}
+      ${color.bestColors.slice(0, 8).map((c: string, i: number) => `<text x="${67 + i * 65}" y="${h - 125}" text-anchor="middle" font-family="monospace" font-size="7" fill="#fff">${c}</text>`).join("")}
+    ` : ""}
+
+    <line x1="40" y1="${h - 80}" x2="${w-40}" y2="${h - 80}" stroke="#C4A882" stroke-width="1"/>
+    <text x="${w/2}" y="${h - 55}" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#C08E62">Generated by AuraStyle</text>
+    <text x="${w/2}" y="${h - 40}" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" fill="#C4A882">aura-style-ai.vercel.app</text>
+  `;
+
+  const svgData = new XMLSerializer().serializeToString(svg);
+  const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
+  const url = URL.createObjectURL(svgBlob);
+
+  const canvas = document.createElement("canvas");
+  canvas.width = w * 2;
+  canvas.height = h * 2;
+  const ctx = canvas.getContext("2d")!;
+  const img = new Image();
+  img.onload = () => {
+    ctx.drawImage(img, 0, 0, w * 2, h * 2);
+    URL.revokeObjectURL(url);
+    const link = document.createElement("a");
+    link.download = "aurastyle-report.png";
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+  };
+  img.src = url;
 }
 
 function StyleRec({
