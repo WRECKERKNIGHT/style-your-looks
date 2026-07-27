@@ -157,6 +157,175 @@ function getSkincareRoutine(skinClarity: number): SkincareStep[] {
   return routine;
 }
 
+interface SkincareProduct {
+  name: string;
+  category: string;
+  keyIngredient: string;
+  why: string;
+  when: string;
+  frequency: string;
+  skinType: string[];
+  priority: "essential" | "recommended" | "advanced";
+}
+
+function getProductRecommendations(metrics: SkinMetric[]): SkincareProduct[] {
+  const products: SkincareProduct[] = [];
+  const avgScore = metrics.reduce((s, m) => s + m.score, 0) / metrics.length;
+  const clarityMetric = metrics.find((m) => m.label === "Skin Clarity");
+  const textureMetric = metrics.find((m) => m.label === "Texture Quality");
+  const toneMetric = metrics.find((m) => m.label === "Tone Evenness");
+  const hydrationMetric = metrics.find((m) => m.label === "Hydration Level");
+
+  if (clarityMetric && clarityMetric.score < 7) {
+    products.push({
+      name: "Salicylic Acid Cleanser",
+      category: "Cleanser",
+      keyIngredient: "2% Salicylic Acid",
+      why: "Deep cleans pores and prevents breakouts. Oil-soluble, penetrates into pores.",
+      when: "Evening",
+      frequency: "Daily",
+      skinType: ["Oily", "Combination", "Acne-prone"],
+      priority: "essential",
+    });
+  }
+
+  if (textureMetric && textureMetric.score < 7) {
+    products.push({
+      name: "AHA Exfoliating Toner",
+      category: "Toner",
+      keyIngredient: "Glycolic Acid 5-8%",
+      why: "Dissolves dead skin cells, smooths texture, and refines pore appearance.",
+      when: "Evening",
+      frequency: "3x/week",
+      skinType: ["Normal", "Combination", "Dry"],
+      priority: "recommended",
+    });
+  }
+
+  if (toneMetric && toneMetric.score < 7) {
+    products.push({
+      name: "Vitamin C Serum",
+      category: "Serum",
+      keyIngredient: "L-Ascorbic Acid 15-20%",
+      why: "Inhibits melanin production, brightens dark spots, and provides antioxidant protection.",
+      when: "Morning",
+      frequency: "Daily",
+      skinType: ["All"],
+      priority: "essential",
+    });
+    products.push({
+      name: "Azelaic Acid Treatment",
+      category: "Treatment",
+      keyIngredient: "Azelaic Acid 10-15%",
+      why: "Reduces hyperpigmentation and redness. Gentle enough for daily use.",
+      when: "Evening",
+      frequency: "Daily",
+      skinType: ["Sensitive", "Rosacea-prone", "Acne-prone"],
+      priority: "recommended",
+    });
+  }
+
+  if (hydrationMetric && hydrationMetric.score < 7) {
+    products.push({
+      name: "Hyaluronic Acid Serum",
+      category: "Serum",
+      keyIngredient: "Multi-weight Hyaluronic Acid",
+      why: "Draws moisture into skin at multiple depths. Plumps and hydrates without heaviness.",
+      when: "Both",
+      frequency: "Daily",
+      skinType: ["All"],
+      priority: "essential",
+    });
+    products.push({
+      name: "Ceramide Repair Cream",
+      category: "Moisturizer",
+      keyIngredient: "Ceramides + Cholesterol",
+      why: "Rebuilds skin barrier, locks in moisture, and reduces transepidermal water loss.",
+      when: "Evening",
+      frequency: "Daily",
+      skinType: ["Dry", "Sensitive", "Mature"],
+      priority: "essential",
+    });
+  }
+
+  if (avgScore < 6) {
+    products.push({
+      name: "Retinol Serum",
+      category: "Treatment",
+      keyIngredient: "Retinol 0.3-0.5%",
+      why: "Accelerates cell turnover, boosts collagen, and addresses multiple concerns at once.",
+      when: "Evening",
+      frequency: "2-3x/week",
+      skinType: ["All except very sensitive"],
+      priority: "recommended",
+    });
+  }
+
+  if (avgScore >= 7) {
+    products.push({
+      name: "Peptide Night Serum",
+      category: "Serum",
+      keyIngredient: "Matrixyl + Copper Peptides",
+      why: "Supports collagen production and skin firmness. Ideal for maintenance phase.",
+      when: "Evening",
+      frequency: "3-4x/week",
+      skinType: ["Mature", "Normal"],
+      priority: "advanced",
+    });
+  }
+
+  products.push({
+    name: "Mineral Sunscreen SPF 50",
+    category: "Sun Protection",
+    keyIngredient: "Zinc Oxide 20%+",
+    why: "Physical barrier against UV. Non-irritating, works immediately on application.",
+    when: "Morning",
+    frequency: "Daily, reapply every 2hrs outdoors",
+    skinType: ["All"],
+    priority: "essential",
+  });
+
+  return products;
+}
+
+function ProductCard({ product }: { product: SkincareProduct }) {
+  const priorityColors = {
+    essential: "bg-amber/10 border-amber/30 text-amber",
+    recommended: "bg-olive/10 border-olive/30 text-olive",
+    advanced: "bg-burgundy/10 border-burgundy/30 text-burgundy",
+  };
+
+  return (
+    <div className="bg-parchment p-5 border border-tan rounded-sm card-hover">
+      <div className="flex items-start justify-between mb-3">
+        <div>
+          <span className="text-[0.6rem] font-mono text-coffee tracking-widest uppercase">{product.category}</span>
+          <h4 className="text-sm font-display font-bold text-espresso mt-0.5">{product.name}</h4>
+        </div>
+        <span className={`text-[0.55rem] font-mono tracking-widest uppercase px-2 py-0.5 border rounded-sm ${priorityColors[product.priority]}`}>
+          {product.priority}
+        </span>
+      </div>
+      <p className="text-xs text-coffee font-body mb-3 leading-relaxed">{product.why}</p>
+      <div className="flex flex-wrap gap-2">
+        <span className="text-[0.6rem] font-mono bg-cream border border-tan px-2 py-0.5 rounded-sm text-coffee">
+          {product.keyIngredient}
+        </span>
+        <span className="text-[0.6rem] font-mono bg-cream border border-tan px-2 py-0.5 rounded-sm text-coffee">
+          {product.when} · {product.frequency}
+        </span>
+      </div>
+      <div className="flex flex-wrap gap-1 mt-2">
+        {product.skinType.map((type) => (
+          <span key={type} className="text-[0.55rem] font-body text-coffee bg-cream/50 px-1.5 py-0.5 rounded-sm">
+            {type}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function MetricCard({ metric, index }: { metric: SkinMetric; index: number }) {
   const [expanded, setExpanded] = useState(false);
 
@@ -223,6 +392,7 @@ export default function SkinHealthPage() {
 
   const metrics = useMemo(() => getSkinMetrics(faceResult), [faceResult]);
   const routine = useMemo(() => faceResult ? getSkincareRoutine(faceResult.skinClarity) : [], [faceResult]);
+  const products = useMemo(() => getProductRecommendations(metrics), [metrics]);
   const avgScore = metrics.length > 0 ? Math.round(metrics.reduce((s, m) => s + m.score, 0) / metrics.length * 10) / 10 : 0;
 
   if (!faceResult) {
@@ -387,6 +557,31 @@ export default function SkinHealthPage() {
               </div>
             </div>
           </ScrollReveal>
+        </div>
+      </div>
+
+      <ScrollProgress />
+
+      {/* Product Recommendations */}
+      <div>
+        <ScrollReveal>
+          <div className="flex items-center gap-3 mb-6">
+            <Shield className="w-6 h-6 text-amber" />
+            <h2 className="text-2xl font-display font-bold text-espresso tracking-tight">
+              RECOMMENDED <span className="text-gradient-gold">PRODUCTS.</span>
+            </h2>
+          </div>
+          <p className="text-coffee font-body mb-6">
+            Specific product types chosen for your skin profile. Focus on ingredients, not brands.
+          </p>
+        </ScrollReveal>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {products.map((product, i) => (
+            <ScrollReveal key={product.name} delay={i * 0.05}>
+              <ProductCard product={product} />
+            </ScrollReveal>
+          ))}
         </div>
       </div>
 
