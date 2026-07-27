@@ -5,28 +5,217 @@ import { ImageUploader } from "@/components/shared/ImageUploader";
 import { useAnalysisStore } from "@/store/analysis-store";
 import { SAMPLE_CLOTHING, type ClothingItem } from "@/lib/ml/virtual-tryon";
 import { motion } from "framer-motion";
-import { Shirt, Trash2, RotateCcw } from "lucide-react";
+import { Shirt, Trash2, RotateCcw, Download, ZoomIn, ZoomOut, Move } from "lucide-react";
+
+interface PlacedItem extends ClothingItem {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  opacity: number;
+}
+
+function estimatePositions(w: number, h: number): Record<string, { x: number; y: number; width: number; height: number }> {
+  const isPortrait = h > w;
+  if (isPortrait) {
+    return {
+      top: { x: w * 0.15, y: h * 0.18, width: w * 0.7, height: h * 0.28 },
+      bottom: { x: w * 0.18, y: h * 0.46, width: w * 0.64, height: h * 0.38 },
+      outerwear: { x: w * 0.08, y: h * 0.15, width: w * 0.84, height: h * 0.35 },
+      accessory: { x: w * 0.35, y: h * 0.06, width: w * 0.3, height: h * 0.1 },
+    };
+  }
+  return {
+    top: { x: w * 0.2, y: h * 0.1, width: w * 0.6, height: h * 0.4 },
+    bottom: { x: w * 0.22, y: h * 0.5, width: w * 0.56, height: h * 0.45 },
+    outerwear: { x: w * 0.1, y: h * 0.08, width: w * 0.8, height: h * 0.45 },
+    accessory: { x: w * 0.35, y: h * 0.02, width: w * 0.3, height: h * 0.15 },
+  };
+}
 
 export default function VirtualTryOnPage() {
   const { uploadedImage, setUploadedImage } = useAnalysisStore();
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [selectedItems, setSelectedItems] = useState<ClothingItem[]>([]);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const imgRef = useRef<HTMLImageElement | null>(null);
+  const [selectedItems, setSelectedItems] = useState<PlacedItem[]>([]);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [scale, setScale] = useState(1);
 
   const handleImageUpload = useCallback(
     (imageData: string) => {
       setUploadedImage(imageData);
+      setSelectedItems([]);
+      const img = new Image();
+      img.onload = () => { imgRef.current = img; };
+      img.src = imageData;
     },
     [setUploadedImage]
   );
 
-  const addClothingItem = (item: ClothingItem) => {
-    if (!selectedItems.find((i) => i.id === item.id)) {
-      setSelectedItems((prev) => [...prev, item]);
+  useEffect(() => {
+    if (uploadedImage) {
+      const img = new Image();
+      img.onload = () => { imgRef.current = img; };
+      img.src = uploadedImage;
     }
+  }, [uploadedImage]);
+
+  useEffect(() => {
+    renderCanvas();
+  }, [selectedItems, scale]);
+
+  function renderCanvas() {
+    const canvas = canvasRef.current;
+    const img = imgRef.current;
+    if (!canvas || !img) return;
+
+    const container = containerRef.current;
+    if (!container) return;
+
+    const displayWidth = container.clientWidth;
+    const displayHeight = Math.min(displayWidth * (img.height / img.width), 560);
+    const dpr = window.devicePixelRatio || 1;
+
+    canvas.width = displayWidth * dpr;
+    canvas.height = displayHeight * dpr;
+    canvas.style.width = `${displayWidth}px`;
+    canvas.style.height = `${displayHeight}px`;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, displayWidth, displayHeight);
+
+    ctx.drawImage(img, 0, 0, displayWidth, displayHeight);
+
+    const positions = estimatePositions(displayWidth, displayHeight);
+
+    selectedItems.forEach((item) => {
+      const pos = positions[item.category] || positions.top;
+      const cx = item.x ?? pos.x;
+      const cy = item.y ?? pos.y;
+      const cw = item.width ?? pos.width;
+      const ch = item.height ?? pos.height;
+
+      ctx.save();
+      ctx.globalAlpha = item.opacity ?? 0.65;
+
+      const radius = 8;
+      ctx.beginPath();
+      ctx.roundRect(cx, cy, cw, ch, radius);
+      ctx.fillStyle = item.color;
+      ctx.fill();
+
+      ctx.globalAlpha = 0.9;
+      ctx.strokeStyle = "rgba(255,255,255,0.4)";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = "#fff";
+      ctx.font = `bold ${Math.max(10, cw * 0.08)}px "DM Sans", sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(item.name, cx + cw / 2, cy + ch / 2);
+
+      ctx.restore();
+    });
+  }
+
+  const addClothingItem = (item: ClothingItem) => {
+    if (selectedItems.find((i) => i.id === item.id)) return;
+    const canvas = canvasRef.current;
+    const container = containerRef.current;
+    if (!canvas || !container) return;
+
+    const displayWidth = container.clientWidth;
+    const img = imgRef.current;
+    if (!img) return;
+    const displayHeight = Math.min(displayWidth * (img.height / img.width), 560);
+
+    const positions = estimatePositions(displayWidth, displayHeight);
+    const pos = positions[item.category] || positions.top;
+
+    setSelectedItems((prev) => [
+      ...prev,
+      { ...item, x: pos.x, y: pos.y, width: pos.width, height: pos.height, opacity: 0.65 },
+    ]);
   };
 
   const removeClothingItem = (id: string) => {
     setSelectedItems((prev) => prev.filter((i) => i.id !== id));
+  };
+
+  const handleCanvasMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+
+    for (let i = selectedItems.length - 1; i >= 0; i--) {
+      const item = selectedItems[i];
+      if (mx >= item.x && mx <= item.x + item.width && my >= item.y && my <= item.y + item.height) {
+        setDragIndex(i);
+        setDragOffset({ x: mx - item.x, y: my - item.y });
+        return;
+      }
+    }
+  };
+
+  const handleCanvasMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (dragIndex === null) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+
+    setSelectedItems((prev) =>
+      prev.map((item, i) =>
+        i === dragIndex
+          ? { ...item, x: mx - dragOffset.x, y: my - dragOffset.y }
+          : item
+      )
+    );
+  };
+
+  const handleCanvasMouseUp = () => {
+    setDragIndex(null);
+  };
+
+  const handleOpacityChange = (id: string, opacity: number) => {
+    setSelectedItems((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, opacity } : item))
+    );
+  };
+
+  const handleScaleItem = (id: string, factor: number) => {
+    setSelectedItems((prev) =>
+      prev.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              width: item.width * factor,
+              height: item.height * factor,
+              x: item.x - (item.width * factor - item.width) / 2,
+              y: item.y - (item.height * factor - item.height) / 2,
+            }
+          : item
+      )
+    );
+  };
+
+  const downloadResult = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const link = document.createElement("a");
+    link.download = "aurastyle-tryon.png";
+    link.href = canvas.toDataURL("image/png");
+    link.click();
   };
 
   const categories = [
@@ -60,35 +249,72 @@ export default function VirtualTryOnPage() {
       ) : (
         <div className="space-y-8">
           {/* Preview Canvas */}
-          <div className="bg-cream border border-tan overflow-hidden relative rounded-sm">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={uploadedImage}
-              alt="Try-on preview"
-              className="w-full max-h-[560px] object-contain bg-parchment"
+          <div
+            ref={containerRef}
+            className="bg-cream border border-tan overflow-hidden relative rounded-sm"
+          >
+            <canvas
+              ref={canvasRef}
+              className="w-full cursor-move"
+              onMouseDown={handleCanvasMouseDown}
+              onMouseMove={handleCanvasMouseMove}
+              onMouseUp={handleCanvasMouseUp}
+              onMouseLeave={handleCanvasMouseUp}
             />
 
-            {/* Color overlay previews */}
-            <div className="absolute bottom-5 left-5 right-5 flex flex-wrap gap-2">
-              {selectedItems.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex items-center gap-2 bg-cream/95 backdrop-blur-sm px-4 py-2 border border-tan rounded-sm shadow-elegant"
-                >
-                  <div
-                    className="w-5 h-5 border border-tan rounded-sm"
-                    style={{ backgroundColor: item.color }}
-                  />
-                  <span className="text-sm font-body text-espresso">{item.name}</span>
-                  <button
-                    onClick={() => removeClothingItem(item.id)}
-                    className="text-coffee hover:text-burgundy transition-colors ml-1"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              ))}
-            </div>
+            {/* Active items panel */}
+            {selectedItems.length > 0 && (
+              <div className="absolute top-3 right-3 bg-cream/95 backdrop-blur-sm border border-tan rounded-sm p-3 space-y-2 max-w-[200px]">
+                <p className="text-[0.6rem] font-mono text-coffee tracking-widest">LAYERS</p>
+                {selectedItems.map((item) => (
+                  <div key={item.id} className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="w-3 h-3 border border-tan rounded-sm shrink-0"
+                        style={{ backgroundColor: item.color }}
+                      />
+                      <span className="text-xs font-body text-espresso truncate flex-1">{item.name}</span>
+                      <button
+                        onClick={() => removeClothingItem(item.id)}
+                        className="text-coffee hover:text-burgundy transition-colors shrink-0"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="range"
+                        min={0.1}
+                        max={1}
+                        step={0.05}
+                        value={item.opacity ?? 0.65}
+                        onChange={(e) => handleOpacityChange(item.id, parseFloat(e.target.value))}
+                        className="flex-1 h-1 accent-amber"
+                      />
+                      <button
+                        onClick={() => handleScaleItem(item.id, 0.9)}
+                        className="text-coffee hover:text-amber transition-colors"
+                      >
+                        <ZoomOut className="w-3 h-3" />
+                      </button>
+                      <button
+                        onClick={() => handleScaleItem(item.id, 1.1)}
+                        className="text-coffee hover:text-amber transition-colors"
+                      >
+                        <ZoomIn className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {selectedItems.length > 0 && (
+              <div className="absolute bottom-3 left-3 flex items-center gap-1 text-[0.55rem] font-mono text-coffee/60 tracking-wider">
+                <Move className="w-3 h-3" />
+                DRAG TO REPOSITION
+              </div>
+            )}
           </div>
 
           {/* Clothing Selection */}
@@ -141,13 +367,21 @@ export default function VirtualTryOnPage() {
               CLEAR SELECTION
             </button>
             <button
+              onClick={downloadResult}
+              disabled={selectedItems.length === 0}
+              className="flex-1 py-4 bg-olive text-cream font-body text-base tracking-wider uppercase transition-colors flex items-center justify-center gap-2 rounded-sm shadow-elegant disabled:opacity-40"
+            >
+              <Download className="w-4 h-4" />
+              SAVE LOOK
+            </button>
+            <button
               onClick={() => {
                 useAnalysisStore.getState().setUploadedImage(null);
                 setSelectedItems([]);
               }}
               className="flex-1 py-4 bg-amber hover:bg-amber-light text-cream font-body text-base tracking-wider uppercase transition-colors rounded-sm shadow-gold"
             >
-              UPLOAD NEW PHOTO
+              NEW PHOTO
             </button>
           </div>
         </div>
