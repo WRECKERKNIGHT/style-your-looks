@@ -18,12 +18,15 @@ import {
   ChevronLeft,
   Menu,
   X,
+  Target,
+  Clock,
 } from "lucide-react";
 import { useState } from "react";
 
 const navItems = [
   { href: "/dashboard", label: "HOME", icon: Home },
   { href: "/dashboard/face-analysis", label: "FACE IQ", icon: ScanFace },
+  { href: "/dashboard/pillar-analysis", label: "4 PILLARS", icon: Target },
   { href: "/dashboard/body-analysis", label: "BODY + TONE", icon: Layers },
   { href: "/dashboard/style-dna", label: "STYLE DNA", icon: Dna },
   { href: "/dashboard/color-analysis", label: "COLOR ANALYSIS", icon: Droplets },
@@ -32,6 +35,7 @@ const navItems = [
   { href: "/dashboard/grooming", label: "GROOMING", icon: Scissors },
   { href: "/dashboard/recommendations", label: "OUTFITS", icon: Sparkles },
   { href: "/dashboard/community", label: "FEED", icon: Users },
+  { href: "/dashboard/history", label: "HISTORY", icon: Clock },
   { href: "/dashboard/profile", label: "PROFILE", icon: User },
 ];
 
