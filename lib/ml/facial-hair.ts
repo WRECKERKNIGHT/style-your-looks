@@ -393,3 +393,99 @@ export function detectHairColor(
 
   return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
 }
+
+export interface GroomingScore {
+  styleId: string;
+  type: "beard" | "mustache";
+  score: number;
+  reason: string;
+}
+
+const BEARD_FACE_SHAPES: Record<string, Record<string, number>> = {
+  "full-beard-short": { Oval: 9, Round: 8, Square: 8, Oblong: 7, Diamond: 7, Triangle: 7, "Inverted Triangle": 7, Heart: 7, Rectangle: 8 },
+  "full-beard-medium": { Oval: 8, Round: 7, Square: 7, Oblong: 6, Diamond: 7, Triangle: 6, "Inverted Triangle": 6, Heart: 6, Rectangle: 7 },
+  "full-beard-long": { Oval: 7, Round: 6, Square: 6, Oblong: 5, Diamond: 6, Triangle: 6, "Inverted Triangle": 5, Heart: 5, Rectangle: 6 },
+  "goatee": { Oval: 8, Round: 9, Square: 7, Oblong: 7, Diamond: 8, Triangle: 9, "Inverted Triangle": 8, Heart: 8, Rectangle: 7 },
+  "circle-beard": { Oval: 8, Round: 8, Square: 7, Oblong: 8, Diamond: 7, Triangle: 8, "Inverted Triangle": 7, Heart: 7, Rectangle: 8 },
+  "van-dyke": { Oval: 9, Round: 8, Square: 8, Oblong: 8, Diamond: 8, Triangle: 8, "Inverted Triangle": 8, Heart: 9, Rectangle: 8 },
+  "anchor": { Oval: 9, Round: 9, Square: 7, Oblong: 8, Diamond: 8, Triangle: 8, "Inverted Triangle": 9, Heart: 9, Rectangle: 7 },
+  "balbo": { Oval: 9, Round: 8, Square: 8, Oblong: 7, Diamond: 8, Triangle: 8, "Inverted Triangle": 8, Heart: 8, Rectangle: 8 },
+  "mutton-chops": { Oval: 6, Round: 6, Square: 7, Oblong: 6, Diamond: 5, Triangle: 6, "Inverted Triangle": 6, Heart: 6, Rectangle: 7 },
+  "clean-shaven": { Oval: 8, Round: 8, Square: 8, Oblong: 8, Diamond: 8, Triangle: 7, "Inverted Triangle": 7, Heart: 8, Rectangle: 8 },
+};
+
+const MUSTACHE_FACE_SHAPES: Record<string, Record<string, number>> = {
+  "chevron": { Oval: 8, Round: 7, Square: 8, Oblong: 7, Diamond: 7, Triangle: 7, "Inverted Triangle": 7, Heart: 7, Rectangle: 8 },
+  "handlebar": { Oval: 9, Round: 8, Square: 7, Oblong: 8, Diamond: 8, Triangle: 8, "Inverted Triangle": 8, Heart: 9, Rectangle: 7 },
+  "pencil": { Oval: 8, Round: 9, Square: 6, Oblong: 8, Diamond: 7, Triangle: 7, "Inverted Triangle": 7, Heart: 8, Rectangle: 8 },
+  "walrus": { Oval: 7, Round: 6, Square: 8, Oblong: 6, Diamond: 7, Triangle: 7, "Inverted Triangle": 6, Heart: 7, Rectangle: 8 },
+  "english": { Oval: 9, Round: 8, Square: 7, Oblong: 8, Diamond: 8, Triangle: 8, "Inverted Triangle": 8, Heart: 9, Rectangle: 7 },
+  "hungarian": { Oval: 8, Round: 7, Square: 8, Oblong: 7, Diamond: 7, Triangle: 7, "Inverted Triangle": 7, Heart: 8, Rectangle: 8 },
+  "horseshoe": { Oval: 6, Round: 6, Square: 8, Oblong: 5, Diamond: 6, Triangle: 6, "Inverted Triangle": 5, Heart: 6, Rectangle: 8 },
+  "toothbrush": { Oval: 7, Round: 8, Square: 7, Oblong: 7, Diamond: 7, Triangle: 7, "Inverted Triangle": 7, Heart: 7, Rectangle: 7 },
+  "none": { Oval: 8, Round: 8, Square: 8, Oblong: 8, Diamond: 8, Triangle: 7, "Inverted Triangle": 7, Heart: 8, Rectangle: 8 },
+};
+
+export function scoreGroomingStyles(faceShape: string | undefined): GroomingScore[] {
+  if (!faceShape) return [];
+
+  const scores: GroomingScore[] = [];
+
+  for (const [styleId, shapeScores] of Object.entries(BEARD_FACE_SHAPES)) {
+    const score = shapeScores[faceShape] ?? 7;
+    scores.push({
+      styleId,
+      type: "beard",
+      score,
+      reason: getBeardReason(styleId, faceShape, score),
+    });
+  }
+
+  for (const [styleId, shapeScores] of Object.entries(MUSTACHE_FACE_SHAPES)) {
+    if (styleId === "none") continue;
+    const score = shapeScores[faceShape] ?? 7;
+    scores.push({
+      styleId,
+      type: "mustache",
+      score,
+      reason: getMustacheReason(styleId, faceShape, score),
+    });
+  }
+
+  return scores.sort((a, b) => b.score - a.score);
+}
+
+function getBeardReason(style: string, shape: string, score: number): string {
+  const reasons: Record<string, string> = {
+    "full-beard-short": "Adds definition to the jawline without overwhelming features",
+    "full-beard-medium": "Creates a balanced, masculine silhouette with structure",
+    "full-beard-long": "Dramatic look that adds length and presence",
+    "goatee": "Draws attention to the chin, great for balancing face proportions",
+    "circle-beard": "Softens angular features while maintaining a clean look",
+    "van-dyke": "Refined style that highlights the lip and chin areas",
+    "anchor": "Tapers the chin for a sophisticated, elongating effect",
+    "balbo": "Defines the jawline without sideburns — modern and versatile",
+    "mutton-chops": "Bold statement that broadens the jaw visually",
+  };
+  const base = reasons[style] || "A classic grooming choice";
+  if (score >= 9) return `${base}. Exceptional match for ${shape} faces.`;
+  if (score >= 7) return `${base}. Good complement to ${shape} face shape.`;
+  return `${base}. Consider other styles for ${shape} faces.`;
+}
+
+function getMustacheReason(style: string, shape: string, score: number): string {
+  const reasons: Record<string, string> = {
+    chevron: "Natural, rugged look that adds maturity",
+    handlebar: "Statement piece that adds width and character",
+    pencil: "Subtle definition that narrows the upper lip area",
+    walrus: "Bold and distinguished — adds visual weight",
+    english: "Refined and elegant with a vintage appeal",
+    hungarian: "Full-bodied style that adds presence",
+    horseshoe: "Classic tough-guy look that extends the lip line",
+    toothbrush: "Compact and tidy — a conversation starter",
+  };
+  const base = reasons[style] || "A distinctive grooming choice";
+  if (score >= 9) return `${base}. Ideal pairing for ${shape} faces.`;
+  if (score >= 7) return `${base}. Works well with ${shape} proportions.`;
+  return `${base}. Other styles may better suit ${shape} faces.`;
+}

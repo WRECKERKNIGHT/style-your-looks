@@ -5,9 +5,9 @@ import { ImageUploader } from "@/components/shared/ImageUploader";
 import { useAnalysisStore } from "@/store/analysis-store";
 import { BEARD_STYLES, MUSTACHE_STYLES } from "@/lib/constants";
 import { initializeFaceLandmarker } from "@/lib/ml/face-analyzer";
-import { drawFacialHair, detectHairColor } from "@/lib/ml/facial-hair";
+import { drawFacialHair, detectHairColor, scoreGroomingStyles, type GroomingScore } from "@/lib/ml/facial-hair";
 import { motion } from "framer-motion";
-import { Scissors, Check } from "lucide-react";
+import { Scissors, Check, Star, Sparkles } from "lucide-react";
 
 export default function GroomingPage() {
   const {
@@ -23,6 +23,7 @@ export default function GroomingPage() {
   const [hairColor, setHairColor] = useState("#3C2A21");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [faceResult, setFaceResult] = useState<any>(null);
+  const [groomingScores, setGroomingScores] = useState<GroomingScore[]>([]);
 
   const handleImageUpload = useCallback(async (imageData: string) => {
     setUploadedImage(imageData);
@@ -42,6 +43,10 @@ export default function GroomingPage() {
         ctx.drawImage(img, 0, 0);
         const color = detectHairColor(canvas, result);
         setHairColor(color);
+
+        const faceShape = useAnalysisStore.getState().faceResult?.facialShape;
+        const scores = scoreGroomingStyles(faceShape);
+        setGroomingScores(scores);
 
         setIsAnalyzing(false);
       };
@@ -128,6 +133,70 @@ export default function GroomingPage() {
               </span>
             </div>
           </div>
+
+          {/* Face-Shape Recommendations */}
+          {groomingScores.length > 0 && (
+            <div className="bg-cream p-8 border border-tan vintage-border rounded-sm">
+              <div className="flex items-center gap-3 mb-6">
+                <Sparkles className="w-5 h-5 text-amber" />
+                <h3 className="text-lg font-display font-bold text-espresso tracking-wider">
+                  RECOMMENDED FOR YOUR FACE
+                </h3>
+              </div>
+
+              <div className="space-y-4">
+                {groomingScores.filter((s) => s.type === "beard").slice(0, 3).map((rec) => (
+                  <div
+                    key={rec.styleId}
+                    className={`p-5 rounded-sm border transition-all cursor-pointer ${
+                      selectedBeardStyle === rec.styleId
+                        ? "bg-amber/10 border-amber/40"
+                        : "bg-parchment border-tan hover:border-amber/30"
+                    }`}
+                    onClick={() => setSelectedBeardStyle(rec.styleId)}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-2">
+                        <Star className="w-4 h-4 text-amber" />
+                        <span className="font-display font-bold text-espresso">
+                          {BEARD_STYLES.find((s) => s.id === rec.styleId)?.label}
+                        </span>
+                      </div>
+                      <span className={`text-sm font-mono font-bold ${rec.score >= 9 ? "text-amber" : rec.score >= 7 ? "text-olive" : "text-coffee"}`}>
+                        {rec.score}/10
+                      </span>
+                    </div>
+                    <p className="text-sm text-coffee font-body ml-6">{rec.reason}</p>
+                  </div>
+                ))}
+
+                {groomingScores.filter((s) => s.type === "mustache").slice(0, 2).map((rec) => (
+                  <div
+                    key={rec.styleId}
+                    className={`p-5 rounded-sm border transition-all cursor-pointer ${
+                      selectedMustacheStyle === rec.styleId
+                        ? "bg-amber/10 border-amber/40"
+                        : "bg-parchment border-tan hover:border-amber/30"
+                    }`}
+                    onClick={() => setSelectedMustacheStyle(rec.styleId)}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-2">
+                        <Star className="w-4 h-4 text-amber" />
+                        <span className="font-display font-bold text-espresso">
+                          {MUSTACHE_STYLES.find((s) => s.id === rec.styleId)?.label}
+                        </span>
+                      </div>
+                      <span className={`text-sm font-mono font-bold ${rec.score >= 9 ? "text-amber" : rec.score >= 7 ? "text-olive" : "text-coffee"}`}>
+                        {rec.score}/10
+                      </span>
+                    </div>
+                    <p className="text-sm text-coffee font-body ml-6">{rec.reason}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Beard Styles */}
           <div className="bg-cream p-8 border border-tan vintage-border rounded-sm">
