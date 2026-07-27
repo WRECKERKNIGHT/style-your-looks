@@ -360,7 +360,7 @@ function MetricTile({ label, score }: { label: string; score: number }) {
   else if (score < 5) borderColor = "border-burgundy/30";
 
   return (
-    <div className={`bg-parchment p-4 border ${borderColor} rounded-sm text-center`}>
+    <div className={`bg-parchment p-4 border ${borderColor} rounded-sm text-center transition-all duration-300 hover:shadow-md hover:-translate-y-0.5`}>
       <span className="text-xs font-body text-coffee tracking-wider uppercase block">
         {label}
       </span>

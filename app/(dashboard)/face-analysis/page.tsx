@@ -7,6 +7,7 @@ import { LandmarkOverlay } from "@/components/analysis/LandmarkOverlay";
 import { useAnalysisStore } from "@/store/analysis-store";
 import { useMediaPipe } from "@/hooks/useMediaPipe";
 import { useWebcam } from "@/hooks/useWebcam";
+import { useToast } from "@/components/shared/Toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { ScanFace, Camera, Loader2, AlertCircle, Eye, Save, CheckCircle } from "lucide-react";
 
@@ -15,6 +16,7 @@ export default function FaceAnalysisPage() {
     useAnalysisStore();
   const { analyzeFaceFromImage } = useMediaPipe();
   const { videoRef, isStreaming, startWebcam, stopWebcam, captureFrame } = useWebcam();
+  const { addToast } = useToast();
   const [error, setError] = useState<string | null>(null);
   const [showLandmarks, setShowLandmarks] = useState(true);
   const [saved, setSaved] = useState(false);
@@ -149,6 +151,7 @@ export default function FaceAnalysisPage() {
               onClick={() => {
                 useAnalysisStore.getState().saveCurrentAnalysis();
                 setSaved(true);
+                addToast("Analysis saved to history", "success");
                 setTimeout(() => setSaved(false), 3000);
               }}
               className={`flex items-center gap-2 py-3 px-6 font-body text-base tracking-wider uppercase transition-all rounded-sm ${

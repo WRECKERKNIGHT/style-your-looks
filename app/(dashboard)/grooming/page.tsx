@@ -137,10 +137,10 @@ export default function GroomingPage() {
                 <button
                   key={style.id}
                   onClick={() => setSelectedBeardStyle(style.id)}
-                  className={`p-4 text-left text-base font-body transition-all rounded-sm ${
+                  className={`p-4 text-left text-base font-body transition-all duration-300 rounded-sm ${
                     selectedBeardStyle === style.id
                       ? "bg-amber text-cream shadow-gold"
-                      : "bg-parchment text-espresso hover:bg-tan/20 border border-tan card-hover"
+                      : "bg-parchment text-espresso hover:bg-tan/20 border border-tan card-hover hover:shadow-md"
                   }`}
                 >
                   <div className="flex items-center gap-2">
@@ -162,10 +162,10 @@ export default function GroomingPage() {
                 <button
                   key={style.id}
                   onClick={() => setSelectedMustacheStyle(style.id)}
-                  className={`p-4 text-left text-base font-body transition-all rounded-sm ${
+                  className={`p-4 text-left text-base font-body transition-all duration-300 rounded-sm ${
                     selectedMustacheStyle === style.id
                       ? "bg-amber text-cream shadow-gold"
-                      : "bg-parchment text-espresso hover:bg-tan/20 border border-tan card-hover"
+                      : "bg-parchment text-espresso hover:bg-tan/20 border border-tan card-hover hover:shadow-md"
                   }`}
                 >
                   <div className="flex items-center gap-2">

@@ -57,9 +57,9 @@ function ColorSwatch({
       : "border-tan";
 
   return (
-    <div className="flex flex-col items-center gap-1.5">
+    <div className="flex flex-col items-center gap-1.5 group cursor-default">
       <div
-        className={`w-14 h-14 border-2 ${borderColor} rounded-sm shadow-sm relative`}
+        className={`w-14 h-14 border-2 ${borderColor} rounded-sm shadow-sm relative transition-transform group-hover:scale-110 group-hover:shadow-md`}
         style={{ backgroundColor: color }}
       >
         {variant === "best" && (
@@ -69,7 +69,7 @@ function ColorSwatch({
           <X className="absolute -top-1.5 -right-1.5 w-4 h-4 text-cream bg-burgundy rounded-full p-0.5" />
         )}
       </div>
-      <span className="text-[10px] font-mono text-coffee">{color}</span>
+      <span className="text-[10px] font-mono text-coffee opacity-0 group-hover:opacity-100 transition-opacity">{color}</span>
       {label && (
         <span className="text-[10px] font-body text-coffee text-center">{label}</span>
       )}

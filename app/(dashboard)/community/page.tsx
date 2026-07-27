@@ -5,6 +5,7 @@ import { COMMUNITY_CATEGORIES } from "@/lib/constants";
 import { Users, Star, Camera, X, Upload, MessageSquare, Send, TrendingUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ScrollReveal, ScrollRevealItem, ScrollProgress } from "@/components/shared/ScrollReveal";
+import { useToast } from "@/components/shared/Toast";
 
 interface Comment {
   id: string;
@@ -124,6 +125,7 @@ export default function CommunityPage() {
   const [posts, setPosts] = useState<Post[]>(DEFAULT_POSTS);
   const [newRating, setNewRating] = useState<Record<string, number>>({});
   const [loaded, setLoaded] = useState(false);
+  const { addToast } = useToast();
 
   useEffect(() => {
     setPosts(loadPosts());
@@ -159,6 +161,7 @@ export default function CommunityPage() {
       })
     );
     setNewRating((prev) => ({ ...prev, [postId]: 5 }));
+    addToast("Rating submitted", "success");
   };
 
   const addComment = (postId: string, text: string) => {
@@ -181,6 +184,7 @@ export default function CommunityPage() {
         };
       })
     );
+    addToast("Comment added", "success");
   };
 
   const toggleComments = (postId: string) => {
@@ -248,7 +252,7 @@ export default function CommunityPage() {
       <div className="space-y-6">
         {filteredPosts.map((post) => (
           <ScrollReveal key={post.id}>
-            <div className="bg-cream border border-tan overflow-hidden rounded-sm card-hover vintage-border">
+            <div className="bg-cream border border-tan overflow-hidden rounded-sm card-hover vintage-border transition-all duration-300 hover:shadow-elegant hover:border-amber/30">
               {/* Post Header */}
               <div className="flex items-center gap-3 p-5 pb-3">
                 <div className="w-11 h-11 bg-amber/15 flex items-center justify-center rounded-full border border-amber/25">
@@ -323,7 +327,7 @@ export default function CommunityPage() {
                   </div>
                   <button
                     onClick={() => submitRating(post.id)}
-                    className="w-full mt-3 py-2.5 bg-amber text-cream font-body text-sm tracking-wider uppercase hover:bg-amber-light transition-colors rounded-sm"
+                    className="w-full mt-3 py-2.5 bg-amber text-cream font-body text-sm tracking-wider uppercase hover:bg-amber-light transition-all duration-300 rounded-sm hover:shadow-gold"
                   >
                     SUBMIT RATING
                   </button>
@@ -410,6 +414,7 @@ export default function CommunityPage() {
         onPost={(post) => {
           setPosts((prev) => [post, ...prev]);
           setShowCreatePost(false);
+          addToast("Look shared with community", "success");
         }}
       />
     </div>

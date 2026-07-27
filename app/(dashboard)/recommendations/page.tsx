@@ -121,7 +121,7 @@ export default function RecommendationsPage() {
         {recommendations.map((rec) => (
           <div
             key={rec.id}
-            className="bg-cream p-8 border border-tan hover:border-amber/40 transition-colors vintage-border rounded-sm card-hover"
+            className="bg-cream p-8 border border-tan hover:border-amber/40 transition-all duration-300 vintage-border rounded-sm card-hover hover:shadow-elegant"
           >
             <div className="flex flex-col md:flex-row gap-8">
               {/* Mannequin Mini */}

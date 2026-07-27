@@ -4,8 +4,10 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import Link from "next/link";
 import { ImageUploader } from "@/components/shared/ImageUploader";
 import { useAnalysisStore } from "@/store/analysis-store";
+import { hairRegion } from "@/lib/ml/face-landmarks";
 import { motion } from "framer-motion";
 import { Palette, Download, Trash2, ArrowRight } from "lucide-react";
+import { useToast } from "@/components/shared/Toast";
 
 interface HairColor {
   id: string;
@@ -33,21 +35,38 @@ function applyHairColor(
   ctx: CanvasRenderingContext2D,
   displayWidth: number,
   displayHeight: number,
-  color: HairColor
+  color: HairColor,
+  landmarks?: number[][]
 ) {
   ctx.save();
 
-  const topY = displayHeight * 0.05;
-  const bottomY = displayHeight * 0.32;
-  const leftX = displayWidth * 0.15;
-  const rightX = displayWidth * 0.85;
+  let topY: number;
+  let bottomY: number;
+  let leftX: number;
+  let rightX: number;
+  let centerX: number;
+
+  if (landmarks && landmarks.length > 152) {
+    const region = hairRegion(landmarks, displayWidth, displayHeight);
+    topY = region.topY;
+    bottomY = region.bottomY;
+    leftX = region.leftX;
+    rightX = region.rightX;
+    centerX = region.centerX;
+  } else {
+    topY = displayHeight * 0.05;
+    bottomY = displayHeight * 0.32;
+    leftX = displayWidth * 0.15;
+    rightX = displayWidth * 0.85;
+    centerX = displayWidth * 0.5;
+  }
 
   ctx.beginPath();
   ctx.moveTo(leftX, bottomY);
-  ctx.quadraticCurveTo(displayWidth * 0.2, topY, displayWidth * 0.5, topY);
-  ctx.quadraticCurveTo(displayWidth * 0.8, topY, rightX, bottomY);
-  ctx.quadraticCurveTo(displayWidth * 0.7, bottomY + displayHeight * 0.05, displayWidth * 0.5, bottomY + displayHeight * 0.03);
-  ctx.quadraticCurveTo(displayWidth * 0.3, bottomY + displayHeight * 0.05, leftX, bottomY);
+  ctx.quadraticCurveTo(leftX + (centerX - leftX) * 0.4, topY, centerX, topY);
+  ctx.quadraticCurveTo(rightX - (rightX - centerX) * 0.4, topY, rightX, bottomY);
+  ctx.quadraticCurveTo(rightX - (rightX - centerX) * 0.2, bottomY + (bottomY - topY) * 0.08, centerX, bottomY + (bottomY - topY) * 0.05);
+  ctx.quadraticCurveTo(leftX + (centerX - leftX) * 0.2, bottomY + (bottomY - topY) * 0.08, leftX, bottomY);
   ctx.closePath();
 
   ctx.fillStyle = color.overlay;
@@ -62,7 +81,8 @@ function applyHairColor(
 }
 
 export default function HairPreviewPage() {
-  const { uploadedImage, setUploadedImage } = useAnalysisStore();
+  const { uploadedImage, setUploadedImage, faceResult } = useAnalysisStore();
+  const { addToast } = useToast();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement | null>(null);
@@ -90,7 +110,7 @@ export default function HairPreviewPage() {
 
   useEffect(() => {
     renderCanvas();
-  }, [selectedColor, intensity]);
+  }, [selectedColor, intensity, faceResult]);
 
   function renderCanvas() {
     const canvas = canvasRef.current;
@@ -116,7 +136,7 @@ export default function HairPreviewPage() {
 
     if (selectedColor) {
       ctx.globalAlpha = intensity;
-      applyHairColor(ctx, displayWidth, displayHeight, selectedColor);
+      applyHairColor(ctx, displayWidth, displayHeight, selectedColor, faceResult?.landmarks);
       ctx.globalAlpha = 1;
     }
   }
@@ -128,6 +148,7 @@ export default function HairPreviewPage() {
     link.download = `aurastyle-hair-${selectedColor?.id || "preview"}.png`;
     link.href = canvas.toDataURL("image/png");
     link.click();
+    addToast("Hair preview saved", "success");
   };
 
   return (
@@ -180,10 +201,10 @@ export default function HairPreviewPage() {
                 <button
                   key={color.id}
                   onClick={() => setSelectedColor(selectedColor?.id === color.id ? null : color)}
-                  className={`p-3 border text-center transition-all rounded-sm ${
+                  className={`p-3 border text-center transition-all duration-300 rounded-sm ${
                     selectedColor?.id === color.id
                       ? "border-amber bg-amber/10 shadow-gold"
-                      : "border-tan hover:border-amber/40 bg-parchment card-hover"
+                      : "border-tan hover:border-amber/40 bg-parchment card-hover hover:shadow-md"
                   }`}
                 >
                   <div

@@ -4,8 +4,10 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import Link from "next/link";
 import { ImageUploader } from "@/components/shared/ImageUploader";
 import { useAnalysisStore } from "@/store/analysis-store";
+import { glassesPosition } from "@/lib/ml/face-landmarks";
 import { motion } from "framer-motion";
 import { Glasses, ArrowRight, Download, Trash2 } from "lucide-react";
+import { useToast } from "@/components/shared/Toast";
 
 interface GlassesStyle {
   id: string;
@@ -124,7 +126,8 @@ function drawGlasses(
 }
 
 export default function AccessoriesPage() {
-  const { uploadedImage, setUploadedImage } = useAnalysisStore();
+  const { uploadedImage, setUploadedImage, faceResult } = useAnalysisStore();
+  const { addToast } = useToast();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement | null>(null);
@@ -153,7 +156,7 @@ export default function AccessoriesPage() {
 
   useEffect(() => {
     renderCanvas();
-  }, [selectedGlasses, glassesY, glassesScale]);
+  }, [selectedGlasses, glassesY, glassesScale, faceResult]);
 
   function renderCanvas() {
     const canvas = canvasRef.current;
@@ -178,9 +181,20 @@ export default function AccessoriesPage() {
     ctx.drawImage(img, 0, 0, displayWidth, displayHeight);
 
     if (selectedGlasses) {
-      const centerX = displayWidth * 0.5;
-      const eyeY = displayHeight * 0.36 + glassesY;
-      const eyeWidth = displayWidth * 0.35 * glassesScale;
+      let centerX: number;
+      let eyeY: number;
+      let eyeWidth: number;
+
+      if (faceResult && faceResult.landmarks.length > 362) {
+        const pos = glassesPosition(faceResult.landmarks, displayWidth, displayHeight);
+        centerX = pos.centerX;
+        eyeY = pos.eyeY + glassesY;
+        eyeWidth = pos.totalWidth * glassesScale;
+      } else {
+        centerX = displayWidth * 0.5;
+        eyeY = displayHeight * 0.36 + glassesY;
+        eyeWidth = displayWidth * 0.35 * glassesScale;
+      }
 
       drawGlasses(ctx, selectedGlasses, centerX, eyeY, eyeWidth);
     }
@@ -193,6 +207,7 @@ export default function AccessoriesPage() {
     link.download = "aurastyle-glasses.png";
     link.href = canvas.toDataURL("image/png");
     link.click();
+    addToast("Glasses preview saved", "success");
   };
 
   return (
@@ -258,10 +273,10 @@ export default function AccessoriesPage() {
                 <button
                   key={style.id}
                   onClick={() => setSelectedGlasses(selectedGlasses?.id === style.id ? null : style)}
-                  className={`p-3 border text-left transition-all rounded-sm ${
+                  className={`p-3 border text-left transition-all duration-300 rounded-sm ${
                     selectedGlasses?.id === style.id
                       ? "border-amber bg-amber/10 shadow-gold"
-                      : "border-tan hover:border-amber/40 bg-parchment card-hover"
+                      : "border-tan hover:border-amber/40 bg-parchment card-hover hover:shadow-md"
                   }`}
                 >
                   <div

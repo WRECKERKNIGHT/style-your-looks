@@ -4,8 +4,10 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { ImageUploader } from "@/components/shared/ImageUploader";
 import { useAnalysisStore } from "@/store/analysis-store";
 import { SAMPLE_CLOTHING, type ClothingItem } from "@/lib/ml/virtual-tryon";
+import { clothingPositions, type Point } from "@/lib/ml/face-landmarks";
 import { motion } from "framer-motion";
 import { Shirt, Trash2, RotateCcw, Download, ZoomIn, ZoomOut, Move } from "lucide-react";
+import { useToast } from "@/components/shared/Toast";
 
 interface PlacedItem extends ClothingItem {
   x: number;
@@ -15,26 +17,9 @@ interface PlacedItem extends ClothingItem {
   opacity: number;
 }
 
-function estimatePositions(w: number, h: number): Record<string, { x: number; y: number; width: number; height: number }> {
-  const isPortrait = h > w;
-  if (isPortrait) {
-    return {
-      top: { x: w * 0.15, y: h * 0.18, width: w * 0.7, height: h * 0.28 },
-      bottom: { x: w * 0.18, y: h * 0.46, width: w * 0.64, height: h * 0.38 },
-      outerwear: { x: w * 0.08, y: h * 0.15, width: w * 0.84, height: h * 0.35 },
-      accessory: { x: w * 0.35, y: h * 0.06, width: w * 0.3, height: h * 0.1 },
-    };
-  }
-  return {
-    top: { x: w * 0.2, y: h * 0.1, width: w * 0.6, height: h * 0.4 },
-    bottom: { x: w * 0.22, y: h * 0.5, width: w * 0.56, height: h * 0.45 },
-    outerwear: { x: w * 0.1, y: h * 0.08, width: w * 0.8, height: h * 0.45 },
-    accessory: { x: w * 0.35, y: h * 0.02, width: w * 0.3, height: h * 0.15 },
-  };
-}
-
 export default function VirtualTryOnPage() {
-  const { uploadedImage, setUploadedImage } = useAnalysisStore();
+  const { uploadedImage, setUploadedImage, faceResult } = useAnalysisStore();
+  const { addToast } = useToast();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement | null>(null);
@@ -64,7 +49,7 @@ export default function VirtualTryOnPage() {
 
   useEffect(() => {
     renderCanvas();
-  }, [selectedItems, scale]);
+  }, [selectedItems, scale, faceResult]);
 
   function renderCanvas() {
     const canvas = canvasRef.current;
@@ -91,21 +76,13 @@ export default function VirtualTryOnPage() {
 
     ctx.drawImage(img, 0, 0, displayWidth, displayHeight);
 
-    const positions = estimatePositions(displayWidth, displayHeight);
-
     selectedItems.forEach((item) => {
-      const pos = positions[item.category] || positions.top;
-      const cx = item.x ?? pos.x;
-      const cy = item.y ?? pos.y;
-      const cw = item.width ?? pos.width;
-      const ch = item.height ?? pos.height;
-
       ctx.save();
       ctx.globalAlpha = item.opacity ?? 0.65;
 
       const radius = 8;
       ctx.beginPath();
-      ctx.roundRect(cx, cy, cw, ch, radius);
+      ctx.roundRect(item.x, item.y, item.width, item.height, radius);
       ctx.fillStyle = item.color;
       ctx.fill();
 
@@ -116,10 +93,10 @@ export default function VirtualTryOnPage() {
 
       ctx.globalAlpha = 1;
       ctx.fillStyle = "#fff";
-      ctx.font = `bold ${Math.max(10, cw * 0.08)}px "DM Sans", sans-serif`;
+      ctx.font = `bold ${Math.max(10, item.width * 0.08)}px "DM Sans", sans-serif`;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillText(item.name, cx + cw / 2, cy + ch / 2);
+      ctx.fillText(item.name, item.x + item.width / 2, item.y + item.height / 2);
 
       ctx.restore();
     });
@@ -136,8 +113,31 @@ export default function VirtualTryOnPage() {
     if (!img) return;
     const displayHeight = Math.min(displayWidth * (img.height / img.width), 560);
 
-    const positions = estimatePositions(displayWidth, displayHeight);
-    const pos = positions[item.category] || positions.top;
+    let pos: { x: number; y: number; width: number; height: number };
+
+    if (faceResult && faceResult.landmarks.length > 0) {
+      const positions = clothingPositions(faceResult.landmarks, displayWidth, displayHeight);
+      pos = positions[item.category as keyof typeof positions] || positions.top;
+    } else {
+      const isPortrait = displayHeight > displayWidth;
+      if (isPortrait) {
+        pos = item.category === "top"
+          ? { x: displayWidth * 0.15, y: displayHeight * 0.18, width: displayWidth * 0.7, height: displayHeight * 0.28 }
+          : item.category === "bottom"
+          ? { x: displayWidth * 0.18, y: displayHeight * 0.46, width: displayWidth * 0.64, height: displayHeight * 0.38 }
+          : item.category === "outerwear"
+          ? { x: displayWidth * 0.08, y: displayHeight * 0.15, width: displayWidth * 0.84, height: displayHeight * 0.35 }
+          : { x: displayWidth * 0.35, y: displayHeight * 0.06, width: displayWidth * 0.3, height: displayHeight * 0.1 };
+      } else {
+        pos = item.category === "top"
+          ? { x: displayWidth * 0.2, y: displayHeight * 0.1, width: displayWidth * 0.6, height: displayHeight * 0.4 }
+          : item.category === "bottom"
+          ? { x: displayWidth * 0.22, y: displayHeight * 0.5, width: displayWidth * 0.56, height: displayHeight * 0.45 }
+          : item.category === "outerwear"
+          ? { x: displayWidth * 0.1, y: displayHeight * 0.08, width: displayWidth * 0.8, height: displayHeight * 0.45 }
+          : { x: displayWidth * 0.35, y: displayHeight * 0.02, width: displayWidth * 0.3, height: displayHeight * 0.15 };
+      }
+    }
 
     setSelectedItems((prev) => [
       ...prev,
@@ -216,6 +216,7 @@ export default function VirtualTryOnPage() {
     link.download = "aurastyle-tryon.png";
     link.href = canvas.toDataURL("image/png");
     link.click();
+    addToast("Try-on image saved", "success");
   };
 
   const categories = [
@@ -335,10 +336,10 @@ export default function VirtualTryOnPage() {
                               ? removeClothingItem(item.id)
                               : addClothingItem(item)
                           }
-                          className={`p-4 border text-left transition-all rounded-sm ${
+                          className={`p-4 border text-left transition-all duration-300 rounded-sm ${
                             isSelected
                               ? "border-amber bg-amber/10 shadow-gold"
-                              : "border-tan hover:border-amber/40 bg-parchment card-hover"
+                              : "border-tan hover:border-amber/40 bg-parchment card-hover hover:shadow-md"
                           }`}
                         >
                           <div
