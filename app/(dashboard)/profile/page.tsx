@@ -1,13 +1,67 @@
 "use client";
 
-import { useState } from "react";
-import { User, Camera, Star, History, Settings, Shield, LogOut } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { User, Camera, Star, History, Settings, Shield, LogOut, Trash2, ExternalLink, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useAnalysisStore } from "@/store/analysis-store";
+import { createClient } from "@/lib/supabase/client";
+import { getHistory, clearHistory, type HistoryEntry } from "@/lib/history";
 
 export default function ProfilePage() {
   const { faceResult, bodyResult } = useAnalysisStore();
   const [activeTab, setActiveTab] = useState<"history" | "settings">("history");
+  const [user, setUser] = useState<{ email: string; name: string } | null>(null);
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [signingOut, setSigningOut] = useState(false);
+  const [cameraStatus, setCameraStatus] = useState<string>("unknown");
+  const router = useRouter();
+  const supabase = createClient();
+
+  useEffect(() => {
+    async function loadUser() {
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (authUser) {
+        setUser({
+          email: authUser.email || "",
+          name: (authUser.user_metadata?.full_name as string) || authUser.email?.split("@")[0] || "User",
+        });
+      }
+    }
+    loadUser();
+    setHistory(getHistory());
+
+    if (navigator.permissions) {
+      navigator.permissions.query({ name: "camera" as PermissionName }).then((result) => {
+        setCameraStatus(result.state);
+      }).catch(() => setCameraStatus("unknown"));
+    }
+  }, [supabase]);
+
+  async function handleSignOut() {
+    setSigningOut(true);
+    await supabase.auth.signOut();
+    router.push("/login");
+    router.refresh();
+  }
+
+  async function handleCameraManage() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      stream.getTracks().forEach((t) => t.stop());
+      setCameraStatus("granted");
+    } catch {
+      setCameraStatus("denied");
+    }
+  }
+
+  function handleClearHistory() {
+    if (window.confirm("Clear all analysis history? This cannot be undone.")) {
+      clearHistory();
+      setHistory([]);
+    }
+  }
 
   return (
     <div className="space-y-8">
@@ -21,12 +75,21 @@ export default function ProfilePage() {
         <span className="section-number">EST. MMXXIV // PROFILE</span>
         <div className="flex items-center gap-5 mt-3">
           <div className="w-20 h-20 bg-amber/15 flex items-center justify-center border border-amber/25 rounded-full">
-            <User className="w-10 h-10 text-amber" />
+            <span className="text-2xl font-display font-bold text-amber">
+              {user?.name?.charAt(0)?.toUpperCase() || "U"}
+            </span>
           </div>
           <div className="flex-1">
-            <h1 className="text-2xl font-display font-bold text-espresso tracking-wider">YOUR PROFILE</h1>
-            <p className="text-base text-coffee font-body mt-1">View your analysis history and settings</p>
+            <h1 className="text-2xl font-display font-bold text-espresso tracking-wider">
+              {user?.name || "YOUR PROFILE"}
+            </h1>
+            <p className="text-base text-coffee font-body mt-1">{user?.email || "Sign in to sync data"}</p>
           </div>
+          {!user && (
+            <Link href="/login" className="text-sm bg-amber text-cream px-5 py-2.5 font-body tracking-wider uppercase rounded-sm shadow-gold hover:bg-amber-light transition-colors">
+              SIGN IN
+            </Link>
+          )}
         </div>
 
         {/* Quick Stats */}
@@ -117,7 +180,47 @@ export default function ProfilePage() {
             </div>
           )}
 
-          {!faceResult && !bodyResult && (
+          {history.length > 0 && (
+            <div className="flex items-center justify-between mt-6">
+              <h3 className="text-sm font-body text-coffee tracking-widest uppercase font-semibold">SAVED ANALYSES</h3>
+              <button
+                onClick={handleClearHistory}
+                className="text-xs text-burgundy hover:text-burgundy-light transition-colors font-body flex items-center gap-1"
+              >
+                <Trash2 className="w-3 h-3" />
+                CLEAR ALL
+              </button>
+            </div>
+          )}
+
+          {history.map((entry) => (
+            <Link
+              key={entry.id}
+              href="/dashboard/history"
+              className="block bg-cream p-5 border border-tan rounded-sm card-hover"
+            >
+              <div className="flex items-center gap-4">
+                {entry.thumbnail ? (
+                  <img src={entry.thumbnail} alt="" className="w-12 h-12 object-cover rounded-sm border border-tan" />
+                ) : (
+                  <div className="w-12 h-12 bg-parchment flex items-center justify-center rounded-sm border border-tan">
+                    <Star className="w-5 h-5 text-amber/40" />
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-sm font-display font-bold text-espresso tracking-wider truncate">
+                    {entry.label || "Analysis"}
+                  </h4>
+                  <p className="text-xs text-coffee font-body mt-0.5">
+                    Score: {entry.faceScore?.toFixed(1) || "N/A"} | {entry.bodyType || "No body data"}
+                  </p>
+                </div>
+                <ExternalLink className="w-4 h-4 text-coffee shrink-0" />
+              </div>
+            </Link>
+          ))}
+
+          {!faceResult && !bodyResult && history.length === 0 && (
             <div className="bg-cream p-10 border border-tan rounded-sm text-center">
               <History className="w-12 h-12 text-amber/40 mx-auto mb-4" />
               <p className="text-base text-coffee font-body">No analysis history yet</p>
@@ -146,23 +249,60 @@ export default function ProfilePage() {
               <Camera className="w-5 h-5 text-coffee" />
               <div className="flex-1">
                 <h4 className="text-base font-display font-bold text-espresso tracking-wider">CAMERA PERMISSION</h4>
-                <p className="text-sm text-coffee font-body mt-1">Manage webcam access for live analysis</p>
+                <p className="text-sm text-coffee font-body mt-1">
+                  {cameraStatus === "granted"
+                    ? "Camera access granted"
+                    : cameraStatus === "denied"
+                    ? "Camera access denied — enable in browser settings"
+                    : "Manage webcam access for live analysis"}
+                </p>
               </div>
-              <button className="text-sm bg-parchment text-espresso px-4 py-2 font-body tracking-wider uppercase border border-tan hover:bg-tan/20 transition-colors rounded-sm">
-                MANAGE
+              <button
+                onClick={handleCameraManage}
+                className="text-sm bg-parchment text-espresso px-4 py-2 font-body tracking-wider uppercase border border-tan hover:bg-tan/20 transition-colors rounded-sm"
+              >
+                {cameraStatus === "granted" ? "GRANTED" : "MANAGE"}
               </button>
             </div>
           </div>
 
           <div className="bg-cream p-6 border border-tan rounded-sm card-hover">
             <div className="flex items-center gap-4">
-              <LogOut className="w-5 h-5 text-burgundy" />
+              <History className="w-5 h-5 text-coffee" />
               <div className="flex-1">
-                <h4 className="text-base font-display font-bold text-burgundy tracking-wider">SIGN OUT</h4>
-                <p className="text-sm text-coffee font-body mt-1">Sign out of your account</p>
+                <h4 className="text-base font-display font-bold text-espresso tracking-wider">LOCAL DATA</h4>
+                <p className="text-sm text-coffee font-body mt-1">{history.length} analysis entries stored locally</p>
               </div>
+              <button
+                onClick={handleClearHistory}
+                className="text-sm bg-parchment text-burgundy px-4 py-2 font-body tracking-wider uppercase border border-tan hover:bg-burgundy/5 transition-colors rounded-sm"
+              >
+                CLEAR
+              </button>
             </div>
           </div>
+
+          {user && (
+            <button
+              onClick={handleSignOut}
+              disabled={signingOut}
+              className="w-full bg-cream p-6 border border-burgundy/30 rounded-sm hover:bg-burgundy/5 transition-colors"
+            >
+              <div className="flex items-center gap-4">
+                {signingOut ? (
+                  <Loader2 className="w-5 h-5 text-burgundy animate-spin" />
+                ) : (
+                  <LogOut className="w-5 h-5 text-burgundy" />
+                )}
+                <div className="flex-1 text-left">
+                  <h4 className="text-base font-display font-bold text-burgundy tracking-wider">
+                    {signingOut ? "SIGNING OUT..." : "SIGN OUT"}
+                  </h4>
+                  <p className="text-sm text-coffee font-body mt-1">Sign out of your account</p>
+                </div>
+              </div>
+            </button>
+          )}
         </div>
       )}
     </div>
