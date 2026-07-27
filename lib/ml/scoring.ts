@@ -100,7 +100,7 @@ function getGoldenRatio(result: FaceLandmarkerResult): number {
   const widthToLength = faceWidth / faceLength;
 
   const upperThird = Math.abs(landmarks[10].y - landmarks[152].y) * 0.33;
-  const midThird = Math.abs(landmarks[152].y - landmarks[152].y) * 0.33;
+  const midThird = Math.abs(landmarks[10].y - landmarks[152].y) * 0.33;
   const mouthWidth = Math.abs(rightMouth.x - leftMouth.x);
   const mouthToFaceWidth = mouthWidth / faceWidth;
 

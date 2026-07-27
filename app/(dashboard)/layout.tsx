@@ -116,7 +116,7 @@ export default function DashboardLayout({
                     : "text-coffee hover:bg-tan/10 hover:text-espresso border-transparent"
                 )}
               >
-                <item.icon className="w-4.5 h-4.5" />
+                <item.icon className="w-[18px] h-[18px]" />
                 {item.label}
               </Link>
             );

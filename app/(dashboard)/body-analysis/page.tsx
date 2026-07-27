@@ -2,7 +2,6 @@
 
 import { useState, useCallback } from "react";
 import { ImageUploader } from "@/components/shared/ImageUploader";
-import { ScoreGauge } from "@/components/analysis/ScoreGauge";
 import { useAnalysisStore } from "@/store/analysis-store";
 import { useMediaPipe } from "@/hooks/useMediaPipe";
 import { motion, AnimatePresence } from "framer-motion";

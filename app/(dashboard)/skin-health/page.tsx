@@ -26,7 +26,7 @@ function getSkinMetrics(faceResult: { skinClarity: number; symmetry: number; ove
   if (!faceResult) return [];
 
   const texture = Math.min(10, faceResult.skinClarity * 1.05);
-  const hydration = Math.min(10, faceResult.skinClarity * 0.9 + Math.random() * 0.5);
+  const hydration = Math.min(10, faceResult.skinClarity * 0.9 + faceResult.overallScore * 0.1);
   const tone = Math.min(10, faceResult.skinClarity * 0.95 + faceResult.symmetry * 0.05);
   const clarity = faceResult.skinClarity;
   const elasticity = Math.min(10, faceResult.overallScore * 0.8 + 2);

@@ -62,11 +62,13 @@ export function saveToHistory(entry: Omit<AnalysisEntry, "id" | "timestamp" | "d
 }
 
 export function deleteFromHistory(id: string): void {
+  if (typeof window === "undefined") return;
   const history = getHistory().filter((e) => e.id !== id);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
 }
 
 export function clearHistory(): void {
+  if (typeof window === "undefined") return;
   localStorage.removeItem(STORAGE_KEY);
 }
 

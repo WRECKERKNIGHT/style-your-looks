@@ -2,18 +2,19 @@ import Link from "next/link";
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-parchment px-6">
-      <div className="text-center max-w-md">
-        <div className="text-6xl font-display font-bold text-gradient-gold mb-4">404</div>
-        <h1 className="text-2xl font-display font-bold text-espresso mb-2">Page not found</h1>
-        <p className="text-coffee font-body mb-8">
-          The page you&apos;re looking for doesn&apos;t exist or has been moved.
+    <div className="min-h-screen bg-parchment flex items-center justify-center px-6">
+      <div className="text-center max-w-lg">
+        <span className="section-number">EST. MMXXIV // 404</span>
+        <h1 className="text-7xl md:text-9xl font-display font-bold text-gradient-gold mt-4 mb-6">404</h1>
+        <h2 className="text-2xl font-display font-bold text-espresso tracking-tight mb-4">PAGE NOT FOUND</h2>
+        <p className="text-coffee font-body text-lg mb-8">
+          The page you are looking for does not exist or has been moved.
         </p>
         <Link
           href="/"
           className="btn-gold inline-flex"
         >
-          BACK TO HOME
+          RETURN HOME
         </Link>
       </div>
     </div>
