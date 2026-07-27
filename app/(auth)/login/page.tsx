@@ -1,12 +1,55 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Mail, Lock, Eye, EyeOff, Sparkles } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, Sparkles, AlertCircle, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
+import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const router = useRouter();
+  const supabase = createClient();
+
+  async function handleEmailLogin(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+    if (error) {
+      setError(error.message);
+      setLoading(false);
+      return;
+    }
+
+    router.push("/dashboard");
+    router.refresh();
+  }
+
+  async function handleGoogleLogin() {
+    setGoogleLoading(true);
+    setError(null);
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+
+    if (error) {
+      setError(error.message);
+      setGoogleLoading(false);
+    }
+  }
 
   return (
     <div className="min-h-screen flex">
@@ -17,7 +60,6 @@ export default function LoginPage() {
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
         className="hidden lg:flex flex-1 bg-linen items-center justify-center p-12 relative overflow-hidden"
       >
-        {/* Decorative diagonal lines */}
         <div className="absolute inset-0 opacity-[0.04] pointer-events-none" style={{
           backgroundImage: "repeating-linear-gradient(45deg, #B8860B 0, #B8860B 1px, transparent 0, transparent 50%)",
           backgroundSize: "40px 40px",
@@ -51,7 +93,6 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Corner ornaments */}
         <div className="absolute top-6 left-6 w-6 h-6 border-l-2 border-t-2 border-amber/40" />
         <div className="absolute bottom-6 right-6 w-6 h-6 border-r-2 border-b-2 border-amber/40" />
       </motion.div>
@@ -75,7 +116,14 @@ export default function LoginPage() {
           <h1 className="mt-2 text-2xl font-display font-bold text-espresso tracking-tight">WELCOME BACK.</h1>
           <p className="text-coffee mt-1 font-body text-sm mb-8">Sign in to continue your style journey.</p>
 
-          <div className="space-y-4">
+          {error && (
+            <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 text-red-700 text-xs font-body mb-4">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleEmailLogin} className="space-y-4">
             <div>
               <label className="text-[0.65rem] font-mono text-coffee tracking-widest mb-1.5 block">EMAIL</label>
               <div className="relative">
@@ -83,6 +131,9 @@ export default function LoginPage() {
                 <input
                   type="email"
                   placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
                   className="w-full pl-10 pr-4 py-3 bg-cream border border-tan text-sm text-espresso placeholder:text-coffee/50 focus:outline-none focus:border-amber transition-colors font-body"
                 />
               </div>
@@ -95,6 +146,10 @@ export default function LoginPage() {
                 <input
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={6}
                   className="w-full pl-10 pr-10 py-3 bg-cream border border-tan text-sm text-espresso placeholder:text-coffee/50 focus:outline-none focus:border-amber transition-colors font-body"
                 />
                 <button
@@ -107,23 +162,27 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <button className="w-full btn-gold justify-center">
-              SIGN IN
+            <button type="submit" disabled={loading} className="w-full btn-gold justify-center disabled:opacity-50">
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "SIGN IN"}
             </button>
+          </form>
 
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-tan" />
-              </div>
-              <div className="relative flex justify-center text-xs">
-                <span className="bg-parchment px-3 text-coffee font-mono text-[0.6rem] tracking-widest">OR</span>
-              </div>
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-tan" />
             </div>
-
-            <button className="w-full py-3 bg-cream border border-tan text-espresso font-mono text-sm hover:border-amber transition-colors">
-              GOOGLE
-            </button>
+            <div className="relative flex justify-center text-xs">
+              <span className="bg-parchment px-3 text-coffee font-mono text-[0.6rem] tracking-widest">OR</span>
+            </div>
           </div>
+
+          <button
+            onClick={handleGoogleLogin}
+            disabled={googleLoading}
+            className="w-full py-3 bg-cream border border-tan text-espresso font-mono text-sm hover:border-amber transition-colors disabled:opacity-50"
+          >
+            {googleLoading ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : "GOOGLE"}
+          </button>
 
           <p className="text-xs text-coffee font-body text-center mt-8">
             NO ACCOUNT?{" "}

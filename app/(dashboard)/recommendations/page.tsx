@@ -98,15 +98,17 @@ export default function RecommendationsPage() {
         <h3 className="text-lg font-display font-bold text-espresso tracking-wider mb-6">YOUR BEST COLORS</h3>
         <div className="space-y-4">
           {palettes.map((palette) => (
-            <div key={palette.name} className="flex items-center gap-4">
-              <span className="text-xs font-body text-coffee tracking-wider uppercase w-32 flex-shrink-0 font-semibold">{palette.name}</span>
-              <div className="flex gap-2 flex-1">
+            <div key={palette.name} className="bg-parchment p-4 border border-tan rounded-sm">
+              <span className="text-sm font-body font-bold text-espresso tracking-wider block mb-3">{palette.name}</span>
+              <div className="flex gap-3">
                 {palette.colors.map((color, i) => (
-                  <div
-                    key={i}
-                    className="flex-1 aspect-square border border-tan rounded-sm"
-                    style={{ backgroundColor: color }}
-                  />
+                  <div key={i} className="flex-1 flex flex-col items-center gap-2">
+                    <div
+                      className="w-full aspect-square border border-tan shadow-sm rounded-sm"
+                      style={{ backgroundColor: color }}
+                    />
+                    <span className="text-[11px] text-coffee font-mono">{color}</span>
+                  </div>
                 ))}
               </div>
             </div>
