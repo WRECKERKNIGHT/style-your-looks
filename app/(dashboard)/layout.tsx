@@ -27,6 +27,7 @@ const navItems = [
   { href: "/dashboard", label: "HOME", icon: Home },
   { href: "/dashboard/face-analysis", label: "FACE IQ", icon: ScanFace },
   { href: "/dashboard/pillar-analysis", label: "4 PILLARS", icon: Target },
+  { href: "/dashboard/skin-health", label: "SKIN HEALTH", icon: Droplets },
   { href: "/dashboard/body-analysis", label: "BODY + TONE", icon: Layers },
   { href: "/dashboard/style-dna", label: "STYLE DNA", icon: Dna },
   { href: "/dashboard/color-analysis", label: "COLOR ANALYSIS", icon: Droplets },
