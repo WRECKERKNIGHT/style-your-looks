@@ -2,7 +2,9 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { SmoothScroll } from "@/components/providers/SmoothScroll";
 import { ToastProvider } from "@/components/shared/Toast";
-import { PageTransition } from "@/components/shared/PageTransition";
+import { CustomCursor } from "@/components/shared/CustomCursor";
+import { LoadingScreen } from "@/components/shared/LoadingScreen";
+import { ParticleField } from "@/components/shared/ParticleField";
 
 export const metadata: Metadata = {
   title: {
@@ -53,9 +55,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased grain vignette">
+        <LoadingScreen />
+        <ParticleField />
+        <CustomCursor />
         <ToastProvider>
           <SmoothScroll>
-            <PageTransition />
             {children}
           </SmoothScroll>
         </ToastProvider>
