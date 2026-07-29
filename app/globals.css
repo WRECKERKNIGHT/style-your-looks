@@ -426,6 +426,99 @@ body {
 }
 
 /* ═══════════════════════════════════════
+   GLOW PULSE — for score thresholds, badges
+   ═══════════════════════════════════════ */
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(184, 134, 11, 0.2), 0 0 20px rgba(184, 134, 11, 0.05); }
+  50% { box-shadow: 0 0 16px rgba(184, 134, 11, 0.4), 0 0 40px rgba(184, 134, 11, 0.1); }
+}
+
+.glow-pulse {
+  animation: glowPulse 2.5s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════
+   SKELETON LOADING
+   ═══════════════════════════════════════ */
+@keyframes skeleton {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #EDE4D8 25%, #F5F0E8 50%, #EDE4D8 75%);
+  background-size: 200% 100%;
+  animation: skeleton 1.5s ease-in-out infinite;
+  border-radius: 2px;
+}
+
+.skeleton-dark {
+  background: linear-gradient(90deg, #2C2318 25%, #3C2B1E 50%, #2C2318 75%);
+  background-size: 200% 100%;
+  animation: skeleton 1.5s ease-in-out infinite;
+  border-radius: 2px;
+}
+
+/* ═══════════════════════════════════════
+   FLOATING SHIMMER — micro-interaction
+   ═══════════════════════════════════════ */
+@keyframes floatShimmer {
+  0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.4; }
+  33% { transform: translateY(-4px) rotate(1deg); opacity: 0.7; }
+  66% { transform: translateY(2px) rotate(-1deg); opacity: 0.5; }
+}
+
+.float-shimmer {
+  animation: floatShimmer 4s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════
+   SPINNER
+   ═══════════════════════════════════════ */
+@keyframes spinner {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 1.5px solid #C4A882;
+  border-top-color: #B8860B;
+  border-radius: 50%;
+  animation: spinner 0.8s linear infinite;
+}
+
+/* ═══════════════════════════════════════
+   DECORATIVE DIVIDER — ornamental
+   ═══════════════════════════════════════ */
+.divider-ornate {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.divider-ornate::before,
+.divider-ornate::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #C4A882);
+}
+
+.divider-ornate::after {
+  background: linear-gradient(90deg, #C4A882, transparent);
+}
+
+.divider-ornate span {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.5rem;
+  color: #C4A882;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+}
+
+/* ═══════════════════════════════════════
    REDUCED MOTION
    ═══════════════════════════════════════ */
 @media (prefers-reduced-motion: reduce) {
