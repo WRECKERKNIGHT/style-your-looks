@@ -1,17 +1,18 @@
 "use client";
 
 import { useRef } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform, useSpring } from "framer-motion";
 import Link from "next/link";
 import { AnimatedCounter } from "@/components/shared/AnimatedCounter";
 import { MagneticButton } from "@/components/shared/MagneticButton";
+import { TextReveal } from "@/components/shared/TextReveal";
 
 const headline = [
-  { word: "Stop", size: "text-[clamp(2.5rem,5vw,4.5rem)]", weight: "font-normal", italic: true, depth: 2 },
-  { word: "dressing", size: "text-[clamp(3.5rem,9vw,8rem)]", weight: "font-bold", italic: false, depth: 1 },
-  { word: "like", size: "text-[clamp(2rem,4vw,3.5rem)]", weight: "font-light", italic: true, depth: 3 },
-  { word: "an", size: "text-[clamp(2rem,4vw,3.5rem)]", weight: "font-light", italic: false, depth: 3 },
-  { word: "algorithm", size: "text-[clamp(3.5rem,9vw,8rem)]", weight: "font-bold", italic: false, gold: true, depth: 1 },
+  { word: "Stop", size: "text-[clamp(2.5rem,5vw,4.5rem)]", weight: "font-normal", italic: true, depth: 2, rotate: -3 },
+  { word: "dressing", size: "text-[clamp(3.5rem,9vw,8rem)]", weight: "font-bold", italic: false, depth: 1, rotate: 0 },
+  { word: "like", size: "text-[clamp(2rem,4vw,3.5rem)]", weight: "font-light", italic: true, depth: 3, rotate: 2 },
+  { word: "an", size: "text-[clamp(2rem,4vw,3.5rem)]", weight: "font-light", italic: false, depth: 3, rotate: -1 },
+  { word: "algorithm", size: "text-[clamp(3.5rem,9vw,8rem)]", weight: "font-bold", italic: false, gold: true, depth: 1, rotate: 0 },
 ];
 
 export function HeroSection() {
@@ -21,35 +22,32 @@ export function HeroSection() {
     offset: ["start start", "end start"],
   });
 
-  // Z-Axis Depth Parallax — each layer moves at different speed
-  // Background layers (slow) → midground → foreground (fast)
-  const bgY = useTransform(scrollYProgress, [0, 1], [0, 80]);
-  const gridScale = useTransform(scrollYProgress, [0, 1], [1, 1.15]);
-  const glowY = useTransform(scrollYProgress, [0, 1], [0, 150]);
-  const watermarkY = useTransform(scrollYProgress, [0, 1], [0, 250]);
-  const watermarkScale = useTransform(scrollYProgress, [0, 0.6], [1, 1.4]);
-  const watermarkOpacity = useTransform(scrollYProgress, [0, 0.5], [0.04, 0]);
+  const smoothProgress = useSpring(scrollYProgress, { stiffness: 100, damping: 30 });
 
-  // Headline layers — different depths create tunnel feel
-  const headlineDeepY = useTransform(scrollYProgress, [0, 1], [0, 60]);
-  const headlineMidY = useTransform(scrollYProgress, [0, 1], [0, 120]);
-  const headlineCloseY = useTransform(scrollYProgress, [0, 1], [0, 200]);
+  const bgY = useTransform(smoothProgress, [0, 1], [0, 80]);
+  const gridScale = useTransform(smoothProgress, [0, 1], [1, 1.15]);
+  const glowY = useTransform(smoothProgress, [0, 1], [0, 150]);
+  const watermarkY = useTransform(smoothProgress, [0, 1], [0, 250]);
+  const watermarkScale = useTransform(smoothProgress, [0, 0.6], [1, 1.4]);
+  const watermarkOpacity = useTransform(smoothProgress, [0, 0.5], [0.04, 0]);
 
-  const subtitleY = useTransform(scrollYProgress, [0, 1], [0, 160]);
-  const subtitleOpacity = useTransform(scrollYProgress, [0, 0.35], [1, 0]);
+  const headlineDeepY = useTransform(smoothProgress, [0, 1], [0, 60]);
+  const headlineMidY = useTransform(smoothProgress, [0, 1], [0, 120]);
+  const headlineCloseY = useTransform(smoothProgress, [0, 1], [0, 200]);
 
-  const ctaY = useTransform(scrollYProgress, [0, 1], [0, 180]);
-  const ctaOpacity = useTransform(scrollYProgress, [0, 0.3], [1, 0]);
+  const subtitleY = useTransform(smoothProgress, [0, 1], [0, 160]);
+  const subtitleOpacity = useTransform(smoothProgress, [0, 0.35], [1, 0]);
 
-  // Right visual — accelerates away (closest to camera)
-  const visualY = useTransform(scrollYProgress, [0, 1], [0, 350]);
-  const visualScale = useTransform(scrollYProgress, [0, 0.5], [1, 0.85]);
-  const visualOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
+  const ctaY = useTransform(smoothProgress, [0, 1], [0, 180]);
+  const ctaOpacity = useTransform(smoothProgress, [0, 0.3], [1, 0]);
 
-  // Stat cards — each at different depth
-  const card1Y = useTransform(scrollYProgress, [0, 1], [0, 300]);
-  const card2Y = useTransform(scrollYProgress, [0, 1], [0, 400]);
-  const card3Y = useTransform(scrollYProgress, [0, 1], [0, 350]);
+  const visualY = useTransform(smoothProgress, [0, 1], [0, 350]);
+  const visualScale = useTransform(smoothProgress, [0, 0.5], [1, 0.85]);
+  const visualOpacity = useTransform(smoothProgress, [0, 0.5], [1, 0]);
+
+  const card1Y = useTransform(smoothProgress, [0, 1], [0, 300]);
+  const card2Y = useTransform(smoothProgress, [0, 1], [0, 400]);
+  const card3Y = useTransform(smoothProgress, [0, 1], [0, 350]);
 
   const depthMap = {
     1: headlineDeepY,
@@ -57,13 +55,15 @@ export function HeroSection() {
     3: headlineCloseY,
   };
 
+  const rotateMap = {
+    1: 0,
+    2: 0,
+    3: 0,
+  };
+
   return (
-    <section ref={ref} className="relative min-h-[115vh] overflow-hidden bg-section-hero">
-      {/* Subtle grid — background layer (moves slowest) */}
-      <motion.div
-        style={{ y: bgY, scale: gridScale }}
-        className="absolute inset-0 opacity-[0.025] origin-center"
-      >
+    <section ref={ref} className="relative min-h-[120vh] overflow-hidden bg-section-hero">
+      <motion.div style={{ y: bgY, scale: gridScale }} className="absolute inset-0 opacity-[0.025] origin-center">
         <div
           className="w-full h-full"
           style={{
@@ -75,21 +75,15 @@ export function HeroSection() {
         />
       </motion.div>
 
-      {/* Warm glow — mid-depth layer */}
-      <motion.div
-        style={{ y: glowY }}
-        className="absolute inset-0 pointer-events-none"
-      >
-        <div className="absolute top-[15%] right-[10%] w-[500px] h-[500px] rounded-full bg-amber/[0.04] blur-[150px]" />
-        <div className="absolute bottom-[20%] left-[5%] w-[300px] h-[300px] rounded-full bg-burgundy/[0.03] blur-[100px]" />
+      <motion.div style={{ y: glowY }} className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-[15%] right-[10%] w-[600px] h-[600px] rounded-full bg-amber/[0.05] blur-[180px]" />
+        <div className="absolute bottom-[20%] left-[5%] w-[400px] h-[400px] rounded-full bg-burgundy/[0.03] blur-[120px]" />
+        <div className="absolute top-[40%] left-[30%] w-[300px] h-[300px] rounded-full bg-olive/[0.02] blur-[100px]" />
       </motion.div>
 
-      {/* Main content — two-column asymmetric layout */}
       <div className="relative z-10 h-full flex flex-col justify-center px-8 md:px-16 lg:px-24 pt-20">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-          {/* Left — headline */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center min-h-[90vh]">
           <div className="lg:col-span-7">
-            {/* Section label */}
             <motion.div
               initial={{ opacity: 0, x: -30 }}
               animate={{ opacity: 1, x: 0 }}
@@ -101,22 +95,24 @@ export function HeroSection() {
               <span className="type-label text-amber/80">Est. MMXXVI</span>
             </motion.div>
 
-            {/* Staggered headline — each word at different Z-depth */}
             <div className="space-y-0">
               {headline.map((item, i) => (
                 <div key={i} className="overflow-hidden">
                   <motion.span
-                    style={{ y: depthMap[item.depth as keyof typeof depthMap] }}
+                    style={{
+                      y: depthMap[item.depth as keyof typeof depthMap],
+                      rotateX: rotateMap[item.depth as keyof typeof rotateMap],
+                    }}
                     className={`block ${item.size} ${item.weight} ${
                       item.italic ? "italic" : ""
                     } tracking-tight text-espresso leading-[0.92] ${
                       item.gold ? "text-gradient-gold" : ""
                     }`}
-                    initial={{ y: "110%", rotateX: -20 }}
-                    animate={{ y: 0, rotateX: 0 }}
+                    initial={{ y: "120%", rotateX: -30, opacity: 0 }}
+                    animate={{ y: 0, rotateX: 0, opacity: 1 }}
                     transition={{
-                      duration: 1.1,
-                      delay: 0.4 + i * 0.12,
+                      duration: 1.2,
+                      delay: 0.4 + i * 0.15,
                       ease: [0.16, 1, 0.3, 1],
                     }}
                   >
@@ -126,30 +122,34 @@ export function HeroSection() {
               ))}
             </div>
 
-            {/* Subtitle — mid-depth */}
             <motion.p
               style={{ y: subtitleY, opacity: subtitleOpacity }}
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.9, delay: 1.2, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.9, delay: 1.4, ease: [0.16, 1, 0.3, 1] }}
               className="mt-10 text-coffee text-lg md:text-xl max-w-lg font-body leading-relaxed"
             >
               478 facial landmarks. Zero server calls. Your face stays on your
               device — we just tell you what works and what doesn&apos;t.
             </motion.p>
 
-            {/* CTAs — near layer */}
             <motion.div
               style={{ y: ctaY, opacity: ctaOpacity }}
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.9, delay: 1.5, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.9, delay: 1.7, ease: [0.16, 1, 0.3, 1] }}
               className="mt-12 flex flex-wrap gap-5"
             >
               <MagneticButton>
                 <Link href="/signup" className="btn-gold">
                   Get Your Score
-                  <span className="text-lg leading-none">&rarr;</span>
+                  <motion.span
+                    className="text-lg leading-none inline-block"
+                    animate={{ x: [0, 4, 0] }}
+                    transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                  >
+                    &rarr;
+                  </motion.span>
                 </Link>
               </MagneticButton>
               <MagneticButton strength={0.2}>
@@ -160,12 +160,10 @@ export function HeroSection() {
             </motion.div>
           </div>
 
-          {/* Right — visual element: closest layer (moves fastest) */}
           <motion.div
             style={{ y: visualY, scale: visualScale, opacity: visualOpacity }}
             className="lg:col-span-5 relative hidden lg:flex items-center justify-center"
           >
-            {/* Giant watermark number — mid-depth, scales up as you scroll */}
             <motion.div
               style={{ y: watermarkY, scale: watermarkScale, opacity: watermarkOpacity }}
               className="absolute select-none pointer-events-none"
@@ -175,53 +173,30 @@ export function HeroSection() {
               </span>
             </motion.div>
 
-            {/* Floating stat cards — each at different depth */}
-            <motion.div
-              style={{ y: card1Y }}
-              initial={{ opacity: 0, x: 40 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, delay: 1.8 }}
-              className="absolute top-[10%] right-[5%] bg-cream/80 backdrop-blur-md border border-tan/30 px-6 py-5 shadow-elegant"
-            >
-              <div className="text-3xl font-display font-bold text-amber">
-                <AnimatedCounter target={478} duration={2.5} />
-              </div>
-              <div className="type-mono text-[0.55rem] text-coffee/60 tracking-widest mt-1">
-                FACE POINTS
-              </div>
-            </motion.div>
+            {[
+              { y: card1Y, xOffset: 40, delay: 1.8, target: 478, suffix: "", label: "FACE POINTS", pos: { top: "10%", right: "5%" } },
+              { y: card2Y, xOffset: -40, delay: 2.0, target: 100, suffix: "%", label: "ON-DEVICE", pos: { top: "35%", left: "0%" } },
+              { y: card3Y, xOffset: 0, delay: 2.2, target: 0, suffix: "", label: "SERVER CALLS", pos: { bottom: "15%", right: "15%" } },
+            ].map((card, i) => (
+              <motion.div
+                key={i}
+                style={{ y: card.y, ...card.pos }}
+                initial={{ opacity: 0, x: card.xOffset }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8, delay: card.delay }}
+                className="absolute bg-cream/80 backdrop-blur-md border border-tan/30 px-6 py-5 shadow-elegant"
+                whileHover={{ y: -4, boxShadow: "0 12px 40px -8px rgba(44,24,16,0.2)" }}
+              >
+                <div className="text-3xl font-display font-bold text-amber">
+                  <AnimatedCounter target={card.target} duration={2.5} />
+                  {card.suffix}
+                </div>
+                <div className="type-mono text-[0.55rem] text-coffee/60 tracking-widest mt-1">
+                  {card.label}
+                </div>
+              </motion.div>
+            ))}
 
-            <motion.div
-              style={{ y: card2Y }}
-              initial={{ opacity: 0, x: -40 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, delay: 2.0 }}
-              className="absolute top-[35%] left-[0%] bg-cream/80 backdrop-blur-md border border-tan/30 px-6 py-5 shadow-elegant"
-            >
-              <div className="text-3xl font-display font-bold text-amber">
-                <AnimatedCounter target={100} suffix="%" duration={2} />
-              </div>
-              <div className="type-mono text-[0.55rem] text-coffee/60 tracking-widest mt-1">
-                ON-DEVICE
-              </div>
-            </motion.div>
-
-            <motion.div
-              style={{ y: card3Y }}
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 2.2 }}
-              className="absolute bottom-[15%] right-[15%] bg-cream/80 backdrop-blur-md border border-tan/30 px-6 py-5 shadow-elegant"
-            >
-              <div className="text-3xl font-display font-bold text-amber">
-                <AnimatedCounter target={0} duration={1} />
-              </div>
-              <div className="type-mono text-[0.55rem] text-coffee/60 tracking-widest mt-1">
-                SERVER CALLS
-              </div>
-            </motion.div>
-
-            {/* Decorative line — foreground layer */}
             <motion.div
               initial={{ scaleY: 0 }}
               animate={{ scaleY: 1 }}
@@ -232,7 +207,6 @@ export function HeroSection() {
         </div>
       </div>
 
-      {/* Scroll indicator */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -255,7 +229,6 @@ export function HeroSection() {
         />
       </motion.div>
 
-      {/* Corner ornaments */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
