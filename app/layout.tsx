@@ -9,6 +9,9 @@ import { CommandPalette } from "@/components/shared/CommandPalette";
 import { ThemeInitializer } from "@/components/shared/ThemeInitializer";
 import { OfflineIndicator } from "@/components/shared/OfflineIndicator";
 import { ServiceWorkerRegister } from "@/components/shared/ServiceWorkerRegister";
+import { SkipLink } from "@/components/shared/SkipLink";
+import { AutoSave } from "@/components/shared/AutoSave";
+import { KeyboardShortcutHint } from "@/components/shared/KeyboardShortcutHint";
 
 export const metadata: Metadata = {
   title: {
@@ -68,9 +71,12 @@ export default function RootLayout({
         <LoadingScreen />
         <ParticleField />
         <CustomCursor />
+        <SkipLink />
         <CommandPalette />
         <OfflineIndicator />
         <ServiceWorkerRegister />
+        <KeyboardShortcutHint />
+        <AutoSave />
         <ToastProvider>
           <SmoothScroll>
             {children}
