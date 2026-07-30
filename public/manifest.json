@@ -1,0 +1,21 @@
+{
+  "name": "AURASTYLE — AI-Powered Style Intelligence",
+  "short_name": "AURASTYLE",
+  "description": "AI-powered facial analysis, virtual try-on, and outfit recommendations. All analysis runs in your browser.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F5F0E8",
+  "theme_color": "#F5F0E8",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["lifestyle", "fashion", "health"],
+  "lang": "en-US",
+  "dir": "ltr"
+}

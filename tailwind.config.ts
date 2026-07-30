@@ -1,6 +1,7 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
+  darkMode: "class",
   content: [
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -25,8 +26,11 @@ const config: Config = {
         ivory: "#FFFFF0",
         linen: "#FAF0E6",
         "dark-base": "#1A1410",
-        "dark-surface": "#231C14",
-        "dark-elevated": "#2C2318",
+        "dark-surface": "#161210",
+        "dark-elevated": "#1C1814",
+        "dark-border": "#3C3228",
+        "dark-text": "#F0E8E0",
+        "dark-muted": "#B8A89A",
       },
       fontFamily: {
         display: ['"Playfair Display"', "Georgia", "ui-serif", "serif"],

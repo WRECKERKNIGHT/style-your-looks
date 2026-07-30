@@ -23,8 +23,12 @@ import {
   GitCompareArrows,
   Glasses,
   ClipboardList,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { useState } from "react";
+import { ThemeToggle } from "@/components/shared/ThemeToggle";
+import { useThemeStore } from "@/hooks/useTheme";
 
 const navItems = [
   { href: "/dashboard", label: "HOME", icon: Home },
@@ -56,44 +60,44 @@ export default function DashboardLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-parchment">
+    <div className="min-h-screen bg-parchment dark:bg-dark-base">
       {/* Mobile top bar */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-cream/95 backdrop-blur-xl border-b border-tan z-50 flex items-center px-4">
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-cream/95 dark:bg-dark-surface/95 backdrop-blur-xl border-b border-tan dark:border-dark-border z-50 flex items-center px-4">
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="p-2 hover:bg-tan/10 rounded-lg transition-colors"
+          className="p-2 hover:bg-tan/10 dark:hover:bg-dark-border/10 rounded-lg transition-colors"
         >
           {sidebarOpen ? (
-            <X className="w-5 h-5 text-espresso" />
+            <X className="w-5 h-5 text-espresso dark:text-dark-text" />
           ) : (
-            <Menu className="w-5 h-5 text-espresso" />
+            <Menu className="w-5 h-5 text-espresso dark:text-dark-text" />
           )}
         </button>
         <div className="flex items-center gap-2.5 ml-3">
           <div className="w-7 h-7 bg-amber flex items-center justify-center rounded-sm">
-            <Sparkles className="w-3.5 h-3.5 text-cream" />
+            <Sparkles className="w-3.5 h-3.5 text-cream dark:text-dark-text" />
           </div>
-          <span className="text-sm font-display font-bold text-espresso tracking-wider">AURASTYLE</span>
+          <span className="text-sm font-display font-bold text-espresso dark:text-dark-text tracking-wider">AURASTYLE</span>
         </div>
       </div>
 
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed top-0 left-0 bottom-0 w-64 bg-cream border-r border-tan z-40 transition-transform duration-300 flex flex-col",
+          "fixed top-0 left-0 bottom-0 w-64 bg-cream dark:bg-dark-surface border-r border-tan dark:border-dark-border z-40 transition-transform duration-300 flex flex-col",
           "lg:translate-x-0",
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
         {/* Logo */}
-        <div className="p-6 border-b border-tan">
+        <div className="p-6 border-b border-tan dark:border-dark-border">
           <Link href="/" className="flex items-center gap-3">
             <div className="w-9 h-9 bg-amber flex items-center justify-center rounded-sm shadow-gold">
-              <Sparkles className="w-4 h-4 text-cream" />
+              <Sparkles className="w-4 h-4 text-cream dark:text-dark-text" />
             </div>
             <div>
-              <span className="text-base font-display font-bold text-espresso tracking-wider block leading-none">AURASTYLE</span>
-              <span className="text-[10px] font-mono text-coffee tracking-widest uppercase">Gentleman&apos;s Journal</span>
+              <span className="text-base font-display font-bold text-espresso dark:text-dark-text tracking-wider block leading-none">AURASTYLE</span>
+              <span className="text-[10px] font-mono text-coffee dark:text-dark-muted tracking-widest uppercase">Gentleman&apos;s Journal</span>
             </div>
           </Link>
         </div>
@@ -115,7 +119,7 @@ export default function DashboardLayout({
                   "flex items-center gap-3 px-4 py-3 text-xs font-body font-semibold tracking-wider transition-all border-l-2 rounded-r-sm",
                   isActive
                     ? "bg-amber/10 text-amber border-amber"
-                    : "text-coffee hover:bg-tan/10 hover:text-espresso border-transparent"
+                    : "text-coffee dark:text-dark-muted hover:bg-tan/10 dark:hover:bg-dark-elevated hover:text-espresso dark:hover:text-dark-text border-transparent"
                 )}
               >
                 <item.icon className="w-[18px] h-[18px]" />
@@ -126,10 +130,14 @@ export default function DashboardLayout({
         </nav>
 
         {/* Bottom */}
-        <div className="p-5 border-t border-tan">
+        <div className="p-5 border-t border-tan dark:border-dark-border space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-mono text-coffee dark:text-dark-muted tracking-widest uppercase">Theme</span>
+            <ThemeToggle />
+          </div>
           <Link
             href="/"
-            className="flex items-center gap-2 text-[11px] font-body text-coffee hover:text-espresso transition-colors tracking-widest uppercase"
+            className="flex items-center gap-2 text-[11px] font-body text-coffee dark:text-dark-muted hover:text-espresso dark:hover:text-dark-text transition-colors tracking-widest uppercase"
           >
             <ChevronLeft className="w-3.5 h-3.5" />
             Back to Site
@@ -140,7 +148,7 @@ export default function DashboardLayout({
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div
-          className="lg:hidden fixed inset-0 bg-espresso/30 backdrop-blur-sm z-30"
+          className="lg:hidden fixed inset-0 bg-espresso/30 dark:bg-black/60 backdrop-blur-sm z-30"
           onClick={() => setSidebarOpen(false)}
         />
       )}

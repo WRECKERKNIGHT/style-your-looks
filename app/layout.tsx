@@ -5,6 +5,10 @@ import { ToastProvider } from "@/components/shared/Toast";
 import { CustomCursor } from "@/components/shared/CustomCursor";
 import { LoadingScreen } from "@/components/shared/LoadingScreen";
 import { ParticleField } from "@/components/shared/ParticleField";
+import { CommandPalette } from "@/components/shared/CommandPalette";
+import { ThemeInitializer } from "@/components/shared/ThemeInitializer";
+import { OfflineIndicator } from "@/components/shared/OfflineIndicator";
+import { ServiceWorkerRegister } from "@/components/shared/ServiceWorkerRegister";
 
 export const metadata: Metadata = {
   title: {
@@ -53,11 +57,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#F5F0E8" media="(prefers-color-scheme: light)" />
+        <meta name="theme-color" content="#0D0A08" media="(prefers-color-scheme: dark)" />
+      </head>
       <body className="antialiased grain vignette">
+        <ThemeInitializer />
         <LoadingScreen />
         <ParticleField />
         <CustomCursor />
+        <CommandPalette />
+        <OfflineIndicator />
+        <ServiceWorkerRegister />
         <ToastProvider>
           <SmoothScroll>
             {children}
