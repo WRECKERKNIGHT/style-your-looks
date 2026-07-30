@@ -29,6 +29,8 @@ import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { PageTransition } from "@/components/shared/PageTransition";
 import { CommandPalette } from "@/components/shared/CommandPalette";
 import { KeyboardShortcutHint } from "@/components/shared/KeyboardShortcutHint";
+import { OnboardingTour } from "@/components/shared/OnboardingTour";
+import { AutoSave } from "@/components/shared/AutoSave";
 
 const navItems = [
   { href: "/dashboard", label: "HOME", icon: Home },
@@ -162,6 +164,8 @@ export default function DashboardLayout({
 
       <CommandPalette />
       <KeyboardShortcutHint />
+      <OnboardingTour />
+      <AutoSave />
     </div>
   );
 }
