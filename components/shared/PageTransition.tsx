@@ -1,47 +1,27 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { usePathname } from "next/navigation";
 
-export function PageTransition() {
-  const pathname = usePathname();
-  const [isTransitioning, setIsTransitioning] = useState(false);
-  const [prevPath, setPrevPath] = useState(pathname);
+const variants = {
+  initial: { opacity: 0, y: 8 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -4 },
+};
 
-  useEffect(() => {
-    if (pathname !== prevPath) {
-      setIsTransitioning(true);
-      const timeout = setTimeout(() => {
-        setPrevPath(pathname);
-        setIsTransitioning(false);
-      }, 600);
-      return () => clearTimeout(timeout);
-    }
-  }, [pathname, prevPath]);
+export function PageTransition({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
 
   return (
-    <AnimatePresence mode="wait">
-      {isTransitioning && (
-        <motion.div
-          key="transition"
-          initial={{ scaleY: 0 }}
-          animate={{ scaleY: 1 }}
-          exit={{ scaleY: 0 }}
-          transition={{ duration: 0.5, ease: [0.76, 0, 0.24, 1] }}
-          className="fixed inset-0 z-[9997] origin-top"
-          style={{ backgroundColor: "#B8860B" }}
-        >
-          <motion.div
-            initial={{ scaleY: 1 }}
-            animate={{ scaleY: 0 }}
-            exit={{ scaleY: 1 }}
-            transition={{ duration: 0.5, delay: 0.3, ease: [0.76, 0, 0.24, 1] }}
-            className="absolute inset-0 origin-bottom"
-            style={{ backgroundColor: "#F5F0E8" }}
-          />
-        </motion.div>
-      )}
-    </AnimatePresence>
+    <motion.div
+      key={pathname}
+      variants={variants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+    >
+      {children}
+    </motion.div>
   );
 }

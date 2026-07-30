@@ -23,12 +23,12 @@ import {
   GitCompareArrows,
   Glasses,
   ClipboardList,
-  Sun,
-  Moon,
 } from "lucide-react";
 import { useState } from "react";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
-import { useThemeStore } from "@/hooks/useTheme";
+import { PageTransition } from "@/components/shared/PageTransition";
+import { CommandPalette } from "@/components/shared/CommandPalette";
+import { KeyboardShortcutHint } from "@/components/shared/KeyboardShortcutHint";
 
 const navItems = [
   { href: "/dashboard", label: "HOME", icon: Home },
@@ -155,8 +155,13 @@ export default function DashboardLayout({
 
       {/* Main content */}
       <main className="lg:ml-64 pt-16 lg:pt-0 min-h-screen">
-        <div className="p-6 lg:p-10 max-w-7xl">{children}</div>
+        <div className="p-6 lg:p-10 max-w-7xl">
+          <PageTransition>{children}</PageTransition>
+        </div>
       </main>
+
+      <CommandPalette />
+      <KeyboardShortcutHint />
     </div>
   );
 }
