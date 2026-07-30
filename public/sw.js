@@ -1,9 +1,14 @@
-const CACHE = "aurastyle-v1";
+const CACHE = "aurastyle-v2";
 const STATIC_ASSETS = [
   "/",
   "/manifest.json",
   "/icon.svg",
+  "/icon-192.png",
+  "/icon-512.png",
 ];
+
+const CACHE_FIRST = ["style", "script", "font", "image"];
+const NETWORK_FIRST = ["document", "manifest"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -22,17 +27,40 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
-  if (event.request.method !== "GET") return;
+  const { request } = event;
+  if (request.method !== "GET") return;
+
+  const url = new URL(request.url);
+  const isStatic = CACHE_FIRST.some((t) => request.destination === t);
+  const isImage = request.destination === "image" || /\.(png|jpg|jpeg|webp|svg|ico)$/i.test(url.pathname);
+
+  if (isImage || isStatic) {
+    event.respondWith(
+      caches.match(request).then((cached) => {
+        if (cached) return cached;
+        return fetch(request).then((response) => {
+          if (response.ok && response.type === "basic") {
+            const clone = response.clone();
+            caches.open(CACHE).then((cache) => cache.put(request, clone));
+          }
+          return response;
+        }).catch(() => new Response("Offline content unavailable", { status: 503 }));
+      })
+    );
+    return;
+  }
+
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      const fetchPromise = fetch(event.request).then((response) => {
-        if (response.ok && response.type === "basic") {
-          const clone = response.clone();
-          caches.open(CACHE).then((cache) => cache.put(event.request, clone));
-        }
-        return response;
-      }).catch(() => cached);
-      return cached || fetchPromise;
+    fetch(request).then((response) => {
+      if (response.ok && response.type === "basic") {
+        const clone = response.clone();
+        caches.open(CACHE).then((cache) => cache.put(request, clone));
+      }
+      return response;
+    }).catch(() => {
+      return caches.match(request).then((cached) => {
+        return cached || new Response("Offline", { status: 503 });
+      });
     })
   );
 });

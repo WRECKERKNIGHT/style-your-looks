@@ -1,11 +1,11 @@
 {
   "name": "AURASTYLE — AI-Powered Style Intelligence",
   "short_name": "AURASTYLE",
-  "description": "AI-powered facial analysis, virtual try-on, and outfit recommendations. All analysis runs in your browser.",
+  "description": "AI-powered facial analysis, virtual try-on, and outfit recommendations. All analysis runs in your browser — your data never leaves your device.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#F5F0E8",
-  "theme_color": "#F5F0E8",
+  "background_color": "#1a1614",
+  "theme_color": "#c89d7c",
   "orientation": "portrait-primary",
   "icons": [
     {
@@ -13,9 +13,37 @@
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
     }
   ],
   "categories": ["lifestyle", "fashion", "health"],
   "lang": "en-US",
-  "dir": "ltr"
+  "dir": "ltr",
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Face Analysis",
+      "short_name": "Face IQ",
+      "description": "Analyze your facial symmetry and proportions",
+      "url": "/dashboard/face-analysis"
+    },
+    {
+      "name": "Virtual Try-On",
+      "short_name": "Try-On",
+      "description": "Try outfits virtually",
+      "url": "/dashboard/virtual-tryon"
+    }
+  ],
+  "related_applications": []
 }
