@@ -1,13 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { User, Camera, Star, History, Settings, Shield, LogOut, Trash2, ExternalLink, Loader2 } from "lucide-react";
+import { User, Camera, Star, History, Settings, Shield, LogOut, Trash2, ExternalLink, Loader2, Download, Upload, RotateCcw, Moon, Save, Bell, Sun } from "lucide-react";
 import { motion } from "framer-motion";
 import { useAnalysisStore } from "@/store/analysis-store";
 import { createClient } from "@/lib/supabase/client";
 import { getHistory, clearHistory, type HistoryEntry } from "@/lib/history";
+import { useSettings, type AppSettings } from "@/hooks/useSettings";
+import { useTheme } from "@/hooks/useTheme";
+import { useToast } from "@/components/shared/Toast";
 
 export default function ProfilePage() {
   const { faceResult, bodyResult } = useAnalysisStore();
@@ -18,6 +21,10 @@ export default function ProfilePage() {
   const [cameraStatus, setCameraStatus] = useState<string>("unknown");
   const router = useRouter();
   const supabase = createClient();
+  const { settings, updateSetting, resetSettings, exportData, importData } = useSettings();
+  const { isDark, toggleTheme } = useTheme();
+  const { addToast } = useToast();
+  const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     async function loadUser() {
@@ -234,22 +241,89 @@ export default function ProfilePage() {
 
       {activeTab === "settings" && (
         <div className="space-y-4">
-          <div className="bg-cream p-6 border border-tan rounded-sm card-hover">
+          {/* Theme */}
+          <div className="bg-cream dark:bg-dark-surface p-6 border border-tan dark:border-dark-border rounded-sm card-hover">
             <div className="flex items-center gap-4">
-              <Shield className="w-5 h-5 text-coffee" />
+              {isDark ? <Moon className="w-5 h-5 text-amber" /> : <Sun className="w-5 h-5 text-amber" />}
               <div className="flex-1">
-                <h4 className="text-base font-display font-bold text-espresso tracking-wider">PRIVACY</h4>
-                <p className="text-sm text-coffee font-body mt-1">All analysis runs in your browser. Photos never leave your device.</p>
+                <h4 className="text-base font-display font-bold text-espresso dark:text-dark-text tracking-wider">THEME</h4>
+                <p className="text-sm text-coffee dark:text-dark-muted font-body mt-1">
+                  Currently in {isDark ? "dark" : "light"} mode
+                </p>
+              </div>
+              <button
+                onClick={toggleTheme}
+                className="text-sm bg-amber text-cream px-4 py-2 font-body tracking-wider uppercase rounded-sm hover:bg-amber-light transition-colors shadow-gold"
+              >
+                {isDark ? "LIGHT" : "DARK"}
+              </button>
+            </div>
+          </div>
+
+          {/* Auto-Save */}
+          <div className="bg-cream dark:bg-dark-surface p-6 border border-tan dark:border-dark-border rounded-sm card-hover">
+            <div className="flex items-center gap-4">
+              <Save className="w-5 h-5 text-coffee dark:text-dark-muted" />
+              <div className="flex-1">
+                <h4 className="text-base font-display font-bold text-espresso dark:text-dark-text tracking-wider">AUTO-SAVE</h4>
+                <p className="text-sm text-coffee dark:text-dark-muted font-body mt-1">
+                  Automatically save analysis results every {settings.autoSaveInterval}s
+                </p>
+              </div>
+              <button
+                onClick={() => updateSetting("autoSave", !settings.autoSave)}
+                className={`relative w-12 h-6 rounded-full transition-colors ${
+                  settings.autoSave ? "bg-amber" : "bg-coffee/30"
+                }`}
+              >
+                <div className={`absolute top-0.5 w-5 h-5 bg-cream rounded-full shadow-sm transition-transform ${
+                  settings.autoSave ? "translate-x-6" : "translate-x-0.5"
+                }`} />
+              </button>
+            </div>
+          </div>
+
+          {/* Landmarks */}
+          <div className="bg-cream dark:bg-dark-surface p-6 border border-tan dark:border-dark-border rounded-sm card-hover">
+            <div className="flex items-center gap-4">
+              <Bell className="w-5 h-5 text-coffee dark:text-dark-muted" />
+              <div className="flex-1">
+                <h4 className="text-base font-display font-bold text-espresso dark:text-dark-text tracking-wider">SHOW LANDMARKS</h4>
+                <p className="text-sm text-coffee dark:text-dark-muted font-body mt-1">
+                  Display facial landmark overlay by default on face analysis
+                </p>
+              </div>
+              <button
+                onClick={() => updateSetting("showLandmarks", !settings.showLandmarks)}
+                className={`relative w-12 h-6 rounded-full transition-colors ${
+                  settings.showLandmarks ? "bg-amber" : "bg-coffee/30"
+                }`}
+              >
+                <div className={`absolute top-0.5 w-5 h-5 bg-cream rounded-full shadow-sm transition-transform ${
+                  settings.showLandmarks ? "translate-x-6" : "translate-x-0.5"
+                }`} />
+              </button>
+            </div>
+          </div>
+
+          {/* Privacy */}
+          <div className="bg-cream dark:bg-dark-surface p-6 border border-tan dark:border-dark-border rounded-sm card-hover">
+            <div className="flex items-center gap-4">
+              <Shield className="w-5 h-5 text-coffee dark:text-dark-muted" />
+              <div className="flex-1">
+                <h4 className="text-base font-display font-bold text-espresso dark:text-dark-text tracking-wider">PRIVACY</h4>
+                <p className="text-sm text-coffee dark:text-dark-muted font-body mt-1">All analysis runs in your browser. Photos never leave your device.</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-cream p-6 border border-tan rounded-sm card-hover">
+          {/* Camera Permission */}
+          <div className="bg-cream dark:bg-dark-surface p-6 border border-tan dark:border-dark-border rounded-sm card-hover">
             <div className="flex items-center gap-4">
-              <Camera className="w-5 h-5 text-coffee" />
+              <Camera className="w-5 h-5 text-coffee dark:text-dark-muted" />
               <div className="flex-1">
-                <h4 className="text-base font-display font-bold text-espresso tracking-wider">CAMERA PERMISSION</h4>
-                <p className="text-sm text-coffee font-body mt-1">
+                <h4 className="text-base font-display font-bold text-espresso dark:text-dark-text tracking-wider">CAMERA PERMISSION</h4>
+                <p className="text-sm text-coffee dark:text-dark-muted font-body mt-1">
                   {cameraStatus === "granted"
                     ? "Camera access granted"
                     : cameraStatus === "denied"
@@ -259,34 +333,90 @@ export default function ProfilePage() {
               </div>
               <button
                 onClick={handleCameraManage}
-                className="text-sm bg-parchment text-espresso px-4 py-2 font-body tracking-wider uppercase border border-tan hover:bg-tan/20 transition-colors rounded-sm"
+                className="text-sm bg-parchment dark:bg-dark-elevated text-espresso dark:text-dark-text px-4 py-2 font-body tracking-wider uppercase border border-tan dark:border-dark-border hover:bg-tan/20 dark:hover:bg-dark-border/20 transition-colors rounded-sm"
               >
                 {cameraStatus === "granted" ? "GRANTED" : "MANAGE"}
               </button>
             </div>
           </div>
 
-          <div className="bg-cream p-6 border border-tan rounded-sm card-hover">
-            <div className="flex items-center gap-4">
-              <History className="w-5 h-5 text-coffee" />
+          {/* Data Management */}
+          <div className="bg-cream dark:bg-dark-surface p-6 border border-tan dark:border-dark-border rounded-sm card-hover">
+            <div className="flex items-center gap-4 mb-4">
+              <History className="w-5 h-5 text-coffee dark:text-dark-muted" />
               <div className="flex-1">
-                <h4 className="text-base font-display font-bold text-espresso tracking-wider">LOCAL DATA</h4>
-                <p className="text-sm text-coffee font-body mt-1">{history.length} analysis entries stored locally</p>
+                <h4 className="text-base font-display font-bold text-espresso dark:text-dark-text tracking-wider">DATA MANAGEMENT</h4>
+                <p className="text-sm text-coffee dark:text-dark-muted font-body mt-1">{history.length} analysis entries stored locally</p>
               </div>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <button
+                onClick={() => {
+                  const json = exportData();
+                  const blob = new Blob([json], { type: "application/json" });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = `aurastyle-data-${Date.now()}.json`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                  addToast("Data exported successfully", "success");
+                }}
+                className="flex items-center gap-2 px-4 py-2.5 bg-amber text-cream text-sm font-body tracking-wider uppercase rounded-sm hover:bg-amber-light transition-colors"
+              >
+                <Download className="w-4 h-4" />
+                EXPORT
+              </button>
+              <button
+                onClick={() => fileRef.current?.click()}
+                className="flex items-center gap-2 px-4 py-2.5 bg-parchment dark:bg-dark-elevated text-espresso dark:text-dark-text text-sm font-body tracking-wider uppercase border border-tan dark:border-dark-border rounded-sm hover:bg-tan/20 transition-colors"
+              >
+                <Upload className="w-4 h-4" />
+                IMPORT
+              </button>
+              <input
+                ref={fileRef}
+                type="file"
+                accept=".json"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  const reader = new FileReader();
+                  reader.onload = () => {
+                    const ok = importData(reader.result as string);
+                    setHistory(getHistory());
+                    addToast(ok ? "Data imported successfully" : "Failed to import data", ok ? "success" : "error");
+                  };
+                  reader.readAsText(file);
+                }}
+              />
               <button
                 onClick={handleClearHistory}
-                className="text-sm bg-parchment text-burgundy px-4 py-2 font-body tracking-wider uppercase border border-tan hover:bg-burgundy/5 transition-colors rounded-sm"
+                className="flex items-center gap-2 px-4 py-2.5 bg-parchment dark:bg-dark-elevated text-burgundy text-sm font-body tracking-wider uppercase border border-burgundy/20 rounded-sm hover:bg-burgundy/5 transition-colors"
               >
+                <Trash2 className="w-4 h-4" />
                 CLEAR
+              </button>
+              <button
+                onClick={() => {
+                  resetSettings();
+                  addToast("Settings reset to defaults", "success");
+                }}
+                className="flex items-center gap-2 px-4 py-2.5 bg-parchment dark:bg-dark-elevated text-coffee dark:text-dark-muted text-sm font-body tracking-wider uppercase border border-tan dark:border-dark-border rounded-sm hover:bg-tan/20 transition-colors"
+              >
+                <RotateCcw className="w-4 h-4" />
+                RESET
               </button>
             </div>
           </div>
 
+          {/* Sign Out */}
           {user && (
             <button
               onClick={handleSignOut}
               disabled={signingOut}
-              className="w-full bg-cream p-6 border border-burgundy/30 rounded-sm hover:bg-burgundy/5 transition-colors"
+              className="w-full bg-cream dark:bg-dark-surface p-6 border border-burgundy/30 rounded-sm hover:bg-burgundy/5 transition-colors"
             >
               <div className="flex items-center gap-4">
                 {signingOut ? (
@@ -298,7 +428,7 @@ export default function ProfilePage() {
                   <h4 className="text-base font-display font-bold text-burgundy tracking-wider">
                     {signingOut ? "SIGNING OUT..." : "SIGN OUT"}
                   </h4>
-                  <p className="text-sm text-coffee font-body mt-1">Sign out of your account</p>
+                  <p className="text-sm text-coffee dark:text-dark-muted font-body mt-1">Sign out of your account</p>
                 </div>
               </div>
             </button>
