@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
-import { ScrollReveal, ScrollRevealItem, ScrollProgress, ParallaxText } from "@/components/shared/ScrollReveal";
+import { ScrollReveal, ScrollRevealItem, ScrollProgress } from "@/components/shared/ScrollReveal";
 import {
   ScanFace,
   Layers,
@@ -106,10 +105,10 @@ export default function DashboardHome() {
       {/* Welcome */}
       <ScrollReveal>
         <span className="section-number">EST. MMXXIV // DASHBOARD</span>
-        <h1 className="mt-3 text-5xl md:text-6xl font-display font-bold text-espresso tracking-tight leading-tight">
+        <h1 className="mt-3 text-5xl md:text-6xl font-display font-bold text-espresso dark:text-dark-text tracking-tight leading-tight">
           WELCOME <span className="text-gradient-gold">BACK.</span>
         </h1>
-        <p className="text-coffee mt-3 font-body text-lg max-w-xl leading-relaxed">
+        <p className="text-coffee dark:text-dark-muted mt-3 font-body text-lg max-w-xl leading-relaxed">
           Pick a tool. All analysis runs on your device. Zero server calls.
         </p>
       </ScrollReveal>
@@ -125,18 +124,18 @@ export default function DashboardHome() {
               <ScrollRevealItem key={action.href}>
                 <Link
                   href={action.href}
-                  className="group block bg-cream border border-tan p-7 hover:border-amber/40 transition-all duration-300 h-full card-hover vintage-border rounded-sm"
+                  className="group block bg-cream dark:bg-dark-surface border border-tan dark:border-dark-border p-7 hover:border-amber/40 transition-all duration-300 h-full card-hover vintage-border rounded-sm"
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div className={`w-11 h-11 ${colors.bg} border ${colors.border} flex items-center justify-center rounded-sm`}>
                       <action.icon className={`w-5 h-5 ${colors.text}`} />
                     </div>
-                    <ArrowRight className="w-4 h-4 text-tan group-hover:text-amber group-hover:translate-x-1 transition-all" />
+                    <ArrowRight className="w-4 h-4 text-tan dark:text-dark-border group-hover:text-amber group-hover:translate-x-1 transition-all" />
                   </div>
-                  <h3 className="text-base font-display font-bold text-espresso tracking-wider mb-1.5">
+                  <h3 className="text-base font-display font-bold text-espresso dark:text-dark-text tracking-wider mb-1.5">
                     {action.label}
                   </h3>
-                  <p className="text-xs text-coffee font-body leading-relaxed">
+                  <p className="text-xs text-coffee dark:text-dark-muted font-body leading-relaxed">
                     {action.description}
                   </p>
                 </Link>
@@ -150,10 +149,10 @@ export default function DashboardHome() {
 
       {/* Getting Started */}
       <ScrollReveal>
-        <div className="bg-cream border border-tan p-10 vintage-border rounded-sm">
+        <div className="bg-cream dark:bg-dark-surface border border-tan dark:border-dark-border p-10 vintage-border rounded-sm">
           <div className="flex items-center gap-3 mb-8">
             <Camera className="w-5 h-5 text-amber" />
-            <h2 className="text-lg font-display font-bold text-espresso tracking-wider">QUICK START</h2>
+            <h2 className="text-lg font-display font-bold text-espresso dark:text-dark-text tracking-wider">QUICK START</h2>
           </div>
           <ScrollReveal stagger staggerChildren={0.15}>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -178,10 +177,10 @@ export default function DashboardHome() {
                   <div className="flex gap-5">
                     <span className="text-4xl font-display font-bold text-amber/30 leading-none mt-1">{item.step}</span>
                     <div>
-                      <h4 className="text-sm font-display font-bold text-espresso tracking-wider mb-2">
+                      <h4 className="text-sm font-display font-bold text-espresso dark:text-dark-text tracking-wider mb-2">
                         {item.title}
                       </h4>
-                      <p className="text-sm text-coffee font-body leading-relaxed">
+                      <p className="text-sm text-coffee dark:text-dark-muted font-body leading-relaxed">
                         {item.desc}
                       </p>
                     </div>
