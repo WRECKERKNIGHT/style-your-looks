@@ -25,12 +25,23 @@ import {
   ClipboardList,
 } from "lucide-react";
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { PageTransition } from "@/components/shared/PageTransition";
-import { CommandPalette } from "@/components/shared/CommandPalette";
-import { KeyboardShortcutHint } from "@/components/shared/KeyboardShortcutHint";
-import { OnboardingTour } from "@/components/shared/OnboardingTour";
 import { AutoSave } from "@/components/shared/AutoSave";
+
+const CommandPalette = dynamic(
+  () => import("@/components/shared/CommandPalette"),
+  { ssr: false }
+);
+const KeyboardShortcutHint = dynamic(
+  () => import("@/components/shared/KeyboardShortcutHint"),
+  { ssr: false }
+);
+const OnboardingTour = dynamic(
+  () => import("@/components/shared/OnboardingTour"),
+  { ssr: false }
+);
 
 const navItems = [
   { href: "/dashboard", label: "HOME", icon: Home },

@@ -2,17 +2,13 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { SmoothScroll } from "@/components/providers/SmoothScroll";
 import { ToastProvider } from "@/components/shared/Toast";
-import { CustomCursor } from "@/components/shared/CustomCursor";
-import { LoadingScreen } from "@/components/shared/LoadingScreen";
-import { ParticleField } from "@/components/shared/ParticleField";
-import { CommandPalette } from "@/components/shared/CommandPalette";
 import { ThemeInitializer } from "@/components/shared/ThemeInitializer";
 import { OfflineIndicator } from "@/components/shared/OfflineIndicator";
 import { ServiceWorkerRegister } from "@/components/shared/ServiceWorkerRegister";
 import { SkipLink } from "@/components/shared/SkipLink";
 import { AutoSave } from "@/components/shared/AutoSave";
-import { KeyboardShortcutHint } from "@/components/shared/KeyboardShortcutHint";
 import { JsonLd } from "@/components/shared/JsonLd";
+import { ClientDecorations } from "@/components/shared/ClientDecorations";
 
 const baseUrl = "https://nexari.app";
 
@@ -94,15 +90,11 @@ export default function RootLayout({
       </head>
       <body className="antialiased grain vignette">
         <ThemeInitializer />
-        <LoadingScreen />
-        <ParticleField />
-        <CustomCursor />
         <SkipLink />
-        <CommandPalette />
         <OfflineIndicator />
         <ServiceWorkerRegister />
-        <KeyboardShortcutHint />
         <AutoSave />
+        <ClientDecorations />
         <ToastProvider>
           <SmoothScroll>
             {children}
