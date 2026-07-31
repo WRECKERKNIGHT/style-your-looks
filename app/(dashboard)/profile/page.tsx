@@ -1,34 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { User, Settings, Camera, LogOut, ChevronRight, Award, BarChart3, Clock, ArrowRight } from "lucide-react";
-
-interface ProfileData {
-  name: string;
-  email: string;
-  joinDate: string;
-  level: string;
-  xp: number;
-  xpNext: number;
-  badges: { name: string; icon: string }[];
-}
-
-const PROFILE: ProfileData = {
-  name: "Alex Morgan",
-  email: "alex@example.com",
-  joinDate: "2026-03-15",
-  level: "GOLD",
-  xp: 2840,
-  xpNext: 3500,
-  badges: [
-    { name: "Complete Analyst", icon: "🏛️" },
-    { name: "Style Icon", icon: "👑" },
-    { name: "Early Adopter", icon: "🚀" },
-    { name: "Consistent", icon: "🔥" },
-  ],
-};
+import { useRouter } from "next/navigation";
+import {
+  User,
+  Settings,
+  Camera,
+  LogOut,
+  ChevronRight,
+  Award,
+  BarChart3,
+  Clock,
+  ScanFace,
+  Dna,
+} from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import { getHistory } from "@/lib/history";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -36,12 +25,76 @@ const fadeUp = {
 };
 
 const stagger = {
-  hidden: {}, show: { transition: { staggerChildren: 0.06 } },
+  hidden: {},
+  show: { transition: { staggerChildren: 0.06 } },
 };
 
+interface SessionUser {
+  email?: string;
+  name?: string;
+  createdAt?: string;
+}
+
+function rankForXp(xp: number): { level: string; next: number } {
+  const tiers = [
+    { level: "BRONZE", min: 0, next: 1000 },
+    { level: "SILVER", min: 1000, next: 2500 },
+    { level: "GOLD", min: 2500, next: 5000 },
+    { level: "PLATINUM", min: 5000, next: 10000 },
+    { level: "DIAMOND", min: 10000, next: 20000 },
+    { level: "STYLE ICON", min: 20000, next: 999999 },
+  ];
+  for (let i = tiers.length - 1; i >= 0; i--) {
+    if (xp >= tiers[i].min) return tiers[i];
+  }
+  return tiers[0];
+}
+
 export default function ProfilePage() {
-  const [editing, setEditing] = useState(false);
-  const [name, setName] = useState(PROFILE.name);
+  const router = useRouter();
+  const [user, setUser] = useState<SessionUser | null>(null);
+  const [signingOut, setSigningOut] = useState(false);
+  const [analysisCount, setAnalysisCount] = useState(0);
+  const [bestScore, setBestScore] = useState<number | null>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user) {
+        setUser({
+          email: data.user.email,
+          name: (data.user.user_metadata?.full_name as string) || data.user.email,
+          createdAt: data.user.created_at,
+        });
+      }
+    });
+
+    const history = getHistory();
+    setAnalysisCount(history.length);
+    const scores = history
+      .map((e) => e.faceResult?.overallScore)
+      .filter((s): s is number => typeof s === "number");
+    if (scores.length) setBestScore(Math.max(...scores));
+  }, []);
+
+  const xp = 500 + analysisCount * 120 + (bestScore ? Math.round(bestScore) : 0);
+  const rank = rankForXp(xp);
+
+  async function handleSignOut() {
+    setSigningOut(true);
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/");
+    router.refresh();
+  }
+
+  const joined = user?.createdAt
+    ? new Date(user.createdAt).toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      })
+    : "—";
 
   return (
     <div className="space-y-8">
@@ -61,21 +114,18 @@ export default function ProfilePage() {
             <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[var(--accent-nexus)] to-[var(--accent-aurum)] mx-auto mb-4 flex items-center justify-center">
               <Camera className="w-6 h-6 text-white" />
             </div>
-            {editing ? (
-              <input type="text" value={name} onChange={e => setName(e.target.value)}
-                className="w-full text-center bg-[var(--bg-tertiary)] border border-[var(--accent-aurum)] text-[var(--text-primary)] type-body px-2 py-1 mb-2" />
-            ) : (
-              <h2 className="type-display text-[var(--text-primary)] text-lg mb-1">{name}</h2>
-            )}
-            <p className="text-xs text-[var(--text-muted)] mb-1">{PROFILE.email}</p>
-            <p className="text-xs text-[var(--text-muted)] mb-4">Member since {PROFILE.joinDate}</p>
+            <h2 className="type-display text-[var(--text-primary)] text-lg mb-1">
+              {user?.name || "Loading…"}
+            </h2>
+            <p className="text-xs text-[var(--text-muted)] mb-1">{user?.email || ""}</p>
+            <p className="text-xs text-[var(--text-muted)] mb-4">Member since {joined}</p>
             <div className="flex justify-center gap-2">
-              <button onClick={() => setEditing(!editing)}
-                className="btn-outline text-xs !py-1.5">
-                <Settings className="w-3 h-3" /> {editing ? "SAVE" : "EDIT"}
-              </button>
-              <button className="btn-outline text-xs !py-1.5 text-red-400 border-red-400/40 hover:border-red-400">
-                <LogOut className="w-3 h-3" /> SIGN OUT
+              <button
+                onClick={handleSignOut}
+                disabled={signingOut}
+                className="btn-outline text-xs !py-1.5 text-red-400 border-red-400/40 hover:border-red-400"
+              >
+                <LogOut className="w-3 h-3" /> {signingOut ? "SIGNING OUT…" : "SIGN OUT"}
               </button>
             </div>
           </div>
@@ -83,84 +133,105 @@ export default function ProfilePage() {
           <div className="glass-card p-4">
             <div className="flex items-center justify-between mb-3">
               <h3 className="type-label text-[var(--text-primary)]">RANK</h3>
-              <span className="type-mono text-[var(--accent-aurum)]">{PROFILE.level}</span>
+              <span className="type-mono text-[var(--accent-aurum)]">{rank.level}</span>
             </div>
             <div className="mb-2">
               <div className="flex justify-between text-xs text-[var(--text-muted)] mb-1">
                 <span>XP</span>
-                <span>{PROFILE.xp} / {PROFILE.xpNext}</span>
+                <span>{xp} / {rank.next}</span>
               </div>
               <div className="h-1.5 bg-[var(--bg-tertiary)] overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-[var(--accent-nexus)] to-[var(--accent-aurum)] transition-all duration-700"
-                  style={{ width: `${(PROFILE.xp / PROFILE.xpNext) * 100}%` }} />
+                <div
+                  className="h-full bg-gradient-to-r from-[var(--accent-nexus)] to-[var(--accent-aurum)] transition-all duration-700"
+                  style={{ width: `${Math.min(100, (xp / rank.next) * 100)}%` }}
+                />
               </div>
             </div>
+            <p className="text-[0.6rem] font-mono text-[var(--text-muted)] tracking-widest mt-2">
+              EARN XP BY COMPLETING ANALYSES
+            </p>
           </div>
 
           <div className="glass-card p-4">
-            <h3 className="type-label text-[var(--text-primary)] mb-3">BADGES</h3>
+            <h3 className="type-label text-[var(--text-primary)] mb-3">STATS</h3>
             <div className="grid grid-cols-2 gap-2">
-              {PROFILE.badges.map(b => (
-                <div key={b.name} className="flex items-center gap-2 p-2 border border-[var(--border-primary)] bg-[var(--bg-tertiary)] card-nexus">
-                  <span className="text-lg">{b.icon}</span>
-                  <span className="text-xs text-[var(--text-primary)]">{b.name}</span>
+              <div className="p-3 border border-[var(--border-primary)] bg-[var(--bg-tertiary)] card-nexus text-center">
+                <ScanFace className="w-4 h-4 text-[var(--accent-nexus)] mx-auto mb-1" />
+                <div className="type-display text-lg text-[var(--text-primary)]">{analysisCount}</div>
+                <div className="text-[0.5rem] font-mono text-[var(--text-muted)] tracking-widest">ANALYSES</div>
+              </div>
+              <div className="p-3 border border-[var(--border-primary)] bg-[var(--bg-tertiary)] card-nexus text-center">
+                <Dna className="w-4 h-4 text-[var(--accent-aurum)] mx-auto mb-1" />
+                <div className="type-display text-lg text-[var(--text-primary)]">
+                  {bestScore ? bestScore.toFixed(0) : "—"}
                 </div>
-              ))}
+                <div className="text-[0.5rem] font-mono text-[var(--text-muted)] tracking-widest">BEST SCORE</div>
+              </div>
             </div>
           </div>
         </motion.div>
 
         <motion.div variants={stagger} initial="hidden" animate="show" className="lg:col-span-2 space-y-4">
           <motion.div variants={fadeUp} className="glass-card p-6">
-            <h3 className="type-label text-[var(--text-primary)] mb-4">PERSONAL DETAILS</h3>
-            <div className="space-y-3 text-sm">
+            <h3 className="type-label text-[var(--text-primary)] mb-4">YOUR JOURNEY</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {[
-                { label: "Height", value: "5'8\" (173 cm)" },
-                { label: "Build", value: "Hourglass" },
-                { label: "Skin Tone", value: "Medium Warm" },
-                { label: "Color Season", value: "Deep Autumn" },
-                { label: "Face Shape", value: "Oval" },
-                { label: "Hair Type", value: "2B (Wavy)" },
-              ].map(detail => (
-                <div key={detail.label} className="flex justify-between py-2 border-b border-[var(--border-primary)] last:border-0">
-                  <span className="text-[var(--text-muted)]">{detail.label}</span>
-                  <span className="text-[var(--text-primary)] type-body">{detail.value}</span>
-                </div>
+                { icon: Clock, label: "History", value: `${analysisCount} entries`, href: "/dashboard/history" },
+                { icon: Award, label: "Pillars", value: "4 tracked", href: "/dashboard/pillar-analysis" },
+                { icon: BarChart3, label: "Trends", value: "View progress", href: "/dashboard/face-comparison" },
+              ].map((item) => (
+                <Link key={item.label} href={item.href}
+                  className="flex items-center justify-between p-3 border border-[var(--border-primary)] card-nexus hover:border-[var(--accent-aurum)]/40 transition-all group">
+                  <div className="flex items-center gap-2">
+                    <item.icon className="w-4 h-4 text-[var(--accent-aurum)]" />
+                    <div>
+                      <span className="type-label text-[var(--text-primary)]">{item.label}</span>
+                      <p className="text-[0.6rem] text-[var(--text-muted)]">{item.value}</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-[var(--text-muted)] group-hover:text-[var(--accent-aurum)]" />
+                </Link>
               ))}
+            </div>
+          </motion.div>
+
+          <motion.div variants={fadeUp} className="glass-card p-6">
+            <h3 className="type-label text-[var(--text-primary)] mb-4">PRIVACY</h3>
+            <div className="space-y-3">
+              <div className="flex items-start gap-3 p-3 border border-[var(--border-primary)] bg-[var(--bg-tertiary)]">
+                <div className="w-8 h-8 shrink-0 flex items-center justify-center border border-[var(--accent-aurum)] text-[var(--accent-aurum)]">
+                  <ScanFace className="w-4 h-4" />
+                </div>
+                <div>
+                  <p className="type-label text-[var(--text-primary)] mb-1">100% ON-DEVICE ANALYSIS</p>
+                  <p className="text-xs text-[var(--text-muted)] leading-relaxed">
+                    Face, body, and skin analysis runs entirely in your browser via MediaPipe.
+                    Your photos are never uploaded to a server.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 p-3 border border-[var(--border-primary)] bg-[var(--bg-tertiary)]">
+                <div className="w-8 h-8 shrink-0 flex items-center justify-center border border-[var(--accent-aurum)] text-[var(--accent-aurum)]">
+                  <Settings className="w-4 h-4" />
+                </div>
+                <div>
+                  <p className="type-label text-[var(--text-primary)] mb-1">LOCAL HISTORY ONLY</p>
+                  <p className="text-xs text-[var(--text-muted)] leading-relaxed">
+                    Your analysis history lives in your browser&apos;s local storage.
+                    Export or wipe it any time from History.
+                  </p>
+                </div>
+              </div>
             </div>
           </motion.div>
 
           <motion.div variants={fadeUp} className="glass-card p-6">
             <h3 className="type-label text-[var(--text-primary)] mb-4">STYLE PREFERENCES</h3>
             <div className="flex flex-wrap gap-2">
-              {["Classic", "Minimalist", "Neutral Palette", "Structured Silhouettes", "Sustainable", "Quality Over Quantity"].map(pref => (
+              {["Classic", "Minimalist", "Neutral Palette", "Structured Silhouettes", "Sustainable", "Quality Over Quantity"].map((pref) => (
                 <span key={pref}
                   className="px-3 py-1.5 border border-[var(--border-primary)] card-nexus text-xs text-[var(--text-primary)] hover:border-[var(--accent-aurum)]/40 transition-all">{pref}</span>
               ))}
-            </div>
-          </motion.div>
-
-          <motion.div variants={fadeUp} className="glass-card p-6">
-            <h3 className="type-label text-[var(--text-primary)] mb-4">QUICK LINKS</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {[
-                { href: "/dashboard/history", label: "ANALYSIS HISTORY", icon: Clock },
-                { href: "/dashboard/pillar-analysis", label: "PILLAR ANALYSIS", icon: Award },
-                { href: "/dashboard/statistics", label: "STATISTICS", icon: BarChart3 },
-                { href: "/dashboard/settings", label: "SETTINGS", icon: Settings },
-              ].map(link => {
-                const Icon = link.icon;
-                return (
-                  <Link key={link.href} href={link.href}
-                    className="flex items-center justify-between p-3 border border-[var(--border-primary)] card-nexus hover:border-[var(--accent-aurum)]/40 transition-all group">
-                    <div className="flex items-center gap-2">
-                      <Icon className="w-4 h-4 text-[var(--accent-aurum)]" />
-                      <span className="type-label text-[var(--text-primary)]">{link.label}</span>
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-[var(--text-muted)] group-hover:text-[var(--accent-aurum)]" />
-                  </Link>
-                );
-              })}
             </div>
           </motion.div>
         </motion.div>

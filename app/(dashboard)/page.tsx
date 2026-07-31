@@ -26,10 +26,12 @@ import {
   Activity,
 } from "lucide-react";
 import { useAnalysisStore } from "@/store/analysis-store";
+import { getHistory } from "@/lib/history";
 import { AnimatedCounter } from "@/components/shared/AnimatedCounter";
 import { AIInsights } from "@/components/shared/AIInsights";
 import { LiveVibeCheck } from "@/components/shared/LiveVibeCheck";
 import { StyleTimeline } from "@/components/shared/StyleTimeline";
+import { StyleStreak } from "@/components/shared/StyleStreak";
 
 const aiTips = [
   "Your jawline benefits from structured collars. Avoid crew necks — they shorten the neck visually.",
@@ -221,6 +223,7 @@ function ProgressRing({ score, label, size = 120 }: { score: number; label: stri
 export default function DashboardHome() {
   const { faceResult, bodyResult } = useAnalysisStore();
   const [tipIndex, setTipIndex] = useState(0);
+  const [analysesDone, setAnalysesDone] = useState(0);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -229,8 +232,11 @@ export default function DashboardHome() {
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    setAnalysesDone(getHistory().length);
+  }, [faceResult]);
+
   const overallScore = faceResult?.overallScore ?? 78;
-  const analysesDone = faceResult ? 12 : 0;
 
   return (
     <div className="space-y-16">
@@ -285,8 +291,8 @@ export default function DashboardHome() {
 
       <ScrollProgress />
 
-      {/* AI Tip of the Day + Vibe Check Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-6">
+      {/* AI Tip of the Day + Vibe Check + Streak Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <ScrollReveal>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -336,6 +342,10 @@ export default function DashboardHome() {
         </ScrollReveal>
 
         <LiveVibeCheck />
+
+        <ScrollReveal>
+          <StyleStreak />
+        </ScrollReveal>
       </div>
 
       <ScrollProgress />
