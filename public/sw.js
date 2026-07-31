@@ -1,29 +1,34 @@
-const CACHE = "nexari-v2";
+const CACHE = "nexari-v3";
 const STATIC_ASSETS = [
   "/",
   "/manifest.json",
   "/icon.svg",
-  "/icon-192.png",
-  "/icon-512.png",
+  "/icon-192.svg",
+  "/icon-512.svg",
+  "/nexari-logo.svg",
 ];
 
-const CACHE_FIRST = ["style", "script", "font", "image"];
-const NETWORK_FIRST = ["document", "manifest"];
+const CACHE_FIRST = ["style", "script", "font"];
+const CACHE_ONLY_IMAGES = /\.(png|jpg|jpeg|webp|gif|svg|ico|avif)$/i;
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE).then((cache) => cache.addAll(STATIC_ASSETS))
+    caches
+      .open(CACHE)
+      .then((cache) => cache.addAll(STATIC_ASSETS))
+      .then(() => self.skipWaiting())
   );
-  self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
-    )
+    caches
+      .keys()
+      .then((keys) =>
+        Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
+      )
+      .then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
 self.addEventListener("fetch", (event) => {
@@ -31,36 +36,62 @@ self.addEventListener("fetch", (event) => {
   if (request.method !== "GET") return;
 
   const url = new URL(request.url);
-  const isStatic = CACHE_FIRST.some((t) => request.destination === t);
-  const isImage = request.destination === "image" || /\.(png|jpg|jpeg|webp|svg|ico)$/i.test(url.pathname);
+  const isSameOrigin = url.origin === self.location.origin;
+  const isNavigation = request.mode === "navigate";
+
+  if (isNavigation) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          const clone = response.clone();
+          caches.open(CACHE).then((cache) => cache.put(request, clone));
+          return response;
+        })
+        .catch(() =>
+          caches.match(request).then(
+            (cached) =>
+              cached ||
+              caches.match("/").then((home) => home || new Response("Offline", { status: 503 }))
+          )
+        )
+    );
+    return;
+  }
+
+  if (!isSameOrigin) return;
+
+  const isImage = request.destination === "image" || CACHE_ONLY_IMAGES.test(url.pathname);
+  const isStatic = CACHE_FIRST.includes(request.destination);
 
   if (isImage || isStatic) {
     event.respondWith(
       caches.match(request).then((cached) => {
         if (cached) return cached;
-        return fetch(request).then((response) => {
-          if (response.ok && response.type === "basic") {
-            const clone = response.clone();
-            caches.open(CACHE).then((cache) => cache.put(request, clone));
-          }
-          return response;
-        }).catch(() => new Response("Offline content unavailable", { status: 503 }));
+        return fetch(request)
+          .then((response) => {
+            if (response.ok) {
+              const clone = response.clone();
+              caches.open(CACHE).then((cache) => cache.put(request, clone));
+            }
+            return response;
+          })
+          .catch(() => new Response("", { status: 503 }));
       })
     );
     return;
   }
 
   event.respondWith(
-    fetch(request).then((response) => {
-      if (response.ok && response.type === "basic") {
-        const clone = response.clone();
-        caches.open(CACHE).then((cache) => cache.put(request, clone));
-      }
-      return response;
-    }).catch(() => {
-      return caches.match(request).then((cached) => {
-        return cached || new Response("Offline", { status: 503 });
-      });
-    })
+    fetch(request)
+      .then((response) => {
+        if (response.ok && request.url.startsWith(self.location.origin + "/_next")) {
+          const clone = response.clone();
+          caches.open(CACHE).then((cache) => cache.put(request, clone));
+        }
+        return response;
+      })
+      .catch(() =>
+        caches.match(request).then((cached) => cached || new Response("Offline", { status: 503 }))
+      )
   );
 });

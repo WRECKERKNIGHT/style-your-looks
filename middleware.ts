@@ -1,7 +1,26 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+const SENSITIVE_PATTERNS = [
+  /^\/\.env/i,
+  /^\/\.git/i,
+  /^\/\.svn/i,
+  /\.php$/i,
+  /^\/config\./i,
+  /^\/database\./i,
+  /^\/\.aws/i,
+  /^\/wp-admin/i,
+  /^\/server-status/i,
+  /^\/\.pem$/i,
+];
+
 export async function middleware(request: NextRequest) {
+  const path = request.nextUrl.pathname;
+
+  if (SENSITIVE_PATTERNS.some((pattern) => pattern.test(path))) {
+    return new NextResponse("Not found", { status: 404 });
+  }
+
   let supabaseResponse = NextResponse.next({
     request,
   });
@@ -59,6 +78,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|sw.js|manifest.json|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|txt)$).*)",
   ],
 };

@@ -1,41 +1,69 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { rateLimit } from "@/lib/rate-limit";
+import { sanitizeText, isUuid, clampInt } from "@/lib/validation";
+
+export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { postId, score, comment } = body;
+    const limitCheck = rateLimit(request, 20);
+    if (limitCheck.limited) {
+      return NextResponse.json(
+        { error: "Rate limit exceeded. Slow down!" },
+        { status: 429 }
+      );
+    }
 
-    if (!postId || !score) {
-      return NextResponse.json({ error: "Post ID and score are required" }, { status: 400 });
+    let body: { postId?: unknown; score?: unknown; comment?: unknown };
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
+
+    const postId = body.postId;
+    const score = clampInt(body.score, 1, 10, -1);
+    const comment = sanitizeText(body.comment, 280);
+
+    if (typeof postId !== "string" || !isUuid(postId)) {
+      return NextResponse.json({ error: "Invalid post ID" }, { status: 400 });
     }
 
     if (score < 1 || score > 10) {
-      return NextResponse.json({ error: "Score must be between 1 and 10" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Score must be between 1 and 10" },
+        { status: 400 }
+      );
     }
 
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     if (!user) {
       return NextResponse.json({ error: "Authentication required" }, { status: 401 });
     }
 
-    const { error: ratingError } = await supabase.from("community_ratings").upsert({
-      post_id: postId,
-      user_id: user.id,
-      score,
-    }, { onConflict: "post_id,user_id" });
+    const { error: ratingError } = await supabase.from("community_ratings").upsert(
+      {
+        post_id: postId,
+        user_id: user.id,
+        score,
+      },
+      { onConflict: "post_id,user_id" }
+    );
 
     if (ratingError) {
       return NextResponse.json({ error: ratingError.message }, { status: 500 });
     }
 
-    if (comment?.trim()) {
+    if (comment) {
       const { error: commentError } = await supabase.from("community_comments").insert({
         post_id: postId,
         user_id: user.id,
-        text: comment.trim(),
+        text: comment,
         rating: score,
       });
 
@@ -44,7 +72,6 @@ export async function POST(request: Request) {
       }
     }
 
-    // Recalculate average rating
     const { data: ratings } = await supabase
       .from("community_ratings")
       .select("score")

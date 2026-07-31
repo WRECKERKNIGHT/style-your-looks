@@ -1,12 +1,30 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { rateLimit } from "@/lib/rate-limit";
+import { isAllowedCategory, clampInt } from "@/lib/validation";
+
+export const dynamic = "force-dynamic";
+
+const MAX_LIMIT = 50;
 
 export async function GET(request: Request) {
   try {
+    const limitCheck = rateLimit(request, 60);
+    if (limitCheck.limited) {
+      return NextResponse.json(
+        { error: "Rate limit exceeded. Try again shortly." },
+        { status: 429 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const category = searchParams.get("category");
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "20");
+    const page = clampInt(searchParams.get("page"), 1, 100000, 1);
+    const limit = clampInt(searchParams.get("limit"), 1, MAX_LIMIT, 20);
+
+    if (category && category !== "all" && !isAllowedCategory(category)) {
+      return NextResponse.json({ error: "Invalid category" }, { status: 400 });
+    }
 
     const supabase = await createClient();
 
@@ -26,11 +44,18 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({
-      success: true,
-      posts: posts || [],
-      pagination: { page, limit, total: count || 0 },
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        posts: posts || [],
+        pagination: { page, limit, total: count || 0 },
+      },
+      {
+        headers: {
+          "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120",
+        },
+      }
+    );
   } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
