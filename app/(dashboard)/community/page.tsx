@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Users, Heart, MessageCircle, Share2, UserPlus, ArrowRight, Search } from "lucide-react";
+import { Users, Heart, MessageCircle, Share2, UserPlus, ArrowRight, Search, RefreshCw, Wifi, WifiOff } from "lucide-react";
 
 interface Post {
   id: string;
@@ -53,8 +53,67 @@ const stagger = {
   hidden: {}, show: { transition: { staggerChildren: 0.05 } },
 };
 
+function mapPost(raw: Record<string, unknown>, index: number): Post {
+  const user = (raw.user as { full_name?: string }) || {};
+  return {
+    id: String(raw.id || `seed_${index}`),
+    user: user.full_name || `Member${index + 1}`,
+    avatar: (user.full_name || "NX").split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase(),
+    badge: "STYLE ICON",
+    content: String(raw.content || ""),
+    likes: Number(raw.likes ?? 0),
+    comments: Number(raw.comments ?? 0),
+    tags: Array.isArray(raw.tags) ? (raw.tags as string[]).map(String) : [],
+    time: raw.created_at ? timeAgo(String(raw.created_at)) : "recently",
+  };
+}
+
+function timeAgo(iso: string): string {
+  const then = new Date(iso).getTime();
+  const mins = Math.max(1, Math.round((Date.now() - then) / 60000));
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.round(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.round(hrs / 24)}d ago`;
+}
+
 export default function CommunityPage() {
   const [activeTab, setActiveTab] = useState<"feed" | "members" | "tags">("feed");
+  const [feed, setFeed] = useState<Post[]>(FEED);
+  const [live, setLive] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [liked, setLiked] = useState<Record<string, boolean>>({});
+
+  const refresh = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/community/feed?limit=20");
+      if (!res.ok) throw new Error(String(res.status));
+      const data = await res.json();
+      if (Array.isArray(data.posts) && data.posts.length) {
+        setFeed(data.posts.map(mapPost));
+        setLive(true);
+      }
+    } catch {
+      setLive(false);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
+
+  const toggleLike = (id: string) => {
+    setLiked((prev) => {
+      const next = { ...prev, [id]: !prev[id] };
+      setFeed((f) =>
+        f.map((p) => (p.id === id ? { ...p, likes: p.likes + (next[id] ? 1 : -1) } : p))
+      );
+      return next;
+    });
+  };
 
   return (
     <div className="space-y-8">
@@ -71,8 +130,8 @@ export default function CommunityPage() {
         </p>
       </motion.div>
 
-      <motion.div variants={fadeUp} initial="hidden" animate="show" className="flex gap-2">
-        {(["feed", "members", "tags"] as const).map(tab => (
+      <motion.div variants={fadeUp} initial="hidden" animate="show" className="flex flex-wrap gap-2 items-center">
+        {(["feed", "members", "tags"] as const).map((tab) => (
           <button key={tab} onClick={() => setActiveTab(tab)}
             className={`px-4 py-2 border type-label transition-all ${
               activeTab === tab
@@ -80,13 +139,27 @@ export default function CommunityPage() {
                 : "border-[var(--border-primary)] text-[var(--text-muted)] hover:border-[var(--accent-aurum)]/40 card-nexus"
             }`}>{tab.toUpperCase()}</button>
         ))}
+        <button
+          onClick={refresh}
+          disabled={loading}
+          className={`ml-auto flex items-center gap-2 px-3 py-2 border type-mono text-[0.6rem] transition-all ${
+            live
+              ? "border-emerald-400/40 text-emerald-400"
+              : "border-[var(--border-primary)] text-[var(--text-muted)] hover:border-[var(--accent-aurum)]/40"
+          }`}
+          aria-label="Refresh feed"
+        >
+          <RefreshCw className={`w-3 h-3 ${loading ? "animate-spin" : ""}`} />
+          {live ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
+          {loading ? "LOADING" : live ? "LIVE FEED" : "DEMO FEED"}
+        </button>
       </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-4">
           {activeTab === "feed" && (
             <motion.div variants={stagger} initial="hidden" animate="show" className="space-y-4">
-              {FEED.map(post => (
+              {feed.map((post) => (
                 <motion.div key={post.id} variants={fadeUp} className="glass-card p-5">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
@@ -102,13 +175,14 @@ export default function CommunityPage() {
                   </div>
                   <p className="text-sm text-[var(--text-primary)] mb-3">{post.content}</p>
                   <div className="flex flex-wrap gap-2 mb-3">
-                    {post.tags.map(tag => (
+                    {post.tags.map((tag) => (
                       <span key={tag} className="type-mono text-[0.55rem] px-2 py-0.5 border border-[var(--border-primary)] text-[var(--text-muted)]">#{tag}</span>
                     ))}
                   </div>
                   <div className="flex items-center gap-4 text-xs text-[var(--text-muted)]">
-                    <button className="flex items-center gap-1 hover:text-[var(--accent-aurum)] transition-colors">
-                      <Heart className="w-3.5 h-3.5" /> {post.likes}
+                    <button onClick={() => toggleLike(post.id)}
+                      className={`flex items-center gap-1 transition-colors ${liked[post.id] ? "text-[var(--accent-aurum)]" : "hover:text-[var(--accent-aurum)]"}`}>
+                      <Heart className={`w-3.5 h-3.5 ${liked[post.id] ? "fill-current" : ""}`} /> {post.likes}
                     </button>
                     <button className="flex items-center gap-1 hover:text-[var(--accent-aurum)] transition-colors">
                       <MessageCircle className="w-3.5 h-3.5" /> {post.comments}
@@ -124,7 +198,7 @@ export default function CommunityPage() {
 
           {activeTab === "members" && (
             <motion.div variants={stagger} initial="hidden" animate="show" className="space-y-4">
-              {MEMBERS.map(member => (
+              {MEMBERS.map((member) => (
                 <motion.div key={member.id} variants={fadeUp}
                   className="glass-card p-4 flex items-center justify-between group hover:border-[var(--accent-aurum)]/40 transition-all">
                   <div className="flex items-center gap-3">
@@ -152,7 +226,7 @@ export default function CommunityPage() {
             <motion.div variants={stagger} initial="hidden" animate="show" className="glass-card p-6">
               <h3 className="type-label text-[var(--text-primary)] mb-4">TRENDING TOPICS</h3>
               <div className="flex flex-wrap gap-3">
-                {TRENDING_TAGS.map(tag => (
+                {TRENDING_TAGS.map((tag) => (
                   <motion.button key={tag} variants={fadeUp}
                     className="px-4 py-2 border border-[var(--border-primary)] card-nexus hover:border-[var(--accent-aurum)]/40 transition-all type-mono text-xs text-[var(--text-muted)] hover:text-[var(--accent-aurum)]">
                     #{tag}
