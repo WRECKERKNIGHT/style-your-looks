@@ -57,17 +57,17 @@ export function CommandPalette() {
           className="fixed inset-0 z-[9999] flex items-start justify-center pt-[15vh]"
           onClick={() => setPaletteOpen(false)}
         >
-          <div className="fixed inset-0 bg-espresso/40 dark:bg-black/60 backdrop-blur-sm" />
+          <div className="fixed inset-0 bg-nexus-800/40 dark:bg-black/60 backdrop-blur-sm" />
           <motion.div
             initial={{ opacity: 0, scale: 0.96, y: -10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y: -10 }}
             transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-            className="relative w-full max-w-lg bg-cream dark:bg-dark-surface border border-tan dark:border-dark-border rounded-sm shadow-elegant-xl overflow-hidden"
+            className="relative w-full max-w-lg bg-light-surface dark:bg-cosmic-surface border border-light-border dark:border-cosmic-border rounded-sm shadow-nexus-xl overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center gap-3 px-5 py-4 border-b border-tan dark:border-dark-border">
-              <Search className="w-4 h-4 text-coffee dark:text-dark-muted" />
+            <div className="flex items-center gap-3 px-5 py-4 border-b border-light-border dark:border-cosmic-border">
+              <Search className="w-4 h-4 text-nexus-400 dark:text-cosmic-muted" />
               <input
                 ref={inputRef}
                 type="text"
@@ -75,9 +75,9 @@ export function CommandPalette() {
                 value={query}
                 onChange={(e) => { setQuery(e.target.value); setSelectedIndex(0); }}
                 onKeyDown={handleKeyDown}
-                className="flex-1 bg-transparent text-sm text-espresso dark:text-dark-text placeholder:text-coffee/50 dark:placeholder:text-dark-muted/50 font-body outline-none"
+                className="flex-1 bg-transparent text-sm text-nexus-800 dark:text-white placeholder:text-nexus-400/50 dark:placeholder:text-cosmic-muted/50 font-body outline-none"
               />
-              <kbd className="hidden sm:inline-flex text-[0.6rem] font-mono text-coffee dark:text-dark-muted bg-parchment dark:bg-dark-elevated px-2 py-0.5 border border-tan dark:border-dark-border rounded-sm">
+              <kbd className="hidden sm:inline-flex text-[0.6rem] font-mono text-nexus-400 dark:text-cosmic-muted bg-light-base dark:bg-cosmic-elevated px-2 py-0.5 border border-light-border dark:border-cosmic-border rounded-sm">
                 ESC
               </kbd>
             </div>
@@ -85,7 +85,7 @@ export function CommandPalette() {
             <div className="max-h-[320px] overflow-y-auto p-2">
               {categories.map((cat) => (
                 <div key={cat}>
-                  <div className="px-3 py-2 text-[0.55rem] font-mono text-coffee dark:text-dark-muted tracking-widest uppercase">
+                  <div className="px-3 py-2 text-[0.55rem] font-mono text-nexus-400 dark:text-cosmic-muted tracking-widest uppercase">
                     {cat}
                   </div>
                   {filtered
@@ -99,13 +99,13 @@ export function CommandPalette() {
                           onMouseEnter={() => setSelectedIndex(globalIndex)}
                           className={`w-full flex items-center gap-3 px-3 py-2.5 text-left rounded-sm transition-colors ${
                             globalIndex === selectedIndex
-                              ? "bg-amber/10 dark:bg-amber/15 text-espresso dark:text-dark-text"
-                              : "text-coffee dark:text-dark-muted hover:bg-parchment dark:hover:bg-dark-elevated"
+                              ? "bg-nexus-400/10 text-nexus-800 dark:text-white"
+                              : "text-nexus-400 dark:text-cosmic-muted hover:bg-light-base dark:hover:bg-cosmic-elevated"
                           }`}
                         >
-                          <ArrowRight className="w-3.5 h-3.5 text-amber flex-shrink-0" />
+                          <ArrowRight className="w-3.5 h-3.5 text-aurum-500 flex-shrink-0" />
                           <span className="flex-1 text-sm font-body">{cmd.label}</span>
-                          <kbd className="text-[0.55rem] font-mono text-coffee dark:text-dark-muted bg-parchment dark:bg-dark-elevated px-1.5 py-0.5 border border-tan dark:border-dark-border rounded-sm">
+                          <kbd className="text-[0.55rem] font-mono text-nexus-400 dark:text-cosmic-muted bg-light-base dark:bg-cosmic-elevated px-1.5 py-0.5 border border-light-border dark:border-cosmic-border rounded-sm">
                             {cmd.shortcut}
                           </kbd>
                         </button>
@@ -116,8 +116,8 @@ export function CommandPalette() {
 
               {filtered.length === 0 && (
                 <div className="py-12 text-center">
-                  <Sparkles className="w-8 h-8 text-tan/40 mx-auto mb-3" />
-                  <p className="text-sm text-coffee dark:text-dark-muted font-body">No commands found</p>
+                  <Sparkles className="w-8 h-8 text-light-border/40 dark:text-cosmic-border/40 mx-auto mb-3" />
+                  <p className="text-sm text-nexus-400 dark:text-cosmic-muted font-body">No commands found</p>
                 </div>
               )}
             </div>

@@ -17,6 +17,11 @@ interface PlacedItem extends ClothingItem {
   opacity: number;
 }
 
+const fadeUp = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
+};
+
 export default function VirtualTryOnPage() {
   const { uploadedImage, setUploadedImage, faceResult } = useAnalysisStore();
   const { addToast } = useToast();
@@ -55,7 +60,6 @@ export default function VirtualTryOnPage() {
     const canvas = canvasRef.current;
     const img = imgRef.current;
     if (!canvas || !img) return;
-
     const container = containerRef.current;
     if (!container) return;
 
@@ -73,31 +77,26 @@ export default function VirtualTryOnPage() {
 
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, displayWidth, displayHeight);
-
     ctx.drawImage(img, 0, 0, displayWidth, displayHeight);
 
     selectedItems.forEach((item) => {
       ctx.save();
       ctx.globalAlpha = item.opacity ?? 0.65;
-
       const radius = 8;
       ctx.beginPath();
       ctx.roundRect(item.x, item.y, item.width, item.height, radius);
       ctx.fillStyle = item.color;
       ctx.fill();
-
       ctx.globalAlpha = 0.9;
       ctx.strokeStyle = "rgba(255,255,255,0.4)";
       ctx.lineWidth = 1;
       ctx.stroke();
-
       ctx.globalAlpha = 1;
       ctx.fillStyle = "#fff";
-      ctx.font = `bold ${Math.max(10, item.width * 0.08)}px "DM Sans", sans-serif`;
+      ctx.font = `bold ${Math.max(10, item.width * 0.08)}px "Inter", sans-serif`;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillText(item.name, item.x + item.width / 2, item.y + item.height / 2);
-
       ctx.restore();
     });
   }
@@ -155,7 +154,6 @@ export default function VirtualTryOnPage() {
     const rect = canvas.getBoundingClientRect();
     const mx = e.clientX - rect.left;
     const my = e.clientY - rect.top;
-
     for (let i = selectedItems.length - 1; i >= 0; i--) {
       const item = selectedItems[i];
       if (mx >= item.x && mx <= item.x + item.width && my >= item.y && my <= item.y + item.height) {
@@ -173,37 +171,22 @@ export default function VirtualTryOnPage() {
     const rect = canvas.getBoundingClientRect();
     const mx = e.clientX - rect.left;
     const my = e.clientY - rect.top;
-
     setSelectedItems((prev) =>
-      prev.map((item, i) =>
-        i === dragIndex
-          ? { ...item, x: mx - dragOffset.x, y: my - dragOffset.y }
-          : item
-      )
+      prev.map((item, i) => i === dragIndex ? { ...item, x: mx - dragOffset.x, y: my - dragOffset.y } : item)
     );
   };
 
-  const handleCanvasMouseUp = () => {
-    setDragIndex(null);
-  };
+  const handleCanvasMouseUp = () => setDragIndex(null);
 
   const handleOpacityChange = (id: string, opacity: number) => {
-    setSelectedItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, opacity } : item))
-    );
+    setSelectedItems((prev) => prev.map((item) => (item.id === id ? { ...item, opacity } : item)));
   };
 
   const handleScaleItem = (id: string, factor: number) => {
     setSelectedItems((prev) =>
       prev.map((item) =>
         item.id === id
-          ? {
-              ...item,
-              width: item.width * factor,
-              height: item.height * factor,
-              x: item.x - (item.width * factor - item.width) / 2,
-              y: item.y - (item.height * factor - item.height) / 2,
-            }
+          ? { ...item, width: item.width * factor, height: item.height * factor, x: item.x - (item.width * factor - item.width) / 2, y: item.y - (item.height * factor - item.height) / 2 }
           : item
       )
     );
@@ -213,7 +196,7 @@ export default function VirtualTryOnPage() {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const link = document.createElement("a");
-    link.download = "aurastyle-tryon.png";
+    link.download = "nexari-tryon.png";
     link.href = canvas.toDataURL("image/png");
     link.click();
     addToast("Try-on image saved", "success");
@@ -228,32 +211,26 @@ export default function VirtualTryOnPage() {
 
   return (
     <div className="space-y-8">
-      <div>
+      <motion.div variants={fadeUp} initial="hidden" animate="show">
         <span className="section-number">EST. MMXXIV // TRY-ON</span>
         <div className="flex items-center gap-3 mt-3 mb-2">
-          <Shirt className="w-7 h-7 text-amber" />
-          <h1 className="text-4xl md:text-5xl font-display font-bold text-espresso tracking-tight">
-            VIRTUAL <span className="text-gradient-gold">TRY-ON.</span>
+          <Shirt className="w-7 h-7 text-[var(--accent-aurum)]" />
+          <h1 className="type-display text-[var(--text-primary)] tracking-tight">
+            VIRTUAL <span className="text-gradient-aurum">TRY-ON.</span>
           </h1>
         </div>
-        <p className="text-coffee font-body text-lg max-w-xl leading-relaxed">
+        <p className="text-[var(--text-muted)] font-body type-subhead max-w-xl">
           Upload your photo and overlay clothing items to preview your look.
         </p>
-      </div>
+      </motion.div>
 
       {!uploadedImage ? (
-        <ImageUploader
-          onImageUpload={handleImageUpload}
-          label="Upload a photo for try-on"
-          accept="any"
-        />
+        <div className="glass-card p-8">
+          <ImageUploader onImageUpload={handleImageUpload} label="Upload a photo for try-on" accept="any" />
+        </div>
       ) : (
-        <div className="space-y-8">
-          {/* Preview Canvas */}
-          <div
-            ref={containerRef}
-            className="bg-cream border border-tan overflow-hidden relative rounded-sm"
-          >
+        <motion.div variants={fadeUp} initial="hidden" animate="show" className="space-y-8">
+          <div ref={containerRef} className="glass-card overflow-hidden relative">
             <canvas
               ref={canvasRef}
               className="w-full cursor-move"
@@ -263,47 +240,24 @@ export default function VirtualTryOnPage() {
               onMouseLeave={handleCanvasMouseUp}
             />
 
-            {/* Active items panel */}
             {selectedItems.length > 0 && (
-              <div className="absolute top-3 right-3 bg-cream/95 backdrop-blur-sm border border-tan rounded-sm p-3 space-y-2 max-w-[200px]">
-                <p className="text-[0.6rem] font-mono text-coffee tracking-widest">LAYERS</p>
+              <div className="absolute top-3 right-3 glass-card p-3 space-y-2 max-w-[200px]">
+                <p className="type-label text-[var(--text-muted)]">LAYERS</p>
                 {selectedItems.map((item) => (
                   <div key={item.id} className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <div
-                        className="w-3 h-3 border border-tan rounded-sm shrink-0"
-                        style={{ backgroundColor: item.color }}
-                      />
-                      <span className="text-xs font-body text-espresso truncate flex-1">{item.name}</span>
-                      <button
-                        onClick={() => removeClothingItem(item.id)}
-                        className="text-coffee hover:text-burgundy transition-colors shrink-0"
-                      >
+                      <div className="w-3 h-3 border border-[var(--border-primary)] shrink-0" style={{ backgroundColor: item.color }} />
+                      <span className="text-xs font-body text-[var(--text-primary)] truncate flex-1">{item.name}</span>
+                      <button onClick={() => removeClothingItem(item.id)} className="text-[var(--text-muted)] hover:text-red-400 transition-colors shrink-0">
                         <Trash2 className="w-3 h-3" />
                       </button>
                     </div>
                     <div className="flex items-center gap-1">
-                      <input
-                        type="range"
-                        min={0.1}
-                        max={1}
-                        step={0.05}
-                        value={item.opacity ?? 0.65}
+                      <input type="range" min={0.1} max={1} step={0.05} value={item.opacity ?? 0.65}
                         onChange={(e) => handleOpacityChange(item.id, parseFloat(e.target.value))}
-                        className="flex-1 h-1 accent-amber"
-                      />
-                      <button
-                        onClick={() => handleScaleItem(item.id, 0.9)}
-                        className="text-coffee hover:text-amber transition-colors"
-                      >
-                        <ZoomOut className="w-3 h-3" />
-                      </button>
-                      <button
-                        onClick={() => handleScaleItem(item.id, 1.1)}
-                        className="text-coffee hover:text-amber transition-colors"
-                      >
-                        <ZoomIn className="w-3 h-3" />
-                      </button>
+                        className="flex-1 h-1 accent-[var(--accent-aurum)]" />
+                      <button onClick={() => handleScaleItem(item.id, 0.9)} className="text-[var(--text-muted)] hover:text-[var(--accent-aurum)] transition-colors"><ZoomOut className="w-3 h-3" /></button>
+                      <button onClick={() => handleScaleItem(item.id, 1.1)} className="text-[var(--text-muted)] hover:text-[var(--accent-aurum)] transition-colors"><ZoomIn className="w-3 h-3" /></button>
                     </div>
                   </div>
                 ))}
@@ -311,44 +265,34 @@ export default function VirtualTryOnPage() {
             )}
 
             {selectedItems.length > 0 && (
-              <div className="absolute bottom-3 left-3 flex items-center gap-1 text-[0.55rem] font-mono text-coffee/60 tracking-wider">
+              <div className="absolute bottom-3 left-3 flex items-center gap-1 type-mono text-[var(--text-muted)]/60">
                 <Move className="w-3 h-3" />
                 DRAG TO REPOSITION
               </div>
             )}
           </div>
 
-          {/* Clothing Selection */}
-          <div className="bg-cream border border-tan p-8 vintage-border rounded-sm">
-            <h3 className="text-lg font-display font-bold text-espresso tracking-wider mb-6">SELECT ITEMS TO TRY</h3>
+          <div className="glass-card p-8">
+            <h3 className="type-heading text-[var(--text-primary)] tracking-tight mb-6">SELECT ITEMS TO TRY</h3>
             <div className="space-y-8">
               {categories.map((cat) => (
                 <div key={cat.key}>
-                  <h4 className="text-xs font-body text-coffee tracking-widest uppercase mb-4 font-semibold">{cat.label}</h4>
+                  <h4 className="type-label text-[var(--text-muted)] mb-4">{cat.label}</h4>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                     {SAMPLE_CLOTHING.filter((i) => i.category === cat.key).map((item) => {
                       const isSelected = selectedItems.some((s) => s.id === item.id);
                       return (
                         <button
                           key={item.id}
-                          onClick={() =>
+                          onClick={() => isSelected ? removeClothingItem(item.id) : addClothingItem(item)}
+                          className={`p-4 border text-left transition-all duration-300 ${
                             isSelected
-                              ? removeClothingItem(item.id)
-                              : addClothingItem(item)
-                          }
-                          className={`p-4 border text-left transition-all duration-300 rounded-sm ${
-                            isSelected
-                              ? "border-amber bg-amber/10 shadow-gold"
-                              : "border-tan hover:border-amber/40 bg-parchment card-hover hover:shadow-md"
+                              ? "border-[var(--accent-aurum)] bg-[var(--accent-aurum)]/10"
+                              : "border-[var(--border-primary)] hover:border-[var(--accent-aurum)]/40 bg-[var(--bg-tertiary)] card-nexus"
                           }`}
                         >
-                          <div
-                            className="w-full h-14 mb-3 border border-tan rounded-sm"
-                            style={{ backgroundColor: item.color }}
-                          />
-                          <p className="text-sm font-body text-espresso truncate">
-                            {item.name}
-                          </p>
+                          <div className="w-full h-14 mb-3 border border-[var(--border-primary)]" style={{ backgroundColor: item.color }} />
+                          <p className="text-sm font-body text-[var(--text-primary)] truncate">{item.name}</p>
                         </button>
                       );
                     })}
@@ -358,34 +302,22 @@ export default function VirtualTryOnPage() {
             </div>
           </div>
 
-          {/* Actions */}
           <div className="flex gap-4">
-            <button
-              onClick={() => setSelectedItems([])}
-              className="flex-1 py-4 bg-parchment hover:bg-tan/20 text-espresso font-body text-base tracking-wider uppercase transition-colors flex items-center justify-center gap-2 border border-tan rounded-sm"
-            >
+            <button onClick={() => setSelectedItems([])} className="btn-outline flex-1 justify-center">
               <RotateCcw className="w-4 h-4" />
               CLEAR SELECTION
             </button>
-            <button
-              onClick={downloadResult}
-              disabled={selectedItems.length === 0}
-              className="flex-1 py-4 bg-olive text-cream font-body text-base tracking-wider uppercase transition-colors flex items-center justify-center gap-2 rounded-sm shadow-elegant disabled:opacity-40"
-            >
+            <button onClick={downloadResult} disabled={selectedItems.length === 0}
+              className="btn-nexus flex-1 justify-center disabled:opacity-40">
               <Download className="w-4 h-4" />
               SAVE LOOK
             </button>
-            <button
-              onClick={() => {
-                useAnalysisStore.getState().setUploadedImage(null);
-                setSelectedItems([]);
-              }}
-              className="flex-1 py-4 bg-amber hover:bg-amber-light text-cream font-body text-base tracking-wider uppercase transition-colors rounded-sm shadow-gold"
-            >
+            <button onClick={() => { useAnalysisStore.getState().setUploadedImage(null); setSelectedItems([]); }}
+              className="btn-nexus flex-1 justify-center">
               NEW PHOTO
             </button>
           </div>
-        </div>
+        </motion.div>
       )}
     </div>
   );

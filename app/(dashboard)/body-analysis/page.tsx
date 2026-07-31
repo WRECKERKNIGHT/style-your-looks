@@ -23,49 +23,42 @@ function BodyProportionViz({ shoulderWidth, waistWidth, hipWidth }: { shoulderWi
   return (
     <div className="flex flex-col items-center gap-6 py-4">
       <svg viewBox="0 0 200 120" className="w-full max-w-[280px]">
-        {/* Shoulder */}
-        <line x1={100 - scale(shoulderWidth)} y1="15" x2={100 + scale(shoulderWidth)} y2="15" stroke="#B8860B" strokeWidth="3" strokeLinecap="round" />
-        <circle cx={100 - scale(shoulderWidth)} cy="15" r="3" fill="#B8860B" />
-        <circle cx={100 + scale(shoulderWidth)} cy="15" r="3" fill="#B8860B" />
-        <text x="100" y="8" textAnchor="middle" className="fill-coffee" fontSize="7" fontFamily="DM Sans">SHOULDER</text>
-
-        {/* Waist */}
-        <line x1={100 - scale(waistWidth)} y1="55" x2={100 + scale(waistWidth)} y2="55" stroke="#C08E62" strokeWidth="3" strokeLinecap="round" />
-        <circle cx={100 - scale(waistWidth)} cy="55" r="3" fill="#C08E62" />
-        <circle cx={100 + scale(waistWidth)} cy="55" r="3" fill="#C08E62" />
-        <text x="100" y="48" textAnchor="middle" className="fill-coffee" fontSize="7" fontFamily="DM Sans">WAIST</text>
-
-        {/* Hip */}
-        <line x1={100 - scale(hipWidth)} y1="95" x2={100 + scale(hipWidth)} y2="95" stroke="#8B7355" strokeWidth="3" strokeLinecap="round" />
-        <circle cx={100 - scale(hipWidth)} cy="95" r="3" fill="#8B7355" />
-        <circle cx={100 + scale(hipWidth)} cy="95" r="3" fill="#8B7355" />
-        <text x="100" y="88" textAnchor="middle" className="fill-coffee" fontSize="7" fontFamily="DM Sans">HIP</text>
-
-        {/* Connecting lines */}
-        <line x1={100 - scale(shoulderWidth)} y1="15" x2={100 - scale(waistWidth)} y2="55" stroke="#C4A882" strokeWidth="1" strokeDasharray="3,3" />
-        <line x1={100 + scale(shoulderWidth)} y1="15" x2={100 + scale(waistWidth)} y2="55" stroke="#C4A882" strokeWidth="1" strokeDasharray="3,3" />
-        <line x1={100 - scale(waistWidth)} y1="55" x2={100 - scale(hipWidth)} y2="95" stroke="#C4A882" strokeWidth="1" strokeDasharray="3,3" />
-        <line x1={100 + scale(waistWidth)} y1="55" x2={100 + scale(hipWidth)} y2="95" stroke="#C4A882" strokeWidth="1" strokeDasharray="3,3" />
+        <line x1={100 - scale(shoulderWidth)} y1="15" x2={100 + scale(shoulderWidth)} y2="15" stroke="var(--accent-nexus)" strokeWidth="3" strokeLinecap="round" />
+        <circle cx={100 - scale(shoulderWidth)} cy="15" r="3" fill="var(--accent-nexus)" />
+        <circle cx={100 + scale(shoulderWidth)} cy="15" r="3" fill="var(--accent-nexus)" />
+        <text x="100" y="8" textAnchor="middle" fill="var(--text-muted)" fontSize="7" fontFamily="DM Sans">SHOULDER</text>
+        <line x1={100 - scale(waistWidth)} y1="55" x2={100 + scale(waistWidth)} y2="55" stroke="var(--accent-aurum)" strokeWidth="3" strokeLinecap="round" />
+        <circle cx={100 - scale(waistWidth)} cy="55" r="3" fill="var(--accent-aurum)" />
+        <circle cx={100 + scale(waistWidth)} cy="55" r="3" fill="var(--accent-aurum)" />
+        <text x="100" y="48" textAnchor="middle" fill="var(--text-muted)" fontSize="7" fontFamily="DM Sans">WAIST</text>
+        <line x1={100 - scale(hipWidth)} y1="95" x2={100 + scale(hipWidth)} y2="95" stroke="#8C59FF" strokeWidth="3" strokeLinecap="round" />
+        <circle cx={100 - scale(hipWidth)} cy="95" r="3" fill="#8C59FF" />
+        <circle cx={100 + scale(hipWidth)} cy="95" r="3" fill="#8C59FF" />
+        <text x="100" y="88" textAnchor="middle" fill="var(--text-muted)" fontSize="7" fontFamily="DM Sans">HIP</text>
+        <line x1={100 - scale(shoulderWidth)} y1="15" x2={100 - scale(waistWidth)} y2="55" stroke="var(--accent-nexus)" strokeWidth="1" strokeDasharray="3,3" />
+        <line x1={100 + scale(shoulderWidth)} y1="15" x2={100 + scale(waistWidth)} y2="55" stroke="var(--accent-nexus)" strokeWidth="1" strokeDasharray="3,3" />
+        <line x1={100 - scale(waistWidth)} y1="55" x2={100 - scale(hipWidth)} y2="95" stroke="var(--accent-nexus)" strokeWidth="1" strokeDasharray="3,3" />
+        <line x1={100 + scale(waistWidth)} y1="55" x2={100 + scale(hipWidth)} y2="95" stroke="var(--accent-nexus)" strokeWidth="1" strokeDasharray="3,3" />
       </svg>
 
       <div className="grid grid-cols-3 gap-4 w-full max-w-[320px]">
         {[
-          { label: "Shoulder", value: shoulderWidth, color: "#B8860B" },
-          { label: "Waist", value: waistWidth, color: "#C08E62" },
-          { label: "Hip", value: hipWidth, color: "#8B7355" },
+          { label: "Shoulder", value: shoulderWidth, color: "var(--accent-nexus)" },
+          { label: "Waist", value: waistWidth, color: "var(--accent-aurum)" },
+          { label: "Hip", value: hipWidth, color: "#8C59FF" },
         ].map((m) => (
           <div key={m.label} className="text-center">
-            <div className="h-24 bg-parchment border border-tan rounded-sm relative overflow-hidden flex items-end justify-center mb-2">
+            <div className="h-24 bg-[var(--bg-tertiary)] border border-[var(--border-primary)] relative overflow-hidden flex items-end justify-center mb-2">
               <motion.div
                 initial={{ height: 0 }}
                 animate={{ height: `${(m.value / maxVal) * 100}%` }}
                 transition={{ duration: 1, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                className="w-full rounded-sm"
+                className="w-full"
                 style={{ backgroundColor: m.color }}
               />
             </div>
-            <span className="text-xs font-body text-coffee">{m.label}</span>
-            <p className="font-display font-bold text-espresso text-lg">{(m.value * 100).toFixed(0)}</p>
+            <span className="text-xs font-body text-[var(--text-muted)]">{m.label}</span>
+            <p className="font-display font-bold text-[var(--text-primary)] text-lg">{(m.value * 100).toFixed(0)}</p>
           </div>
         ))}
       </div>
@@ -90,13 +83,13 @@ function BodySilhouette({ bodyType }: { bodyType: string }) {
       <path
         d={silhouettes[bodyType] || silhouettes.Rectangle}
         fill="none"
-        stroke="#B8860B"
+        stroke="var(--accent-nexus)"
         strokeWidth="1.5"
         className="drop-shadow-sm"
       />
       <path
         d={silhouettes[bodyType] || silhouettes.Rectangle}
-        fill="rgba(184, 134, 11, 0.08)"
+        fill="rgba(108, 43, 217, 0.08)"
       />
     </svg>
   );
@@ -137,23 +130,25 @@ export default function BodyAnalysisPage() {
       <div>
         <span className="section-number">EST. MMXXIV // BODY</span>
         <div className="flex items-center gap-3 mt-3 mb-2">
-          <Layers className="w-7 h-7 text-amber" />
-          <h1 className="text-4xl md:text-5xl font-display font-bold text-espresso tracking-tight">
-            BODY <span className="text-gradient-gold">&amp; TONE.</span>
+          <Layers className="w-7 h-7 text-[var(--accent-aurum)]" />
+          <h1 className="type-display text-[var(--text-primary)] tracking-tight">
+            BODY <span className="text-gradient-aurum">&amp; TONE.</span>
           </h1>
         </div>
-        <p className="text-coffee font-body text-lg max-w-xl leading-relaxed">
+        <p className="text-[var(--text-muted)] font-body type-subhead max-w-xl">
           Upload a full-body photo for body type detection, proportion analysis, and skin undertone classification.
         </p>
       </div>
 
       {!bodyResult && (
         <div className="space-y-5">
-          <ImageUploader
-            onImageUpload={handleImageUpload}
-            label="Upload a full-body photo"
-            accept="full-body"
-          />
+          <div className="glass-card p-8">
+            <ImageUploader
+              onImageUpload={handleImageUpload}
+              label="Upload a full-body photo"
+              accept="full-body"
+            />
+          </div>
 
           <AnimatePresence>
             {isAnalyzing && (
@@ -161,15 +156,15 @@ export default function BodyAnalysisPage() {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -12 }}
-                className="bg-cream p-8 border border-tan rounded-sm"
+                className="glass-card p-8"
               >
                 <div className="flex items-center gap-3 mb-5">
-                  <Loader2 className="w-5 h-5 text-amber animate-spin" />
-                  <span className="font-body font-bold text-espresso text-base">Analysing body proportions and skin tone...</span>
+                  <Loader2 className="w-5 h-5 text-[var(--accent-aurum)] animate-spin" />
+                  <span className="font-body font-bold text-[var(--text-primary)] text-sm">Analysing body proportions and skin tone...</span>
                 </div>
-                <div className="h-4 bg-[#E8E0D8] overflow-hidden rounded-full">
+                <div className="h-2 bg-[var(--bg-tertiary)] overflow-hidden rounded-full">
                   <motion.div
-                    className="h-full bg-amber rounded-full"
+                    className="h-full bg-gradient-to-r from-[var(--accent-nexus)] to-[var(--accent-aurum)] rounded-full"
                     initial={{ width: 0 }}
                     animate={{ width: `${analysisProgress}%` }}
                     transition={{ duration: 0.3 }}
@@ -180,9 +175,9 @@ export default function BodyAnalysisPage() {
           </AnimatePresence>
 
           {error && (
-            <div className="flex items-center gap-3 bg-burgundy/10 border border-burgundy/30 p-5 rounded-sm">
-              <AlertCircle className="w-5 h-5 text-burgundy flex-shrink-0" />
-              <p className="text-sm text-burgundy font-body">{error}</p>
+            <div className="flex items-center gap-3 bg-red-500/10 border border-red-500/30 p-5">
+              <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
+              <p className="text-sm text-red-400 font-body">{error}</p>
             </div>
           )}
         </div>
@@ -196,7 +191,7 @@ export default function BodyAnalysisPage() {
           className="space-y-8"
         >
           {fullBodyImage && (
-            <motion.div variants={fadeUp} className="bg-cream border border-tan overflow-hidden rounded-sm">
+            <motion.div variants={fadeUp} className="glass-card overflow-hidden">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={fullBodyImage}
@@ -206,34 +201,32 @@ export default function BodyAnalysisPage() {
             </motion.div>
           )}
 
-          {/* Body Type + Silhouette */}
-          <motion.div variants={fadeUp} className="bg-cream p-10 border border-tan vintage-border rounded-sm">
+          <motion.div variants={fadeUp} className="glass-card p-10">
             <div className="flex items-center gap-3 mb-8">
-              <Layers className="w-5 h-5 text-amber" />
-              <h3 className="text-lg font-display font-bold text-espresso tracking-wider">BODY TYPE DETECTION</h3>
+              <Layers className="w-5 h-5 text-[var(--accent-aurum)]" />
+              <h3 className="type-heading text-[var(--text-primary)] tracking-tight">BODY TYPE DETECTION</h3>
             </div>
             <div className="flex flex-col md:flex-row items-center gap-10">
               <div className="w-32 h-40 flex-shrink-0">
                 <BodySilhouette bodyType={bodyResult.bodyType} />
               </div>
               <div className="flex-1 text-center md:text-left">
-                <h2 className="text-4xl font-display font-bold text-espresso">{bodyResult.bodyType}</h2>
-                <p className="text-coffee mt-2 font-body text-lg">Your detected body silhouette type</p>
+                <h2 className="type-display text-[var(--text-primary)]">{bodyResult.bodyType}</h2>
+                <p className="text-[var(--text-muted)] mt-2 font-body type-subhead">Your detected body silhouette type</p>
                 {bodyResult.bodyProportionScore && (
-                  <div className="mt-4 inline-flex items-center gap-2 bg-parchment px-4 py-2 border border-tan rounded-sm">
-                    <span className="text-sm font-body text-coffee">Proportion Score:</span>
-                    <span className="font-display font-bold text-amber text-lg">{bodyResult.bodyProportionScore}/10</span>
+                  <div className="mt-4 inline-flex items-center gap-2 bg-[var(--bg-tertiary)] px-4 py-2 border border-[var(--border-primary)]">
+                    <span className="text-sm font-body text-[var(--text-muted)]">Proportion Score:</span>
+                    <span className="font-display font-bold text-gradient-aurum text-lg">{bodyResult.bodyProportionScore}/10</span>
                   </div>
                 )}
               </div>
             </div>
           </motion.div>
 
-          {/* Body Measurements */}
-          <motion.div variants={fadeUp} className="bg-cream p-10 border border-tan vintage-border rounded-sm">
+          <motion.div variants={fadeUp} className="glass-card p-10">
             <div className="flex items-center gap-3 mb-8">
-              <Activity className="w-5 h-5 text-amber" />
-              <h3 className="text-lg font-display font-bold text-espresso tracking-wider">BODY PROPORTIONS</h3>
+              <Activity className="w-5 h-5 text-[var(--accent-aurum)]" />
+              <h3 className="type-heading text-[var(--text-primary)] tracking-tight">BODY PROPORTIONS</h3>
             </div>
 
             <BodyProportionViz
@@ -242,21 +235,20 @@ export default function BodyAnalysisPage() {
               hipWidth={bodyResult.hipWidth}
             />
 
-            {/* Ratios */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-8">
               {bodyResult.shoulderToWaistRatio && (
-                <div className="bg-parchment p-5 border border-tan rounded-sm">
+                <div className="bg-[var(--bg-tertiary)] p-5 border border-[var(--border-primary)]">
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-body text-coffee">Shoulder-to-Waist Ratio</span>
-                    <span className="font-display font-bold text-amber text-lg">{bodyResult.shoulderToWaistRatio}</span>
+                    <span className="text-sm font-body text-[var(--text-muted)]">Shoulder-to-Waist Ratio</span>
+                    <span className="font-display font-bold text-gradient-aurum text-lg">{bodyResult.shoulderToWaistRatio}</span>
                   </div>
-                  <div className="h-3 bg-[#E8E0D8] rounded-full overflow-hidden">
+                  <div className="h-2 bg-[var(--bg-primary)] rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-amber rounded-full transition-all duration-1000"
+                      className="h-full bg-gradient-to-r from-[var(--accent-nexus)] to-[var(--accent-aurum)] rounded-full transition-all duration-1000"
                       style={{ width: `${Math.min(100, (bodyResult.shoulderToWaistRatio / 2) * 100)}%` }}
                     />
                   </div>
-                  <p className="text-xs text-coffee font-body mt-2">
+                  <p className="text-xs text-[var(--text-muted)] font-body mt-2">
                     {bodyResult.shoulderToWaistRatio >= 1.5
                       ? "V-taper detected — broader shoulders relative to waist"
                       : bodyResult.shoulderToWaistRatio >= 1.3
@@ -266,18 +258,18 @@ export default function BodyAnalysisPage() {
                 </div>
               )}
               {bodyResult.waistToHipRatio && (
-                <div className="bg-parchment p-5 border border-tan rounded-sm">
+                <div className="bg-[var(--bg-tertiary)] p-5 border border-[var(--border-primary)]">
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-body text-coffee">Waist-to-Hip Ratio</span>
-                    <span className="font-display font-bold text-amber text-lg">{bodyResult.waistToHipRatio}</span>
+                    <span className="text-sm font-body text-[var(--text-muted)]">Waist-to-Hip Ratio</span>
+                    <span className="font-display font-bold text-gradient-aurum text-lg">{bodyResult.waistToHipRatio}</span>
                   </div>
-                  <div className="h-3 bg-[#E8E0D8] rounded-full overflow-hidden">
+                  <div className="h-2 bg-[var(--bg-primary)] rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-amber rounded-full transition-all duration-1000"
+                      className="h-full bg-gradient-to-r from-[var(--accent-nexus)] to-[var(--accent-aurum)] rounded-full transition-all duration-1000"
                       style={{ width: `${Math.min(100, bodyResult.waistToHipRatio * 100)}%` }}
                     />
                   </div>
-                  <p className="text-xs text-coffee font-body mt-2">
+                  <p className="text-xs text-[var(--text-muted)] font-body mt-2">
                     {bodyResult.waistToHipRatio <= 0.85
                       ? "Well-defined waist — suits tailored and fitted pieces"
                       : bodyResult.waistToHipRatio <= 0.95
@@ -289,63 +281,61 @@ export default function BodyAnalysisPage() {
             </div>
           </motion.div>
 
-          {/* Skin Tone */}
-          <motion.div variants={fadeUp} className="bg-cream p-10 border border-tan vintage-border rounded-sm">
+          <motion.div variants={fadeUp} className="glass-card p-10">
             <div className="flex items-center gap-3 mb-8">
-              <Droplets className="w-5 h-5 text-amber" />
-              <h3 className="text-lg font-display font-bold text-espresso tracking-wider">SKIN TONE ANALYSIS</h3>
+              <Droplets className="w-5 h-5 text-[var(--accent-aurum)]" />
+              <h3 className="type-heading text-[var(--text-primary)] tracking-tight">SKIN TONE ANALYSIS</h3>
             </div>
             <div className="flex items-center gap-8">
               <div
-                className="w-24 h-24 rounded-full border-2 border-tan shadow-elegant flex-shrink-0"
+                className="w-24 h-24 rounded-full border-2 border-[var(--border-primary)] flex-shrink-0 glow-ring"
                 style={{ backgroundColor: bodyResult.skinToneValue }}
               />
               <div>
-                <h3 className="text-2xl font-display font-bold text-espresso">
+                <h3 className="type-heading text-[var(--text-primary)]">
                   {bodyResult.skinToneScale}
                 </h3>
-                <p className="text-coffee font-body text-lg mt-1">
-                  Undertone: <span className="font-bold text-espresso">{bodyResult.undertone}</span>
+                <p className="text-[var(--text-muted)] font-body type-subhead mt-1">
+                  Undertone: <span className="font-bold text-[var(--text-primary)]">{bodyResult.undertone}</span>
                 </p>
-                <p className="text-sm text-coffee font-body mt-2">
+                <p className="text-sm text-[var(--text-muted)] font-body mt-2">
                   Your {bodyResult.undertone.toLowerCase()} undertone means {bodyResult.undertone === "Warm" ? "earth tones, golds, and warm neutrals will be most flattering" : bodyResult.undertone === "Cool" ? "jewel tones, silvers, and cool blues will complement you best" : "both warm and cool palettes work — you have maximum versatility"}.
                 </p>
               </div>
             </div>
           </motion.div>
 
-          {/* Outfit Recommendations */}
           {outfitRecommendations.length > 0 && (
-            <motion.div variants={fadeUp} className="bg-cream p-10 border border-tan vintage-border rounded-sm">
-              <h3 className="text-lg font-display font-bold text-espresso tracking-wider mb-3">RECOMMENDED OUTFITS</h3>
-              <p className="text-coffee font-body text-sm mb-8">
+            <motion.div variants={fadeUp} className="glass-card p-10">
+              <h3 className="type-heading text-[var(--text-primary)] tracking-tight mb-3">RECOMMENDED OUTFITS</h3>
+              <p className="text-[var(--text-muted)] font-body text-sm mb-8">
                 Curated based on your {bodyResult.bodyType} body type and {bodyResult.undertone.toLowerCase()} undertone.
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {outfitRecommendations.slice(0, 6).map((rec) => (
                   <div
                     key={rec.id}
-                    className="bg-parchment p-6 border border-tan rounded-sm card-hover"
+                    className="bg-[var(--bg-tertiary)] p-6 border border-[var(--border-primary)] card-nexus"
                   >
                     <div className="flex items-center justify-between mb-2">
-                      <h4 className="text-sm font-display font-bold text-espresso tracking-wider">{rec.name}</h4>
+                      <h4 className="type-label text-[var(--text-primary)]">{rec.name}</h4>
                       {rec.season && (
-                        <span className="text-xs font-mono text-coffee bg-cream px-2 py-0.5 border border-tan rounded-sm">
+                        <span className="text-xs font-mono text-[var(--text-muted)] bg-[var(--bg-secondary)] px-2 py-0.5 border border-[var(--border-primary)]">
                           {rec.season}
                         </span>
                       )}
                     </div>
-                    <p className="text-sm text-coffee font-body mb-4">{rec.description}</p>
+                    <p className="text-sm text-[var(--text-muted)] font-body mb-4">{rec.description}</p>
                     <div className="flex gap-2 mb-4">
                       {rec.colors.map((color, i) => (
                         <div
                           key={i}
-                          className="w-10 h-10 border border-tan rounded-sm shadow-sm"
+                          className="w-10 h-10 border border-[var(--border-primary)] shadow-sm"
                           style={{ backgroundColor: color }}
                         />
                       ))}
                     </div>
-                    <p className="text-xs text-coffee font-body italic leading-relaxed">{rec.reasoning}</p>
+                    <p className="text-xs text-[var(--text-muted)] font-body italic leading-relaxed">{rec.reasoning}</p>
                   </div>
                 ))}
               </div>
@@ -357,7 +347,7 @@ export default function BodyAnalysisPage() {
               useAnalysisStore.getState().reset();
               setError(null);
             }}
-            className="w-full py-4 bg-parchment hover:bg-tan/20 text-espresso font-body text-base tracking-wider uppercase transition-colors border border-tan rounded-sm"
+            className="btn-outline w-full justify-center"
           >
             Analyse Another Photo
           </button>

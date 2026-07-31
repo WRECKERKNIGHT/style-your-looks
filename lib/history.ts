@@ -12,7 +12,7 @@ export interface AnalysisEntry {
   label: string;
 }
 
-const STORAGE_KEY = "aurastyle_history";
+const STORAGE_KEY = "nexari_history";
 const MAX_ENTRIES = 50;
 
 export function getHistory(): AnalysisEntry[] {

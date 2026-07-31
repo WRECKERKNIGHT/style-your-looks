@@ -62,44 +62,44 @@ export default function DashboardLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-parchment dark:bg-dark-base">
+    <div className="min-h-screen bg-[#0F0A2E] dark:bg-[#0A0618]">
       {/* Mobile top bar */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-cream/95 dark:bg-dark-surface/95 backdrop-blur-xl border-b border-tan dark:border-dark-border z-50 flex items-center px-4">
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-[#1A1540]/95 dark:bg-[#0D0920]/95 backdrop-blur-xl border-b border-[#2A1B6B]/30 dark:border-[#1A0F3D]/50 z-50 flex items-center px-4">
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="p-2 hover:bg-tan/10 dark:hover:bg-dark-border/10 rounded-lg transition-colors"
+          className="p-2 hover:bg-[#3A2B8B]/20 dark:hover:bg-[#2A1B6B]/20 rounded-lg transition-colors"
         >
           {sidebarOpen ? (
-            <X className="w-5 h-5 text-espresso dark:text-dark-text" />
+            <X className="w-5 h-5 text-[#E8E0FF] dark:text-[#C4B5FD]" />
           ) : (
-            <Menu className="w-5 h-5 text-espresso dark:text-dark-text" />
+            <Menu className="w-5 h-5 text-[#E8E0FF] dark:text-[#C4B5FD]" />
           )}
         </button>
         <div className="flex items-center gap-2.5 ml-3">
-          <div className="w-7 h-7 bg-amber flex items-center justify-center rounded-sm">
-            <Sparkles className="w-3.5 h-3.5 text-cream dark:text-dark-text" />
+          <div className="w-7 h-7 bg-gradient-to-br from-[#FF6B35] to-[#FFD700] flex items-center justify-center rounded-sm">
+            <Sparkles className="w-3.5 h-3.5 text-[#0F0A2E]" />
           </div>
-          <span className="text-sm font-display font-bold text-espresso dark:text-dark-text tracking-wider">AURASTYLE</span>
+          <span className="text-sm font-display font-bold text-[#E8E0FF] dark:text-[#C4B5FD] tracking-wider">NEXARI</span>
         </div>
       </div>
 
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed top-0 left-0 bottom-0 w-64 bg-cream dark:bg-dark-surface border-r border-tan dark:border-dark-border z-40 transition-transform duration-300 flex flex-col",
+          "fixed top-0 left-0 bottom-0 w-64 bg-[#1A1540] dark:bg-[#0D0920] border-r border-[#2A1B6B]/30 dark:border-[#1A0F3D]/50 z-40 transition-transform duration-300 flex flex-col",
           "lg:translate-x-0",
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
         {/* Logo */}
-        <div className="p-6 border-b border-tan dark:border-dark-border">
-          <Link href="/" className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-amber flex items-center justify-center rounded-sm shadow-gold">
-              <Sparkles className="w-4 h-4 text-cream dark:text-dark-text" />
+        <div className="p-6 border-b border-[#2A1B6B]/30 dark:border-[#1A0F3D]/50">
+          <Link href="/" className="flex items-center gap-3 group">
+            <div className="w-9 h-9 bg-gradient-to-br from-[#FF6B35] to-[#FFD700] flex items-center justify-center rounded-sm shadow-lg shadow-[#FF6B35]/25 group-hover:shadow-[#FF6B35]/40 transition-shadow">
+              <Sparkles className="w-4 h-4 text-[#0F0A2E]" />
             </div>
             <div>
-              <span className="text-base font-display font-bold text-espresso dark:text-dark-text tracking-wider block leading-none">AURASTYLE</span>
-              <span className="text-[10px] font-mono text-coffee dark:text-dark-muted tracking-widest uppercase">Gentleman&apos;s Journal</span>
+              <span className="text-base font-display font-bold text-[#E8E0FF] dark:text-[#C4B5FD] tracking-wider block leading-none">NEXARI</span>
+              <span className="text-[10px] font-mono text-[#7C6BC4] dark:text-[#5B4BA4] tracking-widest uppercase">STYLE INTELLIGENCE</span>
             </div>
           </Link>
         </div>
@@ -120,8 +120,8 @@ export default function DashboardLayout({
                 className={cn(
                   "flex items-center gap-3 px-4 py-3 text-xs font-body font-semibold tracking-wider transition-all border-l-2 rounded-r-sm",
                   isActive
-                    ? "bg-amber/10 text-amber border-amber"
-                    : "text-coffee dark:text-dark-muted hover:bg-tan/10 dark:hover:bg-dark-elevated hover:text-espresso dark:hover:text-dark-text border-transparent"
+                    ? "bg-gradient-to-r from-[#FF6B35]/15 to-transparent text-[#FFD700] border-[#FF6B35]"
+                    : "text-[#7C6BC4] dark:text-[#5B4BA4] hover:bg-[#2A1B6B]/20 dark:hover:bg-[#1A0F3D]/30 hover:text-[#E8E0FF] dark:hover:text-[#C4B5FD] border-transparent"
                 )}
               >
                 <item.icon className="w-[18px] h-[18px]" />
@@ -132,14 +132,14 @@ export default function DashboardLayout({
         </nav>
 
         {/* Bottom */}
-        <div className="p-5 border-t border-tan dark:border-dark-border space-y-3">
+        <div className="p-5 border-t border-[#2A1B6B]/30 dark:border-[#1A0F3D]/50 space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-mono text-coffee dark:text-dark-muted tracking-widest uppercase">Theme</span>
+            <span className="text-[10px] font-mono text-[#7C6BC4] dark:text-[#5B4BA4] tracking-widest uppercase">Theme</span>
             <ThemeToggle />
           </div>
           <Link
             href="/"
-            className="flex items-center gap-2 text-[11px] font-body text-coffee dark:text-dark-muted hover:text-espresso dark:hover:text-dark-text transition-colors tracking-widest uppercase"
+            className="flex items-center gap-2 text-[11px] font-body text-[#7C6BC4] dark:text-[#5B4BA4] hover:text-[#E8E0FF] dark:hover:text-[#C4B5FD] transition-colors tracking-widest uppercase"
           >
             <ChevronLeft className="w-3.5 h-3.5" />
             Back to Site
@@ -150,7 +150,7 @@ export default function DashboardLayout({
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div
-          className="lg:hidden fixed inset-0 bg-espresso/30 dark:bg-black/60 backdrop-blur-sm z-30"
+          className="lg:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-30"
           onClick={() => setSidebarOpen(false)}
         />
       )}

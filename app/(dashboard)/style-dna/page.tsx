@@ -32,10 +32,10 @@ const fadeUp = {
 function ScoreTrendChart({ trends }: { trends: ScoreTrendPoint[] }) {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
   const metrics = [
-    { key: "overall" as const, label: "Overall", color: "#B8860B" },
-    { key: "symmetry" as const, label: "Symmetry", color: "#C08E62" },
-    { key: "goldenRatio" as const, label: "Golden Ratio", color: "#8B7355" },
-    { key: "harmony" as const, label: "Harmony", color: "#6B7F59" },
+    { key: "overall" as const, label: "Overall", color: "var(--accent-aurum)" },
+    { key: "symmetry" as const, label: "Symmetry", color: "var(--accent-nexus)" },
+    { key: "goldenRatio" as const, label: "Golden Ratio", color: "#8C59FF" },
+    { key: "harmony" as const, label: "Harmony", color: "#4A1A96" },
   ];
 
   const w = 560;
@@ -46,12 +46,10 @@ function ScoreTrendChart({ trends }: { trends: ScoreTrendPoint[] }) {
 
   const toPath = (values: number[]) => {
     if (values.length < 2) return "";
-    const maxV = 10;
-    const minV = 0;
     return values
       .map((v, i) => {
         const x = pad.left + (i / (values.length - 1)) * plotW;
-        const y = pad.top + plotH - ((v - minV) / (maxV - minV)) * plotH;
+        const y = pad.top + plotH - (v / 10) * plotH;
         return `${i === 0 ? "M" : "L"}${x},${y}`;
       })
       .join(" ");
@@ -64,8 +62,8 @@ function ScoreTrendChart({ trends }: { trends: ScoreTrendPoint[] }) {
           const y = pad.top + plotH - (v / 10) * plotH;
           return (
             <g key={v}>
-              <line x1={pad.left} y1={y} x2={w - pad.right} y2={y} stroke="#E8E0D8" strokeWidth="1" />
-              <text x={pad.left - 4} y={y + 3} textAnchor="end" className="fill-coffee" fontSize="8" fontFamily="DM Sans">{v}</text>
+              <line x1={pad.left} y1={y} x2={w - pad.right} y2={y} stroke="var(--border-muted)" strokeWidth="1" />
+              <text x={pad.left - 4} y={y + 3} textAnchor="end" fill="var(--text-muted)" fontSize="8" fontFamily="JetBrains Mono">{v}</text>
             </g>
           );
         })}
@@ -111,7 +109,7 @@ function ScoreTrendChart({ trends }: { trends: ScoreTrendPoint[] }) {
               y1={pad.top}
               x2={pad.left + (hoveredIdx / (trends.length - 1)) * plotW}
               y2={pad.top + plotH}
-              stroke="#B8860B"
+              stroke="var(--accent-aurum)"
               strokeWidth="1"
               strokeDasharray="4,4"
               opacity={0.5}
@@ -120,33 +118,21 @@ function ScoreTrendChart({ trends }: { trends: ScoreTrendPoint[] }) {
               x={pad.left + (hoveredIdx / (trends.length - 1)) * plotW}
               y={h - 5}
               textAnchor="middle"
-              className="fill-espresso"
+              fill="var(--text-primary)"
               fontSize="8"
-              fontFamily="DM Sans"
+              fontFamily="JetBrains Mono"
             >
               {trends[hoveredIdx].date.split(",")[0]}
             </text>
           </g>
         )}
-
-        {trends.length > 1 && trends.map((t, i) => {
-          if (i === 0 || i === trends.length - 1) {
-            const x = pad.left + (i / (trends.length - 1)) * plotW;
-            return (
-              <text key={`label-${i}`} x={x} y={h - 15} textAnchor="middle" className="fill-coffee" fontSize="7" fontFamily="DM Sans">
-                {t.date.split(",")[0]}
-              </text>
-            );
-          }
-          return null;
-        })}
       </svg>
 
       <div className="flex flex-wrap justify-center gap-4 mt-4">
         {metrics.map((m) => (
           <div key={m.key} className="flex items-center gap-1.5">
             <div className="w-3 h-1 rounded-full" style={{ backgroundColor: m.color }} />
-            <span className="text-xs font-body text-coffee">{m.label}</span>
+            <span className="text-xs font-body text-[var(--text-muted)]">{m.label}</span>
           </div>
         ))}
       </div>
@@ -155,10 +141,10 @@ function ScoreTrendChart({ trends }: { trends: ScoreTrendPoint[] }) {
 }
 
 function ScoreBadge({ label, score }: { label: string; score: number }) {
-  let color = "bg-amber/15 text-amber border-amber/30";
-  if (score >= 8) color = "bg-amber/20 text-amber border-amber/40";
-  else if (score >= 6) color = "bg-olive/15 text-olive border-olive/30";
-  else if (score < 5) color = "bg-burgundy/15 text-burgundy border-burgundy/30";
+  let color = "bg-[var(--accent-aurum)]/15 text-[var(--accent-aurum)] border-[var(--accent-aurum)]/30";
+  if (score >= 8) color = "bg-[var(--accent-aurum)]/20 text-[var(--accent-aurum)] border-[var(--accent-aurum)]/40";
+  else if (score >= 6) color = "bg-[var(--accent-nexus)]/15 text-[var(--accent-nexus)] border-[var(--accent-nexus)]/30";
+  else if (score < 5) color = "bg-purple-500/15 text-purple-400 border-purple-500/30";
 
   return (
     <div className={`inline-flex items-center gap-1.5 px-3 py-1 border rounded-full ${color}`}>
@@ -183,107 +169,64 @@ export default function StyleDnaPage() {
       <div>
         <span className="section-number">EST. MMXXIV // STYLE DNA</span>
         <div className="flex items-center gap-3 mt-3 mb-2">
-          <Dna className="w-7 h-7 text-amber" />
-          <h1 className="text-4xl md:text-5xl font-display font-bold text-espresso tracking-tight">
-            STYLE <span className="text-gradient-gold">DNA.</span>
+          <Dna className="w-7 h-7 text-[var(--accent-aurum)]" />
+          <h1 className="type-display text-[var(--text-primary)] tracking-tight">
+            STYLE <span className="text-gradient-aurum">DNA.</span>
           </h1>
         </div>
-        <p className="text-coffee font-body text-lg max-w-xl leading-relaxed">
+        <p className="text-[var(--text-muted)] font-body type-subhead max-w-xl leading-relaxed">
           Your comprehensive profile combining facial analysis, body proportions,
           skin tone, and seasonal color classification into one unified style identity.
         </p>
       </div>
 
       {!hasData && (
-        <div className="bg-cream p-12 border border-tan vintage-border rounded-sm text-center">
-          <Dna className="w-12 h-12 text-tan mx-auto mb-4" />
-          <h3 className="text-lg font-display font-bold text-espresso tracking-wider mb-2">
-            NO ANALYSIS DATA YET
-          </h3>
-          <p className="text-coffee font-body max-w-md mx-auto">
-            Run a face analysis and body analysis first. Your Style DNA will be
-            automatically generated from the combined results.
+        <div className="glass-card p-12 text-center">
+          <Dna className="w-12 h-12 text-[var(--text-muted)]/40 mx-auto mb-4" />
+          <h3 className="type-heading text-[var(--text-primary)] mb-2">NO ANALYSIS DATA YET</h3>
+          <p className="text-[var(--text-muted)] font-body max-w-md mx-auto">
+            Run a face analysis and body analysis first. Your Style DNA will be automatically generated from the combined results.
           </p>
         </div>
       )}
 
       {hasData && (
-        <motion.div
-          variants={stagger}
-          initial="hidden"
-          animate="show"
-          className="space-y-8"
-        >
-          {/* ═══════════════ MASTER PROFILE CARD ═══════════════ */}
-          <motion.div
-            variants={fadeUp}
-            className="bg-cream p-10 border border-tan vintage-border rounded-sm relative overflow-hidden"
-          >
-            <div className="absolute top-0 right-0 w-64 h-64 bg-amber/5 rounded-full -translate-y-1/2 translate-x-1/2" />
+        <motion.div variants={stagger} initial="hidden" animate="show" className="space-y-8">
+          <motion.div variants={fadeUp} className="glass-card p-10 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--accent-nexus)]/5 rounded-full -translate-y-1/2 translate-x-1/2" />
             <div className="relative">
               <div className="flex items-center gap-3 mb-6">
-                <Crown className="w-5 h-5 text-amber" />
-                <h3 className="text-lg font-display font-bold text-espresso tracking-wider">
-                  YOUR STYLE IDENTITY
-                </h3>
+                <Crown className="w-5 h-5 text-[var(--accent-aurum)]" />
+                <h3 className="type-heading text-[var(--text-primary)] tracking-tight">YOUR STYLE IDENTITY</h3>
               </div>
-
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-parchment p-6 border border-tan rounded-sm text-center">
-                  <ScanFace className="w-8 h-8 text-amber mx-auto mb-3" />
-                  <span className="text-xs font-body text-coffee tracking-wider uppercase">
-                    Face Profile
-                  </span>
-                  <p className="font-display font-bold text-espresso text-xl mt-1">
-                    {faceResult?.styleProfile || "—"}
-                  </p>
-                  <p className="text-sm text-coffee font-body mt-1">
-                    {faceResult?.facialShape} shape
-                  </p>
+                <div className="bg-[var(--bg-tertiary)] p-6 border border-[var(--border-primary)] text-center card-nexus">
+                  <ScanFace className="w-8 h-8 text-[var(--accent-aurum)] mx-auto mb-3" />
+                  <span className="type-label text-[var(--text-muted)]">Face Profile</span>
+                  <p className="font-display font-bold text-[var(--text-primary)] text-xl mt-1">{faceResult?.styleProfile || "—"}</p>
+                  <p className="text-sm text-[var(--text-muted)] font-body mt-1">{faceResult?.facialShape} shape</p>
                 </div>
-                <div className="bg-parchment p-6 border border-tan rounded-sm text-center">
-                  <Layers className="w-8 h-8 text-amber mx-auto mb-3" />
-                  <span className="text-xs font-body text-coffee tracking-wider uppercase">
-                    Body Profile
-                  </span>
-                  <p className="font-display font-bold text-espresso text-xl mt-1">
-                    {bodyResult?.bodyType || "—"}
-                  </p>
-                  <p className="text-sm text-coffee font-body mt-1">
-                    {bodyResult?.shoulderToWaistRatio
-                      ? `SWR ${bodyResult.shoulderToWaistRatio}`
-                      : "Awaiting scan"}
-                  </p>
+                <div className="bg-[var(--bg-tertiary)] p-6 border border-[var(--border-primary)] text-center card-nexus">
+                  <Layers className="w-8 h-8 text-[var(--accent-aurum)] mx-auto mb-3" />
+                  <span className="type-label text-[var(--text-muted)]">Body Profile</span>
+                  <p className="font-display font-bold text-[var(--text-primary)] text-xl mt-1">{bodyResult?.bodyType || "—"}</p>
+                  <p className="text-sm text-[var(--text-muted)] font-body mt-1">{bodyResult?.shoulderToWaistRatio ? `SWR ${bodyResult.shoulderToWaistRatio}` : "Awaiting scan"}</p>
                 </div>
-                <div className="bg-parchment p-6 border border-tan rounded-sm text-center">
-                  <Palette className="w-8 h-8 text-amber mx-auto mb-3" />
-                  <span className="text-xs font-body text-coffee tracking-wider uppercase">
-                    Color Season
-                  </span>
-                  <p className="font-display font-bold text-espresso text-xl mt-1">
-                    {colorAnalysis?.subType || faceResult?.undertone || "—"}
-                  </p>
-                  <p className="text-sm text-coffee font-body mt-1">
-                    {colorAnalysis?.metalPreference
-                      ? `${colorAnalysis.metalPreference} metals`
-                      : "Awaiting scan"}
-                  </p>
+                <div className="bg-[var(--bg-tertiary)] p-6 border border-[var(--border-primary)] text-center card-nexus">
+                  <Palette className="w-8 h-8 text-[var(--accent-aurum)] mx-auto mb-3" />
+                  <span className="type-label text-[var(--text-muted)]">Color Season</span>
+                  <p className="font-display font-bold text-[var(--text-primary)] text-xl mt-1">{colorAnalysis?.subType || faceResult?.undertone || "—"}</p>
+                  <p className="text-sm text-[var(--text-muted)] font-body mt-1">{colorAnalysis?.metalPreference ? `${colorAnalysis.metalPreference} metals` : "Awaiting scan"}</p>
                 </div>
               </div>
             </div>
           </motion.div>
 
-          {/* ═══════════════ COMPOSITE SCORES ═══════════════ */}
           {faceResult && (
-            <motion.div
-              variants={fadeUp}
-              className="bg-cream p-10 border border-tan vintage-border rounded-sm"
-            >
+            <motion.div variants={fadeUp} className="glass-card p-10">
               <div className="flex items-center gap-3 mb-8">
-                <TrendingUp className="w-5 h-5 text-amber" />
-                <h3 className="text-lg font-display font-bold text-espresso tracking-wider">
-                  COMPOSITE SCORES
-                </h3>
+                <TrendingUp className="w-5 h-5 text-[var(--accent-aurum)]" />
+                <h3 className="type-heading text-[var(--text-primary)] tracking-tight">COMPOSITE SCORES</h3>
               </div>
               <div className="flex flex-wrap justify-center gap-10">
                 <ScoreGauge score={faceResult.overallScore} size="md" label="Face IQ" />
@@ -292,7 +235,6 @@ export default function StyleDnaPage() {
                   <ScoreGauge score={bodyResult.bodyProportionScore} size="md" label="Body Proportion" />
                 )}
               </div>
-
               <div className="flex flex-wrap justify-center gap-3 mt-8">
                 <ScoreBadge label="Symmetry" score={faceResult.symmetry} />
                 <ScoreBadge label="Golden Ratio" score={faceResult.goldenRatio} />
@@ -306,160 +248,55 @@ export default function StyleDnaPage() {
             </motion.div>
           )}
 
-          {/* ═══════════════ SCORE TRENDS ═══════════════ */}
           {faceResult && trends.length >= 2 && (
-            <motion.div
-              variants={fadeUp}
-              className="bg-cream p-10 border border-tan vintage-border rounded-sm"
-            >
+            <motion.div variants={fadeUp} className="glass-card p-10">
               <div className="flex items-center gap-3 mb-8">
-                <BarChart3 className="w-5 h-5 text-amber" />
-                <h3 className="text-lg font-display font-bold text-espresso tracking-wider">
-                  SCORE PROGRESS
-                </h3>
+                <BarChart3 className="w-5 h-5 text-[var(--accent-aurum)]" />
+                <h3 className="type-heading text-[var(--text-primary)] tracking-tight">SCORE PROGRESS</h3>
               </div>
-              <p className="text-coffee font-body text-sm mb-6">
-                Tracking your analysis scores across {trends.length} sessions. Hover for details.
-              </p>
+              <p className="text-[var(--text-muted)] font-body text-sm mb-6">Tracking your analysis scores across {trends.length} sessions. Hover for details.</p>
               <ScoreTrendChart trends={trends} />
             </motion.div>
           )}
 
-          {/* ═══════════════ STYLE RECOMMENDATIONS ═══════════════ */}
-          <motion.div
-            variants={fadeUp}
-            className="bg-cream p-10 border border-tan vintage-border rounded-sm"
-          >
+          <motion.div variants={fadeUp} className="glass-card p-10">
             <div className="flex items-center gap-3 mb-3">
-              <Sparkles className="w-5 h-5 text-amber" />
-              <h3 className="text-lg font-display font-bold text-espresso tracking-wider">
-                STYLE RECOMMENDATIONS
-              </h3>
+              <Sparkles className="w-5 h-5 text-[var(--accent-aurum)]" />
+              <h3 className="type-heading text-[var(--text-primary)] tracking-tight">STYLE RECOMMENDATIONS</h3>
             </div>
-            <p className="text-coffee font-body text-sm mb-8">
-              Based on your {faceResult?.styleProfile || "unique"} facial profile,
-              {" "}{bodyResult?.bodyType || "individual"} body type, and{" "}
-              {faceResult?.undertone || "natural"} coloring.
+            <p className="text-[var(--text-muted)] font-body text-sm mb-8">
+              Based on your {faceResult?.styleProfile || "unique"} facial profile, {bodyResult?.bodyType || "individual"} body type, and {faceResult?.undertone || "natural"} coloring.
             </p>
-
             <div className="space-y-5">
               {faceResult?.styleProfile === "Rugged Elegance" && (
-                <>
-                  <StyleRec
-                    icon={<Shirt className="w-5 h-5 text-amber" />}
-                    title="Wardrobe Direction"
-                    text="Lean into structured pieces with rich textures. Leather jackets, tailored blazers, and quality knits. Avoid overly trendy pieces — your features carry classic well."
-                  />
-                  <StyleRec
-                    icon={<Palette className="w-5 h-5 text-amber" />}
-                    title="Power Colors"
-                    text="Navy, burgundy, forest green, camel, and charcoal. These ground your strong features without competing."
-                  />
-                </>
+                <><StyleRec icon={<Shirt className="w-5 h-5 text-[var(--accent-aurum)]" />} title="Wardrobe Direction" text="Lean into structured pieces with rich textures. Leather jackets, tailored blazers, and quality knits. Avoid overly trendy pieces — your features carry classic well." /><StyleRec icon={<Palette className="w-5 h-5 text-[var(--accent-aurum)]" />} title="Power Colors" text="Navy, burgundy, forest green, camel, and charcoal. These ground your strong features without competing." /></>
               )}
               {faceResult?.styleProfile === "Classic Handsome" && (
-                <>
-                  <StyleRec
-                    icon={<Shirt className="w-5 h-5 text-amber" />}
-                    title="Wardrobe Direction"
-                    text="Your balanced features suit timeless silhouettes. Invest in well-fitted essentials: Oxford shirts, chinos, leather belts, and clean sneakers."
-                  />
-                  <StyleRec
-                    icon={<Palette className="w-5 h-5 text-amber" />}
-                    title="Power Colors"
-                    text="Your symmetry means you can wear a wide range. Anchor with navy and white, accent with your seasonal palette."
-                  />
-                </>
+                <><StyleRec icon={<Shirt className="w-5 h-5 text-[var(--accent-aurum)]" />} title="Wardrobe Direction" text="Your balanced features suit timeless silhouettes. Invest in well-fitted essentials: Oxford shirts, chinos, leather belts, and clean sneakers." /><StyleRec icon={<Palette className="w-5 h-5 text-[var(--accent-aurum)]" />} title="Power Colors" text="Your symmetry means you can wear a wide range. Anchor with navy and white, accent with your seasonal palette." /></>
               )}
               {faceResult?.styleProfile === "Editorial Sharp" && (
-                <>
-                  <StyleRec
-                    icon={<Shirt className="w-5 h-5 text-amber" />}
-                    title="Wardrobe Direction"
-                    text="Your angular features read editorial. Experiment with monochrome outfits, structured outerwear, and fashion-forward silhouettes."
-                  />
-                  <StyleRec
-                    icon={<Palette className="w-5 h-5 text-amber" />}
-                    title="Power Colors"
-                    text="Black, white, and grey as your base. Add accent colors from your seasonal palette for visual interest."
-                  />
-                </>
+                <><StyleRec icon={<Shirt className="w-5 h-5 text-[var(--accent-aurum)]" />} title="Wardrobe Direction" text="Your angular features read editorial. Experiment with monochrome outfits, structured outerwear, and fashion-forward silhouettes." /><StyleRec icon={<Palette className="w-5 h-5 text-[var(--accent-aurum)]" />} title="Power Colors" text="Black, white, and grey as your base. Add accent colors from your seasonal palette for visual interest." /></>
               )}
-              {!["Rugged Elegance", "Classic Handsome", "Editorial Sharp"].includes(
-                faceResult?.styleProfile || ""
-              ) && (
-                <>
-                  <StyleRec
-                    icon={<Shirt className="w-5 h-5 text-amber" />}
-                    title="Wardrobe Direction"
-                    text="Your unique facial profile gives you versatility. Build a wardrobe of quality basics and let your features do the talking."
-                  />
-                  <StyleRec
-                    icon={<Palette className="w-5 h-5 text-amber" />}
-                    title="Power Colors"
-                    text={`${faceResult?.undertone || "Natural"} palette tones will be most flattering. Use the Color Analysis page for specific recommendations.`}
-                  />
-                </>
+              {!["Rugged Elegance", "Classic Handsome", "Editorial Sharp"].includes(faceResult?.styleProfile || "") && (
+                <><StyleRec icon={<Shirt className="w-5 h-5 text-[var(--accent-aurum)]" />} title="Wardrobe Direction" text="Your unique facial profile gives you versatility. Build a wardrobe of quality basics and let your features do the talking." /><StyleRec icon={<Palette className="w-5 h-5 text-[var(--accent-aurum)]" />} title="Power Colors" text={`${faceResult?.undertone || "Natural"} palette tones will be most flattering. Use the Color Analysis page for specific recommendations.`} /></>
               )}
 
-              {bodyResult?.bodyType === "Inverted Triangle" && (
-                <StyleRec
-                  icon={<Layers className="w-5 h-5 text-amber" />}
-                  title="Body Styling"
-                  text="Your broader shoulders are an asset. V-neck tees and well-fitted tops highlight your V-taper. Avoid excessive shoulder padding."
-                />
-              )}
-              {bodyResult?.bodyType === "Rectangle" && (
-                <StyleRec
-                  icon={<Layers className="w-5 h-5 text-amber" />}
-                  title="Body Styling"
-                  text="Create visual dimension with layering. Structured jackets add shoulder definition. Tapered trousers create a more dynamic silhouette."
-                />
-              )}
-              {bodyResult?.bodyType === "Oval" && (
-                <StyleRec
-                  icon={<Layers className="w-5 h-5 text-amber" />}
-                  title="Body Styling"
-                  text="Vertical lines and structured fabrics create a leaner silhouette. Well-fitted (not tight) pieces are your friend. Monochrome outfits elongate."
-                />
-              )}
-              {bodyResult?.bodyType === "Hourglass" && (
-                <StyleRec
-                  icon={<Layers className="w-5 h-5 text-amber" />}
-                  title="Body Styling"
-                  text="Your balanced proportions suit fitted silhouettes. Define your waist with belts and tailored pieces. Avoid boxy, oversized tops."
-                />
-              )}
+              {bodyResult?.bodyType === "Inverted Triangle" && (<StyleRec icon={<Layers className="w-5 h-5 text-[var(--accent-aurum)]" />} title="Body Styling" text="Your broader shoulders are an asset. V-neck tees and well-fitted tops highlight your V-taper. Avoid excessive shoulder padding." />)}
+              {bodyResult?.bodyType === "Rectangle" && (<StyleRec icon={<Layers className="w-5 h-5 text-[var(--accent-aurum)]" />} title="Body Styling" text="Create visual dimension with layering. Structured jackets add shoulder definition. Tapered trousers create a more dynamic silhouette." />)}
+              {bodyResult?.bodyType === "Oval" && (<StyleRec icon={<Layers className="w-5 h-5 text-[var(--accent-aurum)]" />} title="Body Styling" text="Vertical lines and structured fabrics create a leaner silhouette. Well-fitted (not tight) pieces are your friend. Monochrome outfits elongate." />)}
+              {bodyResult?.bodyType === "Hourglass" && (<StyleRec icon={<Layers className="w-5 h-5 text-[var(--accent-aurum)]" />} title="Body Styling" text="Your balanced proportions suit fitted silhouettes. Define your waist with belts and tailored pieces. Avoid boxy, oversized tops." />)}
 
-              {faceResult?.skinClarity && faceResult.skinClarity < 6 && (
-                <StyleRec
-                  icon={<Droplets className="w-5 h-5 text-amber" />}
-                  title="Skincare Priority"
-                  text="Invest in a consistent skincare routine. A simple 4-step system (cleanse, treat, moisturize, SPF) will noticeably improve your appearance within 4-6 weeks."
-                />
-              )}
+              {faceResult?.skinClarity && faceResult.skinClarity < 6 && (<StyleRec icon={<Droplets className="w-5 h-5 text-[var(--accent-aurum)]" />} title="Skincare Priority" text="Invest in a consistent skincare routine. A simple 4-step system (cleanse, treat, moisturize, SPF) will noticeably improve your appearance within 4-6 weeks." />)}
 
-              {colorAnalysis && (
-                <StyleRec
-                  icon={<Palette className="w-5 h-5 text-amber" />}
-                  title="Metal & Accessories"
-                  text={`Stick to ${colorAnalysis.metalPreference.toLowerCase()} metals for watches, rings, and belt buckles. ${colorAnalysis.patternRecommendation} will complement your coloring.`}
-                />
-              )}
+              {colorAnalysis && (<StyleRec icon={<Palette className="w-5 h-5 text-[var(--accent-aurum)]" />} title="Metal & Accessories" text={`Stick to ${colorAnalysis.metalPreference.toLowerCase()} metals for watches, rings, and belt buckles. ${colorAnalysis.patternRecommendation} will complement your coloring.`} />)}
             </div>
           </motion.div>
 
-          {/* ═══════════════ FULL METRIC GRID ═══════════════ */}
           {faceResult && (
-            <motion.div
-              variants={fadeUp}
-              className="bg-cream p-10 border border-tan vintage-border rounded-sm"
-            >
+            <motion.div variants={fadeUp} className="glass-card p-10">
               <div className="flex items-center gap-3 mb-6">
-                <ScanFace className="w-5 h-5 text-amber" />
-                <h3 className="text-lg font-display font-bold text-espresso tracking-wider">
-                  FULL FACE METRICS
-                </h3>
+                <ScanFace className="w-5 h-5 text-[var(--accent-aurum)]" />
+                <h3 className="type-heading text-[var(--text-primary)] tracking-tight">FULL FACE METRICS</h3>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <MetricTile label="Symmetry" score={faceResult.symmetry} />
@@ -478,26 +315,15 @@ export default function StyleDnaPage() {
             </motion.div>
           )}
 
-          {/* Shareable Report */}
-          <motion.div
-            variants={fadeUp}
-            className="bg-cream p-10 border border-tan vintage-border rounded-sm"
-          >
+          <motion.div variants={fadeUp} className="glass-card p-10">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
-                <Share2 className="w-5 h-5 text-amber" />
-                <h3 className="text-lg font-display font-bold text-espresso tracking-wider">
-                  SHARE YOUR REPORT
-                </h3>
+                <Share2 className="w-5 h-5 text-[var(--accent-aurum)]" />
+                <h3 className="type-heading text-[var(--text-primary)] tracking-tight">SHARE YOUR REPORT</h3>
               </div>
             </div>
-            <p className="text-coffee font-body text-sm mb-6">
-              Generate a comprehensive style report card to share or save.
-            </p>
-            <button
-              onClick={() => generateReport(faceResult, bodyResult, colorAnalysis)}
-              className="flex items-center gap-2 px-6 py-3 bg-amber text-cream font-body text-sm font-bold tracking-wider rounded-sm hover:bg-amber/90 transition-colors"
-            >
+            <p className="text-[var(--text-muted)] font-body text-sm mb-6">Generate a comprehensive style report card to share or save.</p>
+            <button onClick={() => generateReport(faceResult, bodyResult, colorAnalysis)} className="btn-nexus">
               <Download className="w-4 h-4" />
               GENERATE REPORT CARD
             </button>
@@ -508,14 +334,9 @@ export default function StyleDnaPage() {
   );
 }
 
-function generateReport(
-  face: any,
-  body: any,
-  color: any
-) {
+function generateReport(face: any, body: any, color: any) {
   const w = 640;
   const h = 900;
-
   const faceMetrics = face ? [
     { label: "Overall", score: face.overallScore },
     { label: "Symmetry", score: face.symmetry },
@@ -524,13 +345,11 @@ function generateReport(
     { label: "Skin", score: face.skinClarity },
     { label: "Harmony", score: face.facialHarmony },
   ] : [];
-
   const bodyMetrics = body ? [
     { label: "Body Type", value: body.bodyType },
     { label: "Shoulder-Waist", value: body.shoulderToWaistRatio?.toFixed(2) || "—" },
     { label: "Undertone", value: body.undertone },
   ] : [];
-
   const barY = 160;
   const barH = 14;
   const barMaxW = 200;
@@ -541,41 +360,41 @@ function generateReport(
   svg.setAttribute("height", `${h}`);
 
   svg.innerHTML = `
-    <rect width="${w}" height="${h}" fill="#F5F0EB"/>
-    <rect width="${w}" height="8" fill="#B8860B"/>
-    <text x="${w/2}" y="40" text-anchor="middle" font-family="Georgia, serif" font-size="12" fill="#8B7355" letter-spacing="4">A U R A S T Y L E</text>
-    <text x="${w/2}" y="68" text-anchor="middle" font-family="Georgia, serif" font-size="24" fill="#3C2A21" font-weight="bold">Style Analysis Report</text>
-    <text x="${w/2}" y="88" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#C08E62">${new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}</text>
-    <line x1="40" y1="100" x2="${w-40}" y2="100" stroke="#C4A882" stroke-width="1"/>
+    <rect width="${w}" height="${h}" fill="#0A0618"/>
+    <rect width="${w}" height="8" fill="#6C2BD9"/>
+    <text x="${w/2}" y="40" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#8C59FF" letter-spacing="4">N E X A R I</text>
+    <text x="${w/2}" y="68" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" fill="#D4BFFF" font-weight="bold">Style Analysis Report</text>
+    <text x="${w/2}" y="88" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#E8B620">${new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}</text>
+    <line x1="40" y1="100" x2="${w-40}" y2="100" stroke="#6C2BD9" stroke-width="1"/>
 
     ${face ? `
-      <text x="40" y="125" font-family="Georgia, serif" font-size="14" fill="#3C2A21" font-weight="bold">FACE ANALYSIS</text>
-      <text x="40" y="145" font-family="Arial, sans-serif" font-size="10" fill="#8B7355">${face.facialShape} Shape · ${face.styleProfile} · ${face.overallRating}</text>
+      <text x="40" y="125" font-family="Arial, sans-serif" font-size="14" fill="#D4BFFF" font-weight="bold">FACE ANALYSIS</text>
+      <text x="40" y="145" font-family="Arial, sans-serif" font-size="10" fill="#8C59FF">${face.facialShape} Shape · ${face.styleProfile} · ${face.overallRating}</text>
       ${faceMetrics.map((m, i) => `
-        <text x="40" y="${barY + i * 32}" font-family="Arial, sans-serif" font-size="10" fill="#8B7355">${m.label}</text>
-        <rect x="130" y="${barY + i * 32 - 10}" width="${(m.score / 10) * barMaxW}" height="${barH}" rx="3" fill="${m.score >= 7 ? '#556B2F' : m.score >= 5 ? '#B8860B' : '#8B4513'}"/>
-        <text x="${135 + (m.score / 10) * barMaxW}" y="${barY + i * 32}" font-family="monospace" font-size="10" fill="#3C2A21" font-weight="bold">${m.score.toFixed(1)}</text>
+        <text x="40" y="${barY + i * 32}" font-family="Arial, sans-serif" font-size="10" fill="#8C59FF">${m.label}</text>
+        <rect x="130" y="${barY + i * 32 - 10}" width="${(m.score / 10) * barMaxW}" height="${barH}" rx="3" fill="${m.score >= 7 ? 'var(--accent-nexus)' : m.score >= 5 ? 'var(--accent-aurum)' : '#FF4444'}"/>
+        <text x="${135 + (m.score / 10) * barMaxW}" y="${barY + i * 32}" font-family="monospace" font-size="10" fill="#D4BFFF" font-weight="bold">${m.score.toFixed(1)}</text>
       `).join("")}
     ` : ""}
 
     ${body ? `
-      <text x="40" y="${barY + faceMetrics.length * 32 + 30}" font-family="Georgia, serif" font-size="14" fill="#3C2A21" font-weight="bold">BODY ANALYSIS</text>
+      <text x="40" y="${barY + faceMetrics.length * 32 + 30}" font-family="Arial, sans-serif" font-size="14" fill="#D4BFFF" font-weight="bold">BODY ANALYSIS</text>
       ${bodyMetrics.map((m, i) => `
-        <text x="40" y="${barY + faceMetrics.length * 32 + 55 + i * 24}" font-family="Arial, sans-serif" font-size="10" fill="#8B7355">${m.label}:</text>
-        <text x="180" y="${barY + faceMetrics.length * 32 + 55 + i * 24}" font-family="Arial, sans-serif" font-size="11" fill="#3C2A21" font-weight="bold">${m.value}</text>
+        <text x="40" y="${barY + faceMetrics.length * 32 + 55 + i * 24}" font-family="Arial, sans-serif" font-size="10" fill="#8C59FF">${m.label}:</text>
+        <text x="180" y="${barY + faceMetrics.length * 32 + 55 + i * 24}" font-family="Arial, sans-serif" font-size="11" fill="#D4BFFF" font-weight="bold">${m.value}</text>
       `).join("")}
     ` : ""}
 
     ${color ? `
-      <text x="40" y="${h - 180}" font-family="Georgia, serif" font-size="14" fill="#3C2A21" font-weight="bold">COLOR PALETTE</text>
-      <text x="40" y="${h - 160}" font-family="Arial, sans-serif" font-size="10" fill="#8B7355">${color.subType} · ${color.metalPreference} Metals</text>
-      ${color.bestColors.slice(0, 8).map((c: string, i: number) => `<rect x="${40 + i * 65}" y="${h - 145}" width="55" height="30" rx="4" fill="${c}" stroke="#C4A882" stroke-width="1"/>`).join("")}
-      ${color.bestColors.slice(0, 8).map((c: string, i: number) => `<text x="${67 + i * 65}" y="${h - 125}" text-anchor="middle" font-family="monospace" font-size="7" fill="#fff">${c}</text>`).join("")}
+      <text x="40" y="${h - 180}" font-family="Arial, sans-serif" font-size="14" fill="#D4BFFF" font-weight="bold">COLOR PALETTE</text>
+      <text x="40" y="${h - 160}" font-family="Arial, sans-serif" font-size="10" fill="#8C59FF">${color.subType} · ${color.metalPreference} Metals</text>
+      ${color.bestColors.slice(0, 8).map((c: string, i: number) => `<rect x="${40 + i * 65}" y="${h - 145}" width="55" height="30" rx="4" fill="${c}" stroke="#6C2BD9" stroke-width="1"/>`).join("")}
+      ${color.bestColors.slice(0, 8).map((c: string, i: number) => `<text x="${67 + i * 65}" y="${h - 125}" text-anchor="middle" font-family="monospace" font-size="7" fill="#D4BFFF">${c}</text>`).join("")}
     ` : ""}
 
-    <line x1="40" y1="${h - 80}" x2="${w-40}" y2="${h - 80}" stroke="#C4A882" stroke-width="1"/>
-    <text x="${w/2}" y="${h - 55}" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#C08E62">Generated by AuraStyle</text>
-    <text x="${w/2}" y="${h - 40}" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" fill="#C4A882">aura-style-ai.vercel.app</text>
+    <line x1="40" y1="${h - 80}" x2="${w-40}" y2="${h - 80}" stroke="#6C2BD9" stroke-width="1"/>
+    <text x="${w/2}" y="${h - 55}" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#E8B620">Generated by NEXARI</text>
+    <text x="${w/2}" y="${h - 40}" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" fill="#E8B620">nexari.app</text>
   `;
 
   const svgData = new XMLSerializer().serializeToString(svg);
@@ -591,52 +410,40 @@ function generateReport(
     ctx.drawImage(img, 0, 0, w * 2, h * 2);
     URL.revokeObjectURL(url);
     const link = document.createElement("a");
-    link.download = "aurastyle-report.png";
+    link.download = "nexari-report.png";
     link.href = canvas.toDataURL("image/png");
     link.click();
   };
   img.src = url;
 }
 
-function StyleRec({
-  icon,
-  title,
-  text,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  text: string;
-}) {
+function StyleRec({ icon, title, text }: { icon: React.ReactNode; title: string; text: string }) {
   return (
-    <div className="flex items-start gap-4 bg-parchment p-5 border border-tan rounded-sm card-hover">
-      <div className="w-10 h-10 bg-amber/10 flex items-center justify-center flex-shrink-0 rounded-full border border-amber/20">
+    <div className="flex items-start gap-4 bg-[var(--bg-tertiary)] p-5 border border-[var(--border-primary)] card-nexus">
+      <div className="w-10 h-10 bg-[var(--accent-aurum)]/10 flex items-center justify-center flex-shrink-0 rounded-full border border-[var(--accent-aurum)]/20">
         {icon}
       </div>
       <div>
-        <h4 className="text-sm font-display font-bold text-espresso tracking-wider mb-1">
-          {title}
-        </h4>
-        <p className="text-sm text-coffee font-body leading-relaxed">{text}</p>
+        <h4 className="type-label text-[var(--text-primary)] mb-1">{title}</h4>
+        <p className="text-sm text-[var(--text-muted)] font-body leading-relaxed">{text}</p>
       </div>
     </div>
   );
 }
 
 function MetricTile({ label, score }: { label: string; score: number }) {
-  let borderColor = "border-tan";
-  if (score >= 8) borderColor = "border-amber/40";
-  else if (score >= 6) borderColor = "border-olive/30";
-  else if (score < 5) borderColor = "border-burgundy/30";
+  let borderColor = "border-[var(--border-primary)]";
+  if (score >= 8) borderColor = "border-[var(--accent-aurum)]/40";
+  else if (score >= 6) borderColor = "border-[var(--accent-nexus)]/30";
+  else if (score < 5) borderColor = "border-purple-500/30";
 
   return (
-    <div className={`bg-parchment p-4 border ${borderColor} rounded-sm text-center transition-all duration-300 hover:shadow-md hover:-translate-y-0.5`}>
-      <span className="text-xs font-body text-coffee tracking-wider uppercase block">
-        {label}
-      </span>
-      <span className="font-display font-bold text-espresso text-2xl mt-1 block">
+    <div className={`bg-[var(--bg-tertiary)] p-4 border ${borderColor} text-center transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5`}>
+      <span className="type-label text-[var(--text-muted)] block">{label}</span>
+      <span className="font-display font-bold text-[var(--text-primary)] text-2xl mt-1 block">
         {score.toFixed(1)}
       </span>
-      <span className="text-[10px] font-mono text-coffee">/10</span>
+      <span className="type-mono text-[var(--text-muted)]">/10</span>
     </div>
   );
 }

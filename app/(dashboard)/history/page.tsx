@@ -1,213 +1,183 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { getHistory, deleteFromHistory, clearHistory, type AnalysisEntry } from "@/lib/history";
-import { useAnalysisStore } from "@/store/analysis-store";
-import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
-import { History, Trash2, Clock, ScanFace, Layers, Palette, ChevronRight, X } from "lucide-react";
+import { useState } from "react";
+import Link from "next/link";
+import { motion } from "framer-motion";
+import { Clock, ChevronRight, Trash2, BarChart3, Eye, RotateCcw, ArrowRight } from "lucide-react";
+import { useToast } from "@/components/shared/Toast";
+
+interface HistoryEntry {
+  id: string;
+  type: "face" | "body" | "color" | "pillar" | "skin" | "style-dna" | "virtual-tryon" | "grooming" | "accessories" | "hair";
+  label: string;
+  date: string;
+  score?: number;
+  result?: string;
+}
+
+const MOCK_HISTORY: HistoryEntry[] = [
+  { id: "h1", type: "pillar", label: "Pillar Analysis", date: "2026-07-30 14:32", score: 87, result: "Harmonious Classic" },
+  { id: "h2", type: "face", label: "Face Shape Analysis", date: "2026-07-30 14:25", score: 92, result: "Oval" },
+  { id: "h3", type: "body", label: "Body Type Analysis", date: "2026-07-30 14:18", score: 88, result: "Hourglass" },
+  { id: "h4", type: "color", label: "Color Analysis", date: "2026-07-30 14:10", score: 85, result: "Deep Autumn" },
+  { id: "h5", type: "skin", label: "Skin Health", date: "2026-07-29 11:00", score: 76, result: "Needs Improvement" },
+  { id: "h6", type: "style-dna", label: "Style DNA", date: "2026-07-29 10:45", result: "Classic Minimalist" },
+  { id: "h7", type: "virtual-tryon", label: "Virtual Try-On", date: "2026-07-28 16:20" },
+  { id: "h8", type: "grooming", label: "Grooming Guide", date: "2026-07-28 15:00", score: 81 },
+  { id: "h9", type: "accessories", label: "Glasses Try-On", date: "2026-07-27 13:30" },
+  { id: "h10", type: "hair", label: "Hair Preview", date: "2026-07-27 13:15" },
+  { id: "h11", type: "pillar", label: "Pillar Analysis", date: "2026-07-20 09:00", score: 72, result: "Evolving" },
+  { id: "h12", type: "face", label: "Face Shape Analysis", date: "2026-07-20 08:55", score: 90, result: "Oval" },
+];
+
+const TYPE_ICONS: Record<string, string> = {
+  face: "👤", body: "🧍", color: "🎨", pillar: "🏛️", skin: "✨", "style-dna": "🧬", "virtual-tryon": "👗", grooming: "💇", accessories: "👓", hair: "💁",
+};
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
+};
 
 export default function HistoryPage() {
-  const [entries, setEntries] = useState<AnalysisEntry[]>([]);
-  const [showClearConfirm, setShowClearConfirm] = useState(false);
-  const router = useRouter();
-  const store = useAnalysisStore();
+  const { addToast } = useToast();
+  const [history, setHistory] = useState(MOCK_HISTORY);
+  const [filter, setFilter] = useState<string>("all");
+  const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
 
-  useEffect(() => {
-    setEntries(getHistory());
-  }, []);
+  const filtered = history
+    .filter(h => filter === "all" || h.type === filter)
+    .sort((a, b) => sortOrder === "newest"
+      ? new Date(b.date).getTime() - new Date(a.date).getTime()
+      : new Date(a.date).getTime() - new Date(b.date).getTime());
 
-  const handleDelete = (id: string) => {
-    deleteFromHistory(id);
-    setEntries(getHistory());
+  const clearHistory = () => {
+    setHistory([]);
+    addToast("History cleared", "success");
   };
 
-  const handleClearAll = () => {
-    clearHistory();
-    setEntries([]);
-    setShowClearConfirm(false);
-  };
-
-  const handleLoadEntry = (entry: AnalysisEntry) => {
-    if (entry.faceResult) store.setFaceResult(entry.faceResult);
-    if (entry.bodyResult) store.setBodyResult(entry.bodyResult);
-    if (entry.colorAnalysis) store.setColorAnalysis(entry.colorAnalysis);
-    if (entry.outfitRecommendations.length > 0) store.setOutfitRecommendations(entry.outfitRecommendations);
-    if (entry.thumbnailUrl) store.setUploadedImage(entry.thumbnailUrl);
-    router.push("/dashboard/face-analysis");
-  };
-
-  const getScoreColor = (score: number) => {
-    if (score >= 8) return "text-amber";
-    if (score >= 6) return "text-olive";
-    if (score >= 4) return "text-coffee";
-    return "text-burgundy";
-  };
+  const types = Array.from(new Set(history.map(h => h.type)));
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <span className="section-number">EST. MMXXIV // HISTORY</span>
-          <div className="flex items-center gap-3 mt-3 mb-2">
-            <History className="w-7 h-7 text-amber" />
-            <h1 className="text-4xl md:text-5xl font-display font-bold text-espresso tracking-tight">
-              ANALYSIS <span className="text-gradient-gold">HISTORY.</span>
-            </h1>
-          </div>
-          <p className="text-coffee font-body text-lg max-w-xl leading-relaxed">
-            Your past analyses, saved locally. Click any entry to reload results.
-          </p>
+      <motion.div variants={fadeUp} initial="hidden" animate="show">
+        <span className="section-number">EST. MMXXIV // HISTORY</span>
+        <div className="flex items-center gap-3 mt-3 mb-2">
+          <Clock className="w-7 h-7 text-[var(--accent-aurum)]" />
+          <h1 className="type-display text-[var(--text-primary)] tracking-tight">
+            ANALYSIS <span className="text-gradient-aurum">HISTORY.</span>
+          </h1>
         </div>
-        {entries.length > 0 && (
-          <button
-            onClick={() => setShowClearConfirm(true)}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-body text-burgundy hover:bg-burgundy/10 transition-colors rounded-sm border border-burgundy/20"
-          >
-            <Trash2 className="w-4 h-4" />
-            Clear All
-          </button>
-        )}
-      </div>
+        <p className="text-[var(--text-muted)] font-body type-subhead max-w-xl">
+          Track your style evolution over time.
+        </p>
+      </motion.div>
 
-      {entries.length === 0 ? (
-        <div className="bg-cream border border-tan p-16 text-center vintage-border rounded-sm">
-          <Clock className="w-12 h-12 text-tan/40 mx-auto mb-4" />
-          <h3 className="text-lg font-display font-bold text-espresso tracking-wider mb-2">NO HISTORY YET</h3>
-          <p className="text-coffee font-body text-base max-w-sm mx-auto">
-            Complete a face analysis and click &quot;Save Analysis&quot; to store your results here.
-          </p>
-        </div>
+      <motion.div variants={fadeUp} initial="hidden" animate="show" className="flex flex-wrap gap-2 items-center">
+        <select value={filter} onChange={e => setFilter(e.target.value)}
+          className="px-3 py-2 border border-[var(--border-primary)] bg-[var(--bg-tertiary)] text-[var(--text-primary)] text-xs type-mono">
+          <option value="all">ALL TYPES</option>
+          {types.map(t => <option key={t} value={t}>{t.toUpperCase()}</option>)}
+        </select>
+
+        <button onClick={() => setSortOrder(s => s === "newest" ? "oldest" : "newest")}
+          className="px-3 py-2 border border-[var(--border-primary)] text-[var(--text-muted)] text-xs type-mono hover:border-[var(--accent-aurum)]/40 card-nexus">
+          {sortOrder === "newest" ? "NEWEST" : "OLDEST"}
+        </button>
+
+        <button onClick={clearHistory} disabled={history.length === 0}
+          className="px-3 py-2 border border-[var(--border-primary)] text-red-400 text-xs type-mono hover:border-red-400/40 ml-auto flex items-center gap-1 disabled:opacity-30">
+          <Trash2 className="w-3 h-3" /> CLEAR
+        </button>
+      </motion.div>
+
+      {filtered.length === 0 ? (
+        <motion.div variants={fadeUp} initial="hidden" animate="show" className="glass-card p-8 text-center space-y-4">
+          <Clock className="w-8 h-8 text-[var(--text-muted)] mx-auto" />
+          <p className="text-[var(--text-muted)] type-body">No history entries yet.</p>
+          <Link href="/dashboard/face-analysis" className="btn-nexus inline-flex items-center gap-2">
+            START ANALYSIS <ArrowRight className="w-4 h-4" />
+          </Link>
+        </motion.div>
       ) : (
-        <div className="space-y-4">
-          {entries.map((entry, i) => (
-            <motion.div
-              key={entry.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: i * 0.05 }}
-              className="bg-cream border border-tan hover:border-amber/40 transition-all vintage-border rounded-sm card-hover"
-            >
-              <div className="flex items-center gap-6 p-6">
-                {/* Thumbnail */}
-                {entry.thumbnailUrl ? (
-                  <div className="w-20 h-20 flex-shrink-0 bg-parchment border border-tan rounded-sm overflow-hidden">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={entry.thumbnailUrl}
-                      alt="Analysis thumbnail"
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                ) : (
-                  <div className="w-20 h-20 flex-shrink-0 bg-parchment border border-tan rounded-sm flex items-center justify-center">
-                    <ScanFace className="w-8 h-8 text-tan/40" />
-                  </div>
-                )}
-
-                {/* Info */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-3 mb-1">
-                    <h3 className="text-lg font-display font-bold text-espresso tracking-wider truncate">
-                      {entry.label}
-                    </h3>
-                  </div>
-                  <div className="flex items-center gap-4 text-sm text-coffee font-body">
+        <motion.div variants={fadeUp} initial="hidden" animate="show" className="space-y-2">
+          {filtered.map(entry => (
+            <div key={entry.id}
+              className="glass-card p-4 flex items-center justify-between group hover:border-[var(--accent-aurum)]/40 transition-all">
+              <div className="flex items-center gap-3 min-w-0">
+                <span className="text-lg">{TYPE_ICONS[entry.type] || "📄"}</span>
+                <div className="min-w-0">
+                  <p className="type-body text-[var(--text-primary)] truncate">{entry.label}</p>
+                  <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
                     <span>{entry.date}</span>
-                    {entry.faceResult && (
+                    {entry.score && (
                       <>
-                        <span className="text-tan">|</span>
-                        <span>Shape: {entry.faceResult.facialShape}</span>
-                        <span className="text-tan">|</span>
-                        <span className={`font-bold ${getScoreColor(entry.faceResult.overallScore)}`}>
-                          Score: {entry.faceResult.overallScore.toFixed(1)}/10
-                        </span>
+                        <span>·</span>
+                        <span className="text-[var(--accent-aurum)]">{entry.score}</span>
+                      </>
+                    )}
+                    {entry.result && (
+                      <>
+                        <span>·</span>
+                        <span className="text-[var(--text-muted)]">{entry.result}</span>
                       </>
                     )}
                   </div>
-                  <div className="flex items-center gap-2 mt-2">
-                    {entry.faceResult && (
-                      <span className="text-xs font-mono text-amber bg-amber/10 px-2 py-0.5 rounded-full">
-                        FACE
-                      </span>
-                    )}
-                    {entry.bodyResult && (
-                      <span className="text-xs font-mono text-olive bg-olive/10 px-2 py-0.5 rounded-full">
-                        BODY
-                      </span>
-                    )}
-                    {entry.colorAnalysis && (
-                      <span className="text-xs font-mono text-burgundy bg-burgundy/10 px-2 py-0.5 rounded-full">
-                        COLOR
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="flex items-center gap-3 flex-shrink-0">
-                  <button
-                    onClick={() => handleLoadEntry(entry)}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-amber text-cream text-sm font-body tracking-wider uppercase hover:bg-amber-light transition-colors rounded-sm shadow-gold"
-                  >
-                    Load
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(entry.id)}
-                    className="p-2.5 text-coffee hover:text-burgundy hover:bg-burgundy/10 transition-colors rounded-sm"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
                 </div>
               </div>
-            </motion.div>
+              <div className="flex items-center gap-2 shrink-0">
+                <Link href={`/dashboard/${entry.type}`}
+                  className="p-2 border border-[var(--border-primary)] hover:border-[var(--accent-aurum)]/40">
+                  <Eye className="w-3.5 h-3.5 text-[var(--text-muted)]" />
+                </Link>
+                <button onClick={() => {
+                  setHistory(prev => prev.filter(e => e.id !== entry.id));
+                  addToast("Entry removed", "success");
+                }}
+                  className="p-2 border border-[var(--border-primary)] hover:border-red-400/40">
+                  <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                </button>
+              </div>
+            </div>
           ))}
-        </div>
+        </motion.div>
       )}
 
-      {/* Clear Confirm Modal */}
-      <AnimatePresence>
-        {showClearConfirm && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-espresso/30 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-            onClick={() => setShowClearConfirm(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-cream p-8 w-full max-w-sm border border-tan rounded-sm shadow-elegant-lg text-center"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <Trash2 className="w-10 h-10 text-burgundy mx-auto mb-4" />
-              <h2 className="text-lg font-display font-bold text-espresso tracking-wider mb-3">
-                CLEAR ALL HISTORY?
-              </h2>
-              <p className="text-sm text-coffee font-body mb-6">
-                This will permanently delete all {entries.length} saved analyses.
-              </p>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setShowClearConfirm(false)}
-                  className="flex-1 py-3 bg-parchment text-espresso font-body text-base tracking-wider uppercase border border-tan rounded-sm hover:bg-tan/20 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleClearAll}
-                  className="flex-1 py-3 bg-burgundy text-cream font-body text-base tracking-wider uppercase rounded-sm hover:bg-burgundy-light transition-colors"
-                >
-                  Delete All
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {history.length > 0 && (
+        <motion.div variants={fadeUp} initial="hidden" animate="show" className="glass-card p-6">
+          <h3 className="type-label text-[var(--text-primary)] mb-4">PROGRESS</h3>
+          <div className="space-y-3">
+            {Object.entries(
+              history.reduce((acc, h) => {
+                if (h.score) {
+                  acc[h.type] = acc[h.type] || [];
+                  acc[h.type].push(h.score);
+                }
+                return acc;
+              }, {} as Record<string, number[]>)
+            ).map(([type, scores]) => {
+              const latest = scores[0];
+              const avg = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+              const trend = scores.length > 1 ? scores[0] - scores[scores.length - 1] : 0;
+              return (
+                <div key={type} className="flex items-center justify-between text-xs">
+                  <span className="type-mono text-[var(--text-muted)] capitalize">{type.replace("-", " ")}</span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-[var(--text-primary)]">Latest: {latest}</span>
+                    <span className="text-[var(--text-muted)]">Avg: {avg}</span>
+                    <span className={trend >= 0 ? "text-green-400" : "text-red-400"}>
+                      {trend >= 0 ? "+" : ""}{trend}
+                    </span>
+                    <div className="w-16 h-1 bg-[var(--bg-tertiary)] overflow-hidden">
+                      <div className="h-full bg-gradient-to-r from-[var(--accent-nexus)] to-[var(--accent-aurum)]" style={{ width: `${latest}%` }} />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </motion.div>
+      )}
     </div>
   );
 }

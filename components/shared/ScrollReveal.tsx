@@ -122,7 +122,7 @@ export function ScrollProgress({ className = "" }: { className?: string }) {
       whileInView={{ scaleX: 1 }}
       viewport={{ once: true }}
       transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-      className={`h-px bg-gradient-to-r from-transparent via-amber to-transparent origin-left ${className}`}
+      className={`h-px bg-gradient-to-r from-transparent via-aurum-500 to-transparent origin-left ${className}`}
     />
   );
 }

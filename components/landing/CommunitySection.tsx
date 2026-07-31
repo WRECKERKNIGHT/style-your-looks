@@ -2,7 +2,8 @@
 
 import { useRef } from "react";
 import { motion, useInView } from "framer-motion";
-import { Star, TrendingUp, MessageCircle } from "lucide-react";
+import { Star, MessageCircle, TrendingUp } from "lucide-react";
+import { StatsCounter } from "./StatsCounter";
 
 const posts = [
   {
@@ -39,81 +40,69 @@ const posts = [
   },
 ];
 
+const marqueeItems = [
+  "FACE", "BODY", "STYLE", "GROOMING",
+  "COLOR", "FIT", "VIBE", "LOOKS",
+];
+
 export function CommunitySection() {
   const marqueeRef = useRef<HTMLDivElement>(null);
   const marqueeInView = useInView(marqueeRef, { amount: 0.3 });
 
   return (
-    <section className="relative py-32 md:py-44 overflow-hidden bg-section-warm" id="community">
-      {/* Diagonal lines — very subtle */}
-      <div className="absolute inset-0 opacity-[0.015]">
-        <div
-          className="w-full h-full"
-          style={{
-            backgroundImage:
-              "repeating-linear-gradient(135deg, #B8860B 0, #B8860B 1px, transparent 0, transparent 40px)",
-            backgroundSize: "40px 40px",
-          }}
-        />
-      </div>
+    <section className="relative py-32 md:py-44 overflow-hidden bg-cosmic-surface" id="community">
+      <div className="absolute inset-0 grid-bg opacity-20" />
 
       <div className="relative z-10 max-w-[1400px] mx-auto px-8 md:px-16 lg:px-24">
-        {/* Header — left aligned */}
-        <div className="mb-20 md:mb-24">
-          <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-          >
-            <span className="type-label text-amber/80">05 // Community</span>
-            <h2 className="mt-3 type-display text-espresso">
-              HONEST
-              <br />
-              <span className="text-gradient-gold italic">FEEDBACK.</span>
-            </h2>
-            <p className="mt-5 text-coffee max-w-md font-body text-base leading-relaxed">
-              Real people. Real ratings. No filters, no fakery. The kind of
-              feedback your friends won&apos;t give you.
-            </p>
-          </motion.div>
-        </div>
+        <motion.div
+          initial={{ opacity: 0, x: -30 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          className="mb-20"
+        >
+          <div className="flex items-center gap-4 mb-4">
+            <div className="section-divider" />
+            <span className="section-number">04 // Community</span>
+          </div>
+          <h2 className="type-display text-white">
+            HONEST
+            <br />
+            <span className="text-gradient-aurum italic">FEEDBACK.</span>
+          </h2>
+          <p className="mt-5 text-nexus-200/60 max-w-md font-body text-base leading-relaxed">
+            Real people. Real ratings. No filters, no fakery. The kind of
+            feedback your friends won&apos;t give you.
+          </p>
+        </motion.div>
 
-        {/* Marquee — pauses when off-screen */}
-        <div ref={marqueeRef} className="marquee-container mb-16 md:mb-20 py-5 border-y border-tan/20">
+        <div ref={marqueeRef} className="marquee-container mb-16 md:mb-20 py-5 border-y border-nexus-800/30">
           <div
             className="marquee-content"
             style={{ animationPlayState: marqueeInView ? "running" : "paused" }}
           >
             {[...Array(2)].map((_, i) => (
               <div key={i} className="flex items-center gap-10 mr-10">
-                {["FACE", "BODY", "STYLE", "GROOMING", "COLOR", "FIT", "VIBE", "LOOKS"].map(
-                  (word) => (
-                    <span
-                      key={word}
-                      className="text-3xl md:text-5xl font-display italic text-espresso/[0.04] tracking-tight whitespace-nowrap"
-                    >
-                      {word}
-                      <span className="text-amber/15 mx-5">&bull;</span>
-                    </span>
-                  )
-                )}
+                {marqueeItems.map((word) => (
+                  <span
+                    key={word}
+                    className="text-3xl md:text-5xl font-display italic text-white/[0.04] tracking-tight whitespace-nowrap"
+                  >
+                    {word}
+                    <span className="text-aurum-400/15 mx-5">&bull;</span>
+                  </span>
+                ))}
               </div>
             ))}
           </div>
         </div>
 
-        {/* Cards — overlapping cascade */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {posts.map((post, index) => (
             <motion.div
               key={post.name}
-              className="bg-cream/70 backdrop-blur-sm border border-tan/25 p-7 group cursor-default"
-              initial={{
-                opacity: 0,
-                y: 50,
-                rotate: index % 2 === 0 ? -1.5 : 1.5,
-              }}
+              className="glass-card rounded-xl p-6 group cursor-default"
+              initial={{ opacity: 0, y: 50, rotate: index % 2 === 0 ? -1.5 : 1.5 }}
               whileInView={{ opacity: 1, y: 0, rotate: 0 }}
               viewport={{ once: true }}
               transition={{
@@ -121,66 +110,79 @@ export function CommunitySection() {
                 delay: index * 0.1,
                 ease: [0.16, 1, 0.3, 1],
               }}
-              whileHover={{ y: -8, transition: { duration: 0.4 } }}
+              whileHover={{ y: -6, transition: { duration: 0.3 } }}
             >
-              {/* Tag + number */}
               <div className="flex items-center justify-between mb-5">
-                <span className="type-mono text-[0.55rem] text-amber tracking-widest bg-amber/[0.08] px-2.5 py-1">
+                <span className="type-mono text-[0.55rem] text-aurum-400 tracking-widest bg-aurum-400/10 px-2.5 py-1 rounded">
                   {post.tag}
                 </span>
-                <span className="type-mono text-[0.5rem] text-tan/40 tracking-widest">
+                <span className="type-mono text-[0.5rem] text-nexus-300/40 tracking-widest">
                   #{String(index + 1).padStart(3, "0")}
                 </span>
               </div>
 
-              {/* Score */}
               <div className="mb-4">
-                <div className="text-5xl font-display font-bold text-espresso leading-none">
+                <div className="text-5xl font-display font-bold text-gradient-aurum leading-none">
                   {post.score}
                 </div>
-                <div className="type-mono text-[0.5rem] text-coffee/40 tracking-widest mt-2">
+                <div className="type-mono text-[0.5rem] text-nexus-300/40 tracking-widest mt-2">
                   FACEIQ SCORE
                 </div>
               </div>
 
-              {/* Quote */}
-              <p className="text-sm text-coffee/70 font-body italic mb-5 leading-relaxed">
+              <p className="text-sm text-nexus-200/60 font-body italic mb-5 leading-relaxed">
                 &ldquo;{post.quote}&rdquo;
               </p>
 
-              {/* Stats */}
-              <div className="flex items-center gap-4 pt-4 border-t border-tan/15">
+              <div className="flex items-center gap-4 pt-4 border-t border-nexus-800/30">
                 <div className="flex items-center gap-1.5">
-                  <Star className="w-3 h-3 text-amber" fill="#B8860B" />
-                  <span className="type-mono text-[0.65rem] text-espresso">
+                  <Star className="w-3 h-3 text-aurum-400" fill="#FFCB20" />
+                  <span className="type-mono text-[0.65rem] text-white/80">
                     {post.rating}
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <MessageCircle className="w-3 h-3 text-coffee/40" />
-                  <span className="type-mono text-[0.65rem] text-coffee/40">
+                  <MessageCircle className="w-3 h-3 text-nexus-300/40" />
+                  <span className="type-mono text-[0.65rem] text-nexus-300/40">
                     {post.comments}
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <TrendingUp className="w-3 h-3 text-olive/60" />
+                  <TrendingUp className="w-3 h-3 text-success/60" />
                 </div>
               </div>
 
-              {/* User */}
               <div className="mt-4 flex items-center gap-2.5">
-                <div className="w-7 h-7 bg-tan/15 border border-tan/20 flex items-center justify-center">
-                  <span className="text-[0.5rem] font-mono text-espresso font-bold">
+                <div className="w-7 h-7 rounded-full bg-nexus-800/50 border border-nexus-600/30 flex items-center justify-center">
+                  <span className="text-[0.5rem] font-mono text-nexus-300 font-bold">
                     {post.name[0]}
                   </span>
                 </div>
-                <span className="type-mono text-[0.6rem] text-coffee/40">
+                <span className="type-mono text-[0.6rem] text-nexus-300/40">
                   {post.name}
                 </span>
               </div>
             </motion.div>
           ))}
         </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, delay: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          className="mt-16 text-center"
+        >
+          <div className="inline-flex items-center gap-4 glass-card rounded-full px-8 py-4">
+            <div className="text-2xl font-display font-bold text-gradient-aurum">
+              <StatsCounter target={12400} suffix="+" />
+            </div>
+            <div className="h-8 w-px bg-nexus-800/30" />
+            <p className="type-mono text-[0.65rem] text-nexus-300/60 tracking-widest">
+              STYLE PROFILES CREATED
+            </p>
+          </div>
+        </motion.div>
       </div>
     </section>
   );

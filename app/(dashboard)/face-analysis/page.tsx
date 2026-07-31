@@ -11,6 +11,11 @@ import { useToast } from "@/components/shared/Toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { ScanFace, Camera, Loader2, AlertCircle, Eye, Save, CheckCircle } from "lucide-react";
 
+const fadeUp = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
+};
+
 export default function FaceAnalysisPage() {
   const { uploadedImage, setUploadedImage, isAnalyzing, analysisProgress, faceResult } =
     useAnalysisStore();
@@ -55,32 +60,34 @@ export default function FaceAnalysisPage() {
 
   return (
     <div className="space-y-8">
-      <div>
+      <motion.div variants={fadeUp} initial="hidden" animate="show">
         <span className="section-number">EST. MMXXIV // FACE</span>
         <div className="flex items-center gap-3 mt-3 mb-2">
-          <ScanFace className="w-7 h-7 text-amber" />
-          <h1 className="text-4xl md:text-5xl font-display font-bold text-espresso tracking-tight">
-            FACE <span className="text-gradient-gold">IQ.</span>
+          <ScanFace className="w-7 h-7 text-[var(--accent-aurum)]" />
+          <h1 className="type-display text-[var(--text-primary)] tracking-tight">
+            FACE <span className="text-gradient-aurum">IQ.</span>
           </h1>
         </div>
-        <p className="text-coffee font-body text-lg max-w-xl leading-relaxed">
+        <p className="text-[var(--text-muted)] font-body type-subhead max-w-xl">
           Upload a front-facing photo for 478-landmark facial geometry analysis, golden ratio scoring,
           and detailed grooming recommendations.
         </p>
-      </div>
+      </motion.div>
 
       {!faceResult && (
-        <div className="space-y-5">
-          <ImageUploader
-            onImageUpload={handleImageUpload}
-            onWebcamCapture={handleWebcamCapture}
-            label="Upload a face photo"
-            accept="face"
-          />
+        <motion.div variants={fadeUp} initial="hidden" animate="show" className="space-y-5">
+          <div className="glass-card p-8">
+            <ImageUploader
+              onImageUpload={handleImageUpload}
+              onWebcamCapture={handleWebcamCapture}
+              label="Upload a face photo"
+              accept="face"
+            />
+          </div>
 
           <video
             ref={videoRef}
-            className={isStreaming ? "w-full rounded-sm" : "hidden"}
+            className={isStreaming ? "w-full glass-card" : "hidden"}
             playsInline
             muted
             style={{ transform: "scaleX(-1)" }}
@@ -89,7 +96,7 @@ export default function FaceAnalysisPage() {
           {isStreaming && (
             <button
               onClick={handleWebcamCapture}
-              className="w-full flex items-center justify-center gap-2 py-4 px-6 bg-amber hover:bg-amber-light text-cream font-body text-base tracking-wider uppercase transition-colors rounded-sm shadow-gold"
+              className="btn-nexus w-full justify-center"
             >
               <Camera className="w-5 h-5" />
               CAPTURE PHOTO
@@ -102,15 +109,15 @@ export default function FaceAnalysisPage() {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -12 }}
-                className="bg-cream p-8 border border-tan rounded-sm"
+                className="glass-card p-8"
               >
                 <div className="flex items-center gap-3 mb-5">
-                  <Loader2 className="w-5 h-5 text-amber animate-spin" />
-                  <span className="text-base font-display font-bold text-espresso tracking-wider">ANALYSING YOUR FACE...</span>
+                  <Loader2 className="w-5 h-5 text-[var(--accent-aurum)] animate-spin" />
+                  <span className="type-label text-[var(--text-primary)]">ANALYSING YOUR FACE...</span>
                 </div>
-                <div className="h-4 bg-[#E8E0D8] overflow-hidden rounded-full">
+                <div className="h-2 bg-[var(--bg-tertiary)] overflow-hidden rounded-full">
                   <motion.div
-                    className="h-full bg-amber rounded-full"
+                    className="h-full bg-gradient-to-r from-[var(--accent-nexus)] to-[var(--accent-aurum)] rounded-full"
                     initial={{ width: 0 }}
                     animate={{ width: `${analysisProgress}%` }}
                     transition={{ duration: 0.3 }}
@@ -118,16 +125,16 @@ export default function FaceAnalysisPage() {
                 </div>
                 <div className="mt-4 space-y-1">
                   {analysisProgress < 20 && (
-                    <p className="text-sm text-coffee font-body">Detecting face and initialising MediaPipe...</p>
+                    <p className="text-sm text-[var(--text-muted)] font-body">Detecting face and initialising MediaPipe...</p>
                   )}
                   {analysisProgress >= 20 && analysisProgress < 50 && (
-                    <p className="text-sm text-coffee font-body">Mapping 478 facial landmarks...</p>
+                    <p className="text-sm text-[var(--text-muted)] font-body">Mapping 478 facial landmarks...</p>
                   )}
                   {analysisProgress >= 50 && analysisProgress < 80 && (
-                    <p className="text-sm text-coffee font-body">Computing golden ratio, symmetry, and harmony metrics...</p>
+                    <p className="text-sm text-[var(--text-muted)] font-body">Computing golden ratio, symmetry, and harmony metrics...</p>
                   )}
                   {analysisProgress >= 80 && (
-                    <p className="text-sm text-coffee font-body">Generating grooming suggestions and style profile...</p>
+                    <p className="text-sm text-[var(--text-muted)] font-body">Generating grooming suggestions and style profile...</p>
                   )}
                 </div>
               </motion.div>
@@ -135,18 +142,26 @@ export default function FaceAnalysisPage() {
           </AnimatePresence>
 
           {error && (
-            <div className="flex items-center gap-3 bg-burgundy/10 border border-burgundy/30 p-5 rounded-sm">
-              <AlertCircle className="w-5 h-5 text-burgundy flex-shrink-0" />
-              <p className="text-sm text-burgundy font-body">{error}</p>
-            </div>
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-center gap-3 bg-red-500/10 border border-red-500/30 p-5"
+            >
+              <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
+              <p className="text-sm text-red-400 font-body">{error}</p>
+            </motion.div>
           )}
-        </div>
+        </motion.div>
       )}
 
       {faceResult && (
-        <div className="space-y-8">
-          {/* Save / Share Bar */}
-          <div className="flex gap-4">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="space-y-8"
+        >
+          <motion.div variants={fadeUp} initial="hidden" animate="show" className="flex gap-4">
             <button
               onClick={() => {
                 useAnalysisStore.getState().saveCurrentAnalysis();
@@ -154,19 +169,19 @@ export default function FaceAnalysisPage() {
                 addToast("Analysis saved to history", "success");
                 setTimeout(() => setSaved(false), 3000);
               }}
-              className={`flex items-center gap-2 py-3 px-6 font-body text-base tracking-wider uppercase transition-all rounded-sm ${
+              className={`flex items-center gap-2 px-6 py-3 font-body text-sm tracking-wider uppercase transition-all ${
                 saved
-                  ? "bg-olive text-cream"
-                  : "bg-amber hover:bg-amber-light text-cream shadow-gold"
+                  ? "bg-[var(--accent-nexus)] text-white"
+                  : "btn-nexus"
               }`}
             >
               {saved ? <CheckCircle className="w-5 h-5" /> : <Save className="w-5 h-5" />}
               {saved ? "SAVED TO HISTORY" : "SAVE ANALYSIS"}
             </button>
-          </div>
+          </motion.div>
 
           {uploadedImage && (
-            <div className="bg-cream border border-tan overflow-hidden rounded-sm relative">
+            <motion.div variants={fadeUp} initial="hidden" animate="show" className="glass-card overflow-hidden relative">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 ref={imageRef}
@@ -183,26 +198,28 @@ export default function FaceAnalysisPage() {
               )}
               <button
                 onClick={() => setShowLandmarks(!showLandmarks)}
-                className="absolute top-4 right-4 flex items-center gap-2 bg-espresso/70 hover:bg-espresso/90 text-cream px-3 py-1.5 rounded-sm text-xs font-body tracking-wider transition-colors"
+                className="absolute top-4 right-4 flex items-center gap-2 bg-[var(--bg-primary)]/80 text-[var(--text-primary)] px-3 py-1.5 text-xs font-body tracking-wider transition-colors border border-[var(--border-primary)]"
               >
                 <Eye className="w-3.5 h-3.5" />
                 {showLandmarks ? "HIDE" : "SHOW"} LANDMARKS
               </button>
-            </div>
+            </motion.div>
           )}
 
-          <AnalysisResults />
+          <div className="glass-card p-8">
+            <AnalysisResults />
+          </div>
 
           <button
             onClick={() => {
               useAnalysisStore.getState().reset();
               setError(null);
             }}
-            className="w-full py-4 bg-parchment hover:bg-tan/20 text-espresso font-body text-base tracking-wider uppercase transition-colors border border-tan rounded-sm"
+            className="btn-outline w-full justify-center"
           >
             Analyse Another Photo
           </button>
-        </div>
+        </motion.div>
       )}
     </div>
   );

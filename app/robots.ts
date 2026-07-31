@@ -6,6 +6,6 @@ export default function robots(): MetadataRoute.Robots {
       userAgent: "*",
       allow: "/",
     },
-    sitemap: "https://aurastyle.app/sitemap.xml",
+    sitemap: "https://nexari.app/sitemap.xml",
   };
 }

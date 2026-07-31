@@ -1,4 +1,4 @@
-const CACHE = "aurastyle-v2";
+const CACHE = "nexari-v2";
 const STATIC_ASSETS = [
   "/",
   "/manifest.json",

@@ -12,7 +12,7 @@ export interface AppSettings {
   dashboardLayout: "grid" | "list";
 }
 
-const STORAGE_KEY = "aurastyle_settings";
+const STORAGE_KEY = "nexari_settings";
 
 const DEFAULTS: AppSettings = {
   autoSave: true,
@@ -67,7 +67,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     const data: Record<string, unknown> = {};
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      if (key && key.startsWith("aurastyle_")) {
+      if (key && key.startsWith("nexari_")) {
         try {
           data[key] = JSON.parse(localStorage.getItem(key)!);
         } catch {
@@ -81,7 +81,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     try {
       const data = JSON.parse(json);
       for (const [key, value] of Object.entries(data)) {
-        if (key.startsWith("aurastyle_")) {
+        if (key.startsWith("nexari_")) {
           localStorage.setItem(key, JSON.stringify(value));
         }
       }

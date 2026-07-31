@@ -31,36 +31,15 @@ const HAIR_COLORS: HairColor[] = [
   { id: "sage-green", name: "Sage Green", color: "#556B2F", overlay: "rgba(85,107,47,0.3)" },
 ];
 
-function applyHairColor(
-  ctx: CanvasRenderingContext2D,
-  displayWidth: number,
-  displayHeight: number,
-  color: HairColor,
-  landmarks?: number[][]
-) {
+function applyHairColor(ctx: CanvasRenderingContext2D, displayWidth: number, displayHeight: number, color: HairColor, landmarks?: number[][]) {
   ctx.save();
-
-  let topY: number;
-  let bottomY: number;
-  let leftX: number;
-  let rightX: number;
-  let centerX: number;
-
+  let topY: number, bottomY: number, leftX: number, rightX: number, centerX: number;
   if (landmarks && landmarks.length > 152) {
     const region = hairRegion(landmarks, displayWidth, displayHeight);
-    topY = region.topY;
-    bottomY = region.bottomY;
-    leftX = region.leftX;
-    rightX = region.rightX;
-    centerX = region.centerX;
+    topY = region.topY; bottomY = region.bottomY; leftX = region.leftX; rightX = region.rightX; centerX = region.centerX;
   } else {
-    topY = displayHeight * 0.05;
-    bottomY = displayHeight * 0.32;
-    leftX = displayWidth * 0.15;
-    rightX = displayWidth * 0.85;
-    centerX = displayWidth * 0.5;
+    topY = displayHeight * 0.05; bottomY = displayHeight * 0.32; leftX = displayWidth * 0.15; rightX = displayWidth * 0.85; centerX = displayWidth * 0.5;
   }
-
   ctx.beginPath();
   ctx.moveTo(leftX, bottomY);
   ctx.quadraticCurveTo(leftX + (centerX - leftX) * 0.4, topY, centerX, topY);
@@ -68,17 +47,19 @@ function applyHairColor(
   ctx.quadraticCurveTo(rightX - (rightX - centerX) * 0.2, bottomY + (bottomY - topY) * 0.08, centerX, bottomY + (bottomY - topY) * 0.05);
   ctx.quadraticCurveTo(leftX + (centerX - leftX) * 0.2, bottomY + (bottomY - topY) * 0.08, leftX, bottomY);
   ctx.closePath();
-
   ctx.fillStyle = color.overlay;
   ctx.globalCompositeOperation = "overlay";
   ctx.fill();
-
   ctx.globalCompositeOperation = "soft-light";
   ctx.fillStyle = color.overlay;
   ctx.fill();
-
   ctx.restore();
 }
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
+};
 
 export default function HairPreviewPage() {
   const { uploadedImage, setUploadedImage, faceResult } = useAnalysisStore();
@@ -89,51 +70,37 @@ export default function HairPreviewPage() {
   const [selectedColor, setSelectedColor] = useState<HairColor | null>(null);
   const [intensity, setIntensity] = useState(0.7);
 
-  const handleImageUpload = useCallback(
-    (imageData: string) => {
-      setUploadedImage(imageData);
-      setSelectedColor(null);
-      const img = new Image();
-      img.onload = () => { imgRef.current = img; };
-      img.src = imageData;
-    },
-    [setUploadedImage]
-  );
+  const handleImageUpload = useCallback((imageData: string) => {
+    setUploadedImage(imageData);
+    setSelectedColor(null);
+    const img = new Image();
+    img.onload = () => { imgRef.current = img; };
+    img.src = imageData;
+  }, [setUploadedImage]);
 
   useEffect(() => {
-    if (uploadedImage) {
-      const img = new Image();
-      img.onload = () => { imgRef.current = img; };
-      img.src = uploadedImage;
-    }
+    if (uploadedImage) { const img = new Image(); img.onload = () => { imgRef.current = img; }; img.src = uploadedImage; }
   }, [uploadedImage]);
 
-  useEffect(() => {
-    renderCanvas();
-  }, [selectedColor, intensity, faceResult]);
+  useEffect(() => { renderCanvas(); }, [selectedColor, intensity, faceResult]);
 
   function renderCanvas() {
     const canvas = canvasRef.current;
     const img = imgRef.current;
     const container = containerRef.current;
     if (!canvas || !img || !container) return;
-
     const displayWidth = container.clientWidth;
     const displayHeight = Math.min(displayWidth * (img.height / img.width), 560);
     const dpr = window.devicePixelRatio || 1;
-
     canvas.width = displayWidth * dpr;
     canvas.height = displayHeight * dpr;
     canvas.style.width = `${displayWidth}px`;
     canvas.style.height = `${displayHeight}px`;
-
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, displayWidth, displayHeight);
     ctx.drawImage(img, 0, 0, displayWidth, displayHeight);
-
     if (selectedColor) {
       ctx.globalAlpha = intensity;
       applyHairColor(ctx, displayWidth, displayHeight, selectedColor, faceResult?.landmarks);
@@ -145,7 +112,7 @@ export default function HairPreviewPage() {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const link = document.createElement("a");
-    link.download = `aurastyle-hair-${selectedColor?.id || "preview"}.png`;
+    link.download = `nexari-hair-${selectedColor?.id || "preview"}.png`;
     link.href = canvas.toDataURL("image/png");
     link.click();
     addToast("Hair preview saved", "success");
@@ -153,94 +120,73 @@ export default function HairPreviewPage() {
 
   return (
     <div className="space-y-8">
-      <div>
+      <motion.div variants={fadeUp} initial="hidden" animate="show">
         <span className="section-number">EST. MMXXIV // HAIR</span>
         <div className="flex items-center gap-3 mt-3 mb-2">
-          <Palette className="w-7 h-7 text-amber" />
-          <h1 className="text-4xl md:text-5xl font-display font-bold text-espresso tracking-tight">
-            HAIR <span className="text-gradient-gold">PREVIEW.</span>
+          <Palette className="w-7 h-7 text-[var(--accent-aurum)]" />
+          <h1 className="type-display text-[var(--text-primary)] tracking-tight">
+            HAIR <span className="text-gradient-aurum">PREVIEW.</span>
           </h1>
         </div>
-        <p className="text-coffee font-body text-lg max-w-xl">
+        <p className="text-[var(--text-muted)] font-body type-subhead max-w-xl">
           See how different hair colors look on you before committing.
         </p>
-      </div>
+      </motion.div>
 
       {!uploadedImage ? (
-        <ImageUploader
-          onImageUpload={handleImageUpload}
-          label="Upload a photo for hair color preview"
-          accept="any"
-        />
+        <div className="glass-card p-8">
+          <ImageUploader onImageUpload={handleImageUpload} label="Upload a photo for hair color preview" accept="any" />
+        </div>
       ) : (
-        <div className="space-y-8">
-          <div ref={containerRef} className="bg-cream border border-tan overflow-hidden relative rounded-sm">
+        <motion.div variants={fadeUp} initial="hidden" animate="show" className="space-y-8">
+          <div ref={containerRef} className="glass-card overflow-hidden relative">
             <canvas ref={canvasRef} className="w-full" />
-
             {selectedColor && (
-              <div className="absolute top-3 right-3 bg-cream/95 backdrop-blur-sm border border-tan rounded-sm p-3 space-y-2">
-                <p className="text-[0.6rem] font-mono text-coffee tracking-widest">INTENSITY</p>
-                <input
-                  type="range"
-                  min={0.2}
-                  max={1}
-                  step={0.05}
-                  value={intensity}
+              <div className="absolute top-3 right-3 glass-card p-3 space-y-2">
+                <p className="type-label text-[var(--text-muted)]">INTENSITY</p>
+                <input type="range" min={0.2} max={1} step={0.05} value={intensity}
                   onChange={(e) => setIntensity(parseFloat(e.target.value))}
-                  className="w-24 h-1 accent-amber"
-                />
-                <p className="text-[0.55rem] font-mono text-coffee">{Math.round(intensity * 100)}%</p>
+                  className="w-24 h-1 accent-[var(--accent-aurum)]" />
+                <p className="type-mono text-[var(--text-muted)]">{Math.round(intensity * 100)}%</p>
               </div>
             )}
           </div>
 
-          <div className="bg-cream border border-tan p-6 vintage-border rounded-sm">
-            <h3 className="text-sm font-display font-bold text-espresso tracking-widest mb-4">SELECT HAIR COLOR</h3>
+          <div className="glass-card p-6">
+            <h3 className="type-label text-[var(--text-primary)] mb-4">SELECT HAIR COLOR</h3>
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
               {HAIR_COLORS.map((color) => (
                 <button
                   key={color.id}
                   onClick={() => setSelectedColor(selectedColor?.id === color.id ? null : color)}
-                  className={`p-3 border text-center transition-all duration-300 rounded-sm ${
+                  className={`p-3 border text-center transition-all duration-300 ${
                     selectedColor?.id === color.id
-                      ? "border-amber bg-amber/10 shadow-gold"
-                      : "border-tan hover:border-amber/40 bg-parchment card-hover hover:shadow-md"
+                      ? "border-[var(--accent-aurum)] bg-[var(--accent-aurum)]/10"
+                      : "border-[var(--border-primary)] hover:border-[var(--accent-aurum)]/40 bg-[var(--bg-tertiary)] card-nexus"
                   }`}
                 >
-                  <div
-                    className="w-full h-8 mb-2 rounded-full border border-tan"
-                    style={{ backgroundColor: color.color }}
-                  />
-                  <p className="text-[0.65rem] font-body text-espresso">{color.name}</p>
+                  <div className="w-full h-8 mb-2 rounded-full border border-[var(--border-primary)]" style={{ backgroundColor: color.color }} />
+                  <p className="text-[0.65rem] font-body text-[var(--text-primary)]">{color.name}</p>
                 </button>
               ))}
             </div>
           </div>
 
           <div className="flex gap-4">
-            <button
-              onClick={() => setSelectedColor(null)}
-              className="flex-1 py-4 bg-parchment hover:bg-tan/20 text-espresso font-body text-base tracking-wider uppercase transition-colors flex items-center justify-center gap-2 border border-tan rounded-sm"
-            >
+            <button onClick={() => setSelectedColor(null)} className="btn-outline flex-1 justify-center">
               <Trash2 className="w-4 h-4" />
               REMOVE
             </button>
-            <button
-              onClick={downloadResult}
-              disabled={!selectedColor}
-              className="flex-1 py-4 bg-olive text-cream font-body text-base tracking-wider uppercase transition-colors flex items-center justify-center gap-2 rounded-sm shadow-elegant disabled:opacity-40"
-            >
+            <button onClick={downloadResult} disabled={!selectedColor}
+              className="btn-nexus flex-1 justify-center disabled:opacity-40">
               <Download className="w-4 h-4" />
               SAVE IMAGE
             </button>
-            <Link
-              href="/dashboard/accessories"
-              className="flex-1 py-4 bg-amber text-cream font-body text-base tracking-wider uppercase transition-colors flex items-center justify-center gap-2 rounded-sm shadow-gold"
-            >
+            <Link href="/dashboard/accessories" className="btn-nexus flex-1 justify-center">
               GLASSES <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
-        </div>
+        </motion.div>
       )}
     </div>
   );

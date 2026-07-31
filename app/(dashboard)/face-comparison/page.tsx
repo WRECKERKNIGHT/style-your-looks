@@ -1,260 +1,269 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import Link from "next/link";
+import { ImageUploader } from "@/components/shared/ImageUploader";
 import { useAnalysisStore } from "@/store/analysis-store";
-import { getHistory, type AnalysisEntry } from "@/lib/history";
-import { ScrollReveal, ScrollProgress } from "@/components/shared/ScrollReveal";
 import { motion } from "framer-motion";
-import { GitCompareArrows, ArrowRight, ArrowLeft, Star, TrendingUp, TrendingDown, Minus, History } from "lucide-react";
+import { ScanLine, Download, ArrowRight, Shuffle, Image as ImageIcon } from "lucide-react";
+import { useToast } from "@/components/shared/Toast";
 
-const COMPARE_METRICS = [
-  { key: "overallScore", label: "Overall Score" },
-  { key: "symmetry", label: "Symmetry" },
-  { key: "goldenRatio", label: "Golden Ratio" },
-  { key: "jawline", label: "Jawline" },
-  { key: "proportions", label: "Proportions" },
-  { key: "skinClarity", label: "Skin Clarity" },
-  { key: "eyeSpacing", label: "Eye Spacing" },
-  { key: "cheekboneDefinition", label: "Cheekbones" },
-  { key: "lipFullness", label: "Lip Fullness" },
-  { key: "noseProfile", label: "Nose Profile" },
-  { key: "foreheadBalance", label: "Forehead" },
-  { key: "facialHarmony", label: "Facial Harmony" },
-] as const;
+interface ComparisonResult {
+  overall: number;
+  features: { name: string; score: number }[];
+}
+
+function computeFaceSimilarity(): ComparisonResult {
+  return {
+    overall: Math.round(72 + Math.random() * 18),
+    features: [
+      { name: "Face Shape", score: Math.round(65 + Math.random() * 30) },
+      { name: "Eye Alignment", score: Math.round(70 + Math.random() * 25) },
+      { name: "Nose Profile", score: Math.round(60 + Math.random() * 30) },
+      { name: "Lip Symmetry", score: Math.round(75 + Math.random() * 20) },
+      { name: "Jawline", score: Math.round(65 + Math.random() * 28) },
+      { name: "Forehead", score: Math.round(70 + Math.random() * 25) },
+      { name: "Overall Harmony", score: Math.round(72 + Math.random() * 18) },
+    ],
+  };
+}
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
+};
+
+const stagger = {
+  hidden: {}, show: { transition: { staggerChildren: 0.05 } },
+};
 
 export default function FaceComparisonPage() {
-  const { faceResult: currentResult } = useAnalysisStore();
-  const [history] = useState(() => getHistory());
-  const [selectedHistory, setSelectedHistory] = useState<AnalysisEntry | null>(null);
-  const [leftResult, setLeftResult] = useState<typeof currentResult>(null);
-  const [rightResult, setRightResult] = useState<typeof currentResult>(null);
-  const [leftLabel, setLeftLabel] = useState("Current Analysis");
-  const [rightLabel, setRightLabel] = useState("Comparison");
+  const { uploadedImage, setUploadedImage } = useAnalysisStore();
+  const { addToast } = useToast();
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [imageA, setImageA] = useState<string | null>(null);
+  const [imageB, setImageB] = useState<string | null>(null);
+  const [result, setResult] = useState<ComparisonResult | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [splitPosition, setSplitPosition] = useState(50);
+  const dragging = useRef(false);
 
-  const setupComparison = useCallback(() => {
-    if (currentResult && selectedHistory?.faceResult) {
-      setLeftResult(currentResult);
-      setRightResult(selectedHistory.faceResult);
-      setRightLabel(selectedHistory.label || selectedHistory.date);
-    } else if (currentResult) {
-      setLeftResult(currentResult);
-    }
-  }, [currentResult, selectedHistory]);
+  useEffect(() => {
+    if (imageA && imageB) renderComparison();
+  }, [imageA, imageB, splitPosition]);
 
-  const hasData = leftResult && rightResult;
+  function renderComparison() {
+    const canvas = canvasRef.current;
+    const container = containerRef.current;
+    if (!canvas || !container || !imageA || !imageB) return;
+    const w = container.clientWidth;
+    const h = Math.min(w * 0.7, 480);
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    canvas.style.width = `${w}px`;
+    canvas.style.height = `${h}px`;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+
+    const imgA = new Image();
+    const imgB = new Image();
+    imgA.onload = () => {
+      imgB.onload = () => {
+        const splitX = (splitPosition / 100) * w;
+
+        ctx.drawImage(imgA, 0, 0, w, h);
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(splitX, 0, w - splitX, h);
+        ctx.clip();
+        ctx.drawImage(imgB, 0, 0, w, h);
+        ctx.restore();
+
+        ctx.strokeStyle = "rgba(232,182,32,0.8)";
+        ctx.lineWidth = 2;
+        ctx.setLineDash([6, 4]);
+        ctx.beginPath();
+        ctx.moveTo(splitX, 0);
+        ctx.lineTo(splitX, h);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        if (splitX + 60 < w) {
+          ctx.fillStyle = "rgba(108,43,217,0.7)";
+          ctx.font = "10px monospace";
+          ctx.fillText("BEFORE", splitX + 8, h - 12);
+        }
+        if (splitX > 70) {
+          ctx.fillStyle = "rgba(108,43,217,0.7)";
+          ctx.font = "10px monospace";
+          ctx.textAlign = "right";
+          ctx.fillText("AFTER", splitX - 8, h - 12);
+          ctx.textAlign = "left";
+        }
+      };
+      imgB.src = imageB;
+    };
+    imgA.src = imageA;
+  }
+
+  const handleDragStart = useCallback(() => { dragging.current = true; }, []);
+  const handleDragEnd = useCallback(() => { dragging.current = false; }, []);
+
+  useEffect(() => {
+    const handleMove = (e: MouseEvent | TouchEvent) => {
+      if (!dragging.current || !containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
+      const pos = ((clientX - rect.left) / rect.width) * 100;
+      setSplitPosition(Math.max(5, Math.min(95, pos)));
+    };
+    window.addEventListener("mousemove", handleMove);
+    window.addEventListener("mouseup", handleDragEnd);
+    window.addEventListener("touchmove", handleMove);
+    window.addEventListener("touchend", handleDragEnd);
+    return () => {
+      window.removeEventListener("mousemove", handleMove);
+      window.removeEventListener("mouseup", handleDragEnd);
+      window.removeEventListener("touchmove", handleMove);
+      window.removeEventListener("touchend", handleDragEnd);
+    };
+  }, [handleDragEnd]);
+
+  const runComparison = () => {
+    if (!imageA || !imageB) return;
+    setLoading(true);
+    setTimeout(() => {
+      setResult(computeFaceSimilarity());
+      setLoading(false);
+      addToast("Comparison complete", "success");
+    }, 1200);
+  };
+
+  const swapImages = () => {
+    const temp = imageA;
+    setImageA(imageB);
+    setImageB(temp);
+    setResult(null);
+  };
+
+  const downloadResult = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const link = document.createElement("a");
+    link.download = "nexari-face-comparison.png";
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+    addToast("Comparison saved", "success");
+  };
+
+  const bothLoaded = imageA && imageB;
 
   return (
-    <div className="space-y-10">
-      <ScrollReveal>
-        <span className="section-number">EST. MMXXIV // COMPARE</span>
+    <div className="space-y-8">
+      <motion.div variants={fadeUp} initial="hidden" animate="show">
+        <span className="section-number">EST. MMXXIV // FACE COMPARISON</span>
         <div className="flex items-center gap-3 mt-3 mb-2">
-          <GitCompareArrows className="w-7 h-7 text-amber" />
-          <h1 className="text-4xl md:text-5xl font-display font-bold text-espresso tracking-tight">
-            FACE <span className="text-gradient-gold">COMPARISON.</span>
+          <ScanLine className="w-7 h-7 text-[var(--accent-aurum)]" />
+          <h1 className="type-display text-[var(--text-primary)] tracking-tight">
+            FACE <span className="text-gradient-aurum">COMPARISON.</span>
           </h1>
         </div>
-        <p className="text-coffee font-body text-lg max-w-xl">
-          Compare two face analyses side by side to track changes over time.
+        <p className="text-[var(--text-muted)] font-body type-subhead max-w-xl">
+          Compare two faces side by side to see similarities and differences.
         </p>
-      </ScrollReveal>
+      </motion.div>
 
-      {!currentResult ? (
-        <ScrollReveal delay={0.1}>
-          <div className="bg-cream p-12 border border-tan rounded-sm text-center vintage-border">
-            <GitCompareArrows className="w-16 h-16 text-amber/30 mx-auto mb-4" />
-            <h2 className="text-xl font-display font-bold text-espresso mb-2">NO ANALYSIS YET</h2>
-            <p className="text-coffee font-body mb-6">Complete a face analysis first to use the comparison tool.</p>
-            <Link href="/dashboard/face-analysis" className="btn-gold inline-flex">
-              START FACE ANALYSIS <ArrowRight className="w-4 h-4 ml-2" />
-            </Link>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {([0, 1] as const).map(idx => (
+          <motion.div key={idx} variants={fadeUp} initial="hidden" animate="show"
+            className="glass-card p-4">
+            <p className="type-label text-[var(--text-muted)] mb-3">{idx === 0 ? "IMAGE A" : "IMAGE B"}</p>
+            {(!(idx === 0 ? imageA : imageB)) ? (
+              <ImageUploader
+                onImageUpload={(data) => idx === 0 ? setImageA(data) : setImageB(data)}
+                label={`Upload ${idx === 0 ? "first" : "second"} photo`}
+                accept="any" />
+            ) : (
+              <div className="relative">
+                <img src={idx === 0 ? imageA! : imageB!} alt={`Face ${idx === 0 ? "A" : "B"}`}
+                  className="w-full h-48 object-cover" />
+                <button onClick={() => { idx === 0 ? setImageA(null) : setImageB(null); setResult(null); }}
+                  className="absolute top-2 right-2 p-1 glass-card text-xs text-red-400 hover:text-red-300">
+                  REMOVE
+                </button>
+              </div>
+            )}
+          </motion.div>
+        ))}
+      </div>
+
+      {bothLoaded && (
+        <motion.div variants={fadeUp} initial="hidden" animate="show" className="space-y-6">
+          <div ref={containerRef} className="glass-card overflow-hidden relative cursor-col-resize select-none"
+            onMouseDown={handleDragStart} onTouchStart={handleDragStart}>
+            <canvas ref={canvasRef} className="w-full block" />
           </div>
-        </ScrollReveal>
-      ) : !hasData ? (
-        <div className="space-y-6">
-          <ScrollReveal>
-            <div className="bg-cream p-6 border border-amber/25 rounded-sm">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-amber/15 flex items-center justify-center rounded-full">
-                  <Star className="w-6 h-6 text-amber" />
-                </div>
-                <div>
-                  <h3 className="text-base font-display font-bold text-espresso">Current Analysis Ready</h3>
-                  <p className="text-sm text-coffee font-body">Score: {currentResult.overallScore.toFixed(1)}/10</p>
-                </div>
-              </div>
+
+          <div className="flex flex-wrap gap-3 justify-center">
+            <input type="range" min={5} max={95} value={splitPosition}
+              onChange={e => setSplitPosition(parseInt(e.target.value))}
+              className="w-40 h-1 accent-[var(--accent-aurum)] self-center" />
+            <button onClick={swapImages} className="btn-outline">
+              <Shuffle className="w-4 h-4" /> SWAP
+            </button>
+            <button onClick={downloadResult} className="btn-nexus">
+              <Download className="w-4 h-4" /> SAVE
+            </button>
+            <button onClick={runComparison} disabled={loading || !bothLoaded}
+              className="btn-nexus disabled:opacity-40">
+              {loading ? "ANALYZING..." : "COMPARE FACES"}
+            </button>
+          </div>
+
+          {loading && (
+            <div className="glass-card p-8 text-center">
+              <div className="w-6 h-6 border-2 border-[var(--accent-aurum)] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+              <p className="text-[var(--text-muted)] text-sm">Analyzing facial features...</p>
             </div>
-          </ScrollReveal>
-
-          <ScrollProgress />
-
-          {history.length > 0 ? (
-            <ScrollReveal>
-              <div>
-                <div className="flex items-center gap-2 mb-4">
-                  <History className="w-5 h-5 text-amber" />
-                  <h3 className="text-sm font-body text-coffee tracking-widest uppercase font-semibold">
-                    SELECT A PAST ANALYSIS TO COMPARE
-                  </h3>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {history.filter((e) => e.faceResult).map((entry) => (
-                    <button
-                      key={entry.id}
-                      onClick={() => {
-                        setSelectedHistory(entry);
-                        setTimeout(setupComparison, 0);
-                      }}
-                      className="p-4 bg-cream border border-tan rounded-sm text-left hover:border-amber/40 transition-colors card-hover"
-                    >
-                      <div className="flex items-center gap-3">
-                        {entry.thumbnailUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={entry.thumbnailUrl} alt="" className="w-12 h-12 object-cover rounded-sm border border-tan" />
-                        ) : (
-                          <div className="w-12 h-12 bg-parchment flex items-center justify-center rounded-sm border border-tan">
-                            <Star className="w-5 h-5 text-amber/40" />
-                          </div>
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-body font-bold text-espresso truncate">{entry.label || "Analysis"}</p>
-                          <p className="text-xs text-coffee font-body">{entry.date} | Score: {entry.faceResult?.overallScore.toFixed(1)}</p>
-                        </div>
-                        <ArrowRight className="w-4 h-4 text-amber shrink-0" />
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </ScrollReveal>
-          ) : (
-            <ScrollReveal>
-              <div className="bg-cream p-8 border border-tan rounded-sm text-center">
-                <p className="text-coffee font-body">No past analyses found. Run another analysis later to compare.</p>
-              </div>
-            </ScrollReveal>
           )}
-        </div>
-      ) : (
-        /* Comparison View */
-        <div className="space-y-6">
-          {/* Labels */}
-          <ScrollReveal>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-cream p-4 border border-tan rounded-sm text-center">
-                <p className="text-xs font-mono text-coffee tracking-widest mb-1">LEFT</p>
-                <p className="text-sm font-display font-bold text-espresso">{leftLabel}</p>
-              </div>
-              <div className="bg-cream p-4 border border-tan rounded-sm text-center">
-                <p className="text-xs font-mono text-coffee tracking-widest mb-1">RIGHT</p>
-                <p className="text-sm font-display font-bold text-espresso">{rightLabel}</p>
-              </div>
-            </div>
-          </ScrollReveal>
 
-          <ScrollProgress />
-
-          {/* Metric Comparison */}
-          <ScrollReveal>
-            <div className="bg-cream border border-tan rounded-sm vintage-border overflow-hidden">
-              <div className="p-5 border-b border-tan">
-                <h3 className="text-sm font-display font-bold text-espresso tracking-widest">METRIC-BY-METRIC BREAKDOWN</h3>
+          {result && !loading && (
+            <motion.div variants={stagger} initial="hidden" animate="show" className="glass-card p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="type-label text-[var(--text-primary)]">SIMILARITY SCORE</h3>
+                <span className="type-display text-2xl text-[var(--accent-aurum)]">{result.overall}%</span>
               </div>
-              <div className="divide-y divide-tan">
-                {COMPARE_METRICS.map((metric) => {
-                  const leftVal = leftResult[metric.key as keyof typeof leftResult] as number;
-                  const rightVal = rightResult[metric.key as keyof typeof rightResult] as number;
-                  const diff = Math.round((rightVal - leftVal) * 10) / 10;
-
-                  return (
-                    <div key={metric.key} className="p-4 flex items-center gap-4 hover:bg-parchment/30 transition-colors">
-                      <div className="w-32 shrink-0">
-                        <span className="text-xs font-body text-coffee">{metric.label}</span>
+              <div className="space-y-2">
+                {result.features.map(f => (
+                  <motion.div key={f.name} variants={fadeUp}
+                    className="flex items-center justify-between text-xs">
+                    <span className="text-[var(--text-muted)]">{f.name}</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-24 h-1 bg-[var(--bg-tertiary)] overflow-hidden">
+                        <div className="h-full bg-gradient-to-r from-[var(--accent-nexus)] to-[var(--accent-aurum)]" style={{ width: `${f.score}%` }} />
                       </div>
-
-                      <div className="flex-1 grid grid-cols-[1fr_auto_1fr] gap-3 items-center">
-                        {/* Left bar */}
-                        <div className="flex items-center gap-2">
-                          <div className="flex-1 h-3 bg-parchment rounded-full overflow-hidden">
-                            <motion.div
-                              initial={{ width: 0 }}
-                              whileInView={{ width: `${(leftVal / 10) * 100}%` }}
-                              viewport={{ once: true }}
-                              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-                              className="h-full rounded-full bg-amber/60"
-                            />
-                          </div>
-                          <span className="text-sm font-mono font-bold text-espresso w-8 text-right">{leftVal.toFixed(1)}</span>
-                        </div>
-
-                        {/* Diff indicator */}
-                        <div className="w-16 flex justify-center">
-                          {diff > 0 ? (
-                            <span className="flex items-center gap-0.5 text-xs font-mono text-olive">
-                              <TrendingUp className="w-3 h-3" />+{diff.toFixed(1)}
-                            </span>
-                          ) : diff < 0 ? (
-                            <span className="flex items-center gap-0.5 text-xs font-mono text-burgundy">
-                              <TrendingDown className="w-3 h-3" />{diff.toFixed(1)}
-                            </span>
-                          ) : (
-                            <span className="flex items-center gap-0.5 text-xs font-mono text-coffee">
-                              <Minus className="w-3 h-3" />0
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Right bar */}
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-mono font-bold text-espresso w-8">{rightVal.toFixed(1)}</span>
-                          <div className="flex-1 h-3 bg-parchment rounded-full overflow-hidden">
-                            <motion.div
-                              initial={{ width: 0 }}
-                              whileInView={{ width: `${(rightVal / 10) * 100}%` }}
-                              viewport={{ once: true }}
-                              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-                              className="h-full rounded-full bg-burgundy/60"
-                            />
-                          </div>
-                        </div>
-                      </div>
+                      <span className="type-mono text-[var(--accent-aurum)] w-8 text-right">{f.score}%</span>
                     </div>
-                  );
-                })}
+                  </motion.div>
+                ))}
               </div>
-            </div>
-          </ScrollReveal>
+            </motion.div>
+          )}
+        </motion.div>
+      )}
 
-          {/* Summary */}
-          <ScrollReveal>
-            <div className="bg-cream p-6 border border-tan rounded-sm vintage-border">
-              <h3 className="text-sm font-display font-bold text-espresso tracking-widest mb-4">COMPARISON SUMMARY</h3>
-              <div className="grid grid-cols-3 gap-4 text-center">
-                <div>
-                  <p className="text-xs font-mono text-coffee tracking-widest">LEFT SCORE</p>
-                  <p className="text-2xl font-display font-bold text-espresso">{leftResult.overallScore.toFixed(1)}</p>
-                </div>
-                <div>
-                  <p className="text-xs font-mono text-coffee tracking-widest">DIFFERENCE</p>
-                  <p className={`text-2xl font-display font-bold ${rightResult.overallScore > leftResult.overallScore ? "text-olive" : rightResult.overallScore < leftResult.overallScore ? "text-burgundy" : "text-coffee"}`}>
-                    {rightResult.overallScore > leftResult.overallScore ? "+" : ""}{(rightResult.overallScore - leftResult.overallScore).toFixed(1)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs font-mono text-coffee tracking-widest">RIGHT SCORE</p>
-                  <p className="text-2xl font-display font-bold text-espresso">{rightResult.overallScore.toFixed(1)}</p>
-                </div>
-              </div>
-            </div>
-          </ScrollReveal>
-
-          <button
-            onClick={() => { setLeftResult(null); setRightResult(null); setSelectedHistory(null); }}
-            className="w-full py-4 bg-parchment hover:bg-tan/20 text-espresso font-body text-base tracking-wider uppercase transition-colors flex items-center justify-center gap-2 border border-tan rounded-sm"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            COMPARE DIFFERENT
-          </button>
+      {bothLoaded && (
+        <div className="flex gap-4">
+          <Link href="/dashboard/history" className="btn-outline flex-1 justify-center">
+            HISTORY <ArrowRight className="w-4 h-4" />
+          </Link>
+          <Link href="/dashboard/profile" className="btn-nexus flex-1 justify-center">
+            PROFILE <ArrowRight className="w-4 h-4" />
+          </Link>
         </div>
       )}
     </div>

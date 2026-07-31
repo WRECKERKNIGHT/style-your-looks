@@ -30,8 +30,8 @@ export function CustomCursor() {
     isHoveringElement.current = true;
     if (cursorRef.current) {
       cursorRef.current.style.transform = "translate(-50%, -50%) scale(3)";
-      cursorRef.current.style.background = "rgba(184, 134, 11, 0.08)";
-      cursorRef.current.style.borderColor = "rgba(184, 134, 11, 0.4)";
+      cursorRef.current.style.background = "rgba(108, 43, 217, 0.08)";
+      cursorRef.current.style.borderColor = "rgba(108, 43, 217, 0.4)";
     }
     if (followerRef.current) {
       followerRef.current.style.transform = "translate(-50%, -50%) scale(0)";
@@ -43,7 +43,7 @@ export function CustomCursor() {
     if (cursorRef.current) {
       cursorRef.current.style.transform = "translate(-50%, -50%) scale(1)";
       cursorRef.current.style.background = "transparent";
-      cursorRef.current.style.borderColor = "rgba(184, 134, 11, 0.6)";
+      cursorRef.current.style.borderColor = "rgba(108, 43, 217, 0.6)";
     }
     if (followerRef.current) {
       followerRef.current.style.transform = "translate(-50%, -50%) scale(1)";
@@ -118,7 +118,7 @@ export function CustomCursor() {
           width: "28px",
           height: "28px",
           borderRadius: "50%",
-          border: "1.5px solid rgba(184, 134, 11, 0.6)",
+          border: "1.5px solid rgba(108, 43, 217, 0.6)",
           transform: "translate(-50%, -50%)",
           transition: "transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.6s ease",
           opacity: 0,
@@ -134,7 +134,7 @@ export function CustomCursor() {
           height: "6px",
           borderRadius: "50%",
           background: "transparent",
-          border: "1.5px solid rgba(184, 134, 11, 0.6)",
+          border: "1.5px solid rgba(108, 43, 217, 0.6)",
           transform: "translate(-50%, -50%)",
           transition: "transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), width 0.2s, height 0.2s, background 0.3s, border-color 0.3s, opacity 0.6s ease",
           opacity: 0,

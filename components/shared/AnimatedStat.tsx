@@ -11,7 +11,7 @@ interface AnimatedStatProps {
   color?: string;
 }
 
-export function AnimatedStat({ value, label, suffix = "", decimals = 0, color = "text-gradient-gold" }: AnimatedStatProps) {
+export function AnimatedStat({ value, label, suffix = "", decimals = 0, color = "text-gradient-aurum" }: AnimatedStatProps) {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true });
   const [display, setDisplay] = useState(0);
@@ -36,12 +36,12 @@ export function AnimatedStat({ value, label, suffix = "", decimals = 0, color = 
       initial={{ opacity: 0, y: 20 }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.6 }}
-      className="bg-cream p-6 border border-tan rounded-sm text-center vintage-border"
+      className="bg-light-surface dark:bg-cosmic-surface p-6 border border-light-border dark:border-cosmic-border rounded-sm text-center card-nexus"
     >
-      <div className={`text-3xl font-display font-bold ${color} mb-1`}>
+      <div className={`text-3xl font-body font-bold ${color} mb-1`}>
         {display.toFixed(decimals)}{suffix}
       </div>
-      <p className="text-xs font-mono text-coffee tracking-widest uppercase">{label}</p>
+      <p className="text-xs font-mono text-nexus-400 dark:text-nexus-300 tracking-widest uppercase">{label}</p>
     </motion.div>
   );
 }

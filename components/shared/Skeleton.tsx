@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 function SkeletonBlock({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn("animate-pulse bg-tan/20 dark:bg-dark-border/30 rounded-sm", className)}
+      className={cn("animate-pulse bg-light-border/20 dark:bg-cosmic-border/30 rounded-sm", className)}
       {...props}
     />
   );
@@ -11,7 +11,7 @@ function SkeletonBlock({ className, ...props }: React.HTMLAttributes<HTMLDivElem
 
 export function SkeletonCard() {
   return (
-    <div className="bg-cream dark:bg-dark-surface border border-tan dark:border-dark-border rounded-sm p-8 space-y-4">
+    <div className="bg-light-surface dark:bg-cosmic-surface border border-light-border dark:border-cosmic-border rounded-sm p-8 space-y-4">
       <SkeletonBlock className="h-5 w-40" />
       <SkeletonBlock className="h-4 w-full" />
       <SkeletonBlock className="h-4 w-3/4" />
@@ -35,8 +35,8 @@ export function SkeletonScore() {
 
 export function SkeletonImage({ className }: { className?: string }) {
   return (
-    <div className={cn("bg-cream dark:bg-dark-surface border border-tan dark:border-dark-border rounded-sm overflow-hidden", className)}>
-      <div className="aspect-[4/3] bg-tan/10 dark:bg-dark-border/10 flex items-center justify-center">
+    <div className={cn("bg-light-surface dark:bg-cosmic-surface border border-light-border dark:border-cosmic-border rounded-sm overflow-hidden", className)}>
+      <div className="aspect-[4/3] bg-light-border/10 dark:bg-cosmic-border/10 flex items-center justify-center">
         <SkeletonBlock className="w-16 h-16 rounded-full" />
       </div>
     </div>
@@ -45,11 +45,11 @@ export function SkeletonImage({ className }: { className?: string }) {
 
 export function SkeletonTable({ rows = 4 }: { rows?: number }) {
   return (
-    <div className="bg-cream dark:bg-dark-surface border border-tan dark:border-dark-border rounded-sm overflow-hidden">
-      <div className="p-4 border-b border-tan dark:border-dark-border">
+    <div className="bg-light-surface dark:bg-cosmic-surface border border-light-border dark:border-cosmic-border rounded-sm overflow-hidden">
+      <div className="p-4 border-b border-light-border dark:border-cosmic-border">
         <SkeletonBlock className="h-5 w-40" />
       </div>
-      <div className="divide-y divide-tan dark:divide-dark-border">
+      <div className="divide-y divide-light-border dark:divide-cosmic-border">
         {Array.from({ length: rows }).map((_, i) => (
           <div key={i} className="p-4 flex items-center gap-4">
             <SkeletonBlock className="h-10 w-10 rounded-sm flex-shrink-0" />
@@ -123,7 +123,7 @@ export function SkeletonHistory() {
       <SkeletonBlock className="h-8 w-48 mb-2" />
       <SkeletonBlock className="h-4 w-64 mb-6" />
       {Array.from({ length: 3 }).map((_, i) => (
-        <div key={i} className="bg-cream dark:bg-dark-surface border border-tan dark:border-dark-border rounded-sm p-5 flex items-center gap-4">
+        <div key={i} className="bg-light-surface dark:bg-cosmic-surface border border-light-border dark:border-cosmic-border rounded-sm p-5 flex items-center gap-4">
           <SkeletonBlock className="h-14 w-14 rounded-sm flex-shrink-0" />
           <div className="flex-1 space-y-2">
             <SkeletonBlock className="h-4 w-48" />

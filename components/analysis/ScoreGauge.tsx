@@ -55,11 +55,11 @@ export function ScoreGauge({
     const startTime = performance.now();
 
     const scorePercent = score / maxScore;
-    let fillColor = "#B8860B";
-    if (scorePercent >= 0.8) fillColor = "#B8860B";
-    else if (scorePercent >= 0.6) fillColor = "#556B2F";
-    else if (scorePercent >= 0.4) fillColor = "#722F37";
-    else fillColor = "#2C1810";
+    let fillColor = "#FFCB20";
+    if (scorePercent >= 0.8) fillColor = "#FFCB20";
+    else if (scorePercent >= 0.6) fillColor = "#8C59FF";
+    else if (scorePercent >= 0.4) fillColor = "#E8B620";
+    else fillColor = "#6C2BD9";
 
     const animate = (now: number) => {
       const elapsed = now - startTime;
@@ -72,7 +72,7 @@ export function ScoreGauge({
       // Track arc
       ctx.beginPath();
       ctx.arc(centerX, centerY, radius, startAngle, endAngle);
-      ctx.strokeStyle = "#E8E0D8";
+      ctx.strokeStyle = "#D4BFFF";
       ctx.lineWidth = strokeWidth;
       ctx.lineCap = "round";
       ctx.stroke();
@@ -80,7 +80,7 @@ export function ScoreGauge({
       // Decorative ring
       ctx.beginPath();
       ctx.arc(centerX, centerY, radius + strokeWidth / 2 + 6, startAngle, endAngle);
-      ctx.strokeStyle = "#C4A882";
+      ctx.strokeStyle = "#6C2BD9";
       ctx.lineWidth = 1;
       ctx.stroke();
 
@@ -103,7 +103,7 @@ export function ScoreGauge({
   }, [score, maxScore, width, strokeWidth]);
 
   const scorePercent = score / maxScore;
-  const glowClass = scorePercent >= 0.8 ? "shadow-gold-lg" : "";
+  const glowClass = scorePercent >= 0.8 ? "shadow-aurum-lg" : "";
 
   return (
     <div className={cn("flex flex-col items-center", className)}>
@@ -118,15 +118,15 @@ export function ScoreGauge({
         />
         {showValue && (
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className={cn("font-display font-bold text-espresso", fontSize)}>
+            <span className={cn("font-body font-bold text-nexus-800 dark:text-white", fontSize)}>
               {score.toFixed(1)}
             </span>
-            <span className={cn("text-coffee font-body", labelSize)}>/ {maxScore}</span>
+            <span className={cn("text-nexus-400 dark:text-cosmic-muted font-body", labelSize)}>/ {maxScore}</span>
           </div>
         )}
       </div>
       {label && (
-        <p className={cn("mt-3 font-body font-semibold text-espresso text-center", labelSize)}>
+        <p className={cn("mt-3 font-body font-semibold text-nexus-800 dark:text-white text-center", labelSize)}>
           {label}
         </p>
       )}

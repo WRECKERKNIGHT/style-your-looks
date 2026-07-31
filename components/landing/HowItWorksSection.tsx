@@ -1,219 +1,126 @@
 "use client";
 
-import { useRef, useEffect } from "react";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useRef } from "react";
+import { motion, useInView } from "framer-motion";
 import { Camera, Cpu, Shirt } from "lucide-react";
-
-gsap.registerPlugin(ScrollTrigger);
 
 const steps = [
   {
-    number: "01",
+    number: 1,
     icon: Camera,
-    title: "CAPTURE",
+    title: "Capture",
     description:
       "Take a selfie or upload a photo. Front-facing, good lighting. That's it.",
     detail: "Webcam or file upload. JPEG, PNG, WebP. Max 10MB.",
   },
   {
-    number: "02",
+    number: 2,
     icon: Cpu,
-    title: "PROCESS",
+    title: "Process",
     description:
       "MediaPipe runs 478 face landmarks + 33 pose landmarks. All on your GPU.",
     detail: "Zero server calls. Zero data collection. Pure client-side ML.",
   },
   {
-    number: "03",
+    number: 3,
     icon: Shirt,
-    title: "STYLE",
+    title: "Style",
     description:
       "Get your scores, color palette, outfit picks, grooming recs. Everything personalized.",
     detail: "FaceIQ, skin tone, body type, virtual try-on, community ratings.",
   },
 ];
 
+const stepVariants = {
+  hidden: { opacity: 0, y: 50 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.8,
+      delay: i * 0.2,
+      ease: [0.16, 1, 0.3, 1],
+    },
+  }),
+};
+
 export function HowItWorksSection() {
   const sectionRef = useRef<HTMLDivElement>(null);
-  const trackRef = useRef<HTMLDivElement>(null);
-  const stepsRef = useRef<(HTMLDivElement | null)[]>([]);
-  const progressRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const section = sectionRef.current;
-    const track = trackRef.current;
-    const stepsEls = stepsRef.current.filter(Boolean) as HTMLDivElement[];
-    const progress = progressRef.current;
-    if (!section || !track || stepsEls.length === 0) return;
-
-    const ctx = gsap.context(() => {
-      // Calculate track width dynamically
-      const getTrackWidth = () => track.scrollWidth - window.innerWidth + 120;
-
-      // Main horizontal scroll tween
-      const horizontalTween = gsap.to(track, {
-        x: () => -getTrackWidth(),
-        ease: "none",
-        scrollTrigger: {
-          trigger: section,
-          start: "top top",
-          end: () => `+=${getTrackWidth()}`,
-          pin: true,
-          scrub: 0.6,
-          anticipatePin: 1,
-          invalidateOnRefresh: true,
-        },
-      });
-
-      // Progress line fills as you scroll
-      if (progress) {
-        gsap.to(progress, {
-          scaleX: 1,
-          ease: "none",
-          scrollTrigger: {
-            trigger: section,
-            start: "top top",
-            end: () => `+=${getTrackWidth()}`,
-            scrub: 0.3,
-          },
-        });
-      }
-
-      // Per-step animations — use the main tween as containerAnimation
-      stepsEls.forEach((step, i) => {
-        gsap.fromTo(
-          step,
-          { opacity: 0, y: 40, scale: 0.96 },
-          {
-            opacity: 1,
-            y: 0,
-            scale: 1,
-            ease: "power3.out",
-            duration: 1,
-            scrollTrigger: {
-              trigger: step,
-              containerAnimation: horizontalTween,
-              start: "left 90%",
-              end: "left 60%",
-              scrub: 0.5,
-            },
-          }
-        );
-      });
-
-      // Handle resize
-      const handleResize = () => {
-        ScrollTrigger.refresh();
-      };
-      const resizeObserver = new ResizeObserver(handleResize);
-      resizeObserver.observe(section);
-
-      return () => {
-        resizeObserver.disconnect();
-      };
-    }, section);
-
-    return () => ctx.revert();
-  }, []);
+  const isInView = useInView(sectionRef, { once: true, amount: 0.2 });
 
   return (
-    <section
-      ref={sectionRef}
-      className="relative overflow-hidden bg-section-gradient"
-      id="how-it-works"
-    >
-      {/* No CSS sticky — GSAP pin handles this */}
-      <div className="h-screen flex flex-col justify-center overflow-hidden">
-        <div className="max-w-[1400px] mx-auto px-8 md:px-16 lg:px-24 w-full">
-          {/* Header */}
-          <div className="mb-12 md:mb-16">
-            <span className="type-label text-amber/80">04 // Process</span>
-            <h2 className="mt-3 type-display text-espresso">
-              HOW IT{" "}
-              <span className="text-gradient-gold italic">WORKS.</span>
-            </h2>
+    <section ref={sectionRef} className="relative py-32 md:py-44 overflow-hidden bg-cosmic-base" id="how-it-works">
+      <div className="absolute inset-0 grid-bg opacity-20" />
+
+      <div className="relative z-10 max-w-[1400px] mx-auto px-8 md:px-16 lg:px-24">
+        <motion.div
+          initial={{ opacity: 0, x: -30 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          className="mb-20"
+        >
+          <div className="flex items-center gap-4 mb-4">
+            <div className="section-divider" />
+            <span className="section-number">02 // Process</span>
           </div>
-        </div>
+          <h2 className="type-display text-white">
+            HOW IT{" "}
+            <span className="text-gradient-aurum italic">WORKS.</span>
+          </h2>
+        </motion.div>
 
-        {/* Horizontal scrolling track */}
-        <div className="overflow-hidden">
-          <div
-            ref={trackRef}
-            className="flex gap-8 md:gap-12 pl-8 md:pl-16 lg:pl-24 pr-24"
-            style={{ width: "max-content" }}
-          >
+        <div className="relative">
+          <div className="absolute top-24 left-[2.25rem] md:left-[2.75rem] bottom-24 w-px bg-gradient-to-b from-nexus-400/40 via-aurum-400/20 to-nexus-400/40 hidden md:block" />
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
             {steps.map((step, index) => (
-              <div
+              <motion.div
                 key={step.number}
-                ref={(el: HTMLDivElement | null) => {
-                  stepsRef.current[index] = el;
-                }}
-                className="flex-shrink-0 w-[85vw] md:w-[60vw] lg:w-[42vw]"
+                custom={index}
+                variants={stepVariants}
+                initial="hidden"
+                animate={isInView ? "visible" : "hidden"}
+                className="relative"
               >
-                <div className="relative bg-cream/70 backdrop-blur-sm border border-tan/20 p-10 md:p-14 h-full flex flex-col justify-between min-h-[420px] md:min-h-[480px]">
-                  {/* Large background number */}
-                  <div className="absolute top-6 right-8 font-display text-[7rem] md:text-[10rem] font-bold text-amber/[0.06] leading-none select-none">
-                    {step.number}
-                  </div>
+                <div className="glass-card rounded-xl p-8 md:p-10 h-full relative overflow-hidden group">
+                  <div className="absolute -top-10 -right-10 w-24 h-24 rounded-full bg-gradient-nexus opacity-[0.06]" />
 
-                  {/* Step number + icon */}
-                  <div className="relative z-10 mb-10">
-                    <div className="flex items-center gap-6 mb-8">
-                      <div className="w-14 h-14 border border-amber/20 bg-parchment/80 flex items-center justify-center shrink-0">
-                        <step.icon className="w-6 h-6 text-amber/70" />
-                      </div>
-                      <span className="type-mono text-[0.65rem] text-amber/60 tracking-[0.3em]">
-                        STEP {step.number}
-                      </span>
+                  <div className="relative z-10">
+                    <div className="w-14 h-14 rounded-full bg-gradient-nexus flex items-center justify-center mb-6 shadow-nexus">
+                      <step.icon className="w-6 h-6 text-white" />
                     </div>
 
-                    <h3 className="text-4xl md:text-6xl font-display font-bold text-espresso tracking-tight mb-5">
+                    <div className="flex items-center gap-3 mb-4">
+                      <span className="type-mono text-[0.6rem] text-aurum-400/70 tracking-[0.2em]">
+                        STEP 0{step.number}
+                      </span>
+                      <div className="h-px flex-1 bg-gradient-to-r from-nexus-400/20 to-transparent" />
+                    </div>
+
+                    <h3 className="type-heading text-white mb-3 text-2xl">
                       {step.title}
                     </h3>
-                  </div>
 
-                  {/* Content */}
-                  <div className="relative z-10">
-                    <p className="text-lg md:text-xl text-coffee leading-relaxed max-w-lg mb-5 font-body">
+                    <p className="text-nexus-200/60 text-sm font-body leading-relaxed mb-4">
                       {step.description}
                     </p>
-                    <p className="type-mono text-[0.7rem] text-coffee/40 max-w-md">
+
+                    <p className="type-mono text-[0.65rem] text-nexus-300/40">
                       {step.detail}
                     </p>
-
-                    {/* Connector arrow */}
-                    <div className="mt-10 flex items-center gap-3">
-                      <div className="h-px flex-1 bg-gradient-to-r from-tan/30 to-transparent max-w-[200px]" />
-                      <span className="type-mono text-[0.55rem] text-amber/50 tracking-widest">
-                        {index < steps.length - 1
-                          ? "NEXT →"
-                          : "GET STARTED →"}
-                      </span>
-                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        </div>
 
-        {/* Progress bar */}
-        <div className="max-w-[1400px] mx-auto px-8 md:px-16 lg:px-24 w-full mt-8">
-          <div className="h-px w-full bg-tan/15 relative overflow-hidden">
-            <div
-              ref={progressRef}
-              className="h-full bg-amber/50 origin-left"
-              style={{ transform: "scaleX(0)" }}
-            />
-          </div>
-          <div className="mt-3 flex justify-between">
-            <span className="type-mono text-[0.5rem] text-coffee/40 tracking-widest">
-              {steps.length} STEPS
-            </span>
-            <span className="type-mono text-[0.5rem] text-coffee/40 tracking-widest">
-              SCROLL →
-            </span>
+                {index < steps.length - 1 && (
+                  <div className="hidden md:flex absolute top-1/2 -right-6 translate-x-1/2 z-20">
+                    <div className="w-10 h-10 rounded-full bg-cosmic-surface border border-nexus-400/30 flex items-center justify-center">
+                      <span className="text-nexus-300 text-sm">&rarr;</span>
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            ))}
           </div>
         </div>
       </div>

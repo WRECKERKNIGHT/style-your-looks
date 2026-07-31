@@ -21,10 +21,10 @@ const sizeMap = {
 };
 
 function getScoreColor(score: number) {
-  if (score >= 8) return { fill: "#B8860B", label: "Excellent", hex: "#B8860B" };
-  if (score >= 6) return { fill: "#556B2F", label: "Good", hex: "#556B2F" };
-  if (score >= 4) return { fill: "#722F37", label: "Average", hex: "#722F37" };
-  return { fill: "#5C3D2E", label: "Needs Work", hex: "#5C3D2E" };
+  if (score >= 8) return { fill: "#FFCB20", label: "Excellent", hex: "#FFCB20" };
+  if (score >= 6) return { fill: "#8C59FF", label: "Good", hex: "#8C59FF" };
+  if (score >= 4) return { fill: "#E8B620", label: "Average", hex: "#E8B620" };
+  return { fill: "#6C2BD9", label: "Needs Work", hex: "#6C2BD9" };
 }
 
 export function ScoreGauge({
@@ -81,7 +81,7 @@ export function ScoreGauge({
             cy={config.size / 2}
             r={radius}
             fill="none"
-            stroke="rgba(196, 168, 130, 0.1)"
+            stroke="rgba(108, 43, 217, 0.1)"
             strokeWidth={config.stroke}
           />
           <motion.circle
@@ -108,12 +108,12 @@ export function ScoreGauge({
 
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <motion.span
-            className="font-display font-bold text-espresso leading-none"
+            className="font-body font-bold text-nexus-800 dark:text-white leading-none"
             style={{ fontSize: config.fontSize }}
           >
             {animatedScore.toFixed(1)}
           </motion.span>
-          <span className="type-mono text-[0.5rem] text-coffee/40 tracking-widest mt-1">
+          <span className="type-mono text-[0.5rem] text-nexus-400/40 dark:text-cosmic-muted/40 tracking-widest mt-1">
             / {maxScore}
           </span>
         </div>
@@ -123,20 +123,20 @@ export function ScoreGauge({
             initial={{ opacity: 0, scale: 0 }}
             animate={isInView ? { opacity: 1, scale: 1 } : {}}
             transition={{ delay: 1.5, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            className="absolute -top-1 -right-1 w-5 h-5 bg-amber rounded-full flex items-center justify-center"
+            className="absolute -top-1 -right-1 w-5 h-5 bg-aurum-500 rounded-full flex items-center justify-center"
           >
-            <span className="text-[0.5rem] text-ivory font-bold">✦</span>
+            <span className="text-[0.5rem] text-white font-bold">✦</span>
           </motion.div>
         )}
       </div>
 
       {showLabel && (
         <>
-          <span className="type-mono text-[0.6rem] text-coffee/50 tracking-widest uppercase">
+          <span className="type-mono text-[0.6rem] text-nexus-400/50 dark:text-cosmic-muted/50 tracking-widest uppercase">
             {label || scoreColor.label}
           </span>
           {label && (
-            <span className="type-mono text-[0.5rem] text-coffee/30 tracking-widest">
+            <span className="type-mono text-[0.5rem] text-nexus-400/30 dark:text-cosmic-muted/30 tracking-widest">
               {scoreColor.label}
             </span>
           )}

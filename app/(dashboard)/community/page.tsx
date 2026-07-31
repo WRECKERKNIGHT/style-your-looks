@@ -1,586 +1,198 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
-import { COMMUNITY_CATEGORIES } from "@/lib/constants";
-import { Users, Star, Camera, X, Upload, MessageSquare, Send, TrendingUp } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import { ScrollReveal, ScrollRevealItem, ScrollProgress } from "@/components/shared/ScrollReveal";
-import { useToast } from "@/components/shared/Toast";
-
-interface Comment {
-  id: string;
-  user: string;
-  text: string;
-  rating: number;
-  createdAt: string;
-}
+import { useState } from "react";
+import Link from "next/link";
+import { motion } from "framer-motion";
+import { Users, Heart, MessageCircle, Share2, UserPlus, ArrowRight, Search } from "lucide-react";
 
 interface Post {
   id: string;
-  imageUrl: string;
-  category: string;
-  title: string;
-  description: string;
-  avgRating: number;
-  ratingCount: number;
-  totalRating: number;
-  comments: Comment[];
-  createdAt: string;
-  user: { name: string };
-  showComments: boolean;
+  user: string;
+  avatar: string;
+  badge: string;
+  content: string;
+  likes: number;
+  comments: number;
+  tags: string[];
+  time: string;
 }
 
-const STORAGE_KEY = "aurastyle_community";
+interface Member {
+  id: string;
+  name: string;
+  avatar: string;
+  badge: string;
+  style: string;
+  match: number;
+}
 
-const DEFAULT_POSTS: Post[] = [
-  {
-    id: "1",
-    imageUrl: "",
-    category: "outfit",
-    title: "Date Night Look",
-    description: "Navy blazer with cream shirt. First time trying this combo.",
-    avgRating: 8.2,
-    ratingCount: 24,
-    totalRating: 8.2 * 24,
-    comments: [
-      { id: "c1", user: "StylePro", text: "Great colour combo! The blazer fits perfectly.", rating: 9, createdAt: "2h ago" },
-      { id: "c2", user: "FashionFan", text: "Try rolling the sleeves for a more relaxed vibe.", rating: 7, createdAt: "1h ago" },
-    ],
-    createdAt: "2h ago",
-    user: { name: "Alex M." },
-    showComments: false,
-  },
-  {
-    id: "2",
-    imageUrl: "",
-    category: "face",
-    title: "New Beard Style",
-    description: "Trying the Van Dyke for the first time. What do you think?",
-    avgRating: 7.5,
-    ratingCount: 18,
-    totalRating: 7.5 * 18,
-    comments: [
-      { id: "c3", user: "GroomGuru", text: "Suits your face shape well! Keep it.", rating: 8, createdAt: "5h ago" },
-    ],
-    createdAt: "5h ago",
-    user: { name: "Jordan K." },
-    showComments: false,
-  },
-  {
-    id: "3",
-    imageUrl: "",
-    category: "party",
-    title: "Club Night Ready",
-    description: "All black with gold accessories. Going for sleek vibes.",
-    avgRating: 8.8,
-    ratingCount: 31,
-    totalRating: 8.8 * 31,
-    comments: [
-      { id: "c4", user: "NightOwl", text: "Fire look! The gold chain really pops.", rating: 9, createdAt: "1d ago" },
-      { id: "c5", user: "TrendSet", text: "Maybe add a watch for the complete look.", rating: 8, createdAt: "20h ago" },
-    ],
-    createdAt: "1d ago",
-    user: { name: "Sam R." },
-    showComments: false,
-  },
-  {
-    id: "4",
-    imageUrl: "",
-    category: "grooming",
-    title: "Clean Shaven vs Stubble",
-    description: "Can't decide. Which one looks better for an interview?",
-    avgRating: 7.0,
-    ratingCount: 42,
-    totalRating: 7.0 * 42,
-    comments: [
-      { id: "c6", user: "CorpStyle", text: "Go clean shaven for interviews. Stubble for casual.", rating: 7, createdAt: "2d ago" },
-    ],
-    createdAt: "2d ago",
-    user: { name: "Chris P." },
-    showComments: false,
-  },
+const FEED: Post[] = [
+  { id: "p1", user: "AriaChen", avatar: "AC", badge: "STYLE ICON", content: "Just completed my full pillar analysis — the color season recommendations were spot on. Turns out I'm a Deep Autumn. Anyone else?", likes: 24, comments: 8, tags: ["color-analysis", "deep-autumn"], time: "2h ago" },
+  { id: "p2", user: "MarcoR", avatar: "MR", badge: "RISING STAR", content: "Tried the virtual glasses try-on with the Gold Aviators. Game changer for shopping online.", likes: 18, comments: 5, tags: ["virtual-tryon", "accessories"], time: "4h ago" },
+  { id: "p3", user: "StyleBot", avatar: "SB", badge: "AI CURATOR", content: "Weekly trend alert: structured blazers are peaking. Pair with wide-leg trousers for a 10/10 silhouette.", likes: 42, comments: 12, tags: ["trends", "silhouettes"], time: "6h ago" },
+  { id: "p4", user: "LenaW", avatar: "LW", badge: "STYLE ICON", content: "My skin health score went from 72 to 88 in 3 months. Routine in bio.", likes: 35, comments: 15, tags: ["skin-health", "routine"], time: "8h ago" },
+  { id: "p5", user: "DrewK", avatar: "DK", badge: "NEW", content: "First time using AI style analysis — mind officially blown. The body analysis measurements were within 2% of my tailor's.", likes: 29, comments: 7, tags: ["body-analysis", "first-post"], time: "12h ago" },
 ];
 
-function loadPosts(): Post[] {
-  if (typeof window === "undefined") return DEFAULT_POSTS;
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return DEFAULT_POSTS;
-    return JSON.parse(raw);
-  } catch {
-    return DEFAULT_POSTS;
-  }
-}
+const MEMBERS: Member[] = [
+  { id: "m1", name: "Priya S.", avatar: "PS", badge: "DIAMOND", style: "Classic Minimalist", match: 94 },
+  { id: "m2", name: "James L.", avatar: "JL", badge: "GOLD", style: "Smart Casual", match: 91 },
+  { id: "m3", name: "Emma W.", avatar: "EW", badge: "SILVER", style: "Avant-Garde", match: 87 },
+  { id: "m4", name: "Carlos M.", avatar: "CM", badge: "GOLD", style: "Streetwear", match: 85 },
+  { id: "m5", name: "Yuki T.", avatar: "YT", badge: "DIAMOND", style: "Japanese Minimalist", match: 82 },
+];
 
-function savePosts(posts: Post[]) {
-  if (typeof window === "undefined") return;
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(posts));
-  } catch {}
-}
+const TRENDING_TAGS = ["color-analysis", "virtual-tryon", "silhouettes", "skin-health", "accessories", "deep-autumn", "capsule-wardrobe", "sustainable-fashion"];
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
+};
+
+const stagger = {
+  hidden: {}, show: { transition: { staggerChildren: 0.05 } },
+};
 
 export default function CommunityPage() {
-  const [activeCategory, setActiveCategory] = useState("all");
-  const [showCreatePost, setShowCreatePost] = useState(false);
-  const [posts, setPosts] = useState<Post[]>(DEFAULT_POSTS);
-  const [newRating, setNewRating] = useState<Record<string, number>>({});
-  const [loaded, setLoaded] = useState(false);
-  const { addToast } = useToast();
-
-  useEffect(() => {
-    setPosts(loadPosts());
-    setLoaded(true);
-  }, []);
-
-  useEffect(() => {
-    if (loaded) savePosts(posts);
-  }, [posts, loaded]);
-
-  const filteredPosts =
-    activeCategory === "all"
-      ? posts
-      : posts.filter((p) => p.category === activeCategory);
-
-  const handleRate = (postId: string, rating: number) => {
-    setNewRating((prev) => ({ ...prev, [postId]: rating }));
-  };
-
-  const submitRating = (postId: string) => {
-    const rating = newRating[postId] || 5;
-    setPosts((prev) =>
-      prev.map((p) => {
-        if (p.id !== postId) return p;
-        const newTotal = p.totalRating + rating;
-        const newCount = p.ratingCount + 1;
-        return {
-          ...p,
-          totalRating: newTotal,
-          ratingCount: newCount,
-          avgRating: Math.round((newTotal / newCount) * 10) / 10,
-        };
-      })
-    );
-    setNewRating((prev) => ({ ...prev, [postId]: 5 }));
-    addToast("Rating submitted", "success");
-  };
-
-  const addComment = (postId: string, text: string) => {
-    if (!text.trim()) return;
-    setPosts((prev) =>
-      prev.map((p) => {
-        if (p.id !== postId) return p;
-        return {
-          ...p,
-          comments: [
-            ...p.comments,
-            {
-              id: `c_${Date.now()}`,
-              user: "You",
-              text: text.trim(),
-              rating: 0,
-              createdAt: "just now",
-            },
-          ],
-        };
-      })
-    );
-    addToast("Comment added", "success");
-  };
-
-  const toggleComments = (postId: string) => {
-    setPosts((prev) =>
-      prev.map((p) => (p.id === postId ? { ...p, showComments: !p.showComments } : p))
-    );
-  };
+  const [activeTab, setActiveTab] = useState<"feed" | "members" | "tags">("feed");
 
   return (
     <div className="space-y-8">
-      <ScrollReveal>
-        <div className="flex items-center justify-between">
-          <div>
-            <span className="section-number">EST. MMXXIV // FEED</span>
-            <div className="flex items-center gap-3 mt-3 mb-2">
-              <Users className="w-7 h-7 text-amber" />
-              <h1 className="text-4xl md:text-5xl font-display font-bold text-espresso tracking-tight">
-                COMMUNITY <span className="text-gradient-gold">FEED.</span>
-              </h1>
-            </div>
-            <p className="text-coffee font-body text-lg max-w-lg">Share your looks and get honest feedback.</p>
-          </div>
-          <button
-            onClick={() => setShowCreatePost(true)}
-            className="flex items-center gap-2 px-6 py-3 bg-amber text-cream text-base font-body tracking-wider uppercase hover:bg-amber-light transition-colors rounded-sm shadow-gold"
-          >
-            <Camera className="w-4 h-4" />
-            SHARE LOOK
-          </button>
+      <motion.div variants={fadeUp} initial="hidden" animate="show">
+        <span className="section-number">EST. MMXXIV // COMMUNITY</span>
+        <div className="flex items-center gap-3 mt-3 mb-2">
+          <Users className="w-7 h-7 text-[var(--accent-aurum)]" />
+          <h1 className="type-display text-[var(--text-primary)] tracking-tight">
+            STYLE <span className="text-gradient-aurum">COMMUNITY.</span>
+          </h1>
         </div>
-      </ScrollReveal>
+        <p className="text-[var(--text-muted)] font-body type-subhead max-w-xl">
+          Connect, share, and discover with fellow NEXARI users.
+        </p>
+      </motion.div>
 
-      {/* Category Filter */}
-      <ScrollReveal delay={0.1}>
-        <div className="flex gap-3 overflow-x-auto pb-1">
-          <button
-            onClick={() => setActiveCategory("all")}
-            className={`px-5 py-2.5 text-base font-body font-semibold whitespace-nowrap transition-all rounded-sm ${
-              activeCategory === "all"
-                ? "bg-amber text-cream shadow-gold"
-                : "bg-cream text-espresso border border-tan hover:bg-tan/10"
-            }`}
-          >
-            All
-          </button>
-          {COMMUNITY_CATEGORIES.map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => setActiveCategory(cat.id)}
-              className={`px-5 py-2.5 text-base font-body font-semibold whitespace-nowrap transition-all rounded-sm ${
-                activeCategory === cat.id
-                  ? "bg-amber text-cream shadow-gold"
-                  : "bg-cream text-espresso border border-tan hover:bg-tan/10"
-              }`}
-            >
-              {cat.label}
-            </button>
-          ))}
-        </div>
-      </ScrollReveal>
-
-      <ScrollProgress />
-
-      {/* Posts Feed */}
-      <div className="space-y-6">
-        {filteredPosts.map((post) => (
-          <ScrollReveal key={post.id}>
-            <div className="bg-cream border border-tan overflow-hidden rounded-sm card-hover vintage-border transition-all duration-300 hover:shadow-elegant hover:border-amber/30">
-              {/* Post Header */}
-              <div className="flex items-center gap-3 p-5 pb-3">
-                <div className="w-11 h-11 bg-amber/15 flex items-center justify-center rounded-full border border-amber/25">
-                  <span className="text-base font-display font-bold text-amber">
-                    {post.user.name.charAt(0)}
-                  </span>
-                </div>
-                <div className="flex-1">
-                  <span className="text-base font-body font-bold text-espresso">{post.user.name}</span>
-                  <span className="text-sm text-coffee ml-2 font-body">{post.createdAt}</span>
-                </div>
-                <span className="text-xs font-body bg-parchment text-coffee px-3 py-1.5 uppercase tracking-wider border border-tan rounded-sm">
-                  {post.category}
-                </span>
-              </div>
-
-              {/* Post Image */}
-              {post.imageUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={post.imageUrl} alt={post.title} className="w-full h-72 object-cover" />
-              ) : (
-                <div className="w-full h-56 bg-parchment flex items-center justify-center gold-shimmer">
-                  <div className="text-center">
-                    <Camera className="w-12 h-12 text-amber/40 mx-auto mb-3" />
-                    <p className="text-base text-coffee font-body">{post.title}</p>
-                  </div>
-                </div>
-              )}
-
-              <div className="p-6 space-y-4">
-                <div>
-                  <h3 className="text-lg font-display font-bold text-espresso tracking-wider">{post.title}</h3>
-                  <p className="text-base text-coffee font-body mt-1">{post.description}</p>
-                </div>
-
-                {/* Rating */}
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-1.5">
-                    <Star className="w-5 h-5 text-amber fill-amber" />
-                    <span className="font-display font-bold text-espresso text-lg">{post.avgRating}</span>
-                    <span className="text-sm text-coffee font-body">({post.ratingCount} ratings)</span>
-                  </div>
-                  <button
-                    onClick={() => toggleComments(post.id)}
-                    className="flex items-center gap-1.5 text-sm text-coffee hover:text-espresso transition-colors font-body"
-                  >
-                    <MessageSquare className="w-4 h-4" />
-                    {post.comments.length} comments
-                  </button>
-                </div>
-
-                {/* Rate Slider */}
-                <div className="bg-parchment p-4 border border-tan rounded-sm">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-sm text-coffee font-body font-semibold">RATE THIS LOOK</span>
-                    <span className="text-lg font-display font-bold text-amber">
-                      {newRating[post.id] || 5}/10
-                    </span>
-                  </div>
-                  <input
-                    type="range"
-                    min="1"
-                    max="10"
-                    value={newRating[post.id] || 5}
-                    onChange={(e) => handleRate(post.id, parseInt(e.target.value))}
-                    className="w-full h-2.5 bg-[#E8E0D8] appearance-none cursor-pointer rounded-full accent-amber"
-                  />
-                  <div className="flex justify-between text-xs text-coffee mt-2 font-body">
-                    <span>1</span>
-                    <span>5</span>
-                    <span>10</span>
-                  </div>
-                  <button
-                    onClick={() => submitRating(post.id)}
-                    className="w-full mt-3 py-2.5 bg-amber text-cream font-body text-sm tracking-wider uppercase hover:bg-amber-light transition-all duration-300 rounded-sm hover:shadow-gold"
-                  >
-                    SUBMIT RATING
-                  </button>
-                </div>
-
-                {/* Comments */}
-                <AnimatePresence>
-                  {post.showComments && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      className="space-y-3 overflow-hidden"
-                    >
-                      {post.comments.map((comment) => (
-                        <div key={comment.id} className="bg-parchment p-4 border border-tan rounded-sm">
-                          <div className="flex items-center gap-2 mb-1.5">
-                            <span className="text-sm font-body font-bold text-espresso">{comment.user}</span>
-                            {comment.rating > 0 && (
-                              <div className="flex items-center gap-1">
-                                <Star className="w-3.5 h-3.5 text-amber fill-amber" />
-                                <span className="text-sm text-coffee font-body">{comment.rating}</span>
-                              </div>
-                            )}
-                            <span className="text-xs text-coffee/50 font-body ml-auto">{comment.createdAt}</span>
-                          </div>
-                          <p className="text-sm text-coffee font-body">{comment.text}</p>
-                        </div>
-                      ))}
-
-                      {/* Add Comment */}
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          placeholder="Add a comment..."
-                          className="flex-1 px-4 py-2.5 bg-parchment border border-tan text-sm text-espresso placeholder:text-coffee/50 font-body focus:outline-none focus:border-amber rounded-sm"
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              addComment(post.id, (e.target as HTMLInputElement).value);
-                              (e.target as HTMLInputElement).value = "";
-                            }
-                          }}
-                        />
-                        <button
-                          onClick={(e) => {
-                            const input = (e.currentTarget.previousElementSibling as HTMLInputElement);
-                            addComment(post.id, input.value);
-                            input.value = "";
-                          }}
-                          className="px-4 py-2.5 bg-amber text-cream rounded-sm hover:bg-amber-light transition-colors"
-                        >
-                          <Send className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            </div>
-          </ScrollReveal>
+      <motion.div variants={fadeUp} initial="hidden" animate="show" className="flex gap-2">
+        {(["feed", "members", "tags"] as const).map(tab => (
+          <button key={tab} onClick={() => setActiveTab(tab)}
+            className={`px-4 py-2 border type-label transition-all ${
+              activeTab === tab
+                ? "border-[var(--accent-aurum)] bg-[var(--accent-aurum)]/10 text-[var(--accent-aurum)]"
+                : "border-[var(--border-primary)] text-[var(--text-muted)] hover:border-[var(--accent-aurum)]/40 card-nexus"
+            }`}>{tab.toUpperCase()}</button>
         ))}
-      </div>
+      </motion.div>
 
-      {filteredPosts.length === 0 && (
-        <ScrollReveal>
-          <div className="bg-cream p-12 border border-tan rounded-sm text-center vintage-border">
-            <Users className="w-16 h-16 text-amber/30 mx-auto mb-4" />
-            <h2 className="text-xl font-display font-bold text-espresso mb-2">NO POSTS YET</h2>
-            <p className="text-coffee font-body mb-6">Be the first to share a look in this category.</p>
-            <button
-              onClick={() => setShowCreatePost(true)}
-              className="btn-gold inline-flex"
-            >
-              SHARE LOOK
-            </button>
-          </div>
-        </ScrollReveal>
-      )}
-
-      {/* Create Post Modal */}
-      <CreatePostModal
-        isOpen={showCreatePost}
-        onClose={() => setShowCreatePost(false)}
-        onPost={(post) => {
-          setPosts((prev) => [post, ...prev]);
-          setShowCreatePost(false);
-          addToast("Look shared with community", "success");
-        }}
-      />
-    </div>
-  );
-}
-
-function CreatePostModal({
-  isOpen,
-  onClose,
-  onPost,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  onPost: (post: Post) => void;
-}) {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [category, setCategory] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
-  const fileRef = useRef<HTMLInputElement>(null);
-
-  const handleFile = useCallback((file: File) => {
-    if (!file.type.startsWith("image/")) return;
-    const reader = new FileReader();
-    reader.onload = (e) => setImageUrl(e.target?.result as string);
-    reader.readAsDataURL(file);
-  }, []);
-
-  const handleDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      const file = e.dataTransfer.files[0];
-      if (file) handleFile(file);
-    },
-    [handleFile]
-  );
-
-  const handleSubmit = () => {
-    if (!title.trim() || !category) return;
-    onPost({
-      id: Date.now().toString(),
-      imageUrl,
-      category,
-      title: title.trim(),
-      description: description.trim(),
-      avgRating: 0,
-      ratingCount: 0,
-      totalRating: 0,
-      comments: [],
-      createdAt: "just now",
-      user: { name: "You" },
-      showComments: false,
-    });
-    setTitle("");
-    setDescription("");
-    setCategory("");
-    setImageUrl("");
-  };
-
-  return (
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-espresso/30 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-          onClick={onClose}
-        >
-          <motion.div
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.95, opacity: 0 }}
-            className="bg-cream p-8 w-full max-w-lg border border-tan rounded-sm shadow-elegant-lg max-h-[90vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between mb-8">
-              <h2 className="text-lg font-display font-bold text-espresso tracking-wider">SHARE YOUR LOOK</h2>
-              <button onClick={onClose} className="p-2 hover:bg-tan/10 transition-colors rounded-sm">
-                <X className="w-5 h-5 text-coffee" />
-              </button>
-            </div>
-
-            <div className="space-y-5">
-              {/* Image Upload */}
-              <input
-                ref={fileRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) handleFile(file);
-                }}
-              />
-              {imageUrl ? (
-                <div className="relative">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={imageUrl} alt="Preview" className="w-full h-48 object-cover rounded-sm" />
-                  <button
-                    onClick={() => setImageUrl("")}
-                    className="absolute top-2 right-2 p-1.5 bg-espresso/60 text-cream rounded-full hover:bg-espresso/80"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              ) : (
-                <div
-                  onClick={() => fileRef.current?.click()}
-                  onDrop={handleDrop}
-                  onDragOver={(e) => e.preventDefault()}
-                  className="border-2 border-dashed border-tan p-10 text-center rounded-sm hover:border-amber/40 transition-colors cursor-pointer"
-                >
-                  <Upload className="w-10 h-10 text-amber mx-auto mb-3" />
-                  <p className="text-base text-coffee font-body">Drop your photo here or click to browse</p>
-                </div>
-              )}
-
-              {/* Category */}
-              <div>
-                <label className="text-xs font-body text-coffee tracking-widest uppercase mb-2 block font-semibold">Category</label>
-                <div className="flex gap-2">
-                  {COMMUNITY_CATEGORIES.map((cat) => (
-                    <button
-                      key={cat.id}
-                      onClick={() => setCategory(cat.id)}
-                      className={`flex-1 py-2.5 text-sm font-body font-semibold transition-colors border rounded-sm ${
-                        category === cat.id
-                          ? "bg-amber text-cream border-amber"
-                          : "bg-parchment text-espresso hover:bg-tan/20 border-tan"
-                      }`}
-                    >
-                      {cat.label}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-4">
+          {activeTab === "feed" && (
+            <motion.div variants={stagger} initial="hidden" animate="show" className="space-y-4">
+              {FEED.map(post => (
+                <motion.div key={post.id} variants={fadeUp} className="glass-card p-5">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--accent-nexus)] to-[var(--accent-aurum)] flex items-center justify-center type-mono text-sm text-white">{post.avatar}</div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <p className="type-body text-[var(--text-primary)]">{post.user}</p>
+                          <span className="type-mono text-[0.55rem] px-1.5 py-0.5 border border-[var(--accent-aurum)] text-[var(--accent-aurum)]">{post.badge}</span>
+                        </div>
+                        <p className="text-xs text-[var(--text-muted)]">{post.time}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-sm text-[var(--text-primary)] mb-3">{post.content}</p>
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {post.tags.map(tag => (
+                      <span key={tag} className="type-mono text-[0.55rem] px-2 py-0.5 border border-[var(--border-primary)] text-[var(--text-muted)]">#{tag}</span>
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-4 text-xs text-[var(--text-muted)]">
+                    <button className="flex items-center gap-1 hover:text-[var(--accent-aurum)] transition-colors">
+                      <Heart className="w-3.5 h-3.5" /> {post.likes}
                     </button>
-                  ))}
-                </div>
+                    <button className="flex items-center gap-1 hover:text-[var(--accent-aurum)] transition-colors">
+                      <MessageCircle className="w-3.5 h-3.5" /> {post.comments}
+                    </button>
+                    <button className="flex items-center gap-1 hover:text-[var(--accent-aurum)] transition-colors">
+                      <Share2 className="w-3.5 h-3.5" /> SHARE
+                    </button>
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
+
+          {activeTab === "members" && (
+            <motion.div variants={stagger} initial="hidden" animate="show" className="space-y-4">
+              {MEMBERS.map(member => (
+                <motion.div key={member.id} variants={fadeUp}
+                  className="glass-card p-4 flex items-center justify-between group hover:border-[var(--accent-aurum)]/40 transition-all">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--accent-nexus)] to-[var(--accent-aurum)] flex items-center justify-center type-mono text-sm text-white">{member.avatar}</div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="type-body text-[var(--text-primary)]">{member.name}</p>
+                        <span className="type-mono text-[0.5rem] px-1.5 py-0.5 border border-[var(--accent-aurum)] text-[var(--accent-aurum)]">{member.badge}</span>
+                      </div>
+                      <p className="text-xs text-[var(--text-muted)]">{member.style}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="type-mono text-[var(--accent-aurum)]">{member.match}% MATCH</span>
+                    <button className="btn-outline text-xs !py-1 !px-3">
+                      <UserPlus className="w-3 h-3" /> FOLLOW
+                    </button>
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
+
+          {activeTab === "tags" && (
+            <motion.div variants={stagger} initial="hidden" animate="show" className="glass-card p-6">
+              <h3 className="type-label text-[var(--text-primary)] mb-4">TRENDING TOPICS</h3>
+              <div className="flex flex-wrap gap-3">
+                {TRENDING_TAGS.map(tag => (
+                  <motion.button key={tag} variants={fadeUp}
+                    className="px-4 py-2 border border-[var(--border-primary)] card-nexus hover:border-[var(--accent-aurum)]/40 transition-all type-mono text-xs text-[var(--text-muted)] hover:text-[var(--accent-aurum)]">
+                    #{tag}
+                  </motion.button>
+                ))}
               </div>
+            </motion.div>
+          )}
+        </div>
 
-              <input
-                type="text"
-                placeholder="Give your look a title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="w-full px-5 py-3.5 bg-parchment border border-tan text-base text-espresso placeholder:text-coffee font-body focus:outline-none focus:border-amber rounded-sm"
-              />
-
-              <textarea
-                placeholder="Describe your look..."
-                rows={3}
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="w-full px-5 py-3.5 bg-parchment border border-tan text-base text-espresso placeholder:text-coffee font-body focus:outline-none focus:border-amber resize-none rounded-sm"
-              />
-
-              <button
-                onClick={handleSubmit}
-                disabled={!title.trim() || !category}
-                className="w-full py-4 bg-amber text-cream font-body text-base tracking-wider uppercase hover:bg-amber-light transition-colors rounded-sm shadow-gold disabled:opacity-40 flex items-center justify-center gap-2"
-              >
-                <Send className="w-4 h-4" />
-                SHARE LOOK
-              </button>
+        <motion.div variants={fadeUp} initial="hidden" animate="show" className="space-y-4">
+          <div className="glass-card p-4">
+            <h3 className="type-label text-[var(--text-primary)] mb-3">CONNECT</h3>
+            <p className="text-xs text-[var(--text-muted)] mb-4">Link your profiles and share your style journey.</p>
+            <button className="btn-nexus w-full justify-center text-sm mb-2">
+              <UserPlus className="w-4 h-4" /> FIND FRIENDS
+            </button>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[var(--text-muted)]" />
+              <input type="text" placeholder="Search community..."
+                className="w-full pl-8 pr-3 py-2 text-xs bg-[var(--bg-tertiary)] border border-[var(--border-primary)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[var(--accent-aurum)] outline-none" />
             </div>
-          </motion.div>
+          </div>
+
+          <div className="glass-card p-4">
+            <h3 className="type-label text-[var(--text-primary)] mb-3">YOUR STATS</h3>
+            <div className="space-y-2 text-xs">
+              <div className="flex justify-between text-[var(--text-muted)]"><span>Posts</span><span className="text-[var(--text-primary)]">3</span></div>
+              <div className="flex justify-between text-[var(--text-muted)]"><span>Followers</span><span className="text-[var(--text-primary)]">12</span></div>
+              <div className="flex justify-between text-[var(--text-muted)]"><span>Following</span><span className="text-[var(--text-primary)]">8</span></div>
+              <div className="flex justify-between text-[var(--text-muted)]"><span>Rank</span><span className="text-[var(--accent-aurum)]">SILVER</span></div>
+            </div>
+          </div>
+
+          <Link href="/dashboard/history" className="glass-card p-4 flex items-center justify-between group hover:border-[var(--accent-aurum)]/40 transition-all">
+            <span className="type-label text-[var(--text-primary)]">HISTORY</span>
+            <ArrowRight className="w-4 h-4 text-[var(--text-muted)] group-hover:text-[var(--accent-aurum)] transition-colors" />
+          </Link>
         </motion.div>
-      )}
-    </AnimatePresence>
+      </div>
+    </div>
   );
 }

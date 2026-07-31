@@ -1,4 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="128" fill="#3C2A21"/>
-  <path d="M256 96 L296 208 L416 208 L320 272 L352 384 L256 320 L160 384 L192 272 L96 208 L216 208 Z" fill="#C89D7C"/>
+  <defs>
+    <linearGradient id="nexari-gradient" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0F0A2E"/>
+      <stop offset="45%" stop-color="#6C2BD9"/>
+      <stop offset="100%" stop-color="#D4A017"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="128" fill="#0F0A2E"/>
+  <g fill="url(#nexari-gradient)">
+    <polygon points="48,32 160,32 160,480 48,480"/>
+    <polygon points="352,32 464,32 464,480 352,480"/>
+    <polygon points="96,32 208,32 416,480 304,480"/>
+    <polygon points="304,32 416,32 208,480 96,480"/>
+  </g>
 </svg>

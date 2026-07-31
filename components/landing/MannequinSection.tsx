@@ -1,254 +1,96 @@
 "use client";
 
 import { useRef } from "react";
-import { motion, useScroll, useTransform, MotionValue } from "framer-motion";
+import { motion, useInView } from "framer-motion";
 import { Mannequin3D } from "./Mannequin3D";
 
-const features = [
-  {
-    id: "face",
-    label: "FACE ANALYSIS",
-    sublabel: "478-point detection",
-    x: "74%",
-    y: "14%",
-    side: "right" as const,
-  },
-  {
-    id: "grooming",
-    label: "GROOMING STUDIO",
-    sublabel: "15+ beard styles",
-    x: "74%",
-    y: "26%",
-    side: "right" as const,
-  },
-  {
-    id: "skin",
-    label: "SKIN TONE",
-    sublabel: "ITA color science",
-    x: "74%",
-    y: "38%",
-    side: "right" as const,
-  },
-  {
-    id: "body",
-    label: "BODY TYPE",
-    sublabel: "Pose landmark AI",
-    x: "26%",
-    y: "50%",
-    side: "left" as const,
-  },
-  {
-    id: "tryon",
-    label: "VIRTUAL TRY-ON",
-    sublabel: "Outfit overlay",
-    x: "26%",
-    y: "62%",
-    side: "left" as const,
-  },
-  {
-    id: "color",
-    label: "COLOR STUDIO",
-    sublabel: "Palette matching",
-    x: "74%",
-    y: "54%",
-    side: "right" as const,
-  },
-  {
-    id: "outfits",
-    label: "OUTFIT PICKS",
-    sublabel: "AI recommendations",
-    x: "74%",
-    y: "70%",
-    side: "right" as const,
-  },
+const hotspots = [
+  { id: "face", label: "Face IQ", sublabel: "478-point analysis", x: "75%", y: "10%", side: "right" as const },
+  { id: "skin", label: "Color Analysis", sublabel: "ITA skin tone", x: "75%", y: "25%", side: "right" as const },
+  { id: "body", label: "Body Analysis", sublabel: "Pose landmarks", x: "25%", y: "45%", side: "left" as const },
+  { id: "grooming", label: "Grooming", sublabel: "15+ styles", x: "75%", y: "42%", side: "right" as const },
+  { id: "tryon", label: "Virtual Try-On", sublabel: "Outfit overlay", x: "25%", y: "62%", side: "left" as const },
+  { id: "outfits", label: "Outfit Picks", sublabel: "AI recommendations", x: "75%", y: "60%", side: "right" as const },
 ];
 
-function FeatureLabel({
-  feature,
-  index,
-  total,
-  scrollYProgress,
-}: {
-  feature: (typeof features)[number];
-  index: number;
-  total: number;
-  scrollYProgress: MotionValue<number>;
-}) {
-  const labelStart = 0.1 + (index / total) * 0.6;
-  const labelEnd = labelStart + 0.15;
-  const labelOpacity = useTransform(
-    scrollYProgress,
-    [labelStart, labelEnd, 0.85, 0.95],
-    [0, 1, 1, 0]
-  );
-  const labelX = useTransform(
-    scrollYProgress,
-    [labelStart, labelEnd],
-    [feature.side === "left" ? -40 : 40, 0]
-  );
-  const labelScale = useTransform(
-    scrollYProgress,
-    [labelStart, labelEnd],
-    [0.92, 1]
-  );
-
-  return (
-    <motion.div
-      className="feature-label"
-      style={{
-        left: feature.x,
-        top: feature.y,
-        opacity: labelOpacity,
-        x: labelX,
-        scale: labelScale,
-        transform:
-          feature.side === "left" ? "translateX(-100%)" : "none",
-      }}
-    >
-      <div className="flex flex-col">
-        <span>{feature.label}</span>
-        <span className="text-coffee/70 text-[0.5rem] font-body font-normal tracking-normal normal-case">
-          {feature.sublabel}
-        </span>
-      </div>
-    </motion.div>
-  );
-}
-
 export function MannequinSection() {
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start start", "end end"],
-  });
-
-  const mannequinOpacity = useTransform(scrollYProgress, [0, 0.15, 0.85, 1], [0, 1, 1, 0]);
-  const mannequinScale = useTransform(scrollYProgress, [0, 0.2], [0.85, 1]);
-  const mannequinRotate = useTransform(scrollYProgress, [0, 1], [-5, 5]);
-  const glowOpacity = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [0, 0.6, 0.6, 0]);
-  const scrollIndicatorOpacity = useTransform(scrollYProgress, [0.1, 0.2, 0.8, 0.9], [0, 1, 1, 0]);
+  const ref = useRef<HTMLDivElement>(null);
+  const isInView = useInView(ref, { once: true, amount: 0.2 });
 
   return (
-    <section
-      ref={containerRef}
-      className="relative h-[220vh] bg-section-dark"
-    >
-      {/* Sticky viewport */}
-      <div className="sticky top-0 h-screen flex items-center justify-center overflow-hidden">
-        {/* Radial glow behind mannequin */}
+    <section ref={ref} className="relative py-32 md:py-44 overflow-hidden bg-cosmic-elevated" id="mannequin">
+      <div className="absolute inset-0 grid-bg opacity-20" />
+
+      <div className="relative z-10 max-w-[1400px] mx-auto px-8 md:px-16 lg:px-24">
         <motion.div
-          style={{ opacity: glowOpacity }}
-          className="absolute w-[600px] h-[600px] rounded-full pointer-events-none"
-          initial={false}
+          initial={{ opacity: 0, x: -30 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          className="mb-16"
         >
-          <div className="w-full h-full rounded-full bg-amber/[0.08] blur-[120px]" />
-        </motion.div>
-
-        {/* Diagonal line pattern — very subtle on dark */}
-        <div className="absolute inset-0 opacity-[0.015]">
-          <div
-            className="w-full h-full"
-            style={{
-              backgroundImage:
-                "repeating-linear-gradient(45deg, #C4A882 0, #C4A882 1px, transparent 0, transparent 60px)",
-              backgroundSize: "60px 60px",
-            }}
-          />
-        </div>
-
-        {/* Title — top left, light text on dark */}
-        <div className="absolute top-14 left-8 md:left-16 z-10">
-          <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-          >
-            <span className="type-label text-amber/60">02 // The Body</span>
-            <h2 className="mt-3 type-display text-parchment/90">
-              EVERY
-              <br />
-              FEATURE.
-              <br />
-              <span className="text-gradient-gold">MAPPED.</span>
-            </h2>
-            <p className="mt-5 text-tan/60 text-sm max-w-xs font-body leading-relaxed">
-              Every analysis runs on your device. Your data never leaves your
-              hands.
-            </p>
-          </motion.div>
-        </div>
-
-        {/* Mannequin — with scroll-driven rotation */}
-        <motion.div
-          style={{
-            opacity: mannequinOpacity,
-            scale: mannequinScale,
-            rotateY: mannequinRotate,
-          }}
-          className="relative z-10"
-        >
-          <Mannequin3D interactive className="w-[280px] md:w-[340px]" />
-        </motion.div>
-
-        {/* Feature labels — tied to scroll progress ranges */}
-        {features.map((feature, index) => (
-          <FeatureLabel
-            key={feature.id}
-            feature={feature}
-            index={index}
-            total={features.length}
-            scrollYProgress={scrollYProgress}
-          />
-        ))}
-
-        {/* Connector lines */}
-        <svg
-          className="absolute inset-0 w-full h-full pointer-events-none z-[5]"
-          viewBox="0 0 100 100"
-          preserveAspectRatio="none"
-        >
-          {features.map((feature, index) => (
-            <motion.line
-              key={feature.id}
-              x1="50"
-              y1={feature.y}
-              x2={feature.x}
-              y2={feature.y}
-              stroke="rgba(196, 168, 130, 0.15)"
-              strokeWidth="0.1"
-              initial={{ pathLength: 0 }}
-              whileInView={{ pathLength: 1 }}
-              viewport={{ once: true }}
-              transition={{
-                duration: 0.8,
-                delay: 0.5 + index * 0.08,
-                ease: "easeOut",
-              }}
-            />
-          ))}
-        </svg>
-
-        {/* Bottom info bar */}
-        <div className="absolute bottom-8 left-8 md:left-16 z-10 flex items-center gap-6">
-          <div className="flex items-center gap-2">
-            <div className="w-1.5 h-1.5 bg-amber/60 rounded-full" />
-            <span className="type-mono text-[0.6rem] text-tan/40 tracking-widest">FRONT VIEW</span>
+          <div className="flex items-center gap-4 mb-4">
+            <div className="section-divider" />
+            <span className="section-number">03 // Analysis</span>
           </div>
-          <div className="h-px w-10 bg-tan/15" />
-          <span className="type-mono text-[0.6rem] text-tan/30 tracking-widest">1:1 SCALE</span>
+          <h2 className="type-display text-white">
+            EVERY
+            <br />
+            FEATURE.
+            <br />
+            <span className="text-gradient-aurum">MAPPED.</span>
+          </h2>
+        </motion.div>
+
+        <div className="relative flex flex-col lg:flex-row items-center gap-12 lg:gap-24">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className="relative w-[200px] md:w-[260px] flex-shrink-0"
+          >
+            <div className="absolute inset-0 rounded-full bg-gradient-nexus opacity-[0.08] blur-[80px]" />
+            <Mannequin3D className="w-full relative z-10" />
+
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[140%] h-4 bg-black/30 blur-[20px] rounded-full" />
+          </motion.div>
+
+          <div className="relative flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {hotspots.map((spot, index) => (
+              <motion.div
+                key={spot.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.3 + index * 0.1, ease: [0.16, 1, 0.3, 1] }}
+                className="glass-card rounded-lg p-5 flex items-start gap-4 group"
+              >
+                <div className="relative mt-1">
+                  <div className="w-3 h-3 rounded-full bg-aurum-400/80 glow-pulse" />
+                </div>
+                <div>
+                  <h4 className="text-white font-display font-semibold text-sm tracking-wide">
+                    {spot.label}
+                  </h4>
+                  <p className="type-mono text-[0.6rem] text-nexus-300/50 mt-1">
+                    {spot.sublabel}
+                  </p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
         </div>
 
-        {/* Scroll indicator */}
-        <motion.div
-          className="absolute bottom-8 right-8 md:right-16 z-10"
-          style={{ opacity: scrollIndicatorOpacity }}
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, delay: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          className="mt-16 text-center text-nexus-200/40 text-sm font-body max-w-xl mx-auto"
         >
-          <span className="type-mono text-[0.5rem] text-tan/30 tracking-widest uppercase">
-            Scroll to rotate
-          </span>
-        </motion.div>
+          Every analysis runs on your device. Your data never leaves your hands.
+        </motion.p>
       </div>
     </section>
   );

@@ -111,37 +111,40 @@ export function ImageUploader({
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onClick={() => inputRef.current?.click()}
-            className={`relative cursor-pointer border-2 border-dashed transition-all duration-500 ${aspectRatioClasses[aspectRatio]} min-h-[280px] flex flex-col items-center justify-center gap-5 p-10 ${
+            className={`relative cursor-pointer border-2 border-dashed transition-all duration-500 ${aspectRatioClasses[aspectRatio]} min-h-[320px] flex flex-col items-center justify-center gap-5 p-10 ${
               dragOver
-                ? "border-amber bg-amber/[0.04] shadow-gold"
-                : "border-tan/30 bg-parchment/30 hover:border-amber/40 hover:bg-cream/50"
+                ? "border-aurum-500 bg-aurum-500/[0.04] shadow-aurum"
+                : "border-light-border/30 dark:border-cosmic-border/30 bg-light-base/30 dark:bg-cosmic-base/30 backdrop-blur-sm hover:border-aurum-500/40 hover:bg-light-surface/50 dark:hover:bg-cosmic-surface/50"
             }`}
+            style={{
+              background: dragOver ? undefined : "linear-gradient(135deg, rgba(108,43,217,0.03) 0%, transparent 100%)",
+            }}
           >
             <motion.div
               animate={dragOver ? { scale: 1.1, rotate: -5 } : { scale: 1, rotate: 0 }}
-              className="w-16 h-16 border border-tan/20 bg-cream/50 flex items-center justify-center"
+              className="w-20 h-20 border border-light-border/20 dark:border-cosmic-border/20 bg-light-surface/50 dark:bg-cosmic-surface/50 backdrop-blur-sm flex items-center justify-center rounded-sm"
             >
-              <Upload className="w-7 h-7 text-amber/60" />
+              <Upload className="w-8 h-8 text-aurum-500/60" />
             </motion.div>
 
             <div className="text-center">
-              <p className="font-body text-base text-espresso font-medium mb-1">
+              <p className="font-body text-base text-nexus-800 dark:text-white font-medium mb-1">
                 Drop your photo here
               </p>
-              <p className="type-mono text-[0.6rem] text-coffee/40 tracking-widest">
+              <p className="type-mono text-[0.6rem] text-nexus-400/40 dark:text-cosmic-muted/40 tracking-widest">
                 JPEG, PNG, WebP &bull; Max {maxSizeMB}MB
               </p>
             </div>
 
             <div className="flex items-center gap-4 mt-2">
-              <div className="h-px w-8 bg-tan/15" />
-              <span className="type-mono text-[0.5rem] text-coffee/30 tracking-widest">OR</span>
-              <div className="h-px w-8 bg-tan/15" />
+              <div className="h-px w-8 bg-light-border/15 dark:bg-cosmic-border/15" />
+              <span className="type-mono text-[0.5rem] text-nexus-400/30 dark:text-cosmic-muted/30 tracking-widest">OR</span>
+              <div className="h-px w-8 bg-light-border/15 dark:bg-cosmic-border/15" />
             </div>
 
             <button
               type="button"
-              className="btn-elegant text-xs py-2.5 px-6"
+              className="btn-outline text-xs py-2.5 px-6 border-aurum-500/50 text-aurum-500 hover:bg-aurum-500/10"
               onClick={(e) => {
                 e.stopPropagation();
                 inputRef.current?.click();
@@ -164,7 +167,7 @@ export function ImageUploader({
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.96 }}
-            className="relative overflow-hidden border border-tan/20 bg-cream/50"
+            className="relative overflow-hidden border border-light-border/20 dark:border-cosmic-border/20 bg-light-surface/50 dark:bg-cosmic-surface/50 backdrop-blur-sm rounded-sm card-nexus"
           >
             <div
               className={`relative ${isZoomed ? "cursor-zoom-out" : "cursor-zoom-in"} ${aspectRatioClasses[aspectRatio]}`}
@@ -177,37 +180,37 @@ export function ImageUploader({
                   isZoomed ? "scale-150" : "scale-100"
                 }`}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-espresso/30 via-transparent to-transparent pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-t from-nexus-800/30 via-transparent to-transparent pointer-events-none" />
             </div>
 
             <div className="absolute top-3 right-3 flex gap-2">
               <button
                 onClick={() => setIsZoomed(!isZoomed)}
-                className="w-8 h-8 bg-cream/80 backdrop-blur-sm border border-tan/20 flex items-center justify-center hover:bg-cream transition-colors"
+                className="w-8 h-8 bg-light-surface/80 dark:bg-cosmic-surface/80 backdrop-blur-sm border border-light-border/20 dark:border-cosmic-border/20 flex items-center justify-center hover:bg-light-surface dark:hover:bg-cosmic-surface transition-colors rounded-sm"
               >
                 {isZoomed ? (
-                  <Maximize2 className="w-3.5 h-3.5 text-coffee/60" />
+                  <Maximize2 className="w-3.5 h-3.5 text-nexus-400/60 dark:text-cosmic-muted/60" />
                 ) : (
-                  <ZoomIn className="w-3.5 h-3.5 text-coffee/60" />
+                  <ZoomIn className="w-3.5 h-3.5 text-nexus-400/60 dark:text-cosmic-muted/60" />
                 )}
               </button>
               <button
                 onClick={handleClear}
-                className="w-8 h-8 bg-cream/80 backdrop-blur-sm border border-tan/20 flex items-center justify-center hover:bg-cream transition-colors"
+                className="w-8 h-8 bg-light-surface/80 dark:bg-cosmic-surface/80 backdrop-blur-sm border border-light-border/20 dark:border-cosmic-border/20 flex items-center justify-center hover:bg-light-surface dark:hover:bg-cosmic-surface transition-colors rounded-sm"
               >
-                <X className="w-3.5 h-3.5 text-coffee/60" />
+                <X className="w-3.5 h-3.5 text-nexus-400/60 dark:text-cosmic-muted/60" />
               </button>
             </div>
 
             {fileName && (
-              <div className="absolute bottom-0 left-0 right-0 bg-cream/80 backdrop-blur-sm border-t border-tan/20 px-4 py-3 flex items-center justify-between">
+              <div className="absolute bottom-0 left-0 right-0 bg-light-surface/80 dark:bg-cosmic-surface/80 backdrop-blur-sm border-t border-light-border/20 dark:border-cosmic-border/20 px-4 py-3 flex items-center justify-between">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-1.5 h-1.5 rounded-full bg-olive/60 shrink-0" />
-                  <span className="type-mono text-[0.6rem] text-coffee/60 truncate">
+                  <div className="w-1.5 h-1.5 rounded-full bg-aurum-600/60 shrink-0" />
+                  <span className="type-mono text-[0.6rem] text-nexus-400/60 dark:text-cosmic-muted/60 truncate">
                     {fileName}
                   </span>
                 </div>
-                <span className="type-mono text-[0.55rem] text-coffee/40 shrink-0 ml-3">
+                <span className="type-mono text-[0.55rem] text-nexus-400/40 dark:text-cosmic-muted/40 shrink-0 ml-3">
                   {fileSize}
                 </span>
               </div>

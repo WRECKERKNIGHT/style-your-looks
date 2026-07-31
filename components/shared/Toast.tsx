@@ -44,9 +44,9 @@ export const useToastStore = create<ToastStore>((set) => ({
 }));
 
 const typeConfig: Record<ToastType, { border: string; bg: string; icon: typeof CheckCircle; darkBg: string }> = {
-  success: { border: "border-olive/30", bg: "bg-olive/[0.06]", icon: CheckCircle, darkBg: "dark:bg-olive/[0.12]" },
-  error: { border: "border-burgundy/30", bg: "bg-burgundy/[0.06]", icon: AlertCircle, darkBg: "dark:bg-burgundy/[0.12]" },
-  info: { border: "border-amber/30", bg: "bg-amber/[0.06]", icon: Info, darkBg: "dark:bg-amber/[0.12]" },
+  success: { border: "border-aurum-600/30", bg: "bg-aurum-600/[0.06]", icon: CheckCircle, darkBg: "dark:bg-aurum-600/[0.12]" },
+  error: { border: "border-nexus-500/30", bg: "bg-nexus-500/[0.06]", icon: AlertCircle, darkBg: "dark:bg-nexus-500/[0.12]" },
+  info: { border: "border-aurum-500/30", bg: "bg-aurum-500/[0.06]", icon: Info, darkBg: "dark:bg-aurum-500/[0.12]" },
 };
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
@@ -69,13 +69,13 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                 animate={{ opacity: 1, x: 0, scale: 1 }}
                 exit={{ opacity: 0, x: 80, scale: 0.95, transition: { duration: 0.15 } }}
                 transition={{ type: "spring", stiffness: 300, damping: 28 }}
-                className={`pointer-events-auto flex items-center gap-3 px-4 py-3.5 border ${config.border} ${config.bg} ${config.darkBg} backdrop-blur-md shadow-elegant-lg cursor-pointer max-w-sm rounded-sm dark:bg-dark-surface`}
+                className={`pointer-events-auto flex items-center gap-3 px-4 py-3.5 border ${config.border} ${config.bg} ${config.darkBg} backdrop-blur-md shadow-nexus-lg cursor-pointer max-w-sm rounded-sm dark:bg-cosmic-surface`}
                 onClick={() => removeToast(toast.id)}
               >
                 <Icon className={`w-4 h-4 shrink-0 ${
-                  toast.type === "success" ? "text-olive" : toast.type === "error" ? "text-burgundy" : "text-amber"
+                  toast.type === "success" ? "text-aurum-600" : toast.type === "error" ? "text-nexus-400" : "text-aurum-500"
                 }`} />
-                <p className="flex-1 text-sm font-body text-espresso dark:text-dark-text leading-snug">{toast.message}</p>
+                <p className="flex-1 text-sm font-body text-nexus-800 dark:text-white leading-snug">{toast.message}</p>
                 {toast.action && (
                   <button
                     onClick={(e) => {
@@ -83,14 +83,14 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                       toast.action?.onClick();
                       removeToast(toast.id);
                     }}
-                    className="flex items-center gap-1 text-xs font-body font-semibold text-amber hover:text-amber-light uppercase tracking-wider transition-colors shrink-0"
+                    className="flex items-center gap-1 text-xs font-body font-semibold text-aurum-500 hover:text-aurum-400 uppercase tracking-wider transition-colors shrink-0"
                   >
                     <Undo2 className="w-3 h-3" />
                     {toast.action.label}
                   </button>
                 )}
                 <button
-                  className="text-coffee/30 hover:text-coffee/60 dark:text-dark-muted/30 dark:hover:text-dark-muted/60 transition-colors shrink-0"
+                  className="text-nexus-400/30 hover:text-nexus-400/60 dark:text-cosmic-muted/30 dark:hover:text-cosmic-muted/60 transition-colors shrink-0"
                   onClick={(e) => {
                     e.stopPropagation();
                     removeToast(toast.id);

@@ -1,276 +1,180 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { generateRecommendations, getRecommendedPalette, generateCombos, type OutfitCombo } from "@/lib/ml/outfit-recommender";
+import { useState } from "react";
+import Link from "next/link";
 import { useAnalysisStore } from "@/store/analysis-store";
-import { OCCASIONS, UNDERTONES } from "@/lib/constants";
-import { Sparkles, Filter, Target, Shuffle, ArrowRight } from "lucide-react";
+import { motion } from "framer-motion";
+import { Lightbulb, ChevronRight, Sparkles, Shirt, Palette, Star, ArrowRight } from "lucide-react";
+
+interface RecCategory {
+  id: string;
+  title: string;
+  icon: typeof Shirt;
+  items: { title: string; desc: string; match: number }[];
+}
+
+const RECOMMENDATIONS: RecCategory[] = [
+  {
+    id: "colors",
+    title: "COLOR PALETTE",
+    icon: Palette,
+    items: [
+      { title: "Deep Navy Blazer", desc: "Core investment piece for your palette", match: 98 },
+      { title: "Burgundy Turtleneck", desc: "Complements your undertone perfectly", match: 95 },
+      { title: "Cream Silk Blouse", desc: "Adds softness while staying in range", match: 92 },
+      { title: "Forest Green Trousers", desc: "Strong accent piece for your profile", match: 90 },
+      { title: "Charcoal Wool Coat", desc: "Neutral layer with high versatility", match: 88 },
+    ],
+  },
+  {
+    id: "silhouettes",
+    title: "SILHOUETTES",
+    icon: Shirt,
+    items: [
+      { title: "Structured Shoulder Coat", desc: "Balances your proportions", match: 96 },
+      { title: "High-Waisted Wide Leg", desc: "Creates a lengthening effect", match: 93 },
+      { title: "Wrap Dress", desc: "Defines waist elegantly", match: 91 },
+      { title: "A-Line Midi Skirt", desc: "Flowing yet structured shape", match: 89 },
+      { title: "Cropped Blazer", desc: "Modern proportion for your frame", match: 86 },
+    ],
+  },
+  {
+    id: "essentials",
+    title: "WARDROBE ESSENTIALS",
+    icon: Star,
+    items: [
+      { title: "Italian Leather Belt", desc: "Defines waist; choose dark brown", match: 97 },
+      { title: "Silk Scarf", desc: "Adds face-framing color near features", match: 94 },
+      { title: "Minimalist Watch", desc: "Gold-tone case, neutral strap", match: 91 },
+      { title: "Structured Tote", desc: "Neutral investment carried daily", match: 88 },
+      { title: "Block-Heel Pumps", desc: "Nude tone to elongate legs", match: 85 },
+    ],
+  },
+  {
+    id: "grooming",
+    title: "GROOMING",
+    icon: Sparkles,
+    items: [
+      { title: "Hydrating Serum", desc: "For your skin type & climate", match: 99 },
+      { title: "Volumizing Texture Spray", desc: "Matches your hair density analysis", match: 93 },
+      { title: "SPF 50 Mineral Sunscreen", desc: "Essential for your skin health score", match: 92 },
+      { title: "Lightweight Moisturizer", desc: "Non-comedogenic for your skin type", match: 90 },
+      { title: "Tinted Lip Balm", desc: "Enhances natural lip color subtly", match: 88 },
+    ],
+  },
+];
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
+};
+
+const stagger = {
+  hidden: {}, show: { transition: { staggerChildren: 0.06 } },
+};
 
 export default function RecommendationsPage() {
-  const { faceResult, bodyResult } = useAnalysisStore();
-  const [selectedUndertone, setSelectedUndertone] = useState<"Warm" | "Cool" | "Neutral">(
-    faceResult?.undertone as "Warm" | "Cool" | "Neutral" || "Warm"
-  );
-  const [selectedOccasion, setSelectedOccasion] = useState<string>("");
+  const { pillarResult } = useAnalysisStore();
+  const [activeCategory, setActiveCategory] = useState("colors");
 
-  const recommendations = useMemo(
-    () => generateRecommendations(selectedUndertone, bodyResult?.bodyType || "Unknown", selectedOccasion || undefined, faceResult?.skinToneValue || undefined, faceResult?.facialShape),
-    [selectedUndertone, bodyResult, selectedOccasion, faceResult]
-  );
-
-  const combos = useMemo(
-    () => generateCombos(recommendations, 4),
-    [recommendations]
-  );
-
-  const palettes = getRecommendedPalette(selectedUndertone);
+  const activeRecs = RECOMMENDATIONS.find(r => r.id === activeCategory);
 
   return (
     <div className="space-y-8">
-      <div>
-        <span className="section-number">EST. MMXXIV // OUTFITS</span>
+      <motion.div variants={fadeUp} initial="hidden" animate="show">
+        <span className="section-number">EST. MMXXIV // RECOMMENDATIONS</span>
         <div className="flex items-center gap-3 mt-3 mb-2">
-          <Sparkles className="w-7 h-7 text-amber" />
-          <h1 className="text-4xl md:text-5xl font-display font-bold text-espresso tracking-tight">
-            OUTFIT <span className="text-gradient-gold">RECS.</span>
+          <Lightbulb className="w-7 h-7 text-[var(--accent-aurum)]" />
+          <h1 className="type-display text-[var(--text-primary)] tracking-tight">
+            CURATED <span className="text-gradient-aurum">RECOMMENDATIONS.</span>
           </h1>
         </div>
-        <p className="text-coffee font-body text-lg max-w-xl leading-relaxed">
-          AI-curated outfit picks based on your analysis results.
+        <p className="text-[var(--text-muted)] font-body type-subhead max-w-xl">
+          Data-driven suggestions based on your full analysis profile.
         </p>
-      </div>
+      </motion.div>
 
-      {/* Filters */}
-      <div className="bg-cream p-8 border border-tan vintage-border rounded-sm">
-        <div className="flex items-center gap-3 mb-6">
-          <Filter className="w-5 h-5 text-amber" />
-          <h3 className="text-lg font-display font-bold text-espresso tracking-wider">FILTERS</h3>
-        </div>
-
-        <div className="space-y-5">
-          <div>
-            <label className="text-xs font-body text-coffee tracking-widest uppercase mb-3 block font-semibold">Undertone</label>
-            <div className="flex gap-3">
-              {UNDERTONES.map((tone) => (
-                <button
-                  key={tone}
-                  onClick={() => setSelectedUndertone(tone)}
-                  className={`flex-1 py-3.5 text-base font-body font-semibold transition-all rounded-sm ${
-                    selectedUndertone === tone
-                      ? "bg-amber text-cream shadow-gold"
-                      : "bg-parchment text-espresso hover:bg-tan/20 border border-tan"
-                  }`}
-                >
-                  {tone}
+      {!pillarResult ? (
+        <motion.div variants={fadeUp} initial="hidden" animate="show" className="glass-card p-8 text-center space-y-4">
+          <Sparkles className="w-8 h-8 text-[var(--accent-aurum)] mx-auto" />
+          <p className="text-[var(--text-muted)] type-body">Complete your pillar analysis first to unlock personalized recommendations.</p>
+          <Link href="/dashboard/pillar-analysis" className="btn-nexus inline-flex items-center gap-2">
+            TAKE PILLAR ANALYSIS <ArrowRight className="w-4 h-4" />
+          </Link>
+        </motion.div>
+      ) : (
+        <>
+          <motion.div variants={fadeUp} initial="hidden" animate="show" className="flex gap-2 overflow-x-auto pb-2">
+            {RECOMMENDATIONS.map(cat => {
+              const Icon = cat.icon;
+              return (
+                <button key={cat.id} onClick={() => setActiveCategory(cat.id)}
+                  className={`flex items-center gap-2 px-4 py-2 border whitespace-nowrap transition-all ${
+                    activeCategory === cat.id
+                      ? "border-[var(--accent-aurum)] bg-[var(--accent-aurum)]/10 text-[var(--accent-aurum)]"
+                      : "border-[var(--border-primary)] text-[var(--text-muted)] hover:border-[var(--accent-aurum)]/40 card-nexus"
+                  }`}>
+                  <Icon className="w-4 h-4" />
+                  <span className="type-label">{cat.title}</span>
                 </button>
-              ))}
-            </div>
-          </div>
+              );
+            })}
+          </motion.div>
 
-          <div>
-            <label className="text-xs font-body text-coffee tracking-widest uppercase mb-3 block font-semibold">Occasion</label>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <button
-                onClick={() => setSelectedOccasion("")}
-                className={`py-3.5 text-base font-body font-semibold transition-all rounded-sm ${
-                  selectedOccasion === ""
-                    ? "bg-amber text-cream shadow-gold"
-                    : "bg-parchment text-espresso hover:bg-tan/20 border border-tan"
-                }`}
-              >
-                All
-              </button>
-              {OCCASIONS.map((occ) => (
-                <button
-                  key={occ.id}
-                  onClick={() => setSelectedOccasion(occ.id)}
-                  className={`py-3.5 text-base font-body font-semibold transition-all rounded-sm ${
-                    selectedOccasion === occ.id
-                      ? "bg-amber text-cream shadow-gold"
-                      : "bg-parchment text-espresso hover:bg-tan/20 border border-tan"
-                  }`}
-                >
-                  {occ.icon} {occ.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Your Color Palette */}
-      <div className="bg-cream p-8 border border-tan vintage-border rounded-sm">
-        <h3 className="text-lg font-display font-bold text-espresso tracking-wider mb-6">YOUR BEST COLORS</h3>
-        <div className="space-y-4">
-          {palettes.map((palette) => (
-            <div key={palette.name} className="bg-parchment p-4 border border-tan rounded-sm">
-              <span className="text-sm font-body font-bold text-espresso tracking-wider block mb-3">{palette.name}</span>
-              <div className="flex gap-3">
-                {palette.colors.map((color, i) => (
-                  <div key={i} className="flex-1 flex flex-col items-center gap-2">
-                    <div
-                      className="w-full aspect-square border border-tan shadow-sm rounded-sm"
-                      style={{ backgroundColor: color }}
-                    />
-                    <span className="text-[11px] text-coffee font-mono">{color}</span>
-                  </div>
+          {activeRecs && (
+            <motion.div variants={stagger} initial="hidden" animate="show" className="glass-card p-6">
+              <h3 className="type-label text-[var(--text-primary)] mb-5">{activeRecs.title}</h3>
+              <div className="space-y-3">
+                {activeRecs.items.map((item, i) => (
+                  <motion.div key={i} variants={fadeUp}
+                    className="flex items-center justify-between p-4 border border-[var(--border-primary)] bg-[var(--bg-tertiary)] card-nexus group hover:border-[var(--accent-aurum)]/40 transition-all">
+                    <div className="flex items-center gap-3">
+                      <span className="type-mono text-[var(--accent-aurum)] text-xs">{String(i + 1).padStart(2, "0")}</span>
+                      <div>
+                        <p className="type-body text-[var(--text-primary)]">{item.title}</p>
+                        <p className="text-xs text-[var(--text-muted)]">{item.desc}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-12 h-1 bg-[var(--bg-tertiary)] overflow-hidden">
+                        <div className="h-full bg-gradient-to-r from-[var(--accent-nexus)] to-[var(--accent-aurum)]" style={{ width: `${item.match}%` }} />
+                      </div>
+                      <span className="type-mono text-[var(--accent-aurum)] text-xs">{item.match}%</span>
+                      <ChevronRight className="w-4 h-4 text-[var(--text-muted)] group-hover:text-[var(--accent-aurum)] transition-colors" />
+                    </div>
+                  </motion.div>
                 ))}
               </div>
+            </motion.div>
+          )}
+
+          <motion.div variants={fadeUp} initial="hidden" animate="show" className="glass-card p-6">
+            <h3 className="type-label text-[var(--text-primary)] mb-3">ANALYSIS SUMMARY</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[
+                { label: "FACE", value: pillarResult.face || "N/A" },
+                { label: "BODY", value: pillarResult.body || "N/A" },
+                { label: "COLOR", value: pillarResult.color || "N/A" },
+                { label: "OVERALL", value: pillarResult.overall || "N/A" },
+              ].map(p => (
+                <div key={p.label} className="text-center p-3 border border-[var(--border-primary)] bg-[var(--bg-tertiary)] card-nexus">
+                  <p className="type-mono text-[var(--text-muted)]">{p.label}</p>
+                  <p className="type-display text-[var(--accent-aurum)] text-lg">{p.value}</p>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      </div>
+          </motion.div>
 
-      {/* Outfit Recommendations */}
-      <div className="space-y-6">
-        {recommendations.map((rec) => (
-          <div
-            key={rec.id}
-            className="bg-cream p-8 border border-tan hover:border-amber/40 transition-all duration-300 vintage-border rounded-sm card-hover hover:shadow-elegant"
-          >
-            <div className="flex flex-col md:flex-row gap-8">
-              {/* Mannequin Mini */}
-              <div className="flex-shrink-0">
-                <svg viewBox="0 0 120 300" width="120" height="300">
-                  <circle cx="60" cy="25" r="17" fill="#5C3D2E" stroke="#C4A882" strokeWidth="0.5" />
-                  <rect x="54" y="42" width="12" height="12" rx="2" fill="#5C3D2E" stroke="#C4A882" strokeWidth="0.5" />
-                  <path
-                    d="M33 54 L87 54 L84 56 L90 96 L92 144 L28 144 L30 96 L36 56 Z"
-                    fill={rec.colors[0]}
-                    rx="4"
-                  />
-                  <path d="M33 54 L18 60 L15 114 L21 115 L24 63 L36 56" fill={rec.colors[0]} />
-                  <path d="M87 54 L102 60 L105 114 L99 115 L96 63 L84 56" fill={rec.colors[0]} />
-                  <rect x="28" y="141" width="64" height="5" rx="1" fill="#8B7355" />
-                  <path
-                    d="M28 146 L31 228 L45 231 L57 156 L69 231 L83 228 L92 146 Z"
-                    fill={rec.colors[1]}
-                  />
-                  <path d="M31 226 L28 237 L48 239 L47 231" fill={rec.colors[2]} />
-                  <path d="M83 226 L86 237 L66 239 L67 231" fill={rec.colors[2]} />
-                </svg>
-              </div>
-
-              <div className="flex-1">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <h3 className="text-lg font-display font-bold text-espresso tracking-wider">{rec.name}</h3>
-                    <p className="text-sm text-coffee font-body mt-1">{rec.description}</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {rec.confidence && (
-                      <span className={`text-xs font-mono px-2 py-1 rounded-sm border ${
-                        rec.confidence >= 85 ? "bg-olive/10 text-olive border-olive/30" :
-                        rec.confidence >= 70 ? "bg-amber/10 text-amber border-amber/30" :
-                        "bg-parchment text-coffee border-tan"
-                      }`}>
-                        {rec.confidence}% match
-                      </span>
-                    )}
-                    <span className="text-xs font-body bg-parchment text-coffee px-3 py-1.5 tracking-wider uppercase border border-tan rounded-sm">
-                      {OCCASIONS.find((o) => o.id === rec.occasion)?.label || rec.occasion}
-                    </span>
-                  </div>
-                </div>
-
-                <p className="text-base text-espresso bg-parchment p-4 mb-4 font-body leading-relaxed border border-tan rounded-sm">
-                  {rec.reasoning}
-                </p>
-
-                <div>
-                  <h4 className="text-xs font-body text-coffee tracking-widest uppercase mb-3 font-semibold">Key Pieces</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {rec.keyPieces.map((piece, i) => (
-                      <span
-                        key={i}
-                        className="text-sm bg-parchment text-espresso px-3 py-1.5 font-body border border-tan rounded-sm"
-                      >
-                        {piece}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex gap-2 mt-4">
-                  {rec.colors.map((color, i) => (
-                    <div
-                      key={i}
-                      className="w-9 h-9 border border-tan rounded-sm shadow-sm"
-                      style={{ backgroundColor: color }}
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
+          <div className="flex gap-4">
+            <Link href="/dashboard/mannequin" className="btn-nexus flex-1 justify-center">
+              <Shirt className="w-4 h-4" /> TRY ON MANNEQUIN
+            </Link>
+            <Link href="/dashboard/community" className="btn-nexus flex-1 justify-center">
+              COMMUNITY <ArrowRight className="w-4 h-4" />
+            </Link>
           </div>
-        ))}
-      </div>
-
-      {/* Combo Builder */}
-      {combos.length > 0 && (
-        <div className="space-y-6">
-          <div className="flex items-center gap-3">
-            <Shuffle className="w-6 h-6 text-amber" />
-            <h2 className="text-2xl font-display font-bold text-espresso tracking-tight">
-              MIX &amp; MATCH <span className="text-gradient-gold">COMBOS.</span>
-            </h2>
-          </div>
-          <p className="text-coffee font-body text-sm max-w-xl">
-            Cross-pair pieces from different outfits to create fresh combinations.
-          </p>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {combos.map((combo) => (
-              <ComboCard key={combo.id} combo={combo} />
-            ))}
-          </div>
-        </div>
+        </>
       )}
-    </div>
-  );
-}
-
-function ComboCard({ combo }: { combo: OutfitCombo }) {
-  const pieces = [
-    { label: "TOP", ...combo.top },
-    { label: "BOTTOM", ...combo.bottom },
-    { label: "SHOES", ...combo.shoes },
-    { label: "ACCESSORY", ...combo.accessory },
-  ];
-
-  return (
-    <div className="bg-cream p-6 border border-tan hover:border-amber/40 transition-all duration-300 vintage-border rounded-sm">
-      <div className="flex items-center justify-between mb-4">
-        <h4 className="text-sm font-display font-bold text-espresso tracking-wider">{combo.name}</h4>
-        <div className="flex gap-1.5">
-          {combo.overallColor.slice(0, 4).map((c, i) => (
-            <div
-              key={i}
-              className="w-5 h-5 border border-tan rounded-sm"
-              style={{ backgroundColor: c }}
-            />
-          ))}
-        </div>
-      </div>
-
-      <div className="space-y-2.5">
-        {pieces.map((p) => (
-          <div key={p.label} className="flex items-center gap-3 bg-parchment px-3 py-2 rounded-sm">
-            <div
-              className="w-4 h-4 rounded-sm border border-tan flex-shrink-0"
-              style={{ backgroundColor: p.color }}
-            />
-            <div className="flex-1 min-w-0">
-              <span className="text-xs font-body text-coffee tracking-wider uppercase">{p.label}</span>
-              <p className="text-sm font-body text-espresso font-semibold truncate">{p.piece}</p>
-            </div>
-            <ArrowRight className="w-3 h-3 text-tan flex-shrink-0" />
-            <span className="text-[0.6rem] font-mono text-coffee truncate max-w-[120px]">{p.from}</span>
-          </div>
-        ))}
-      </div>
-
-      <p className="text-xs text-coffee font-body mt-3 leading-relaxed italic">{combo.reasoning}</p>
     </div>
   );
 }

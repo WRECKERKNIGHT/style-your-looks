@@ -85,27 +85,27 @@ export const COMMUNITY_CATEGORIES = [
 export const COLOR_PALETTES = {
   warm: {
     label: "Warm Tones",
-    colors: ["#D4A574", "#C89D7C", "#8B4513", "#CD853F", "#DAA520", "#B8860B", "#D2691E", "#A0522D"],
+    colors: ["#FF6B35", "#FF4500", "#FF8C00", "#FFA500", "#FFD700", "#FFB347", "#FF7F50", "#FF6347"],
   },
   cool: {
     label: "Cool Tones",
-    colors: ["#4682B4", "#5F9EA0", "#6A5ACD", "#7B68EE", "#9370DB", "#8FBC8F", "#20B2AA", "#48D1CC"],
+    colors: ["#00F5FF", "#00BFFF", "#1E90FF", "#4169E1", "#6A5ACD", "#9932CC", "#00CED1", "#00FA9A"],
   },
   neutral: {
     label: "Neutral Tones",
-    colors: ["#8B8682", "#A9A9A9", "#696969", "#778899", "#B0C4DE", "#D3D3D3", "#C0C0C0", "#DCDCDC"],
+    colors: ["#1A1A2E", "#16213E", "#0F3460", "#533483", "#E94560", "#0F0A2E", "#2A1B3D", "#44107A"],
   },
   earth: {
     label: "Earth Tones",
-    colors: ["#8B7355", "#6B4423", "#8B4513", "#A0522D", "#CD853F", "#DEB887", "#D2B48C", "#BC8F8F"],
+    colors: ["#2D1B00", "#4A2800", "#6B3A00", "#8B5E00", "#B8860B", "#DAA520", "#FFD700", "#FFC107"],
   },
   jewel: {
     label: "Jewel Tones",
-    colors: ["#8B0000", "#4B0082", "#006400", "#008B8B", "#B8860B", "#800080", "#0000CD", "#8B0000"],
+    colors: ["#FF004D", "#7000FF", "#00FF88", "#00D4FF", "#FFD700", "#FF0088", "#7B00FF", "#FF0055"],
   },
   pastel: {
     label: "Pastel Tones",
-    colors: ["#FFB6C1", "#FFDAB9", "#E6E6FA", "#F0FFF0", "#F5F5DC", "#FDF5E6", "#F0F8FF", "#FFF0F5"],
+    colors: ["#FF6B9D", "#C084FC", "#67E8F9", "#86EFAC", "#FDE047", "#FCA5A5", "#A5B4FC", "#F0ABFC"],
   },
 } as const;
 
