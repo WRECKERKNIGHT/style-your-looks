@@ -156,9 +156,7 @@ export default function MannequinPage() {
   const [undoStack, setUndoStack] = useState<Garment[][]>([]);
   const [redoStack, setRedoStack] = useState<Garment[][]>([]);
 
-  useEffect(() => { renderCanvas(); }, [pose, bodyType, garments]);
-
-  function renderCanvas() {
+  const renderCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const rect = canvas.parentElement?.getBoundingClientRect();
@@ -175,7 +173,9 @@ export default function MannequinPage() {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, w, h);
     drawMannequin(ctx, w, h, pose, bodyType, garments);
-  }
+  }, [pose, bodyType, garments]);
+
+  useEffect(() => { renderCanvas(); }, [renderCanvas]);
 
   const addGarment = useCallback((g: Garment) => {
     setUndoStack(prev => [...prev, garments]);

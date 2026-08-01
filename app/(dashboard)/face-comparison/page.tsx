@@ -49,11 +49,7 @@ export default function FaceComparisonPage() {
   const [splitPosition, setSplitPosition] = useState(50);
   const dragging = useRef(false);
 
-  useEffect(() => {
-    if (imageA && imageB) renderComparison();
-  }, [imageA, imageB, splitPosition]);
-
-  function renderComparison() {
+  const renderComparison = useCallback(() => {
     const canvas = canvasRef.current;
     const container = containerRef.current;
     if (!canvas || !container || !imageA || !imageB) return;
@@ -108,7 +104,11 @@ export default function FaceComparisonPage() {
       imgB.src = imageB;
     };
     imgA.src = imageA;
-  }
+  }, [imageA, imageB, splitPosition]);
+
+  useEffect(() => {
+    renderComparison();
+  }, [renderComparison]);
 
   const handleDragStart = useCallback(() => { dragging.current = true; }, []);
   const handleDragEnd = useCallback(() => { dragging.current = false; }, []);

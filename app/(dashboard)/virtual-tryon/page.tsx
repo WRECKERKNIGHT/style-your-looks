@@ -52,11 +52,7 @@ export default function VirtualTryOnPage() {
     }
   }, [uploadedImage]);
 
-  useEffect(() => {
-    renderCanvas();
-  }, [selectedItems, scale, faceResult]);
-
-  function renderCanvas() {
+  const renderCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     const img = imgRef.current;
     if (!canvas || !img) return;
@@ -99,7 +95,11 @@ export default function VirtualTryOnPage() {
       ctx.fillText(item.name, item.x + item.width / 2, item.y + item.height / 2);
       ctx.restore();
     });
-  }
+  }, [selectedItems]);
+
+  useEffect(() => {
+    renderCanvas();
+  }, [renderCanvas]);
 
   const addClothingItem = (item: ClothingItem) => {
     if (selectedItems.find((i) => i.id === item.id)) return;

@@ -91,9 +91,7 @@ export default function AccessoriesPage() {
     if (uploadedImage) { const img = new Image(); img.onload = () => { imgRef.current = img; }; img.src = uploadedImage; }
   }, [uploadedImage]);
 
-  useEffect(() => { renderCanvas(); }, [selectedGlasses, glassesY, glassesScale, faceResult]);
-
-  function renderCanvas() {
+  const renderCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     const img = imgRef.current;
     const container = containerRef.current;
@@ -120,7 +118,9 @@ export default function AccessoriesPage() {
       }
       drawGlasses(ctx, selectedGlasses, centerX, eyeY, eyeWidth);
     }
-  }
+  }, [selectedGlasses, glassesY, glassesScale, faceResult]);
+
+  useEffect(() => { renderCanvas(); }, [renderCanvas]);
 
   const downloadResult = () => {
     const canvas = canvasRef.current;

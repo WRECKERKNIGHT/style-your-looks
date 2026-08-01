@@ -82,9 +82,7 @@ export default function HairPreviewPage() {
     if (uploadedImage) { const img = new Image(); img.onload = () => { imgRef.current = img; }; img.src = uploadedImage; }
   }, [uploadedImage]);
 
-  useEffect(() => { renderCanvas(); }, [selectedColor, intensity, faceResult]);
-
-  function renderCanvas() {
+  const renderCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     const img = imgRef.current;
     const container = containerRef.current;
@@ -106,7 +104,9 @@ export default function HairPreviewPage() {
       applyHairColor(ctx, displayWidth, displayHeight, selectedColor, faceResult?.landmarks);
       ctx.globalAlpha = 1;
     }
-  }
+  }, [selectedColor, intensity, faceResult]);
+
+  useEffect(() => { renderCanvas(); }, [renderCanvas]);
 
   const downloadResult = () => {
     const canvas = canvasRef.current;

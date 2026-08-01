@@ -9,7 +9,6 @@ gsap.registerPlugin(ScrollTrigger);
 
 export function SmoothScroll({ children }: { children: React.ReactNode }) {
   const lenisRef = useRef<Lenis | null>(null);
-  const rafRef = useRef<number>(0);
 
   useEffect(() => {
     const lenis = new Lenis({
@@ -32,7 +31,6 @@ export function SmoothScroll({ children }: { children: React.ReactNode }) {
     return () => {
       lenis.destroy();
       gsap.ticker.remove(tickerCallback);
-      cancelAnimationFrame(rafRef.current);
     };
   }, []);
 
