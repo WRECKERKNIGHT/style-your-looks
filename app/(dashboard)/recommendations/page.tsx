@@ -74,10 +74,19 @@ const stagger = {
 };
 
 export default function RecommendationsPage() {
-  const { pillarResult } = useAnalysisStore();
+  const { faceResult, bodyResult, colorAnalysis } = useAnalysisStore();
   const [activeCategory, setActiveCategory] = useState("colors");
 
   const activeRecs = RECOMMENDATIONS.find(r => r.id === activeCategory);
+
+  const pillarResult = faceResult || bodyResult || colorAnalysis
+    ? {
+        face: faceResult?.overallRating || "N/A",
+        body: bodyResult?.bodyType || (bodyResult ? "Complete" : "N/A"),
+        color: colorAnalysis?.seasonalType || "N/A",
+        overall: faceResult ? faceResult.overallScore.toFixed(0) : "N/A",
+      }
+    : null;
 
   return (
     <div className="space-y-8">

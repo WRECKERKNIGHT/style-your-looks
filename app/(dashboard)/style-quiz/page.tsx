@@ -135,7 +135,7 @@ export default function StyleQuizPage() {
             className="glass-card p-8 text-center space-y-6 max-w-lg mx-auto">
             <Sparkles className="w-12 h-12 text-[var(--accent-aurum)] mx-auto" />
             <h2 className="type-display text-[var(--text-primary)]">FIND YOUR STYLE</h2>
-            <p className="text-[var(--text-muted)] type-body">Answer 5 quick questions and we'll identify your personal style archetype.</p>
+            <p className="text-[var(--text-muted)] type-body">Answer 5 quick questions and we&apos;ll identify your personal style archetype.</p>
             <button onClick={startQuiz} className="btn-nexus">START QUIZ</button>
           </motion.div>
         )}

@@ -133,7 +133,7 @@ export function StyleStreak() {
       <div className="flex items-center gap-2 mb-5">
         <Flame className="w-4 h-4 text-[#FFCB20]" />
         <span className="type-label text-[#FFCB20]">STYLE STREAK</span>
-        {!ready && <span className="type-mono text-[0.5rem] text-[#7C6BC4]">// SYNCING</span>}
+        {!ready && <span className="type-mono text-[0.5rem] text-[#7C6BC4]">{"// SYNCING"}</span>}
       </div>
 
       <div className="flex items-end justify-between mb-6">

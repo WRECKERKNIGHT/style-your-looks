@@ -8,7 +8,7 @@ import { ServiceWorkerRegister } from "@/components/shared/ServiceWorkerRegister
 import { SkipLink } from "@/components/shared/SkipLink";
 import { AutoSave } from "@/components/shared/AutoSave";
 import { JsonLd } from "@/components/shared/JsonLd";
-import { ClientDecorations } from "@/components/shared/ClientDecorations";
+import ClientDecorations from "@/components/shared/ClientDecorations";
 
 const baseUrl = "https://nexari.app";
 

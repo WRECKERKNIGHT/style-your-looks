@@ -6,10 +6,14 @@ import { Upload, Camera, X, ZoomIn, Maximize2 } from "lucide-react";
 import { useToastStore } from "./Toast";
 
 interface ImageUploaderProps {
-  onImageSelect: (file: File) => void;
+  onImageUpload?: (imageData: string) => void;
+  onImageSelect?: (file: File) => void;
+  onWebcamCapture?: (imageData: string) => void;
   className?: string;
   maxSizeMB?: number;
   aspectRatio?: "square" | "portrait" | "landscape" | "any";
+  label?: string;
+  accept?: "any" | "face" | "full-body";
 }
 
 const aspectRatioClasses = {
@@ -19,11 +23,20 @@ const aspectRatioClasses = {
   any: "",
 };
 
+const acceptMessages: Record<NonNullable<ImageUploaderProps["accept"]>, string> = {
+  any: "JPEG, PNG, WebP",
+  face: "Front-facing face photo",
+  "full-body": "Full-body photo",
+};
+
 export function ImageUploader({
+  onImageUpload,
   onImageSelect,
   className = "",
   maxSizeMB = 10,
   aspectRatio = "any",
+  label = "Drop your photo here",
+  accept = "any",
 }: ImageUploaderProps) {
   const [dragOver, setDragOver] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
@@ -52,16 +65,18 @@ export function ImageUploader({
 
       const reader = new FileReader();
       reader.onload = (e) => {
-        setPreview(e.target?.result as string);
+        const result = e.target?.result as string;
+        setPreview(result);
+        onImageUpload?.(result);
       };
       reader.readAsDataURL(file);
 
       setFileName(file.name);
       setFileSize(formatSize(file.size));
-      onImageSelect(file);
+      onImageSelect?.(file);
       addToast("Image loaded successfully", "success");
     },
-    [onImageSelect, maxSizeMB, addToast]
+    [onImageUpload, onImageSelect, maxSizeMB, addToast]
   );
 
   const handleDrop = useCallback(
@@ -129,10 +144,10 @@ export function ImageUploader({
 
             <div className="text-center">
               <p className="font-body text-base text-nexus-800 dark:text-white font-medium mb-1">
-                Drop your photo here
+                {label}
               </p>
               <p className="type-mono text-[0.6rem] text-nexus-400/40 dark:text-cosmic-muted/40 tracking-widest">
-                JPEG, PNG, WebP &bull; Max {maxSizeMB}MB
+                {acceptMessages[accept]} &bull; Max {maxSizeMB}MB
               </p>
             </div>
 

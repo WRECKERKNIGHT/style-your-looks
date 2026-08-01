@@ -116,7 +116,13 @@ export default function VirtualTryOnPage() {
 
     if (faceResult && faceResult.landmarks.length > 0) {
       const positions = clothingPositions(faceResult.landmarks, displayWidth, displayHeight);
-      pos = positions[item.category as keyof typeof positions] || positions.top;
+      const categoryBoxes: Record<ClothingItem["category"], { x: number; y: number; width: number; height: number }> = {
+        top: positions.top,
+        bottom: positions.bottom,
+        outerwear: positions.outerwear,
+        accessory: positions.accessory,
+      };
+      pos = categoryBoxes[item.category];
     } else {
       const isPortrait = displayHeight > displayWidth;
       if (isPortrait) {

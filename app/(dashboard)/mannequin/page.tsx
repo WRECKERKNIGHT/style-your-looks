@@ -45,13 +45,13 @@ function drawMannequin(ctx: CanvasRenderingContext2D, w: number, h: number, pose
   const waist = body === "hourglass" ? 50 : body === "rectangle" ? 65 : body === "inverted-triangle" ? 55 : body === "oval" ? 75 : 55;
   const hips = body === "triangle" ? 95 : body === "hourglass" ? 85 : 75;
   const height = 400;
+  const cp = pose === "three-quarter" ? 0.85 : 1;
 
   function drawBody() {
     ctx.strokeStyle = "rgba(108,43,217,0.25)";
     ctx.lineWidth = 1.5;
     ctx.fillStyle = "rgba(255,255,255,0.06)";
 
-    const cp = pose === "three-quarter" ? 0.85 : 1;
     ctx.beginPath();
     ctx.moveTo(-shoulders * cp, 20);
     ctx.quadraticCurveTo(-shoulders * cp, 40, -waist * cp, 120);
@@ -186,7 +186,7 @@ export default function MannequinPage() {
   const undo = useCallback(() => {
     if (undoStack.length === 0) return;
     const prev = undoStack[undoStack.length - 1];
-    setUndoStack(prev.slice(0, -1));
+    setUndoStack(s => s.slice(0, -1));
     setRedoStack(prev => [...prev, garments]);
     setGarments(prev);
   }, [undoStack, garments]);

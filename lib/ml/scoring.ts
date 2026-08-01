@@ -250,9 +250,9 @@ function analyzeBlendshapes(result: FaceLandmarkerResult): BlendshapeAnalysis {
 
   const headRotation = result.facialTransformationMatrixes?.[0];
   let headTilt = 0;
-  if (headRotation) {
-    const matrix = headRotation;
-    headTilt = Math.asin(-matrix[2][0]) * (180 / Math.PI);
+  if (headRotation && headRotation.data) {
+    const cols = headRotation.columns || 3;
+    headTilt = Math.asin(-headRotation.data[2 * cols + 0]) * (180 / Math.PI);
   }
 
   return {
