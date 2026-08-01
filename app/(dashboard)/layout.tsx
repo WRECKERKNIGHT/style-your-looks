@@ -29,17 +29,10 @@ import dynamic from "next/dynamic";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { PageTransition } from "@/components/shared/PageTransition";
 import { AutoSave } from "@/components/shared/AutoSave";
+import { InstallApp } from "@/components/shared/InstallApp";
 
-const CommandPalette = dynamic(
-  () => import("@/components/shared/CommandPalette"),
-  { ssr: false }
-);
-const KeyboardShortcutHint = dynamic(
-  () => import("@/components/shared/KeyboardShortcutHint"),
-  { ssr: false }
-);
 const OnboardingTour = dynamic(
-  () => import("@/components/shared/OnboardingTour"),
+  () => import("@/components/shared/OnboardingTour").then((m) => m.OnboardingTour),
   { ssr: false }
 );
 
@@ -144,6 +137,7 @@ export default function DashboardLayout({
 
         {/* Bottom */}
         <div className="p-5 border-t border-[#2A1B6B]/30 dark:border-[#1A0F3D]/50 space-y-3">
+          <InstallApp />
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-mono text-[#7C6BC4] dark:text-[#5B4BA4] tracking-widest uppercase">Theme</span>
             <ThemeToggle />
@@ -173,8 +167,6 @@ export default function DashboardLayout({
         </div>
       </main>
 
-      <CommandPalette />
-      <KeyboardShortcutHint />
       <OnboardingTour />
       <AutoSave />
     </div>
