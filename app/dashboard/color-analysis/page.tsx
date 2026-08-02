@@ -5,10 +5,10 @@ import { ImageUploader } from "@/components/shared/ImageUploader";
 import { useAnalysisStore } from "@/store/analysis-store";
 import { useMediaPipe } from "@/hooks/useMediaPipe";
 import { analyzeColorSeason, getSeasonEmoji, getColorHarmonyScore } from "@/lib/ml/color-analysis";
-import { motion, AnimatePresence } from "framer-motion";
+import { ProcessingOverlay } from "@/components/analysis/ProcessingOverlay";
+import { motion } from "framer-motion";
 import {
   Palette,
-  Loader2,
   AlertCircle,
   Droplets,
   Sun,
@@ -79,8 +79,6 @@ export default function ColorAnalysisPage() {
     setColorAnalysis,
     uploadedImage,
     setUploadedImage,
-    isAnalyzing,
-    analysisProgress,
   } = useAnalysisStore();
   const { analyzeFaceFromImage } = useMediaPipe();
   const [error, setError] = useState<string | null>(null);
@@ -216,31 +214,7 @@ export default function ColorAnalysisPage() {
             />
           </div>
 
-          <AnimatePresence>
-            {isAnalyzing && (
-              <motion.div
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -12 }}
-                className="glass-card p-8"
-              >
-                <div className="flex items-center gap-3 mb-5">
-                  <Loader2 className="w-5 h-5 text-[var(--accent-aurum)] animate-spin" />
-                  <span className="font-body font-bold text-[var(--text-primary)] text-sm">
-                    Analysing skin undertone for seasonal classification...
-                  </span>
-                </div>
-                <div className="h-2 bg-[var(--bg-tertiary)] overflow-hidden rounded-full">
-                  <motion.div
-                    className="h-full bg-gradient-to-r from-[var(--accent-nexus)] to-[var(--accent-aurum)] rounded-full"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${analysisProgress}%` }}
-                    transition={{ duration: 0.3 }}
-                  />
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          <ProcessingOverlay title="ANALYSING YOUR COLOR SEASON..." />
 
           {error && (
             <div className="flex items-center gap-3 bg-red-500/10 border border-red-500/30 p-5">

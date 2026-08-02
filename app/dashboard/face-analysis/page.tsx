@@ -4,12 +4,13 @@ import { useState, useCallback, useRef } from "react";
 import { ImageUploader } from "@/components/shared/ImageUploader";
 import { AnalysisResults } from "@/components/analysis/AnalysisResults";
 import { LandmarkOverlay } from "@/components/analysis/LandmarkOverlay";
+import { ProcessingOverlay } from "@/components/analysis/ProcessingOverlay";
 import { useAnalysisStore } from "@/store/analysis-store";
 import { useMediaPipe } from "@/hooks/useMediaPipe";
 import { useWebcam } from "@/hooks/useWebcam";
 import { useToast } from "@/components/shared/Toast";
-import { motion, AnimatePresence } from "framer-motion";
-import { ScanFace, Camera, Loader2, AlertCircle, Eye, Save, CheckCircle } from "lucide-react";
+import { motion } from "framer-motion";
+import { ScanFace, Camera, AlertCircle, Eye, Save, CheckCircle } from "lucide-react";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -17,7 +18,7 @@ const fadeUp = {
 };
 
 export default function FaceAnalysisPage() {
-  const { uploadedImage, setUploadedImage, isAnalyzing, analysisProgress, faceResult } =
+  const { uploadedImage, setUploadedImage, faceResult } =
     useAnalysisStore();
   const { analyzeFaceFromImage } = useMediaPipe();
   const { videoRef, isStreaming, startWebcam, stopWebcam, captureFrame } = useWebcam();
@@ -103,43 +104,7 @@ export default function FaceAnalysisPage() {
             </button>
           )}
 
-          <AnimatePresence>
-            {isAnalyzing && (
-              <motion.div
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -12 }}
-                className="glass-card p-8"
-              >
-                <div className="flex items-center gap-3 mb-5">
-                  <Loader2 className="w-5 h-5 text-[var(--accent-aurum)] animate-spin" />
-                  <span className="type-label text-[var(--text-primary)]">ANALYSING YOUR FACE...</span>
-                </div>
-                <div className="h-2 bg-[var(--bg-tertiary)] overflow-hidden rounded-full">
-                  <motion.div
-                    className="h-full bg-gradient-to-r from-[var(--accent-nexus)] to-[var(--accent-aurum)] rounded-full"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${analysisProgress}%` }}
-                    transition={{ duration: 0.3 }}
-                  />
-                </div>
-                <div className="mt-4 space-y-1">
-                  {analysisProgress < 20 && (
-                    <p className="text-sm text-[var(--text-muted)] font-body">Detecting face and initialising MediaPipe...</p>
-                  )}
-                  {analysisProgress >= 20 && analysisProgress < 50 && (
-                    <p className="text-sm text-[var(--text-muted)] font-body">Mapping 478 facial landmarks...</p>
-                  )}
-                  {analysisProgress >= 50 && analysisProgress < 80 && (
-                    <p className="text-sm text-[var(--text-muted)] font-body">Computing golden ratio, symmetry, and harmony metrics...</p>
-                  )}
-                  {analysisProgress >= 80 && (
-                    <p className="text-sm text-[var(--text-muted)] font-body">Generating grooming suggestions and style profile...</p>
-                  )}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          <ProcessingOverlay title="ANALYSING YOUR FACE..." />
 
           {error && (
             <motion.div
