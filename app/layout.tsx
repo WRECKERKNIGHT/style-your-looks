@@ -90,7 +90,9 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <JsonLd />
       </head>
-      <body className="antialiased grain vignette">
+      <body className="antialiased">
+        <div className="grain" aria-hidden="true" />
+        <div className="vignette" aria-hidden="true" />
         <ThemeInitializer />
         <SkipLink />
         <OfflineIndicator />

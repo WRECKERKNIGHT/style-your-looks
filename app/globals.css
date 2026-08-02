@@ -58,7 +58,7 @@ body {
   --accent-honey: #C8963E;
   --overlay: rgba(58, 42, 34, 0.25);
   --card-shadow: 0 2px 4px rgba(87, 58, 39, 0.04), 0 12px 32px -12px rgba(87, 58, 39, 0.14);
-  --grain-opacity: 0.5;
+  --grain-opacity: 0.06;
 
   --cosmic-base: 39 49% 93%;
   --cosmic-surface: 38 58% 96%;
@@ -84,7 +84,7 @@ body {
   --accent-honey: #DCB987;
   --overlay: rgba(0, 0, 0, 0.45);
   --card-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), 0 14px 40px -16px rgba(0, 0, 0, 0.5);
-  --grain-opacity: 0.65;
+  --grain-opacity: 0.09;
 
   --cosmic-base: 20 33% 11%;
   --cosmic-surface: 19 26% 14%;
