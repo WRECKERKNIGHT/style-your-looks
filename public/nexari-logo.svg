@@ -1,9 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 64">
   <defs>
     <linearGradient id="nexari-gradient" x1="0" y1="0" x2="280" y2="64" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#0F0A2E"/>
-      <stop offset="45%" stop-color="#6C2BD9"/>
-      <stop offset="100%" stop-color="#D4A017"/>
+      <stop offset="0%" stop-color="#3A2A22"/>
+      <stop offset="50%" stop-color="#8A5F3D"/>
+      <stop offset="100%" stop-color="#C8963E"/>
     </linearGradient>
   </defs>
   <g transform="translate(6, 16)" fill="url(#nexari-gradient)">

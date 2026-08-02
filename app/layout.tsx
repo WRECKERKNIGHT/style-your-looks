@@ -66,8 +66,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#0F0A2E" },
-    { media: "(prefers-color-scheme: dark)", color: "#0A0618" },
+    { media: "(prefers-color-scheme: light)", color: "#F6F0E5" },
+    { media: "(prefers-color-scheme: dark)", color: "#241812" },
   ],
   width: "device-width",
   initialScale: 1,
@@ -84,8 +84,8 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#0F0A2E" media="(prefers-color-scheme: light)" />
-        <meta name="theme-color" content="#0A0618" media="(prefers-color-scheme: dark)" />
+        <meta name="theme-color" content="#F6F0E5" media="(prefers-color-scheme: light)" />
+        <meta name="theme-color" content="#241812" media="(prefers-color-scheme: dark)" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <JsonLd />
