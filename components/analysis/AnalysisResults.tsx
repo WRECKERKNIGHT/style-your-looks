@@ -173,6 +173,19 @@ export function AnalysisResults() {
                   <p className="font-body font-bold text-nexus-800 dark:text-white text-lg mt-1">{faceResult.undertone}</p>
                 </div>
               </div>
+
+              <div className="flex flex-wrap gap-2">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 border border-aurum-500/30 bg-aurum-500/5 text-aurum-500 text-xs font-mono tracking-wider rounded-full">
+                  <span className="w-1.5 h-1.5 rounded-full bg-aurum-500 animate-pulse" />
+                  VERIFIED GEOMETRY
+                </span>
+                <span className="inline-flex items-center px-3 py-1 border border-light-border dark:border-cosmic-border bg-light-base dark:bg-cosmic-elevated text-nexus-400 dark:text-cosmic-muted text-xs font-mono tracking-wider rounded-full">
+                  {faceResult.analysisConfidence}% CONFIDENCE
+                </span>
+                <span className="inline-flex items-center px-3 py-1 border border-light-border dark:border-cosmic-border bg-light-base dark:bg-cosmic-elevated text-nexus-400 dark:text-cosmic-muted text-xs font-mono tracking-wider rounded-full">
+                  {faceResult.photoCount} {faceResult.photoCount === 1 ? "PHOTO" : "PHOTOS"} ANALYSED
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -285,14 +298,19 @@ export function AnalysisResults() {
         </p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[
-            { label: "Photo Quality", value: faceResult.photoQualityScore, hint: "/10" },
-            { label: "Cross-Photo Consistency", value: faceResult.consistencyScore, hint: "/10" },
-            { label: "Analysis Confidence", value: faceResult.analysisConfidence, hint: "%" },
+            { label: "Photo Quality", value: faceResult.photoQualityScore, hint: "/10", decimals: 1 },
+            { label: "Cross-Photo Consistency", value: faceResult.consistencyScore, hint: "/10", decimals: 1 },
+            { label: "Analysis Confidence", value: faceResult.analysisConfidence, hint: "%", decimals: 0 },
           ].map((item) => (
             <div key={item.label} className="bg-light-base dark:bg-cosmic-elevated p-5 border border-light-border dark:border-cosmic-border rounded-sm">
               <span className="text-xs font-body text-nexus-400 dark:text-cosmic-muted tracking-wider uppercase">{item.label}</span>
               <div className="flex items-baseline gap-1 mt-1">
-                <p className="font-body font-bold text-aurum-500 text-3xl">{item.value}</p>
+                <AnimatedCounter
+                  target={item.value}
+                  duration={1.2}
+                  decimals={item.decimals}
+                  className="font-body font-bold text-aurum-500 text-3xl"
+                />
                 <span className="text-xs text-nexus-400 dark:text-cosmic-muted font-mono">{item.hint}</span>
               </div>
               <div className="h-2 bg-light-border dark:bg-cosmic-border rounded-full mt-3 overflow-hidden">
