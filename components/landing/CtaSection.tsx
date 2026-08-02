@@ -3,6 +3,7 @@
 import { useRef } from "react";
 import { motion, useScroll, useTransform, useSpring } from "framer-motion";
 import Link from "next/link";
+import { MagneticButton } from "@/components/shared/MagneticButton";
 
 export function CtaSection() {
   const ref = useRef<HTMLDivElement>(null);
@@ -40,6 +41,27 @@ export function CtaSection() {
           </h2>
         </motion.div>
 
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 24, repeat: Infinity, ease: "linear" }}
+          aria-hidden
+          className="hidden md:block absolute top-16 right-16 lg:right-32 w-28 h-28"
+        >
+          <svg viewBox="0 0 100 100" className="w-full h-full">
+            <defs>
+              <path id="cta-circle" d="M 50,50 m -38,0 a 38,38 0 1,1 76,0 a 38,38 0 1,1 -76,0" />
+            </defs>
+            <text className="fill-nexus-300/40" style={{ fontSize: "8.5px", letterSpacing: "2.5px" }}>
+              <textPath href="#cta-circle">
+                FREE FOREVER • ON-DEVICE • PRIVATE •
+              </textPath>
+            </text>
+          </svg>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-3 h-3 rounded-full bg-aurum-400/80 glow-pulse" />
+          </div>
+        </motion.div>
+
         <motion.p
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -58,17 +80,19 @@ export function CtaSection() {
           transition={{ duration: 0.8, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
           className="mt-14"
         >
-          <Link href="/signup" className="btn-nexus text-sm py-4 px-10">
-            GET STARTED FREE
-            <span
-              className="text-xl inline-block"
-              style={{
-                animation: "none",
-              }}
-            >
-              &rarr;
-            </span>
-          </Link>
+          <MagneticButton>
+            <Link href="/signup" className="btn-nexus text-sm py-4 px-10">
+              GET STARTED FREE
+              <span
+                className="text-xl inline-block"
+                style={{
+                  animation: "none",
+                }}
+              >
+                &rarr;
+              </span>
+            </Link>
+          </MagneticButton>
         </motion.div>
 
         <motion.div
