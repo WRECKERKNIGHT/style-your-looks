@@ -1,8 +1,9 @@
 "use client";
 
 import { useRef } from "react";
-import { motion, useInView } from "framer-motion";
+import { motion, useInView, useScroll, useTransform, useSpring } from "framer-motion";
 import { Camera, Cpu, Shirt } from "lucide-react";
+import { KineticHeadline } from "./KineticHeadline";
 
 const steps = [
   {
@@ -48,6 +49,12 @@ export function HowItWorksSection() {
   const sectionRef = useRef<HTMLDivElement>(null);
   const isInView = useInView(sectionRef, { once: true, amount: 0.2 });
 
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ["start 0.8", "end 0.6"],
+  });
+  const lineScaleY = useSpring(scrollYProgress, { stiffness: 80, damping: 26 });
+
   return (
     <section ref={sectionRef} className="relative py-32 md:py-44 overflow-hidden bg-cosmic-base" id="how-it-works">
       <div className="absolute inset-0 grid-bg opacity-20" />
@@ -64,14 +71,15 @@ export function HowItWorksSection() {
             <div className="section-divider" />
             <span className="section-number">02 // Process</span>
           </div>
-          <h2 className="type-display text-white">
-            HOW IT{" "}
-            <span className="text-gradient-aurum italic">WORKS.</span>
-          </h2>
+          <KineticHeadline text="HOW IT WORKS." className="type-display text-white" />
         </motion.div>
 
         <div className="relative">
-          <div className="absolute top-24 left-[2.25rem] md:left-[2.75rem] bottom-24 w-px bg-gradient-to-b from-nexus-400/40 via-aurum-400/20 to-nexus-400/40 hidden md:block" />
+          <div className="absolute top-24 left-[2.25rem] md:left-[2.75rem] bottom-24 w-px bg-nexus-800/40 hidden md:block" />
+          <motion.div
+            style={{ scaleY: lineScaleY }}
+            className="absolute top-24 left-[2.25rem] md:left-[2.75rem] bottom-24 w-px origin-top bg-gradient-to-b from-aurum-400 via-nexus-400 to-aurum-400 hidden md:block shadow-[0_0_12px_rgba(108,43,217,0.5)]"
+          />
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
             {steps.map((step, index) => (
@@ -84,10 +92,11 @@ export function HowItWorksSection() {
                 className="relative"
               >
                 <div className="glass-card rounded-xl p-8 md:p-10 h-full relative overflow-hidden group">
-                  <div className="absolute -top-10 -right-10 w-24 h-24 rounded-full bg-gradient-nexus opacity-[0.06]" />
+                  <div className="absolute -top-10 -right-10 w-24 h-24 rounded-full bg-gradient-nexus opacity-[0.06] group-hover:opacity-[0.12] transition-opacity duration-700" />
+                  <div className="absolute -bottom-16 -left-16 w-40 h-40 rounded-full bg-nexus-400/0 blur-[60px] group-hover:bg-nexus-400/10 transition-colors duration-700" />
 
                   <div className="relative z-10">
-                    <div className="w-14 h-14 rounded-full bg-gradient-nexus flex items-center justify-center mb-6 shadow-nexus">
+                    <div className="w-14 h-14 rounded-full bg-gradient-nexus flex items-center justify-center mb-6 shadow-nexus group-hover:scale-110 group-hover:rotate-6 transition-transform duration-500">
                       <step.icon className="w-6 h-6 text-white" />
                     </div>
 
@@ -114,8 +123,8 @@ export function HowItWorksSection() {
 
                 {index < steps.length - 1 && (
                   <div className="hidden md:flex absolute top-1/2 -right-6 translate-x-1/2 z-20">
-                    <div className="w-10 h-10 rounded-full bg-cosmic-surface border border-nexus-400/30 flex items-center justify-center">
-                      <span className="text-nexus-300 text-sm">&rarr;</span>
+                    <div className="w-10 h-10 rounded-full bg-cosmic-surface border border-nexus-400/30 flex items-center justify-center group-hover:border-aurum-400/50 transition-colors">
+                      <span className="text-nexus-300 text-sm group-hover:text-aurum-400 transition-colors">&rarr;</span>
                     </div>
                   </div>
                 )}
