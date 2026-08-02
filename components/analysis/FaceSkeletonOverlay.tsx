@@ -165,6 +165,16 @@ export function FaceSkeletonOverlay({
       className={`absolute inset-0 pointer-events-none overflow-hidden ${className || ""}`}
       style={{ width, height }}
     >
+      {animate && (
+        <motion.div
+          className="absolute inset-0"
+          style={{
+            background:
+              "repeating-linear-gradient(90deg, rgba(232,200,138,0.04) 0px, rgba(232,200,138,0.04) 1px, transparent 1px, transparent 36px)",
+          }}
+        />
+      )}
+
       <svg
         viewBox={`0 0 ${width} ${height}`}
         width={width}
@@ -179,7 +189,41 @@ export function FaceSkeletonOverlay({
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
+          <linearGradient id="scan-gradient" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stopColor="rgba(232,200,138,0)" />
+            <stop offset="0.5" stopColor="rgba(232,200,138,0.9)" />
+            <stop offset="1" stopColor="rgba(232,200,138,0)" />
+          </linearGradient>
         </defs>
+
+        {animate && (
+          <motion.rect
+            x={0}
+            y={0}
+            width={width}
+            height={height}
+            fill="none"
+            stroke="rgba(200,150,62,0.5)"
+            strokeWidth={1}
+          />
+        )}
+
+        {animate && (
+          <motion.g
+            initial={{ y: 0, opacity: 0.9 }}
+            animate={{ y: height - 24, opacity: 0.2 }}
+            transition={{ duration: 3.2, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }}
+          >
+            <rect
+              x={0}
+              y={0}
+              width={width}
+              height={2}
+              fill="url(#scan-gradient)"
+              opacity={0.7}
+            />
+          </motion.g>
+        )}
 
         <g filter="url(#skel-glow)">
           {REGIONS.map((region) => {
@@ -343,6 +387,24 @@ export function FaceSkeletonOverlay({
             SHAPE: {shapeLabel}
           </span>
         </motion.div>
+      )}
+
+      {animate && (
+        <div className="absolute top-3 left-3 flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "#E8C88A" }} />
+          <span className="text-[0.55rem] font-mono tracking-[0.3em] text-[#E8C88A]">
+            FACEIQ LIVE TRACKING
+          </span>
+        </div>
+      )}
+
+      {animate && (
+        <>
+          <div className="absolute top-2 left-2 w-8 h-8 border-t-2 border-l-2" style={{ borderColor: "rgba(200,150,62,0.7)" }} />
+          <div className="absolute top-2 right-2 w-8 h-8 border-t-2 border-r-2" style={{ borderColor: "rgba(200,150,62,0.7)" }} />
+          <div className="absolute bottom-2 left-2 w-8 h-8 border-b-2 border-l-2" style={{ borderColor: "rgba(200,150,62,0.7)" }} />
+          <div className="absolute bottom-2 right-2 w-8 h-8 border-b-2 border-r-2" style={{ borderColor: "rgba(200,150,62,0.7)" }} />
+        </>
       )}
 
       {measurements?.fwhr !== undefined && (
