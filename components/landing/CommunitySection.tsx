@@ -4,6 +4,8 @@ import { useRef } from "react";
 import { motion, useInView } from "framer-motion";
 import { Star, MessageCircle, TrendingUp } from "lucide-react";
 import { StatsCounter } from "./StatsCounter";
+import { SpotlightCard } from "@/components/shared/SpotlightCard";
+import { KineticHeadline } from "./KineticHeadline";
 
 const posts = [
   {
@@ -65,21 +67,20 @@ export function CommunitySection() {
             <div className="section-divider" />
             <span className="section-number">04 // Community</span>
           </div>
-          <h2 className="type-display text-white">
-            HONEST
-            <br />
-            <span className="text-gradient-aurum italic">FEEDBACK.</span>
-          </h2>
+          <KineticHeadline text="HONEST FEEDBACK." className="type-display text-white" />
           <p className="mt-5 text-nexus-200/60 max-w-md font-body text-base leading-relaxed">
             Real people. Real ratings. No filters, no fakery. The kind of
             feedback your friends won&apos;t give you.
           </p>
         </motion.div>
 
-        <div ref={marqueeRef} className="marquee-container mb-16 md:mb-20 py-5 border-y border-nexus-800/30">
+        <div ref={marqueeRef} className="marquee-container mb-16 md:mb-20 py-5 border-y border-nexus-800/30 overflow-hidden">
           <div
             className="marquee-content"
-            style={{ animationPlayState: marqueeInView ? "running" : "paused" }}
+            style={{
+              animationPlayState: marqueeInView ? "running" : "paused",
+              animationDirection: "reverse",
+            }}
           >
             {[...Array(2)].map((_, i) => (
               <div key={i} className="flex items-center gap-10 mr-10">
@@ -112,6 +113,7 @@ export function CommunitySection() {
               }}
               whileHover={{ y: -6, transition: { duration: 0.3 } }}
             >
+              <SpotlightCard className="h-full rounded-xl">
               <div className="flex items-center justify-between mb-5">
                 <span className="type-mono text-[0.55rem] text-aurum-400 tracking-widest bg-aurum-400/10 px-2.5 py-1 rounded">
                   {post.tag}
@@ -162,6 +164,7 @@ export function CommunitySection() {
                   {post.name}
                 </span>
               </div>
+              </SpotlightCard>
             </motion.div>
           ))}
         </div>
