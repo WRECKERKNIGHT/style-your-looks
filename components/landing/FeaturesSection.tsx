@@ -11,6 +11,8 @@ import {
   Sparkles,
   Layers,
 } from "lucide-react";
+import { SpotlightCard } from "@/components/shared/SpotlightCard";
+import { KineticHeadline } from "./KineticHeadline";
 
 const features = [
   {
@@ -95,10 +97,10 @@ export function FeaturesSection() {
             <div className="section-divider" />
             <span className="section-number">01 // Features</span>
           </div>
-          <h2 className="type-display text-white">
-            WHAT WE{" "}
-            <span className="text-gradient-aurum italic">BUILD.</span>
-          </h2>
+          <KineticHeadline
+            text="WHAT WE BUILD."
+            className="type-display text-white"
+          />
         </motion.div>
 
         <motion.div
@@ -111,26 +113,28 @@ export function FeaturesSection() {
             <motion.div
               key={feature.title}
               variants={cardVariants}
-              className="card-nexus group relative overflow-hidden rounded-xl"
+              className="group"
             >
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-nexus opacity-[0.03] rounded-bl-full" />
-              <div className="relative z-10 p-8">
-                <div className="w-12 h-12 rounded-full bg-gradient-nexus flex items-center justify-center mb-5 shadow-nexus">
-                  <feature.icon className="w-5 h-5 text-white" />
+              <SpotlightCard className="h-full card-nexus relative overflow-hidden rounded-xl">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-nexus opacity-[0.03] rounded-bl-full" />
+                <div className="relative z-10 p-8">
+                  <div className="w-12 h-12 rounded-full bg-gradient-nexus flex items-center justify-center mb-5 shadow-nexus group-hover:scale-110 transition-transform duration-500">
+                    <feature.icon className="w-5 h-5 text-white" />
+                  </div>
+                  <h3 className="type-heading text-white mb-3 text-xl">
+                    {feature.title}
+                  </h3>
+                  <p className="text-sm text-nexus-200/60 font-body leading-relaxed">
+                    {feature.description}
+                  </p>
+                  <div className="mt-6 pt-4 border-t border-nexus-800/30 flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-aurum-400/60" />
+                    <span className="type-mono text-[0.55rem] text-nexus-300/40 tracking-widest group-hover:text-nexus-300/70 transition-colors">
+                      EXPLORE &rarr;
+                    </span>
+                  </div>
                 </div>
-                <h3 className="type-heading text-white mb-3 text-xl">
-                  {feature.title}
-                </h3>
-                <p className="text-sm text-nexus-200/60 font-body leading-relaxed">
-                  {feature.description}
-                </p>
-                <div className="mt-6 pt-4 border-t border-nexus-800/30 flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-aurum-400/60" />
-                  <span className="type-mono text-[0.55rem] text-nexus-300/40 tracking-widest group-hover:text-nexus-300/70 transition-colors">
-                    EXPLORE &rarr;
-                  </span>
-                </div>
-              </div>
+              </SpotlightCard>
             </motion.div>
           ))}
         </motion.div>
