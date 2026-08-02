@@ -4,6 +4,8 @@ import { Nav } from "./Nav";
 import { HeroSection } from "./HeroSection";
 import { FeaturesSection } from "./FeaturesSection";
 import { HowItWorksSection } from "./HowItWorksSection";
+import { HorizontalPipeline } from "./HorizontalPipeline";
+import { StorySection } from "./StorySection";
 import { MannequinSection } from "./MannequinSection";
 import { CommunitySection } from "./CommunitySection";
 import { CtaSection } from "./CtaSection";
@@ -16,6 +18,8 @@ export function Hero() {
       <HeroSection />
       <FeaturesSection />
       <HowItWorksSection />
+      <HorizontalPipeline />
+      <StorySection />
       <MannequinSection />
       <CommunitySection />
       <CtaSection />

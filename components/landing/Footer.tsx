@@ -1,5 +1,7 @@
 "use client";
 
+import { useRef } from "react";
+import { motion, useScroll, useTransform, useSpring } from "framer-motion";
 import Link from "next/link";
 
 const productLinks = [
@@ -24,8 +26,25 @@ const companyLinks = [
 ];
 
 export function Footer() {
+  const ref = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start end", "end end"],
+  });
+  const watermarkY = useSpring(useTransform(scrollYProgress, [0, 1], [120, 0]), {
+    stiffness: 80,
+    damping: 24,
+  });
+
   return (
-    <footer className="bg-cosmic-base border-t border-nexus-800/30">
+    <footer ref={ref} className="bg-cosmic-base border-t border-nexus-800/30 relative overflow-hidden">
+      <motion.div
+        aria-hidden
+        style={{ y: watermarkY }}
+        className="pointer-events-none absolute -bottom-16 left-1/2 -translate-x-1/2 text-[24vw] font-display font-black text-white/[0.02] tracking-tight whitespace-nowrap select-none"
+      >
+        NEXARI
+      </motion.div>
       <div className="max-w-[1400px] mx-auto px-8 md:px-16 lg:px-24 py-20">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-12">
           <div className="lg:col-span-2 space-y-5">
