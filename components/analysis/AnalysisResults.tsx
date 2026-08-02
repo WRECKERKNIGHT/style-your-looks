@@ -29,6 +29,12 @@ import {
   Award,
 } from "lucide-react";
 
+function ordinalSuffix(n: number) {
+  const s = ["th", "st", "nd", "rd"];
+  const v = n % 100;
+  return s[(v - 20) % 10] || s[v] || s[0];
+}
+
 function CollapsibleSection({
   icon: Icon,
   title,
@@ -224,39 +230,81 @@ export function AnalysisResults() {
 
       <CollapsibleSection icon={Smile} title="EXPRESSION ANALYSIS" badge={faceResult.blendshapes.emotion}>
         <p className="text-nexus-400 dark:text-cosmic-muted font-body text-sm mb-6 leading-relaxed">
-          Detected from 478-point facial blendshapes during analysis.
+          Detected live from 478-point facial blendshapes during analysis.
         </p>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          <div className="bg-light-base dark:bg-cosmic-elevated p-5 border border-light-border dark:border-cosmic-border rounded-sm">
+          <div className="bg-light-base dark:bg-cosmic-elevated p-5 border border-aurum-500/20 rounded-sm relative overflow-hidden">
+            <span className="absolute top-3 right-3 flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-aurum-500 animate-pulse" />
+              <span className="text-[0.55rem] font-mono text-aurum-500 tracking-widest">LIVE</span>
+            </span>
             <span className="text-xs font-body text-nexus-400 dark:text-cosmic-muted tracking-wider uppercase">Emotion</span>
             <p className="font-body font-bold text-aurum-500 text-xl mt-1">{faceResult.blendshapes.emotion}</p>
-            <span className="text-xs text-nexus-400 dark:text-cosmic-muted font-mono">{Math.round(faceResult.blendshapes.emotionConfidence * 100)}% confidence</span>
+            <div className="h-2 bg-light-border dark:bg-cosmic-border rounded-full mt-2 overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }}
+                whileInView={{ width: `${faceResult.blendshapes.emotionConfidence * 100}%` }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                className="h-full rounded-full bg-gradient-to-r from-aurum-600 to-aurum-400"
+              />
+            </div>
+            <span className="text-xs text-nexus-400 dark:text-cosmic-muted font-mono">
+              {Math.round(faceResult.blendshapes.emotionConfidence * 100)}% confidence
+            </span>
           </div>
           {[
             { label: "Smile", value: faceResult.blendshapes.smileIntensity, color: "bg-aurum-500" },
             { label: "Eye Openness", value: faceResult.blendshapes.eyeOpenness, color: "bg-nexus-400" },
             { label: "Brow Raise", value: faceResult.blendshapes.browRaise, color: "bg-aurum-600" },
             { label: "Mouth Openness", value: faceResult.blendshapes.mouthOpenness, color: "bg-nexus-500" },
-          ].map((item) => (
+          ].map((item, i) => (
             <div key={item.label} className="bg-light-base dark:bg-cosmic-elevated p-5 border border-light-border dark:border-cosmic-border rounded-sm">
               <span className="text-xs font-body text-nexus-400 dark:text-cosmic-muted tracking-wider uppercase">{item.label}</span>
               <p className="font-body font-bold text-nexus-800 dark:text-white text-xl mt-1">{Math.round(item.value * 100)}%</p>
               <div className="h-2 bg-light-border dark:bg-cosmic-border rounded-full mt-2 overflow-hidden">
-                <div className={`h-full ${item.color} rounded-full`} style={{ width: `${item.value * 100}%` }} />
+                <motion.div
+                  initial={{ width: 0 }}
+                  whileInView={{ width: `${item.value * 100}%` }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.8, delay: 0.15 + i * 0.1, ease: [0.16, 1, 0.3, 1] }}
+                  className={`h-full ${item.color} rounded-full`}
+                />
               </div>
             </div>
           ))}
           <div className="bg-light-base dark:bg-cosmic-elevated p-5 border border-light-border dark:border-cosmic-border rounded-sm">
             <span className="text-xs font-body text-nexus-400 dark:text-cosmic-muted tracking-wider uppercase">Head Tilt</span>
             <p className="font-body font-bold text-nexus-800 dark:text-white text-xl mt-1">{faceResult.blendshapes.headTilt}deg</p>
+            <span className="text-xs text-nexus-400 dark:text-cosmic-muted font-mono">pose correction applied</span>
           </div>
         </div>
       </CollapsibleSection>
 
       <CollapsibleSection icon={Eye} title="PERCENTILE RANKINGS" defaultOpen>
-        <p className="text-nexus-400 dark:text-cosmic-muted font-body text-sm mb-6 leading-relaxed">
-          How your scores compare to the general population distribution.
-        </p>
+        <div className="flex flex-col md:flex-row items-center gap-6 mb-6">
+          <div className="text-center shrink-0">
+            <div className="flex items-baseline justify-center gap-1">
+              <AnimatedCounter
+                target={faceResult.percentile.overall}
+                duration={1.4}
+                decimals={0}
+                className="text-5xl font-body font-bold text-gradient-aurum"
+              />
+              <span className="text-3xl font-body font-bold text-aurum-500">
+                {ordinalSuffix(faceResult.percentile.overall)}
+              </span>
+            </div>
+            <span className="type-mono text-[0.6rem] text-nexus-400/50 dark:text-cosmic-muted/50 tracking-widest block mt-1">POPULATION PERCENTILE</span>
+            <span className="inline-block mt-2 px-3 py-1 bg-aurum-500 text-white text-xs font-mono tracking-wider rounded-full">
+              {faceResult.percentile.bracket}
+            </span>
+          </div>
+          <div className="flex-1 text-sm text-nexus-400 dark:text-cosmic-muted font-body leading-relaxed">
+            {faceResult.percentile.comparisonText} Percentiles compare your geometry against a
+            reference distribution of analysed faces. {faceResult.percentile.overall >= 85 ? "You rank in an elite tier — striking bone structure." : faceResult.percentile.overall >= 50 ? "You sit in the upper half — strong, balanced features." : "Targeted styling moves these bars fastest."}
+          </div>
+        </div>
         <div className="space-y-3">
           <PercentileBar label="Overall" percentile={faceResult.percentile.overall} />
           <PercentileBar label="Symmetry" percentile={faceResult.percentile.symmetry} />
