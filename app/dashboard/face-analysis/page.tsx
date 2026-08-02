@@ -447,7 +447,7 @@ export default function FaceAnalysisPage() {
             </motion.div>
           )}
 
-          {faceResult.landmarks.length > 0 && (
+          {faceResult.landmarks.length > 0 && uploadedImage && (
             <TryItOnPanel image={uploadedImage} landmarks={faceResult.landmarks} />
           )}
 

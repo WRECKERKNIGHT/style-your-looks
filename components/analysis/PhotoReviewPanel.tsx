@@ -31,7 +31,7 @@ export function PhotoReviewPanel({
           PHOTO REVIEW
         </span>
         <span className="type-mono text-[0.6rem] text-[var(--text-muted)] tracking-widest">
-          {usedCount} USED · {rejected.size} REJECTED
+          {usedCount} USED · {rejected.length} REJECTED
         </span>
       </div>
 
@@ -86,7 +86,7 @@ export function PhotoReviewPanel({
         })}
       </div>
 
-      {rejected.size > 0 && (
+      {rejected.length > 0 && (
         <p className="text-xs text-[var(--text-muted)] font-body mt-4 leading-relaxed">
           Rejected photos were excluded from scoring — they would skew the geometry. Tap{" "}
           <span className="text-[var(--text-primary)] font-bold">Analyse Another Set</span> to
