@@ -729,6 +729,8 @@ export function AnalysisResults() {
             ))}
         </div>
       </CollapsibleSection>
+
+      {faceResult.strengths.length > 0 && (
         <CollapsibleSection icon={TrendingUp} title="YOUR STRENGTHS" badge={`${faceResult.strengths.length} found`}>
           <div className="space-y-3">
             {faceResult.strengths.map((strength, i) => (

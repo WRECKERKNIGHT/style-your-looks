@@ -54,8 +54,8 @@ export function MetricRadar({ metrics, size = 420, maxScore = 10 }: MetricRadarP
       return `${p.x.toFixed(1)},${p.y.toFixed(1)}`;
     });
     return pts.join(" ");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [metrics, maxScore, w, h, cx, cy, radius]);
-
   return (
     <svg
       viewBox={`0 0 ${w} ${h}`}
