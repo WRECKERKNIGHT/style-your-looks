@@ -14,11 +14,34 @@ const navLinks = [
 export function Nav() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [active, setActive] = useState("");
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    const sections = navLinks
+      .map((link) => document.getElementById(link.href.slice(1)))
+      .filter((el): el is HTMLElement => Boolean(el));
+
+    if (!sections.length) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActive(`#${entry.target.id}`);
+          }
+        });
+      },
+      { rootMargin: "-40% 0px -55% 0px" }
+    );
+
+    sections.forEach((section) => observer.observe(section));
+    return () => observer.disconnect();
   }, []);
 
   return (
@@ -43,16 +66,36 @@ export function Nav() {
           </Link>
 
           <div className="hidden md:flex items-center gap-10">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="relative font-body text-[0.8rem] font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors duration-300 tracking-wide py-1 group"
-              >
-                {link.label}
-                <span className="absolute -bottom-0.5 left-0 right-0 h-px bg-[color-mix(in_srgb,var(--accent-caramel)_60%,transparent)] scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left" />
-              </Link>
-            ))}
+            {navLinks.map((link) => {
+              const isActive = active === link.href;
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setActive(link.href)}
+                  className={`relative font-body text-[0.8rem] font-medium transition-colors duration-300 tracking-wide py-1 group ${
+                    isActive
+                      ? "text-[var(--text-primary)]"
+                      : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                  }`}
+                >
+                  {link.label}
+                  <span
+                    className={`absolute -bottom-0.5 left-0 right-0 h-px bg-[color-mix(in_srgb,var(--accent-caramel)_60%,transparent)] transition-transform duration-500 origin-left ${
+                      isActive
+                        ? "scale-x-100"
+                        : "scale-x-0 group-hover:scale-x-100"
+                    }`}
+                  />
+                  {isActive && (
+                    <motion.span
+                      layoutId="nav-active-dot"
+                      className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-aurum-400"
+                    />
+                  )}
+                </Link>
+              );
+            })}
           </div>
 
           <div className="hidden md:flex items-center gap-4">
@@ -99,8 +142,15 @@ export function Nav() {
                 >
                   <Link
                     href={link.href}
-                    onClick={() => setMobileOpen(false)}
-                    className="text-lg font-display font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors py-1 block"
+                    onClick={() => {
+                      setMobileOpen(false);
+                      setActive(link.href);
+                    }}
+                    className={`text-lg font-display font-medium transition-colors py-1 block ${
+                      active === link.href
+                        ? "text-[var(--text-primary)]"
+                        : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                    }`}
                   >
                     {link.label}
                   </Link>

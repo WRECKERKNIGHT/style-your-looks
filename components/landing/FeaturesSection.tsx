@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { motion, useInView } from "framer-motion";
+import { motion, useInView, useScroll, useTransform } from "framer-motion";
 import {
   ScanFace,
   Shirt,
@@ -81,9 +81,21 @@ export function FeaturesSection() {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true, amount: 0.1 });
 
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start end", "end start"],
+  });
+  const gridY = useTransform(scrollYProgress, [0, 1], [32, -32]);
+  const glowOpacity = useTransform(scrollYProgress, [0, 0.5, 1], [0.35, 0.7, 0.35]);
+
   return (
     <section ref={ref} className="relative py-32 md:py-44 overflow-hidden bg-cosmic-surface" id="features">
       <div className="absolute inset-0 grid-bg opacity-40" />
+      <motion.div
+        aria-hidden
+        style={{ opacity: glowOpacity }}
+        className="pointer-events-none absolute top-1/4 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] rounded-full bg-aurum-400/10 blur-[160px]"
+      />
 
       <div className="relative z-10 max-w-[1400px] mx-auto px-8 md:px-16 lg:px-24">
         <motion.div
@@ -109,6 +121,7 @@ export function FeaturesSection() {
 
         <motion.div
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          style={{ y: gridY }}
           variants={containerVariants}
           initial="hidden"
           animate={isInView ? "visible" : "hidden"}
@@ -117,7 +130,8 @@ export function FeaturesSection() {
             <motion.div
               key={feature.title}
               variants={cardVariants}
-              className="group"
+              whileHover={{ y: -6 }}
+              className="group h-full"
             >
               <SpotlightCard
                 spotlightColor="rgba(185, 139, 86, 0.18)"
@@ -127,9 +141,13 @@ export function FeaturesSection() {
                 <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-aurum opacity-[0.05] rounded-bl-full" />
                 <div className="relative z-10 p-8">
                   <div className="flex items-start justify-between mb-5">
-                    <div className="w-12 h-12 rounded-full bg-gradient-aurum flex items-center justify-center shadow-aurum group-hover:scale-110 group-hover:rotate-6 transition-transform duration-500">
+                    <motion.div
+                      animate={{ y: [0, -3, 0] }}
+                      transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: index * 0.35 }}
+                      className="w-12 h-12 rounded-full bg-gradient-aurum flex items-center justify-center shadow-aurum group-hover:scale-110 group-hover:rotate-6 transition-transform duration-500"
+                    >
                       <feature.icon className="w-5 h-5 text-white" />
-                    </div>
+                    </motion.div>
                     <span className="type-mono text-[0.55rem] text-[color-mix(in_srgb,var(--text-muted)_50%,transparent)] tracking-[0.25em]">
                       {String(index + 1).padStart(2, "0")}
                     </span>

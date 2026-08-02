@@ -52,10 +52,10 @@ function ChapterWord({
   chapterProgress: MotionValue<number>;
   accent: string;
 }) {
-  const start = index / total;
+  const start = (index / total) * 0.45;
   const width = useTransform(
     chapterProgress,
-    [start, start + 0.18],
+    [start, start + 0.45 / total],
     ["0%", "100%"]
   );
 
@@ -90,16 +90,16 @@ function Chapter({
 
   const opacity = useTransform(
     scrollYProgress,
-    [start + 0.02, center, end - 0.02],
-    [0, 1, 0]
+    [start + 0.04, center - 0.04, center + 0.04, end - 0.04],
+    [0, 1, 1, 0]
   );
-  const y = useTransform(scrollYProgress, [start + 0.02, center, end - 0.02], [60, 0, -60]);
+  const y = useTransform(scrollYProgress, [start + 0.04, center, end - 0.04], [48, 0, -48]);
   const chapterProgress = useTransform(
     scrollYProgress,
     [start, end],
     [0, 1]
   );
-  const subOpacity = useTransform(chapterProgress, [0.3, 0.8], [0, 1]);
+  const subOpacity = useTransform(chapterProgress, [0.12, 0.38], [0, 1]);
   const title = chapter.title.split(" ");
 
   return (
@@ -111,6 +111,22 @@ function Chapter({
         aria-hidden
         className={`absolute inset-0 bg-gradient-to-b ${chapter.tint} to-transparent opacity-60`}
       />
+      <div
+        aria-hidden
+        className="absolute inset-0 flex items-center justify-center pointer-events-none"
+      >
+        <div
+          className="w-[110vmin] h-[110vmin] rounded-full opacity-25 blur-[120px]"
+          style={{ background: `radial-gradient(circle, ${chapter.accent}, transparent 70%)` }}
+        />
+      </div>
+      <div
+        aria-hidden
+        className="absolute -bottom-10 -right-4 md:right-8 pointer-events-none select-none type-display leading-none text-[24vw] md:text-[17vw] font-bold opacity-[0.05]"
+        style={{ color: chapter.accent }}
+      >
+        {String(index + 1).padStart(2, "0")}
+      </div>
       <div className="relative z-10 max-w-5xl mx-auto w-full">
         <div
           className="flex items-center gap-4 mb-8"
@@ -220,6 +236,13 @@ export function StorySection() {
               />
             </div>
           ))}
+        </div>
+
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-[color-mix(in_srgb,var(--text-muted)_18%,transparent)]">
+          <motion.div
+            className="h-full origin-left bg-gradient-to-r from-[#8A5F3D] via-[#B98B56] to-[#C8963E]"
+            style={{ scaleX: scrollYProgress }}
+          />
         </div>
       </div>
     </section>

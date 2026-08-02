@@ -65,7 +65,7 @@ export function HorizontalPipeline() {
     offset: ["start start", "end end"],
   });
 
-  const x = useTransform(scrollYProgress, [0.05, 0.95], [0, -scrollDistance]);
+  const x = useTransform(scrollYProgress, [0.03, 0.97], [0, -scrollDistance]);
 
   return (
     <section
@@ -80,9 +80,9 @@ export function HorizontalPipeline() {
         <motion.div
           ref={trackRef}
           style={{ x }}
-          className="relative z-10 flex items-center gap-8 md:gap-14 pl-8 md:pl-16 lg:pl-24 pr-[20vw]"
+          className="relative z-10 flex items-center gap-8 md:gap-14 pl-8 md:pl-16 lg:pl-24 pr-[8vw]"
         >
-          <div className="w-[80vw] md:w-[38vw] lg:w-[30vw] flex-shrink-0">
+          <div className="w-[80vw] md:w-[38vw] lg:w-[36vw] flex-shrink-0">
             <div className="flex items-center gap-4 mb-6">
               <div className="section-divider" />
               <span className="section-number">THE PIPELINE</span>
@@ -100,6 +100,30 @@ export function HorizontalPipeline() {
               Four steps. Zero servers. Scroll through the entire journey your
               photo takes inside NEXARI.
             </p>
+            <div className="mt-8 grid grid-cols-2 gap-3 max-w-md">
+              {pipelineSteps.map((step, i) => (
+                <div
+                  key={step.number}
+                  className="flex items-center gap-3 glass-card rounded-lg px-4 py-3 border-glow"
+                >
+                  <span className="type-mono text-[0.6rem] font-bold text-[var(--accent-mocha)]">
+                    {step.number}
+                  </span>
+                  <span className="type-mono text-[0.6rem] text-[var(--text-secondary)] tracking-widest">
+                    {step.title}
+                  </span>
+                  <motion.span
+                    initial={{ opacity: 0, x: -6 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.3 + i * 0.1, duration: 0.4 }}
+                    className="ml-auto text-[var(--accent-caramel)]"
+                  >
+                    &rarr;
+                  </motion.span>
+                </div>
+              ))}
+            </div>
             <div className="mt-10 flex items-center gap-3 text-[var(--text-muted)]">
               <div className="w-10 h-px bg-aurum-400/40" />
               <span className="type-mono text-[0.6rem] tracking-[0.25em]">
@@ -128,10 +152,10 @@ export function HorizontalPipeline() {
               </div>
 
               <motion.div
-                initial={{ opacity: 0, y: 40 }}
+                initial={{ opacity: 0, y: 24 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.7, delay: i * 0.05, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ duration: 0.5, delay: i * 0.04, ease: [0.16, 1, 0.3, 1] }}
                 className="glass-card rounded-xl p-8 md:p-12 h-[420px] md:h-[480px] flex flex-col justify-between relative overflow-hidden"
               >
                 <div
