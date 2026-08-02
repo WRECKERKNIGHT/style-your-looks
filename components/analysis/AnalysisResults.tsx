@@ -38,6 +38,26 @@ function ordinalSuffix(n: number) {
   return s[(v - 20) % 10] || s[v] || s[0];
 }
 
+function paletteSwatches(skinTone: string, undertone: string): string[] {
+  const base =
+    skinTone.toLowerCase().includes("fair")
+      ? ["#F5D6C6", "#E8BBA6", "#DCA68F"]
+      : skinTone.toLowerCase().includes("light")
+        ? ["#EECBB2", "#DEB093", "#C99775"]
+        : skinTone.toLowerCase().includes("medium")
+          ? ["#D8A27C", "#C38A5F", "#A97146"]
+          : skinTone.toLowerCase().includes("deep")
+            ? ["#8A5A33", "#6E4526", "#543418"]
+            : ["#E0B592", "#CB9370", "#B07754"];
+  if (undertone.toLowerCase().includes("warm")) {
+    return ["#E8B48A", "#D19C6E", "#B57F4E"];
+  }
+  if (undertone.toLowerCase().includes("cool")) {
+    return ["#F0C4B4", "#DB9F92", "#C08178"];
+  }
+  return base;
+}
+
 function CollapsibleSection({
   icon: Icon,
   title,
@@ -141,6 +161,14 @@ export function AnalysisResults() {
                 <ScanFace className="w-6 h-6 text-aurum-500" />
                 <h3 className="text-lg font-body font-bold text-nexus-800 dark:text-white tracking-wider">FACIAL ANALYSIS</h3>
               </div>
+              <div className="relative h-px mt-3 mb-1 overflow-hidden bg-light-border dark:bg-cosmic-border">
+                <motion.div
+                  className="absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-aurum-500 to-transparent"
+                  initial={{ left: "-35%" }}
+                  animate={{ left: "105%" }}
+                  transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut", repeatDelay: 1.4 }}
+                />
+              </div>
 
               <div className="bg-light-base dark:bg-cosmic-elevated p-5 border border-light-border dark:border-cosmic-border rounded-sm">
                 <span className="text-aurum-500 font-body font-bold text-sm tracking-widest uppercase">
@@ -194,6 +222,31 @@ export function AnalysisResults() {
                 <span className="inline-flex items-center px-3 py-1 border border-light-border dark:border-cosmic-border bg-light-base dark:bg-cosmic-elevated text-nexus-400 dark:text-cosmic-muted text-xs font-mono tracking-wider rounded-full">
                   {faceResult.photoCount} {faceResult.photoCount === 1 ? "PHOTO" : "PHOTOS"} ANALYSED
                 </span>
+              </div>
+
+              <div className="mt-5">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[0.6rem] font-mono tracking-widest text-nexus-400/60 dark:text-cosmic-muted/60">
+                    DETECTED SKIN PALETTE
+                  </span>
+                  <span className="text-[0.6rem] font-mono text-aurum-500">{faceResult.skinTone}</span>
+                </div>
+                <div className="flex gap-2">
+                  {paletteSwatches(faceResult.skinTone, faceResult.undertone).map((c, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, y: 8 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: 0.1 + i * 0.08, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                      className="flex-1 h-9 rounded-sm border border-white/10"
+                      style={{ background: c, boxShadow: "inset 0 1px 0 rgba(255,255,255,0.15)" }}
+                    />
+                  ))}
+                </div>
+                <p className="text-[0.6rem] text-nexus-400/60 dark:text-cosmic-muted/60 font-mono mt-2">
+                  {faceResult.undertone.toUpperCase()} UNDERTONE MATCH
+                </p>
               </div>
             </div>
           </div>
