@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Mail, Lock, Eye, EyeOff, Sparkles, AlertCircle, Loader2, Send } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, AlertCircle, Loader2, Send } from "lucide-react";
 import { motion } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 
@@ -35,18 +35,23 @@ export default function LoginPage() {
     }
     setResending(true);
     setError(null);
-    const supabase = createClient();
-    const { error: resendError } = await supabase.auth.resend({
-      type: "signup",
-      email,
-      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
-    });
-    setResending(false);
-    if (resendError) {
-      setError(resendError.message);
-      return;
+    try {
+      const supabase = createClient();
+      const { error: resendError } = await supabase.auth.resend({
+        type: "signup",
+        email,
+        options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+      });
+      if (resendError) {
+        setError(resendError.message);
+        return;
+      }
+      setResent(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not resend confirmation email.");
+    } finally {
+      setResending(false);
     }
-    setResent(true);
   }
 
   async function handleEmailLogin(e: React.FormEvent) {
@@ -54,33 +59,41 @@ export default function LoginPage() {
     setError(null);
     setLoading(true);
 
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
 
-    if (error) {
-      setError(error.message);
+      if (error) {
+        setError(error.message);
+        return;
+      }
+
+      router.push("/dashboard");
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not sign in. Try again.");
+    } finally {
       setLoading(false);
-      return;
     }
-
-    router.push("/dashboard");
-    router.refresh();
   }
 
   async function handleGoogleLogin() {
     setGoogleLoading(true);
     setError(null);
 
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
 
-    if (error) {
-      setError(error.message);
+      if (error) setError(error.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not start Google sign-in.");
+    } finally {
       setGoogleLoading(false);
     }
   }
@@ -103,9 +116,12 @@ export default function LoginPage() {
         <div className="absolute bottom-20 right-20 w-96 h-96 bg-aurum-500/5 rounded-full blur-3xl animate-float" style={{ animationDelay: "-3s" }} />
 
         <div className="relative z-10 text-center">
-          <div className="w-20 h-20 bg-gradient-to-br from-aurum-500 to-aurum-300 flex items-center justify-center mx-auto mb-6 rounded-sm shadow-lg shadow-aurum-500/25">
-            <Sparkles className="w-9 h-9 text-cosmic-base" />
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/auraya-logo.svg"
+            alt="AURAYA"
+            className="h-12 w-auto mx-auto mb-8 drop-shadow-aurum"
+          />
           <h2 className="text-4xl font-body font-bold text-nexus-800 dark:text-white mb-3 tracking-tight">
             YOUR FACE
             <br />
@@ -143,9 +159,12 @@ export default function LoginPage() {
       >
         <div className="w-full max-w-sm">
           <Link href="/" className="flex items-center gap-2 mb-10">
-            <div className="w-7 h-7 bg-gradient-to-br from-aurum-500 to-aurum-300 flex items-center justify-center rounded-sm">
-              <Sparkles className="w-3.5 h-3.5 text-cosmic-base" />
-            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/auraya-logo.svg"
+              alt="AURAYA"
+              className="h-7 w-auto drop-shadow-aurum"
+            />
             <span className="text-sm font-body font-bold text-nexus-800 dark:text-white tracking-wider">AURAYA</span>
           </Link>
 
@@ -236,9 +255,21 @@ export default function LoginPage() {
           <button
             onClick={handleGoogleLogin}
             disabled={googleLoading}
-            className="w-full py-3 bg-light-surface dark:bg-cosmic-surface border border-light-border dark:border-cosmic-border text-nexus-800 dark:text-white font-mono text-sm hover:border-aurum-500 transition-colors disabled:opacity-50 rounded-sm"
+            className="w-full py-3 bg-light-surface dark:bg-cosmic-surface border border-light-border dark:border-cosmic-border text-nexus-800 dark:text-white font-mono text-sm hover:border-aurum-500 transition-colors disabled:opacity-50 rounded-sm flex items-center justify-center gap-3"
           >
-            {googleLoading ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : "GOOGLE"}
+            {googleLoading ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <>
+                <svg className="w-4 h-4" viewBox="0 0 48 48">
+                  <path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.1 6.1 29.3 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.6-.4-3.9z" />
+                  <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.1 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z" />
+                  <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z" />
+                  <path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.1 5.7l6.2 5.2C41 39.6 44 35 44 24c0-1.3-.1-2.6-.4-3.9z" />
+                </svg>
+                CONTINUE WITH GOOGLE
+              </>
+            )}
           </button>
 
           <p className="text-xs text-nexus-400 dark:text-cosmic-muted font-body text-center mt-8">
