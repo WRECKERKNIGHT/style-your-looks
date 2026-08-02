@@ -6,6 +6,9 @@ import { ScoreGauge } from "./ScoreGauge";
 import { MetricBar } from "./MetricBar";
 import { MetricRadar } from "./MetricRadar";
 import { FaceShapeDiagram } from "./FaceShapeDiagram";
+import { InstantSnapshot } from "./InstantSnapshot";
+import { CategoryCards } from "./CategoryCards";
+import { ActionPlan } from "./ActionPlan";
 import { AnimatedCounter } from "@/components/shared/AnimatedCounter";
 import { SCORE_METRICS } from "@/lib/constants";
 import { motion, AnimatePresence } from "framer-motion";
@@ -152,6 +155,10 @@ export function AnalysisResults() {
 
   return (
     <div className="space-y-6">
+      <InstantSnapshot />
+
+      <CategoryCards />
+
       <ScrollReveal>
         <div className="bg-light-surface dark:bg-cosmic-surface p-10 border border-light-border dark:border-cosmic-border rounded-sm card-nexus">
           <div className="flex flex-col md:flex-row items-center gap-10">
@@ -825,6 +832,8 @@ export function AnalysisResults() {
           ))}
         </div>
       </CollapsibleSection>
+
+      <ActionPlan />
 
       <CollapsibleSection icon={Target} title="HOW WE SCORED YOU">
         <div className="space-y-4 text-sm text-nexus-400 dark:text-cosmic-muted font-body leading-relaxed">

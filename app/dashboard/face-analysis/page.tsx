@@ -7,6 +7,7 @@ import { FaceSkeletonOverlay } from "@/components/analysis/FaceSkeletonOverlay";
 import { ProcessingOverlay } from "@/components/analysis/ProcessingOverlay";
 import { PhotoGuidelines } from "@/components/analysis/PhotoGuidelines";
 import { PhotoReviewPanel, type RejectedPhoto } from "@/components/analysis/PhotoReviewPanel";
+import { TryItOnPanel } from "@/components/analysis/TryItOnPanel";
 import { useAnalysisStore } from "@/store/analysis-store";
 import { useMediaPipe } from "@/hooks/useMediaPipe";
 import { useWebcam } from "@/hooks/useWebcam";
@@ -444,6 +445,10 @@ export default function FaceAnalysisPage() {
                 {showLandmarks ? "HIDE" : "SHOW"} SKELETON
               </button>
             </motion.div>
+          )}
+
+          {faceResult.landmarks.length > 0 && (
+            <TryItOnPanel image={uploadedImage} landmarks={faceResult.landmarks} />
           )}
 
           <div className="glass-card p-8">
