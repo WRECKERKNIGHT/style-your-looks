@@ -458,12 +458,34 @@ export function AnalysisResults() {
         <CollapsibleSection icon={TrendingUp} title="YOUR STRENGTHS" badge={`${faceResult.strengths.length} found`}>
           <div className="space-y-3">
             {faceResult.strengths.map((strength, i) => (
-              <div key={i} className="flex items-start gap-4 bg-light-base dark:bg-cosmic-elevated p-5 border border-aurum-500/20 rounded-sm">
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, x: -16 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.12, duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+                className={`flex items-start gap-4 p-5 rounded-sm border ${
+                  i === 0
+                    ? "bg-aurum-500/[0.06] border-aurum-500/30 card-nexus"
+                    : "bg-light-base dark:bg-cosmic-elevated border-aurum-500/20"
+                }`}
+              >
                 <div className="w-8 h-8 bg-aurum-500/15 flex items-center justify-center flex-shrink-0 mt-0.5 rounded-full border border-aurum-500/30">
-                  <TrendingUp className="w-4 h-4 text-aurum-500" />
+                  {i === 0 ? (
+                    <Crown className="w-4 h-4 text-aurum-500" />
+                  ) : (
+                    <TrendingUp className="w-4 h-4 text-aurum-500" />
+                  )}
                 </div>
-                <p className="text-base text-nexus-800 dark:text-white font-body leading-relaxed">{strength}</p>
-              </div>
+                <div>
+                  <p className="text-base text-nexus-800 dark:text-white font-body leading-relaxed">{strength}</p>
+                  {i === 0 && (
+                    <span className="inline-block mt-2 px-2 py-0.5 bg-aurum-500 text-white text-[0.6rem] font-mono tracking-widest rounded-sm">
+                      SIGNATURE TRAIT
+                    </span>
+                  )}
+                </div>
+              </motion.div>
             ))}
           </div>
         </CollapsibleSection>
@@ -473,12 +495,30 @@ export function AnalysisResults() {
         <CollapsibleSection icon={AlertTriangle} title="AREAS FOR IMPROVEMENT" badge={`${faceResult.improvements.length} found`}>
           <div className="space-y-3">
             {faceResult.improvements.map((improvement, i) => (
-              <div key={i} className="flex items-start gap-4 bg-light-base dark:bg-cosmic-elevated p-5 border border-light-border dark:border-cosmic-border rounded-sm card-nexus">
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, x: 16 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.12, duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+                className="flex items-start gap-4 bg-light-base dark:bg-cosmic-elevated p-5 border border-light-border dark:border-cosmic-border rounded-sm card-nexus"
+              >
                 <div className="w-8 h-8 bg-nexus-500/15 flex items-center justify-center flex-shrink-0 mt-0.5 rounded-full border border-nexus-500/30">
                   <span className="text-sm font-body font-bold text-nexus-400">{i + 1}</span>
                 </div>
-                <p className="text-base text-nexus-800 dark:text-white font-body leading-relaxed">{improvement}</p>
-              </div>
+                <div className="flex-1">
+                  <p className="text-base text-nexus-800 dark:text-white font-body leading-relaxed">{improvement}</p>
+                  <div className="mt-2 h-1.5 bg-light-border dark:bg-cosmic-border rounded-full overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      whileInView={{ width: `${Math.max(10, 100 - i * 20)}%` }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.9, delay: 0.2 + i * 0.1, ease: [0.16, 1, 0.3, 1] }}
+                      className="h-full rounded-full bg-gradient-to-r from-nexus-400 to-aurum-500"
+                    />
+                  </div>
+                </div>
+              </motion.div>
             ))}
           </div>
         </CollapsibleSection>
@@ -490,12 +530,22 @@ export function AnalysisResults() {
         </p>
         <div className="space-y-3">
           {faceResult.groomingSuggestions.map((suggestion, i) => (
-            <div key={i} className="flex items-start gap-4 bg-light-base dark:bg-cosmic-elevated p-5 border border-light-border dark:border-cosmic-border rounded-sm card-nexus">
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 12 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.08, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+              className="flex items-start gap-4 bg-light-base dark:bg-cosmic-elevated p-5 border border-light-border dark:border-cosmic-border rounded-sm card-nexus"
+            >
               <div className="w-8 h-8 bg-aurum-500/15 flex items-center justify-center flex-shrink-0 mt-0.5 rounded-full border border-aurum-500/30">
-                <span className="text-sm font-body font-bold text-aurum-500">{i + 1}</span>
+                <Scissors className="w-4 h-4 text-aurum-500" />
               </div>
-              <p className="text-base text-nexus-800 dark:text-white font-body leading-relaxed">{suggestion}</p>
-            </div>
+              <p className="text-base text-nexus-800 dark:text-white font-body leading-relaxed">
+                <span className="font-mono text-aurum-500 text-xs mr-2">{String(i + 1).padStart(2, "0")}</span>
+                {suggestion}
+              </p>
+            </motion.div>
           ))}
         </div>
       </CollapsibleSection>
@@ -507,10 +557,21 @@ export function AnalysisResults() {
             478 MediaPipe facial landmarks. Weights are based on attractiveness perception research.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {topMetrics.map((m) => (
-              <div key={m.key} className="flex justify-between items-center bg-light-base dark:bg-cosmic-elevated p-3 border border-light-border dark:border-cosmic-border rounded-sm">
-                <span className="text-nexus-800 dark:text-white font-body">{m.label}</span>
-                <span className="text-aurum-500 font-mono font-bold">{Math.round(m.weight * 100)}%</span>
+            {topMetrics.map((m, i) => (
+              <div key={m.key} className="flex items-center gap-3 bg-light-base dark:bg-cosmic-elevated p-3 border border-light-border dark:border-cosmic-border rounded-sm">
+                <span className="flex-1 text-nexus-800 dark:text-white font-body truncate">{m.label}</span>
+                <div className="flex-1 h-1.5 bg-light-border dark:bg-cosmic-border rounded-full overflow-hidden">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    whileInView={{ width: `${m.weight * 100}%` }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.8, delay: i * 0.05, ease: [0.16, 1, 0.3, 1] }}
+                    className="h-full rounded-full bg-gradient-to-r from-aurum-600 to-aurum-400"
+                  />
+                </div>
+                <span className="text-aurum-500 font-mono font-bold min-w-[42px] text-right">
+                  {Math.round(m.weight * 100)}%
+                </span>
               </div>
             ))}
           </div>
