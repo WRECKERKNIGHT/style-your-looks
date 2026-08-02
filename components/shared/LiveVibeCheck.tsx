@@ -32,11 +32,11 @@ export function LiveVibeCheck() {
   }, []);
 
   const moodColors = [
-    "from-[#8C59FF] to-[#6C2BD9]",
-    "from-[#FFCB20] to-[#E8B620]",
-    "from-[#FF6B35] to-[#FF4500]",
-    "from-[#00E676] to-[#00C853]",
-    "from-[#FF1744] to-[#D50000]",
+    "from-[#B98B56] to-[#8A5F3D]",
+    "from-[#CCA066] to-[#C8963E]",
+    "from-[#A0764E] to-[#6F4A30]",
+    "from-[#9C7142] to-[#7A5734]",
+    "from-[#C07A5A] to-[#A13B2F]",
   ];
 
   return (
@@ -44,23 +44,23 @@ export function LiveVibeCheck() {
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      className="relative overflow-hidden rounded-sm bg-[#0F0A2E]/40 dark:bg-[#0A0618]/60 border border-[#6C2BD9]/20"
+      className="relative overflow-hidden rounded-sm bg-[var(--bg-secondary)] border border-[var(--border-primary)] shadow-paper"
     >
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#6C2BD9]/5 to-transparent pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[color-mix(in_srgb,var(--accent-caramel)_6%,transparent)] to-transparent pointer-events-none" />
 
       <div className="relative p-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
-            <Activity className="w-4 h-4 text-[#8C59FF]" />
-            <span className="type-label text-[#8C59FF]">LIVE VIBE CHECK</span>
+            <Activity className="w-4 h-4 text-[var(--accent-caramel)]" />
+            <span className="type-label text-[var(--accent-mocha)]">LIVE VIBE CHECK</span>
           </div>
           <div className="flex items-center gap-2">
             <motion.span
-              className="w-2 h-2 rounded-full bg-[#00E676]"
+              className="w-2 h-2 rounded-full bg-[var(--accent-honey)]"
               animate={{ opacity: [1, 0.3, 1] }}
               transition={{ duration: 1.5, repeat: Infinity }}
             />
-            <span className="type-mono text-[#00E676]">LIVE</span>
+            <span className="type-mono text-[var(--accent-honey)]">LIVE</span>
           </div>
         </div>
 
@@ -72,8 +72,8 @@ export function LiveVibeCheck() {
                 key={`${currentMoodIndex}-${i}`}
                 className={`w-full rounded-t-sm ${
                   isCenterBar
-                    ? "bg-gradient-to-t from-[#8C59FF] to-[#FFCB20]"
-                    : "bg-gradient-to-t from-[#6C2BD9]/60 to-[#8C59FF]/30"
+                    ? "bg-gradient-to-t from-[#B98B56] to-[#CCA066]"
+                    : "bg-gradient-to-t from-[color-mix(in_srgb,var(--accent-nexus)_55%,transparent)] to-[color-mix(in_srgb,var(--accent-caramel)_30%,transparent)]"
                 }`}
                 style={{ height: "100%" }}
                 animate={{
@@ -91,20 +91,20 @@ export function LiveVibeCheck() {
 
         <div className="flex flex-col items-center gap-3">
           <div className="relative">
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#6C2BD9]/20 to-[#FFCB20]/10 border border-[#6C2BD9]/30 flex items-center justify-center">
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[color-mix(in_srgb,var(--accent-nexus)_20%,transparent)] to-[color-mix(in_srgb,var(--accent-honey)_10%,transparent)] border border-[color-mix(in_srgb,var(--accent-caramel)_30%,transparent)] flex items-center justify-center">
               <motion.div
-                className="w-14 h-14 rounded-full bg-gradient-to-br from-[#8C59FF] to-[#FFCB20] flex items-center justify-center"
+                className="w-14 h-14 rounded-full bg-gradient-to-br from-[#B98B56] to-[#CCA066] flex items-center justify-center"
                 animate={{
                   scale: [1, 1.08, 1],
                   boxShadow: [
-                    "0 0 20px rgba(140, 89, 255, 0.3)",
-                    "0 0 40px rgba(255, 203, 32, 0.4)",
-                    "0 0 20px rgba(140, 89, 255, 0.3)",
+                    "0 0 20px rgba(185, 139, 86, 0.3)",
+                    "0 0 40px rgba(200, 150, 62, 0.4)",
+                    "0 0 20px rgba(185, 139, 86, 0.3)",
                   ],
                 }}
                 transition={{ duration: 2.5, repeat: Infinity }}
               >
-                <Music className="w-6 h-6 text-[#0A0618]" />
+                <Music className="w-6 h-6 text-[#241812]" />
               </motion.div>
             </div>
             <motion.div
@@ -112,7 +112,7 @@ export function LiveVibeCheck() {
               animate={{ scale: [1, 1.3, 1], opacity: [0.7, 1, 0.7] }}
               transition={{ duration: 1.8, repeat: Infinity }}
             >
-              <span className="block w-full h-full rounded-full bg-[#FFCB20] shadow-[0_0_12px_#FFCB20]" />
+              <span className="block w-full h-full rounded-full bg-[var(--accent-honey)] shadow-[0_0_12px_var(--accent-honey)]" />
             </motion.div>
           </div>
 
@@ -129,7 +129,7 @@ export function LiveVibeCheck() {
             </motion.span>
           </AnimatePresence>
 
-          <span className="type-mono text-[#6C2BD9]">
+          <span className="type-mono text-[var(--accent-mocha)]">
             vibe index &middot; {Math.floor(Math.random() * 30 + 70)}%
           </span>
         </div>
@@ -141,8 +141,8 @@ export function LiveVibeCheck() {
               onClick={() => setCurrentMoodIndex(i)}
               className={`h-1 rounded-full transition-all duration-300 ${
                 i === currentMoodIndex
-                  ? "w-5 bg-[#8C59FF]"
-                  : "w-1.5 bg-[#6C2BD9]/30 hover:bg-[#6C2BD9]/50"
+                  ? "w-5 bg-[var(--accent-caramel)]"
+                  : "w-1.5 bg-[color-mix(in_srgb,var(--accent-caramel)_30%,transparent)] hover:bg-[color-mix(in_srgb,var(--accent-caramel)_50%,transparent)]"
               }`}
               aria-label={`Switch to ${moods[i]} mood`}
             />

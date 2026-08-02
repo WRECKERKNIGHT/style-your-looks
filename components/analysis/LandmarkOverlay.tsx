@@ -54,7 +54,7 @@ export function LandmarkOverlay({ landmarks, width, height, className }: Landmar
     ctx.clearRect(0, 0, width, height);
 
     // Draw connections
-    ctx.strokeStyle = "rgba(108, 43, 217, 0.25)";
+    ctx.strokeStyle = "rgba(185, 139, 86, 0.25)";
     ctx.lineWidth = 1;
     for (const [i, j] of CONNECTIONS) {
       if (landmarks[i] && landmarks[j]) {
@@ -73,7 +73,7 @@ export function LandmarkOverlay({ landmarks, width, height, className }: Landmar
         const y = landmarks[idx][1] * height;
         ctx.beginPath();
         ctx.arc(x, y, 3, 0, Math.PI * 2);
-        ctx.fillStyle = "rgba(232, 182, 32, 0.8)";
+        ctx.fillStyle = "rgba(200, 150, 62, 0.8)";
         ctx.fill();
       }
     }
@@ -83,7 +83,7 @@ export function LandmarkOverlay({ landmarks, width, height, className }: Landmar
       const noseX = landmarks[1][0] * width;
       ctx.beginPath();
       ctx.setLineDash([4, 4]);
-      ctx.strokeStyle = "rgba(232, 182, 32, 0.2)";
+      ctx.strokeStyle = "rgba(200, 150, 62, 0.2)";
       ctx.lineWidth = 1;
       ctx.moveTo(noseX, landmarks[10][1] * height);
       ctx.lineTo(noseX, landmarks[152][1] * height);

@@ -84,10 +84,10 @@ function CollapsibleSection({
 
 function PercentileBar({ label, percentile }: { label: string; percentile: number }) {
   const color =
-    percentile >= 85 ? "#FFCB20" :
-    percentile >= 70 ? "#8C59FF" :
-    percentile >= 50 ? "#6C2BD9" :
-    "#4A1A96";
+    percentile >= 85 ? "#C8963E" :
+    percentile >= 70 ? "#B98B56" :
+    percentile >= 50 ? "#8A5F3D" :
+    "#6F4A30";
   return (
     <div className="flex items-center gap-4 bg-light-base dark:bg-cosmic-elevated p-4 border border-light-border dark:border-cosmic-border rounded-sm">
       <span className="text-sm font-body text-nexus-800 dark:text-white min-w-[140px]">{label}</span>

@@ -14,11 +14,11 @@ import {
 import { useAnalysisStore } from "@/store/analysis-store";
 
 const phases = [
-  { id: "detect", icon: Scan, label: "DETECTING", detail: "Initialising MediaPipe and locating your face", threshold: 15, color: "#8C59FF" },
-  { id: "landmarks", icon: Fingerprint, label: "LANDMARKS", detail: "Mapping 478 facial landmarks", threshold: 40, color: "#6C2BD9" },
-  { id: "scoring", icon: BarChart3, label: "SCORING", detail: "Computing symmetry, ratios and harmony", threshold: 65, color: "#B08CFF" },
-  { id: "matching", icon: Palette, label: "MATCHING", detail: "Matching skin tone, palette and body typing", threshold: 85, color: "#FFCB20" },
-  { id: "finalizing", icon: Sparkles, label: "FINALIZING", detail: "Generating your style profile", threshold: 100, color: "#00E676" },
+  { id: "detect", icon: Scan, label: "DETECTING", detail: "Initialising MediaPipe and locating your face", threshold: 15, color: "#A0764E" },
+  { id: "landmarks", icon: Fingerprint, label: "LANDMARKS", detail: "Mapping 478 facial landmarks", threshold: 40, color: "#8A5F3D" },
+  { id: "scoring", icon: BarChart3, label: "SCORING", detail: "Computing symmetry, ratios and harmony", threshold: 65, color: "#9C7142" },
+  { id: "matching", icon: Palette, label: "MATCHING", detail: "Matching skin tone, palette and body typing", threshold: 85, color: "#CCA066" },
+  { id: "finalizing", icon: Sparkles, label: "FINALIZING", detail: "Generating your style profile", threshold: 100, color: "#B98B56" },
 ];
 
 export function ProcessingOverlay({
@@ -51,7 +51,7 @@ export function ProcessingOverlay({
           className="relative overflow-hidden glass-card rounded-xl"
         >
           <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full bg-[#6C2BD9]/10 blur-[90px]" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full bg-[color-mix(in_srgb,var(--accent-caramel)_12%,transparent)] blur-[90px]" />
           </div>
 
           <div className="relative z-10 p-8 md:p-10">
@@ -116,8 +116,8 @@ export function ProcessingOverlay({
                   <motion.div
                     className="h-full rounded-full"
                     style={{
-                      background: "linear-gradient(90deg, #6C2BD9, #8C59FF, #FFCB20)",
-                      boxShadow: "0 0 12px rgba(140,89,255,0.6)",
+                      background: "linear-gradient(90deg, #8A5F3D, #B98B56, #CCA066)",
+                      boxShadow: "0 0 12px rgba(185,139,86,0.5)",
                     }}
                     animate={{ width: `${progress}%` }}
                     transition={{ duration: 0.25, ease: "easeOut" }}
@@ -133,28 +133,28 @@ export function ProcessingOverlay({
                         key={phase.id}
                         className={`flex items-center gap-3 px-3.5 py-2.5 rounded-lg border transition-all duration-500 ${
                           done
-                            ? "border-[#00E676]/30 bg-[#00E676]/5"
+                            ? "border-[color-mix(in_srgb,var(--accent-mocha)_30%,transparent)] bg-[color-mix(in_srgb,var(--accent-mocha)_8%,transparent)]"
                             : active
-                            ? "border-[var(--border-primary)] bg-[var(--bg-tertiary)]/40"
+                            ? "border-[var(--border-primary)] bg-[color-mix(in_srgb,var(--bg-tertiary)_40%,transparent)]"
                             : "border-[var(--border-muted)] opacity-40"
                         }`}
                       >
                         <div
                           className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                            done ? "bg-[#00E676]/20" : active ? "animate-pulse bg-[#6C2BD9]/20" : ""
+                            done ? "bg-[color-mix(in_srgb,var(--accent-mocha)_20%,transparent)]" : active ? "animate-pulse bg-[color-mix(in_srgb,var(--accent-caramel)_20%,transparent)]" : ""
                           }`}
                         >
                           {done ? (
-                            <Check className="w-3 h-3 text-[#00E676]" />
+                            <Check className="w-3 h-3 text-[var(--accent-mocha)]" />
                           ) : active ? (
-                            <phase.icon className="w-3 h-3 text-[#8C59FF]" />
+                            <phase.icon className="w-3 h-3 text-[var(--accent-caramel)]" />
                           ) : (
                             <span className="w-1.5 h-1.5 rounded-full bg-[var(--border-muted)]" />
                           )}
                         </div>
                         <span
                           className={`type-mono text-[0.6rem] tracking-widest ${
-                            done ? "text-[#00E676]" : active ? "text-[var(--text-primary)]" : "text-[var(--text-muted)]"
+                            done ? "text-[var(--accent-mocha)]" : active ? "text-[var(--text-primary)]" : "text-[var(--text-muted)]"
                           }`}
                         >
                           {phase.label}
@@ -189,7 +189,7 @@ function Radar({
         className="absolute inset-5 rounded-full"
         style={{ border: `1px dashed ${phaseColor}40` }}
       />
-      <div className="absolute inset-10 rounded-full border border-[var(--border-muted)]/40" />
+      <div className="absolute inset-10 rounded-full border border-[color-mix(in_srgb,var(--border-muted)_40%,transparent)]" />
 
       <motion.div
         className="absolute inset-0 rounded-full"
@@ -236,7 +236,7 @@ function Radar({
           cy="50"
           r="48"
           fill="none"
-          stroke="rgba(108,43,217,0.15)"
+          stroke="rgba(185,139,86,0.15)"
           strokeWidth="1.5"
           strokeLinecap="round"
         />

@@ -11,7 +11,7 @@ const milestones = [
     title: "Style Foundation",
     description: "Baseline facial analysis completed. Symmetry score: 72.4. Primary palette identified.",
     icon: Shield,
-    color: "#6C2BD9",
+    color: "#8A5F3D",
     score: 72,
   },
   {
@@ -19,7 +19,7 @@ const milestones = [
     title: "Color Profile",
     description: "Seasonal analysis: Deep Autumn. 12-tone palette locked. Contrast rating: high.",
     icon: Palette,
-    color: "#8C59FF",
+    color: "#A0764E",
     score: 78,
   },
   {
@@ -27,7 +27,7 @@ const milestones = [
     title: "Grooming Evolution",
     description: "Beard style optimized. Jawline framing improved angularity by 15%.",
     icon: Sparkles,
-    color: "#FFCB20",
+    color: "#B98B56",
     score: 84,
   },
   {
@@ -35,7 +35,7 @@ const milestones = [
     title: "Wardrobe Sync",
     description: "Capsule wardrobe aligned with color season. 94% palette coherence achieved.",
     icon: Shirt,
-    color: "#E8B620",
+    color: "#C8963E",
     score: 89,
   },
   {
@@ -43,7 +43,7 @@ const milestones = [
     title: "Peak Convergence",
     description: "All pillars aligned: harmony, angularity, dimorphism, health at optimal ratios.",
     icon: TrendingUp,
-    color: "#00E676",
+    color: "#CCA066",
     score: 94,
   },
 ];
@@ -147,8 +147,8 @@ function TimelineNode({
             {milestone.score}
           </motion.span>
         </div>
-        <h3 className="type-label text-[#E8E0FF] dark:text-[#C4B5FD] mb-1">{milestone.title}</h3>
-        <p className="text-xs text-[#7C6BC4] dark:text-[#5B4BA4] font-body leading-relaxed">
+        <h3 className="type-label text-[var(--text-primary)] mb-1">{milestone.title}</h3>
+        <p className="text-xs text-[var(--text-muted)] font-body leading-relaxed">
           {milestone.description}
         </p>
       </motion.div>
@@ -167,12 +167,12 @@ export function StyleTimeline() {
       initial={{ opacity: 0, y: 20 }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      className="relative overflow-hidden rounded-sm bg-[#0F0A2E]/40 dark:bg-[#0A0618]/60 border border-[#6C2BD9]/20 p-6"
+      className="relative overflow-hidden rounded-sm bg-[var(--bg-secondary)] border border-[var(--border-primary)] shadow-paper p-6"
     >
       <div className="flex items-center gap-2 mb-8">
-        <Calendar className="w-4 h-4 text-[#8C59FF]" />
-        <span className="type-label text-[#8C59FF]">STYLE EVOLUTION TIMELINE</span>
-        <span className="type-mono text-[#6C2BD9] ml-auto">5 milestones</span>
+        <Calendar className="w-4 h-4 text-[var(--accent-caramel)]" />
+        <span className="type-label text-[var(--accent-mocha)]">STYLE EVOLUTION TIMELINE</span>
+        <span className="type-mono text-[var(--accent-mocha)] ml-auto">5 milestones</span>
       </div>
 
       <div className="space-y-1">

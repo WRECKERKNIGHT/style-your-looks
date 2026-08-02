@@ -55,11 +55,11 @@ export function ScoreGauge({
     const startTime = performance.now();
 
     const scorePercent = score / maxScore;
-    let fillColor = "#FFCB20";
-    if (scorePercent >= 0.8) fillColor = "#FFCB20";
-    else if (scorePercent >= 0.6) fillColor = "#8C59FF";
-    else if (scorePercent >= 0.4) fillColor = "#E8B620";
-    else fillColor = "#6C2BD9";
+    let fillColor = "#C8963E";
+    if (scorePercent >= 0.8) fillColor = "#C8963E";
+    else if (scorePercent >= 0.6) fillColor = "#B98B56";
+    else if (scorePercent >= 0.4) fillColor = "#9C7142";
+    else fillColor = "#6F4A30";
 
     const animate = (now: number) => {
       const elapsed = now - startTime;
@@ -72,7 +72,7 @@ export function ScoreGauge({
       // Track arc
       ctx.beginPath();
       ctx.arc(centerX, centerY, radius, startAngle, endAngle);
-      ctx.strokeStyle = "#D4BFFF";
+      ctx.strokeStyle = "#E5D5BD";
       ctx.lineWidth = strokeWidth;
       ctx.lineCap = "round";
       ctx.stroke();
@@ -80,7 +80,7 @@ export function ScoreGauge({
       // Decorative ring
       ctx.beginPath();
       ctx.arc(centerX, centerY, radius + strokeWidth / 2 + 6, startAngle, endAngle);
-      ctx.strokeStyle = "#6C2BD9";
+      ctx.strokeStyle = "#8A5F3D";
       ctx.lineWidth = 1;
       ctx.stroke();
 

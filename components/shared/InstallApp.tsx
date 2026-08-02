@@ -60,11 +60,11 @@ export function InstallApp() {
   if (installed) return null;
 
   return (
-    <div className="border border-[#2A1B6B]/40 dark:border-[#1A0F3D]/50 bg-[#0F0A2E]/40 dark:bg-[#0A0618]/40 rounded-sm p-3">
+    <div className="border border-[color-mix(in_srgb,var(--accent-caramel)_35%,transparent)] dark:border-[color-mix(in_srgb,var(--accent-caramel)_20%,transparent)] bg-[var(--bg-tertiary)]/60 dark:bg-[var(--bg-tertiary)]/40 rounded-sm p-3">
       {promptEvent ? (
         <button
           onClick={install}
-          className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-body font-semibold tracking-widest uppercase text-[#0F0A2E] bg-gradient-to-r from-[#FF6B35] to-[#FFD700] hover:brightness-110 transition-all"
+          className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-body font-semibold tracking-widest uppercase text-[var(--bg-primary)] bg-gradient-to-r from-[var(--accent-mocha)] to-[var(--accent-honey)] hover:brightness-110 transition-all"
         >
           <Download className="w-3.5 h-3.5" />
           Install App
@@ -73,16 +73,16 @@ export function InstallApp() {
         <div className="relative">
           <button
             onClick={dismissIos}
-            className="absolute -top-1 -right-1 p-1 text-[#7C6BC4] hover:text-[#E8E0FF] transition-colors"
+            className="absolute -top-1 -right-1 p-1 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
             aria-label="Dismiss"
           >
             <X className="w-3 h-3" />
           </button>
-          <div className="flex items-center gap-2 text-[#E8E0FF] dark:text-[#C4B5FD] mb-1.5">
-            <Share className="w-3.5 h-3.5 text-[#FFD700]" />
+          <div className="flex items-center gap-2 text-[var(--text-primary)] mb-1.5">
+            <Share className="w-3.5 h-3.5 text-[var(--accent-honey)]" />
             <span className="text-[10px] font-mono tracking-widest uppercase">Add to Home Screen</span>
           </div>
-          <p className="text-[10px] font-body text-[#7C6BC4] leading-relaxed">
+          <p className="text-[10px] font-body text-[var(--text-muted)] leading-relaxed">
             Tap <AppWindow className="inline w-3 h-3" /> Share, then Add to Home Screen.
           </p>
         </div>

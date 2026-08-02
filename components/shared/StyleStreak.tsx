@@ -126,14 +126,14 @@ export function StyleStreak() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      className="relative overflow-hidden rounded-sm bg-[#0F0A2E]/60 dark:bg-[#0A0618]/80 border border-[#6C2BD9]/30 p-6"
+      className="relative overflow-hidden rounded-sm bg-[var(--bg-secondary)] border border-[var(--border-primary)] shadow-paper p-6"
     >
-      <div className="absolute inset-0 bg-gradient-to-br from-[#FFCB20]/5 via-transparent to-[#6C2BD9]/10 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-br from-[color-mix(in_srgb,var(--accent-honey)_8%,transparent)] via-transparent to-[color-mix(in_srgb,var(--accent-nexus)_12%,transparent)] pointer-events-none" />
 
       <div className="flex items-center gap-2 mb-5">
-        <Flame className="w-4 h-4 text-[#FFCB20]" />
-        <span className="type-label text-[#FFCB20]">STYLE STREAK</span>
-        {!ready && <span className="type-mono text-[0.5rem] text-[#7C6BC4]">{"// SYNCING"}</span>}
+        <Flame className="w-4 h-4 text-[var(--accent-honey)]" />
+        <span className="type-label text-[var(--accent-mocha)]">STYLE STREAK</span>
+        {!ready && <span className="type-mono text-[0.5rem] text-[var(--text-muted)]">{"// SYNCING"}</span>}
       </div>
 
       <div className="flex items-end justify-between mb-6">
@@ -146,11 +146,11 @@ export function StyleStreak() {
           >
             {state.streak}
           </motion.span>
-          <span className="text-sm text-[#7C6BC4] dark:text-[#5B4BA4] font-body">
+          <span className="text-sm text-[var(--text-muted)] font-body">
             day{state.streak === 1 ? "" : "s"} running
           </span>
         </div>
-        <div className="flex items-center gap-1.5 text-xs font-mono text-[#FFCB20]">
+        <div className="flex items-center gap-1.5 text-xs font-mono text-[var(--accent-honey)]">
           <Zap className="w-3.5 h-3.5" />
           {state.xp} XP
         </div>
@@ -167,10 +167,10 @@ export function StyleStreak() {
                 animate={isToday ? { scale: [1, 1.25, 1] } : {}}
                 transition={{ duration: 0.8, repeat: Infinity, repeatDelay: 2 }}
                 className={`w-2.5 h-2.5 rounded-full ${
-                  lit ? "bg-[#FFCB20] shadow-[0_0_8px_rgba(255,203,32,0.6)]" : "bg-[#6C2BD9]/25"
+                  lit ? "bg-[var(--accent-honey)] shadow-[0_0_8px_rgba(200,150,62,0.6)]" : "bg-[color-mix(in_srgb,var(--accent-nexus)_25%,transparent)]"
                 }`}
               />
-              <span className="type-mono text-[0.45rem] text-[#7C6BC4]">
+              <span className="type-mono text-[0.45rem] text-[var(--text-muted)]">
                 {d.slice(5).replace("-", "/")}
               </span>
             </div>
@@ -178,12 +178,12 @@ export function StyleStreak() {
         })}
       </div>
 
-      <div className="rounded-sm border border-[#FFCB20]/25 bg-[#FFCB20]/5 p-4">
+      <div className="rounded-sm border border-[color-mix(in_srgb,var(--accent-honey)_25%,transparent)] bg-[color-mix(in_srgb,var(--accent-honey)_6%,transparent)] p-4">
         <div className="flex items-center gap-2 mb-1.5">
-          <Crown className="w-3.5 h-3.5 text-[#FFCB20]" />
-          <span className="type-label text-[#FFCB20]">DAILY CHALLENGE</span>
+          <Crown className="w-3.5 h-3.5 text-[var(--accent-honey)]" />
+          <span className="type-label text-[var(--accent-mocha)]">DAILY CHALLENGE</span>
         </div>
-        <p className="text-sm text-[#E8E0FF] dark:text-[#C4B5FD] font-body leading-relaxed mb-3">
+        <p className="text-sm text-[var(--text-primary)] font-body leading-relaxed mb-3">
           {challenge.title} — {challenge.desc}
         </p>
         <AnimatePresence mode="wait">
@@ -192,7 +192,7 @@ export function StyleStreak() {
               key="done"
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex items-center gap-2 text-xs font-mono text-[#FFCB20]"
+              className="flex items-center gap-2 text-xs font-mono text-[var(--accent-honey)]"
             >
               <Check className="w-3.5 h-3.5" /> COMPLETED +{challenge.points} XP
             </motion.div>
@@ -213,7 +213,7 @@ export function StyleStreak() {
       </div>
 
       {state.best > state.streak && (
-        <p className="type-mono text-[0.5rem] text-[#7C6BC4] tracking-widest mt-4">
+        <p className="type-mono text-[0.5rem] text-[var(--text-muted)] tracking-widest mt-4">
           PERSONAL BEST: {state.best} DAYS
         </p>
       )}

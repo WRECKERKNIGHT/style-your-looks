@@ -81,7 +81,7 @@ export function ParticleField() {
 
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(108, 43, 217, ${p.opacity * (0.5 + Math.sin(p.life * 0.02) * 0.5)})`;
+        ctx.fillStyle = `rgba(185, 139, 86, ${p.opacity * (0.5 + Math.sin(p.life * 0.02) * 0.5)})`;
         ctx.fill();
 
         particlesRef.current.forEach((p2, j) => {
@@ -93,7 +93,7 @@ export function ParticleField() {
             ctx.beginPath();
             ctx.moveTo(p.x, p.y);
             ctx.lineTo(p2.x, p2.y);
-            ctx.strokeStyle = `rgba(108, 43, 217, ${0.08 * (1 - dist2 / CONNECTION_DIST)})`;
+            ctx.strokeStyle = `rgba(185, 139, 86, ${0.08 * (1 - dist2 / CONNECTION_DIST)})`;
             ctx.lineWidth = 0.5;
             ctx.stroke();
           }

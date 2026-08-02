@@ -87,7 +87,7 @@ export function LoadingScreen() {
                 animate={{
                   opacity: [0.2, 0.8, 0.2],
                   scale: [1, 1.5, 1],
-                  backgroundColor: ["rgba(232,182,32,0.2)", "rgba(108,43,217,0.6)", "rgba(232,182,32,0.2)"],
+                  backgroundColor: ["rgba(200,150,62,0.2)", "rgba(138,95,61,0.6)", "rgba(200,150,62,0.2)"],
                 }}
                 transition={{
                   duration: 1.2,
@@ -101,7 +101,7 @@ export function LoadingScreen() {
 
           <div className="absolute inset-0 pointer-events-none opacity-[0.03]"
             style={{
-              backgroundImage: "radial-gradient(circle at 25% 50%, #8C59FF 0%, transparent 50%), radial-gradient(circle at 75% 50%, #E8B620 0%, transparent 50%)",
+              backgroundImage: "radial-gradient(circle at 25% 50%, #B98B56 0%, transparent 50%), radial-gradient(circle at 75% 50%, #C8963E 0%, transparent 50%)",
             }}
           />
         </motion.div>

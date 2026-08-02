@@ -21,10 +21,10 @@ const sizeMap = {
 };
 
 function getScoreColor(score: number) {
-  if (score >= 8) return { fill: "#FFCB20", label: "Excellent", hex: "#FFCB20" };
-  if (score >= 6) return { fill: "#8C59FF", label: "Good", hex: "#8C59FF" };
-  if (score >= 4) return { fill: "#E8B620", label: "Average", hex: "#E8B620" };
-  return { fill: "#6C2BD9", label: "Needs Work", hex: "#6C2BD9" };
+  if (score >= 8) return { fill: "#C8963E", label: "Excellent", hex: "#C8963E" };
+  if (score >= 6) return { fill: "#B98B56", label: "Good", hex: "#B98B56" };
+  if (score >= 4) return { fill: "#A0764E", label: "Average", hex: "#A0764E" };
+  return { fill: "#6F4A30", label: "Needs Work", hex: "#6F4A30" };
 }
 
 export function ScoreGauge({
@@ -81,7 +81,7 @@ export function ScoreGauge({
             cy={config.size / 2}
             r={radius}
             fill="none"
-            stroke="rgba(108, 43, 217, 0.1)"
+            stroke="rgba(185, 139, 86, 0.12)"
             strokeWidth={config.stroke}
           />
           <motion.circle

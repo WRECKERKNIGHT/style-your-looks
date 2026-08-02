@@ -19,11 +19,11 @@ export function MetricBar({
 }: MetricBarProps) {
   const percentage = (score / maxScore) * 100;
 
-  let color = "#FFCB20";
-  if (percentage >= 80) color = "#FFCB20";
-  else if (percentage >= 60) color = "#8C59FF";
-  else if (percentage >= 40) color = "#E8B620";
-  else color = "#6C2BD9";
+  let color = "#C8963E";
+  if (percentage >= 80) color = "#C8963E";
+  else if (percentage >= 60) color = "#B98B56";
+  else if (percentage >= 40) color = "#9C7142";
+  else color = "#6F4A30";
 
   return (
     <div className={cn("space-y-3", className)}>

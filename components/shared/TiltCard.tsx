@@ -71,7 +71,7 @@ export function TiltCard({
           style={{
             opacity: glareOpacity,
             background:
-              "radial-gradient(circle at 50% 50%, rgba(108, 43, 217, 0.3), transparent 70%)",
+              "radial-gradient(circle at 50% 50%, rgba(185, 139, 86, 0.3), transparent 70%)",
           }}
         />
       )}

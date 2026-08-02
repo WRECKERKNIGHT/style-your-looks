@@ -34,7 +34,7 @@ export function CursorGlow() {
         left: glowX,
         top: glowY,
         background:
-          "radial-gradient(circle, rgba(108,43,217,0.14) 0%, rgba(140,89,255,0.07) 35%, transparent 70%)",
+          "radial-gradient(circle, rgba(185,139,86,0.16) 0%, rgba(200,150,62,0.08) 35%, transparent 70%)",
       }}
     />
   );

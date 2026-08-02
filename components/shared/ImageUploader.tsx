@@ -132,7 +132,7 @@ export function ImageUploader({
                 : "border-light-border/30 dark:border-cosmic-border/30 bg-light-base/30 dark:bg-cosmic-base/30 backdrop-blur-sm hover:border-aurum-500/40 hover:bg-light-surface/50 dark:hover:bg-cosmic-surface/50"
             }`}
             style={{
-              background: dragOver ? undefined : "linear-gradient(135deg, rgba(108,43,217,0.03) 0%, transparent 100%)",
+              background: dragOver ? undefined : "linear-gradient(135deg, rgba(185,139,86,0.03) 0%, transparent 100%)",
             }}
           >
             <motion.div
