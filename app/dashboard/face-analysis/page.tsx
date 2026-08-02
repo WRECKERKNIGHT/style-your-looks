@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef } from "react";
 import { ImageUploader } from "@/components/shared/ImageUploader";
 import { AnalysisResults } from "@/components/analysis/AnalysisResults";
-import { LandmarkOverlay } from "@/components/analysis/LandmarkOverlay";
+import { FaceSkeletonOverlay } from "@/components/analysis/FaceSkeletonOverlay";
 import { ProcessingOverlay } from "@/components/analysis/ProcessingOverlay";
 import { useAnalysisStore } from "@/store/analysis-store";
 import { useMediaPipe } from "@/hooks/useMediaPipe";
@@ -264,7 +264,12 @@ export default function FaceAnalysisPage() {
           </motion.div>
 
           {uploadedImage && (
-            <motion.div variants={fadeUp} initial="hidden" animate="show" className="glass-card overflow-hidden relative">
+            <motion.div
+              variants={fadeUp}
+              initial="hidden"
+              animate="show"
+              className="glass-card overflow-hidden relative"
+            >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 ref={imageRef}
@@ -272,11 +277,27 @@ export default function FaceAnalysisPage() {
                 alt="Analysed face"
                 className="w-full max-h-[480px] object-cover"
               />
+              <motion.div
+                className="absolute inset-x-0 h-24 pointer-events-none"
+                style={{
+                  background:
+                    "linear-gradient(180deg, transparent, rgba(232,200,138,0.18) 50%, rgba(200,150,62,0.35) 100%)",
+                }}
+                initial={{ top: "-10%" }}
+                animate={{ top: "110%" }}
+                transition={{ duration: 1.4, ease: "easeInOut" }}
+              />
               {showLandmarks && faceResult.landmarks.length > 0 && (
-                <LandmarkOverlay
+                <FaceSkeletonOverlay
                   landmarks={faceResult.landmarks}
                   width={imageRef.current?.clientWidth || 600}
                   height={imageRef.current?.clientHeight || 480}
+                  facialShape={faceResult.facialShape}
+                  measurements={{
+                    fwhr: faceResult.rawFwhr || undefined,
+                    canthalTilt: faceResult.rawCanthalTilt || undefined,
+                    eyeNoseRatio: faceResult.rawEyeNoseRatio || undefined,
+                  }}
                 />
               )}
               <button
@@ -284,7 +305,7 @@ export default function FaceAnalysisPage() {
                 className="absolute top-4 right-4 flex items-center gap-2 bg-[color-mix(in_srgb,var(--bg-primary)_80%,transparent)] text-[var(--text-primary)] px-3 py-1.5 text-xs font-body tracking-wider transition-colors border border-[var(--border-primary)]"
               >
                 <Eye className="w-3.5 h-3.5" />
-                {showLandmarks ? "HIDE" : "SHOW"} LANDMARKS
+                {showLandmarks ? "HIDE" : "SHOW"} SKELETON
               </button>
             </motion.div>
           )}
