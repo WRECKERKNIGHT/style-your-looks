@@ -12,6 +12,7 @@ import Link from "next/link";
 import { StatsCounter } from "./StatsCounter";
 import { MagneticButton } from "@/components/shared/MagneticButton";
 import { KineticHeadline } from "./KineticHeadline";
+import { Mannequin3D } from "./Mannequin3D";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -30,10 +31,18 @@ const itemVariants = {
   },
 };
 
+const headlineWords = ["NEXARI."];
+
 const stats = [
   { target: 47, suffix: "-Point", label: "Analysis" },
   { target: 100, suffix: "%", label: "Private" },
   { target: 0, suffix: "", prefix: "Real-time ", label: "AI" },
+];
+
+const floatingTags = [
+  { label: "FACE IQ", sub: "478 landmarks", x: "-6%", y: "12%", delay: 0 },
+  { label: "ITA COLOR", sub: "tone science", x: "-14%", y: "52%", delay: 0.8 },
+  { label: "TRY-ON", sub: "fit preview", x: "-4%", y: "78%", delay: 1.6 },
 ];
 
 export function HeroSection() {
@@ -48,9 +57,10 @@ export function HeroSection() {
     damping: 30,
   });
 
-  const bgY = useTransform(smoothProgress, [0, 1], [0, 80]);
+  const bgY = useTransform(smoothProgress, [0, 1], [0, 120]);
+  const mannequinY = useTransform(smoothProgress, [0, 1], [0, -120]);
   const typeY = useTransform(smoothProgress, [0, 1], [0, 140]);
-  const typeScale = useTransform(smoothProgress, [0, 1], [1, 1.12]);
+  const typeScale = useTransform(smoothProgress, [0, 1], [1, 1.08]);
   const typeOpacity = useTransform(smoothProgress, [0, 0.7], [1, 0.15]);
   const fadeOut = useTransform(smoothProgress, [0.6, 1], [1, 0]);
 
@@ -70,21 +80,21 @@ export function HeroSection() {
     <section
       ref={ref}
       onMouseMove={handleMouseMove}
-      className="relative min-h-screen overflow-hidden bg-cosmic-base"
+      className="relative min-h-screen overflow-hidden bg-cosmic-base paper-texture"
     >
-      <div className="absolute inset-0 grid-bg opacity-40" />
+      <div className="absolute inset-0 grid-bg opacity-60" />
 
       <motion.div style={{ y: bgY }} className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-[15%] right-[15%] w-[600px] h-[600px] rounded-full bg-nexus-400/10 blur-[180px] animate-drift" />
-        <div className="absolute top-[40%] left-[10%] w-[400px] h-[400px] rounded-full bg-aurum-400/8 blur-[140px] animate-drift" style={{ animationDelay: "-5s" }} />
-        <div className="absolute bottom-[10%] right-[25%] w-[350px] h-[350px] rounded-full bg-nexus-600/10 blur-[120px] animate-drift" style={{ animationDelay: "-10s" }} />
+        <div className="absolute top-[10%] right-[10%] w-[520px] h-[520px] rounded-full bg-aurum-400/15 blur-[160px] animate-drift" />
+        <div className="absolute top-[45%] left-[5%] w-[420px] h-[420px] rounded-full bg-nexus-500/10 blur-[140px] animate-drift" style={{ animationDelay: "-5s" }} />
+        <div className="absolute bottom-[5%] right-[25%] w-[360px] h-[360px] rounded-full bg-aurum-300/12 blur-[120px] animate-drift" style={{ animationDelay: "-10s" }} />
       </motion.div>
 
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 z-[1] transition-opacity duration-300 opacity-0 lg:opacity-100"
         style={{
-          background: `radial-gradient(600px circle at ${spotlightX} ${spotlightY}, rgba(108,43,217,0.12), transparent 60%)`,
+          background: `radial-gradient(700px circle at ${spotlightX} ${spotlightY}, rgba(185,139,86,0.14), transparent 60%)`,
         }}
       />
 
@@ -96,33 +106,47 @@ export function HeroSection() {
           animate="visible"
         >
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center min-h-[80vh]">
-            <div>
+            <div className="relative">
               <motion.div variants={itemVariants} className="flex items-center gap-4 mb-8">
                 <div className="section-divider" />
                 <span className="section-number">AI Style Intelligence</span>
               </motion.div>
 
               <motion.div variants={itemVariants} style={{ y: typeY, scale: typeScale, opacity: typeOpacity }}>
-                <h1 className="type-massive text-white leading-[0.85] mb-4">
-                  NEX
-                  <span className="text-gradient-aurum">ARI</span>
+                <h1 className="type-massive text-[var(--text-primary)] leading-[0.85] mb-6">
+                  {headlineWords.map((word, i) => (
+                    <span key={i} className="inline-block overflow-hidden align-bottom">
+                      <motion.span
+                        initial={{ y: "110%", rotate: 3 }}
+                        animate={{ y: 0, rotate: 0 }}
+                        transition={{ duration: 1, delay: 0.4 + i * 0.1, ease: [0.16, 1, 0.3, 1] }}
+                        className="inline-block"
+                      >
+                        {word}
+                      </motion.span>
+                    </span>
+                  ))}
+                  <span className="text-gradient-aurum italic">MEASURED.</span>
+                  <span className="text-gradient-aurum italic"> MADE.</span>
+                  <span className="text-gradient-aurum italic"> YOURS.</span>
                 </h1>
               </motion.div>
 
               <motion.p
                 variants={itemVariants}
-                className="type-label text-aurum-400/80 mb-6 text-[0.7rem]"
+                className="type-label mb-6 text-[0.7rem]"
               >
                 AI-POWERED STYLE INTELLIGENCE
               </motion.p>
 
               <motion.p
                 variants={itemVariants}
-                className="text-nexus-200/60 text-lg md:text-xl max-w-lg font-body leading-relaxed"
+                className="text-[var(--text-secondary)] text-lg md:text-xl max-w-lg font-body leading-relaxed"
               >
                 Unlock your style DNA with 47-point facial analysis, body
                 typing, and personalized recommendations — all running
-                privately on your device.
+                privately on your device. Measured like a tailor, computed
+                like an atelier.
               </motion.p>
 
               <motion.div
@@ -138,7 +162,7 @@ export function HeroSection() {
                   </Link>
                 </MagneticButton>
                 <MagneticButton strength={0.2}>
-                  <Link href="#features" className="btn-outline border-aurum-400/50 text-aurum-400 hover:text-white">
+                  <Link href="#features" className="btn-outline border-[var(--accent-mocha)] text-[var(--text-secondary)]">
                     EXPLORE FEATURES
                   </Link>
                 </MagneticButton>
@@ -150,27 +174,80 @@ export function HeroSection() {
               className="hidden lg:flex items-center justify-center"
             >
               <motion.div
-                animate={{ rotate: [0, 6, -6, 0], scale: [1, 1.03, 1.03, 1] }}
+                animate={{ rotate: [0, 2, -2, 0] }}
                 transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
-                className="relative w-[400px] h-[500px]"
+                className="relative w-[360px] h-[560px]"
               >
-                <div className="absolute inset-0 rounded-full bg-gradient-nexus opacity-10 blur-[100px]" />
+                <div className="absolute inset-0 rounded-full bg-gradient-aurum opacity-10 blur-[100px]" />
+
                 <motion.div
-                  animate={{ scale: [1, 1.06, 1] }}
+                  animate={{ scale: [1, 1.05, 1] }}
                   transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
-                  className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full border border-nexus-400/20 glow-pulse"
+                  className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 rounded-full border border-aurum-400/25 glow-pulse"
                 />
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full border border-aurum-400/20" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[330px] h-[330px] rounded-full border border-nexus-500/15" />
                 <motion.div
                   animate={{ rotate: 360 }}
-                  transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
-                  className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-56 h-56 rounded-full border border-dashed border-nexus-400/10"
+                  transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
+                  className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[360px] h-[360px] rounded-full border border-dashed border-aurum-500/20"
                 />
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                  <span className="type-massive text-nexus-400/10 select-none">
-                    47
-                  </span>
-                </div>
+
+                {/* rotating circular stamp */}
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 26, repeat: Infinity, ease: "linear" }}
+                  aria-hidden
+                  className="absolute -top-4 left-1/2 -translate-x-1/2 w-32 h-32"
+                >
+                  <svg viewBox="0 0 100 100" className="w-full h-full">
+                    <defs>
+                      <path id="hero-stamp" d="M 50,50 m -38,0 a 38,38 0 1,1 76,0 a 38,38 0 1,1 -76,0" />
+                    </defs>
+                    <text className="fill-[var(--accent-caramel)]" style={{ fontSize: "8px", letterSpacing: "2.5px", fontFamily: "JetBrains Mono, monospace", fontWeight: 700 }}>
+                      <textPath href="#hero-stamp">
+                        MADE TO MEASURE • CRAFTED FOR YOU •
+                      </textPath>
+                    </text>
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-2.5 h-2.5 rounded-full bg-aurum-400/80 glow-pulse" />
+                  </div>
+                </motion.div>
+
+                {/* the mannequin */}
+                <motion.div
+                  style={{ y: mannequinY }}
+                  className="absolute inset-0 z-10"
+                >
+                  <Mannequin3D className="w-full h-full" />
+                </motion.div>
+
+                {/* floating measurement tags */}
+                {floatingTags.map((tag) => (
+                  <motion.div
+                    key={tag.label}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 1.2 + tag.delay, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                    className="absolute z-20"
+                    style={{ left: tag.x, top: tag.y }}
+                  >
+                    <motion.div
+                      animate={{ y: [0, -8, 0] }}
+                      transition={{ duration: 4 + tag.delay, repeat: Infinity, ease: "easeInOut" }}
+                      className="glass-card rounded-md px-3.5 py-2 border-glow"
+                    >
+                      <div className="type-mono text-[0.55rem] font-bold tracking-widest text-[var(--accent-mocha)]">
+                        {tag.label}
+                      </div>
+                      <div className="type-mono text-[0.5rem] text-[var(--text-muted)]">
+                        {tag.sub}
+                      </div>
+                    </motion.div>
+                  </motion.div>
+                ))}
+
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-[70%] h-5 bg-[var(--overlay)] blur-[16px] rounded-full" />
               </motion.div>
             </motion.div>
           </div>
@@ -180,13 +257,13 @@ export function HeroSection() {
             className="mt-16 lg:mt-20 grid grid-cols-3 gap-8 max-w-2xl"
           >
             {stats.map((stat) => (
-              <div key={stat.label} className="glass-card rounded-lg px-6 py-5 text-center group hover:border-nexus-400/30 transition-colors duration-500">
+              <div key={stat.label} className="glass-card rounded-lg px-6 py-5 text-center group hover:border-[color-mix(in_srgb,var(--accent-caramel)_40%,transparent)] transition-colors duration-500">
                 <div className="text-3xl md:text-4xl font-display font-bold text-gradient-aurum">
-                  {stat.prefix && <span className="text-white/40 text-sm">{stat.prefix}</span>}
+                  {stat.prefix && <span className="text-[var(--text-muted)] text-sm">{stat.prefix}</span>}
                   <StatsCounter target={stat.target} suffix="" />
                   <span className="text-lg">{stat.suffix}</span>
                 </div>
-                <div className="type-mono text-[0.5rem] text-nexus-300/60 tracking-widest mt-2">
+                <div className="type-mono text-[0.5rem] text-[var(--text-muted)] tracking-widest mt-2">
                   {stat.label}
                 </div>
               </div>
@@ -201,20 +278,23 @@ export function HeroSection() {
         transition={{ delay: 2, duration: 1 }}
         className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-3"
       >
+        <span className="type-mono text-[0.5rem] tracking-[0.3em] text-[var(--text-muted)]">
+          SCROLL
+        </span>
         <motion.div
           animate={{ y: [0, 8, 0] }}
           transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-          className="w-4 h-4 border-r-2 border-b-2 border-nexus-400/60 rotate-45"
+          className="w-4 h-4 border-r-2 border-b-2 border-[color-mix(in_srgb,var(--accent-mocha)_60%,transparent)] rotate-45"
         />
       </motion.div>
 
-      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-nexus-400/30 to-transparent" />
+      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[color-mix(in_srgb,var(--accent-caramel)_40%,transparent)] to-transparent" />
 
       <KineticHeadline
         text="LOOKS ARE DATA"
         className="absolute bottom-6 right-8 md:right-16 z-[1] hidden lg:block"
         fillClassName="text-gradient-aurum"
-        dimClassName="text-white/8"
+        dimClassName="text-[color-mix(in_srgb,var(--text-primary)_8%,transparent)]"
         as="p"
       />
     </section>

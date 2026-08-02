@@ -30,7 +30,7 @@ const pipelineSteps = [
     tagline: "Scored. Ranked. Curated.",
     description:
       "FaceIQ, harmony indices, outfit picks, grooming recs. Everything personalized to your unique profile.",
-    accent: "from-nexus-500 to-aurum-400",
+    accent: "from-nexus-700 to-aurum-500",
   },
   {
     number: "04",
@@ -39,7 +39,7 @@ const pipelineSteps = [
     tagline: "Join the style economy.",
     description:
       "Publish your look to the community. Get honest ratings from real people. Level up your style reputation.",
-    accent: "from-aurum-400 to-nexus-400",
+    accent: "from-aurum-500 to-nexus-500",
   },
 ];
 
@@ -71,11 +71,11 @@ export function HorizontalPipeline() {
     <section
       ref={sectionRef}
       id="pipeline"
-      className="relative h-[360vh] bg-cosmic-base"
+      className="relative h-[360vh] bg-cosmic-surface"
     >
       <div className="sticky top-0 h-screen overflow-hidden flex items-center">
-        <div className="absolute inset-0 grid-bg opacity-20" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1200px] h-[1200px] rounded-full bg-nexus-400/10 blur-[200px] pointer-events-none" />
+        <div className="absolute inset-0 grid-bg opacity-40" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1200px] h-[1200px] rounded-full bg-aurum-400/10 blur-[200px] pointer-events-none" />
 
         <motion.div
           ref={trackRef}
@@ -87,7 +87,7 @@ export function HorizontalPipeline() {
               <div className="section-divider" />
               <span className="section-number">THE PIPELINE</span>
             </div>
-            <h2 className="type-display text-white leading-[0.92]">
+            <h2 className="type-display text-[var(--text-primary)] leading-[0.92]">
               FROM ONE
               <br />
               PHOTO TO A
@@ -96,11 +96,11 @@ export function HorizontalPipeline() {
               <br />
               IDENTITY.
             </h2>
-            <p className="mt-8 text-nexus-200/60 text-base md:text-lg font-body leading-relaxed max-w-md">
+            <p className="mt-8 text-[var(--text-secondary)] text-base md:text-lg font-body leading-relaxed max-w-md">
               Four steps. Zero servers. Scroll through the entire journey your
               photo takes inside NEXARI.
             </p>
-            <div className="mt-10 flex items-center gap-3 text-nexus-300/50">
+            <div className="mt-10 flex items-center gap-3 text-[var(--text-muted)]">
               <div className="w-10 h-px bg-aurum-400/40" />
               <span className="type-mono text-[0.6rem] tracking-[0.25em]">
                 SCROLL TO TRAVEL
@@ -120,11 +120,11 @@ export function HorizontalPipeline() {
               key={step.number}
               className="relative w-[78vw] md:w-[420px] flex-shrink-0 group"
             >
-              <div className="absolute -top-16 left-0 right-0 flex items-center gap-4 opacity-30">
-                <span className="type-mono text-[0.7rem] text-nexus-300/60 tracking-[0.3em]">
+              <div className="absolute -top-16 left-0 right-0 flex items-center gap-4 opacity-40">
+                <span className="type-mono text-[0.7rem] text-[var(--accent-mocha)] tracking-[0.3em]">
                   STEP {step.number}
                 </span>
-                <div className="h-px flex-1 bg-gradient-to-r from-nexus-400/40 to-transparent" />
+                <div className="h-px flex-1 bg-gradient-to-r from-[color-mix(in_srgb,var(--accent-caramel)_40%,transparent)] to-transparent" />
               </div>
 
               <motion.div
@@ -139,22 +139,22 @@ export function HorizontalPipeline() {
                 />
 
                 <div>
-                  <div className="text-6xl md:text-7xl font-display font-bold text-white/10 leading-none">
+                  <div className="text-6xl md:text-7xl font-display font-bold text-[var(--text-primary)]/[0.08] leading-none">
                     {step.number}
                   </div>
-                  <div className="mt-8 w-14 h-14 rounded-full bg-gradient-nexus flex items-center justify-center shadow-nexus">
+                  <div className="mt-8 w-14 h-14 rounded-full bg-gradient-aurum flex items-center justify-center shadow-aurum">
                     <step.icon className="w-6 h-6 text-white" />
                   </div>
                 </div>
 
                 <div>
-                  <h3 className="type-heading text-white mb-3">
+                  <h3 className="type-heading text-[var(--text-primary)] mb-3">
                     {step.title}
                   </h3>
-                  <p className="type-mono text-[0.65rem] text-aurum-400/80 tracking-[0.15em] mb-4 uppercase">
+                  <p className="type-mono text-[0.65rem] text-[var(--accent-mocha)] tracking-[0.15em] mb-4 uppercase">
                     {step.tagline}
                   </p>
-                  <p className="text-sm text-nexus-200/60 font-body leading-relaxed">
+                  <p className="text-sm text-[var(--text-secondary)] font-body leading-relaxed">
                     {step.description}
                   </p>
                 </div>
@@ -176,14 +176,14 @@ export function HorizontalPipeline() {
                 &rarr;
               </span>
             </motion.div>
-            <p className="type-mono text-[0.6rem] text-nexus-300/40 tracking-[0.3em] uppercase">
+            <p className="type-mono text-[0.6rem] text-[var(--text-muted)] tracking-[0.3em] uppercase">
               End of the pipeline
             </p>
           </div>
         </motion.div>
 
-        <div className="pointer-events-none absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-cosmic-base to-transparent z-20" />
-        <div className="pointer-events-none absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-cosmic-base to-transparent z-20" />
+        <div className="pointer-events-none absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-[var(--bg-primary)] to-transparent z-20" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-[var(--bg-primary)] to-transparent z-20" />
       </div>
     </section>
   );

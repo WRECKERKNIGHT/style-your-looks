@@ -56,8 +56,8 @@ export function HowItWorksSection() {
   const lineScaleY = useSpring(scrollYProgress, { stiffness: 80, damping: 26 });
 
   return (
-    <section ref={sectionRef} className="relative py-32 md:py-44 overflow-hidden bg-cosmic-base" id="how-it-works">
-      <div className="absolute inset-0 grid-bg opacity-20" />
+    <section ref={sectionRef} className="relative py-32 md:py-44 overflow-hidden bg-cosmic-base paper-texture" id="how-it-works">
+      <div className="absolute inset-0 grid-bg opacity-40" />
 
       <div className="relative z-10 max-w-[1400px] mx-auto px-8 md:px-16 lg:px-24">
         <motion.div
@@ -71,14 +71,14 @@ export function HowItWorksSection() {
             <div className="section-divider" />
             <span className="section-number">02 // Process</span>
           </div>
-          <KineticHeadline text="HOW IT WORKS." className="type-display text-white" />
+          <KineticHeadline text="HOW IT WORKS." className="type-display text-[var(--text-primary)]" />
         </motion.div>
 
         <div className="relative">
-          <div className="absolute top-24 left-[2.25rem] md:left-[2.75rem] bottom-24 w-px bg-nexus-800/40 hidden md:block" />
+          <div className="absolute top-24 left-[2.25rem] md:left-[2.75rem] bottom-24 w-px bg-[var(--border-primary)] hidden md:block" />
           <motion.div
             style={{ scaleY: lineScaleY }}
-            className="absolute top-24 left-[2.25rem] md:left-[2.75rem] bottom-24 w-px origin-top bg-gradient-to-b from-aurum-400 via-nexus-400 to-aurum-400 hidden md:block shadow-[0_0_12px_rgba(108,43,217,0.5)]"
+            className="absolute top-24 left-[2.25rem] md:left-[2.75rem] bottom-24 w-[2px] origin-top bg-gradient-to-b from-aurum-400 via-[var(--accent-mocha)] to-aurum-400 hidden md:block rounded-full shadow-aurum"
           />
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
@@ -92,30 +92,30 @@ export function HowItWorksSection() {
                 className="relative"
               >
                 <div className="glass-card rounded-xl p-8 md:p-10 h-full relative overflow-hidden group">
-                  <div className="absolute -top-10 -right-10 w-24 h-24 rounded-full bg-gradient-nexus opacity-[0.06] group-hover:opacity-[0.12] transition-opacity duration-700" />
-                  <div className="absolute -bottom-16 -left-16 w-40 h-40 rounded-full bg-nexus-400/0 blur-[60px] group-hover:bg-nexus-400/10 transition-colors duration-700" />
+                  <div className="absolute -top-10 -right-10 w-24 h-24 rounded-full bg-gradient-aurum opacity-[0.06] group-hover:opacity-[0.12] transition-opacity duration-700" />
+                  <div className="absolute -bottom-16 -left-16 w-40 h-40 rounded-full bg-aurum-400/0 blur-[60px] group-hover:bg-aurum-400/10 transition-colors duration-700" />
 
                   <div className="relative z-10">
-                    <div className="w-14 h-14 rounded-full bg-gradient-nexus flex items-center justify-center mb-6 shadow-nexus group-hover:scale-110 group-hover:rotate-6 transition-transform duration-500">
+                    <div className="w-14 h-14 rounded-full bg-gradient-aurum flex items-center justify-center mb-6 shadow-aurum group-hover:scale-110 group-hover:rotate-6 transition-transform duration-500">
                       <step.icon className="w-6 h-6 text-white" />
                     </div>
 
                     <div className="flex items-center gap-3 mb-4">
-                      <span className="type-mono text-[0.6rem] text-aurum-400/70 tracking-[0.2em]">
+                      <span className="type-mono text-[0.6rem] text-[var(--accent-mocha)] tracking-[0.2em]">
                         STEP 0{step.number}
                       </span>
-                      <div className="h-px flex-1 bg-gradient-to-r from-nexus-400/20 to-transparent" />
+                      <div className="h-px flex-1 bg-gradient-to-r from-[color-mix(in_srgb,var(--accent-caramel)_30%,transparent)] to-transparent" />
                     </div>
 
-                    <h3 className="type-heading text-white mb-3 text-2xl">
+                    <h3 className="type-heading text-[var(--text-primary)] mb-3 text-2xl">
                       {step.title}
                     </h3>
 
-                    <p className="text-nexus-200/60 text-sm font-body leading-relaxed mb-4">
+                    <p className="text-[var(--text-secondary)] text-sm font-body leading-relaxed mb-4">
                       {step.description}
                     </p>
 
-                    <p className="type-mono text-[0.65rem] text-nexus-300/40">
+                    <p className="type-mono text-[0.65rem] text-[var(--text-muted)]">
                       {step.detail}
                     </p>
                   </div>
@@ -123,8 +123,8 @@ export function HowItWorksSection() {
 
                 {index < steps.length - 1 && (
                   <div className="hidden md:flex absolute top-1/2 -right-6 translate-x-1/2 z-20">
-                    <div className="w-10 h-10 rounded-full bg-cosmic-surface border border-nexus-400/30 flex items-center justify-center group-hover:border-aurum-400/50 transition-colors">
-                      <span className="text-nexus-300 text-sm group-hover:text-aurum-400 transition-colors">&rarr;</span>
+                    <div className="w-10 h-10 rounded-full bg-[var(--bg-secondary)] border border-[color-mix(in_srgb,var(--accent-caramel)_30%,transparent)] flex items-center justify-center group-hover:border-aurum-400/50 transition-colors shadow-paper">
+                      <span className="text-[var(--accent-mocha)] text-sm group-hover:text-[var(--accent-caramel)] transition-colors">&rarr;</span>
                     </div>
                   </div>
                 )}

@@ -28,8 +28,8 @@ export function MannequinSection() {
   });
 
   return (
-    <section ref={ref} className="relative py-32 md:py-44 overflow-hidden bg-cosmic-elevated" id="mannequin">
-      <div className="absolute inset-0 grid-bg opacity-20" />
+    <section ref={ref} className="relative py-32 md:py-44 overflow-hidden bg-cosmic-base paper-texture" id="mannequin">
+      <div className="absolute inset-0 grid-bg opacity-40" />
 
       <div className="relative z-10 max-w-[1400px] mx-auto px-8 md:px-16 lg:px-24">
         <motion.div
@@ -43,7 +43,7 @@ export function MannequinSection() {
             <div className="section-divider" />
             <span className="section-number">03 // Analysis</span>
           </div>
-          <KineticHeadline text="EVERY FEATURE. MAPPED." className="type-display text-white" />
+          <KineticHeadline text="EVERY FEATURE. MAPPED." className="type-display text-[var(--text-primary)]" />
         </motion.div>
 
         <div className="relative flex flex-col lg:flex-row items-center gap-12 lg:gap-24">
@@ -52,14 +52,18 @@ export function MannequinSection() {
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            className="relative w-[200px] md:w-[260px] flex-shrink-0"
+            className="relative w-[220px] md:w-[300px] flex-shrink-0"
           >
-            <div className="absolute inset-0 rounded-full bg-gradient-nexus opacity-[0.08] blur-[80px]" />
-            <motion.div style={{ y: mannequinY }}>
+            <div className="absolute inset-0 rounded-full bg-gradient-aurum opacity-[0.1] blur-[80px]" />
+            <motion.div style={{ y: mannequinY }} className="scan-line relative">
               <Mannequin3D className="w-full relative z-10" />
             </motion.div>
 
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[140%] h-4 bg-black/30 blur-[20px] rounded-full" />
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20">
+              <span className="craft-badge">Measured to fit</span>
+            </div>
+
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[130%] h-4 bg-[var(--overlay)] blur-[20px] rounded-full" />
           </motion.div>
 
           <div className="relative flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -70,17 +74,17 @@ export function MannequinSection() {
                 whileInView={{ opacity: 1, y: 0, x: 0 }}
                 viewport={{ once: true, margin: "-40px" }}
                 transition={{ duration: 0.55, delay: index * 0.08, ease: [0.16, 1, 0.3, 1] }}
-                className="glass-card rounded-lg p-5 flex items-start gap-4 group hover:border-aurum-400/30 transition-colors duration-500"
+                className="glass-card rounded-lg p-5 flex items-start gap-4 group hover:border-aurum-400/40 transition-colors duration-500"
               >
                 <div className="relative mt-1">
                   <div className="w-3 h-3 rounded-full bg-aurum-400/80 glow-pulse" />
                   <div className="absolute inset-0 rounded-full bg-aurum-400/40 animate-ping scale-150 opacity-30" />
                 </div>
                 <div>
-                  <h4 className="text-white font-display font-semibold text-sm tracking-wide group-hover:text-aurum-400 transition-colors duration-500">
+                  <h4 className="text-[var(--text-primary)] font-display font-semibold text-sm tracking-wide group-hover:text-[var(--accent-mocha)] transition-colors duration-500">
                     {spot.label}
                   </h4>
-                  <p className="type-mono text-[0.6rem] text-nexus-300/50 mt-1">
+                  <p className="type-mono text-[0.6rem] text-[var(--text-muted)] mt-1">
                     {spot.sublabel}
                   </p>
                 </div>
@@ -94,7 +98,7 @@ export function MannequinSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8, delay: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="mt-16 text-center text-nexus-200/40 text-sm font-body max-w-xl mx-auto"
+          className="mt-16 text-center text-[var(--text-muted)] text-sm font-body max-w-xl mx-auto"
         >
           Every analysis runs on your device. Your data never leaves your hands.
         </motion.p>

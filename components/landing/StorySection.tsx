@@ -13,29 +13,29 @@ const chapters = [
     label: "CHAPTER I",
     title: "YOUR FACE IS YOUR FIRST LANGUAGE.",
     sub: "Before you speak a word, 47 objective signals are already speaking for you.",
-    accent: "#6C2BD9",
-    tint: "from-[#6C2BD9]/25",
+    accent: "#8A5F3D",
+    tint: "from-[#8A5F3D]/25",
   },
   {
     label: "CHAPTER II",
     title: "SYMMETRY IS HEARD BEFORE IT IS SEEN.",
     sub: "Golden ratios, harmony indices, proportions — mathematics has always dressed first.",
-    accent: "#E8B620",
-    tint: "from-[#E8B620]/20",
+    accent: "#B98B56",
+    tint: "from-[#B98B56]/20",
   },
   {
     label: "CHAPTER III",
     title: "STYLE IS A RATIO. FIT IS A DECLARATION.",
     sub: "Body typing turns silhouettes into physics. The right frame makes the outfit.",
-    accent: "#8C59FF",
-    tint: "from-[#8C59FF]/25",
+    accent: "#C8963E",
+    tint: "from-[#C8963E]/25",
   },
   {
     label: "CHAPTER IV",
     title: "PRIVACY IS THE NEW CHARM.",
     sub: "Every pixel is processed on your device. Your face never leaves your hands.",
-    accent: "#FFCB20",
-    tint: "from-[#FFCB20]/20",
+    accent: "#6F4A30",
+    tint: "from-[#6F4A30]/20",
   },
 ];
 
@@ -61,11 +61,11 @@ function ChapterWord({
 
   return (
     <span className="relative inline-block whitespace-nowrap">
-      <span className="text-white/10">{word}</span>
+      <span className="text-[color-mix(in_srgb,var(--text-primary)_10%,transparent)]">{word}</span>
       <motion.span
         aria-hidden
         className="absolute top-0 left-0 overflow-hidden"
-        style={{ width, color: accent, textShadow: `0 0 24px ${accent}55` }}
+        style={{ width, color: accent, textShadow: `0 0 24px ${accent}44` }}
       >
         <span className="whitespace-nowrap">{word}</span>
       </motion.span>
@@ -128,7 +128,7 @@ function Chapter({
           </span>
         </div>
 
-        <h2 className="type-massive text-white leading-[0.95] tracking-tight">
+        <h2 className="type-massive text-[var(--text-primary)] leading-[0.95] tracking-tight">
           {title.map((word, i) => (
             <span key={`${word}-${i}`}>
               <ChapterWord
@@ -144,7 +144,7 @@ function Chapter({
         </h2>
 
         <motion.p
-          className="mt-10 text-nexus-200/60 text-lg md:text-xl font-body leading-relaxed max-w-xl"
+          className="mt-10 text-[var(--text-secondary)] text-lg md:text-xl font-body leading-relaxed max-w-xl"
           initial={{ opacity: 0, y: 20 }}
           style={{ opacity: subOpacity }}
         >
@@ -172,7 +172,7 @@ function ChapterDot({
   const color = useTransform(
     active,
     [0, 0.4],
-    ["rgba(255,255,255,0.15)", chapter.accent]
+    ["rgba(87, 58, 39, 0.2)", chapter.accent]
   );
   const scale = useTransform(active, [0, 0.4], [1, 1.6]);
 
@@ -194,7 +194,7 @@ export function StorySection() {
   return (
     <section ref={ref} className="relative h-[360vh] bg-cosmic-elevated">
       <div className="sticky top-0 h-screen overflow-hidden">
-        <div className="absolute inset-0 grid-bg opacity-10" />
+        <div className="absolute inset-0 grid-bg opacity-30" />
 
         {chapters.map((chapter, i) => (
           <Chapter

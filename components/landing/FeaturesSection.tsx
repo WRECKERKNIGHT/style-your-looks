@@ -83,7 +83,7 @@ export function FeaturesSection() {
 
   return (
     <section ref={ref} className="relative py-32 md:py-44 overflow-hidden bg-cosmic-surface" id="features">
-      <div className="absolute inset-0 grid-bg opacity-20" />
+      <div className="absolute inset-0 grid-bg opacity-40" />
 
       <div className="relative z-10 max-w-[1400px] mx-auto px-8 md:px-16 lg:px-24">
         <motion.div
@@ -99,8 +99,12 @@ export function FeaturesSection() {
           </div>
           <KineticHeadline
             text="WHAT WE BUILD."
-            className="type-display text-white"
+            className="type-display text-[var(--text-primary)]"
           />
+          <p className="mt-5 text-[var(--text-secondary)] max-w-md font-body text-base leading-relaxed">
+            Seven instruments, one fitting room. Every analysis runs on your
+            device — measured, cut, and tailored for you.
+          </p>
         </motion.div>
 
         <motion.div
@@ -109,27 +113,36 @@ export function FeaturesSection() {
           initial="hidden"
           animate={isInView ? "visible" : "hidden"}
         >
-          {features.map((feature) => (
+          {features.map((feature, index) => (
             <motion.div
               key={feature.title}
               variants={cardVariants}
               className="group"
             >
-              <SpotlightCard className="h-full card-nexus relative overflow-hidden rounded-xl">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-nexus opacity-[0.03] rounded-bl-full" />
+              <SpotlightCard
+                spotlightColor="rgba(185, 139, 86, 0.18)"
+                tilt={5}
+                className="h-full card-nexus relative overflow-hidden rounded-xl"
+              >
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-aurum opacity-[0.05] rounded-bl-full" />
                 <div className="relative z-10 p-8">
-                  <div className="w-12 h-12 rounded-full bg-gradient-nexus flex items-center justify-center mb-5 shadow-nexus group-hover:scale-110 transition-transform duration-500">
-                    <feature.icon className="w-5 h-5 text-white" />
+                  <div className="flex items-start justify-between mb-5">
+                    <div className="w-12 h-12 rounded-full bg-gradient-aurum flex items-center justify-center shadow-aurum group-hover:scale-110 group-hover:rotate-6 transition-transform duration-500">
+                      <feature.icon className="w-5 h-5 text-white" />
+                    </div>
+                    <span className="type-mono text-[0.55rem] text-[color-mix(in_srgb,var(--text-muted)_50%,transparent)] tracking-[0.25em]">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
                   </div>
-                  <h3 className="type-heading text-white mb-3 text-xl">
+                  <h3 className="type-heading text-[var(--text-primary)] mb-3 text-xl">
                     {feature.title}
                   </h3>
-                  <p className="text-sm text-nexus-200/60 font-body leading-relaxed">
+                  <p className="text-sm text-[var(--text-secondary)] font-body leading-relaxed">
                     {feature.description}
                   </p>
-                  <div className="mt-6 pt-4 border-t border-nexus-800/30 flex items-center gap-2">
+                  <div className="mt-6 pt-4 border-t border-[var(--border-primary)] flex items-center gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-aurum-400/60" />
-                    <span className="type-mono text-[0.55rem] text-nexus-300/40 tracking-widest group-hover:text-nexus-300/70 transition-colors">
+                    <span className="type-mono text-[0.55rem] text-[var(--text-muted)] tracking-widest group-hover:text-[var(--accent-mocha)] transition-colors">
                       EXPLORE &rarr;
                     </span>
                   </div>

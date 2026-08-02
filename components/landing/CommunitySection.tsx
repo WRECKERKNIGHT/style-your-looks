@@ -53,7 +53,7 @@ export function CommunitySection() {
 
   return (
     <section className="relative py-32 md:py-44 overflow-hidden bg-cosmic-surface" id="community">
-      <div className="absolute inset-0 grid-bg opacity-20" />
+      <div className="absolute inset-0 grid-bg opacity-40" />
 
       <div className="relative z-10 max-w-[1400px] mx-auto px-8 md:px-16 lg:px-24">
         <motion.div
@@ -67,14 +67,14 @@ export function CommunitySection() {
             <div className="section-divider" />
             <span className="section-number">04 // Community</span>
           </div>
-          <KineticHeadline text="HONEST FEEDBACK." className="type-display text-white" />
-          <p className="mt-5 text-nexus-200/60 max-w-md font-body text-base leading-relaxed">
+          <KineticHeadline text="HONEST FEEDBACK." className="type-display text-[var(--text-primary)]" />
+          <p className="mt-5 text-[var(--text-secondary)] max-w-md font-body text-base leading-relaxed">
             Real people. Real ratings. No filters, no fakery. The kind of
             feedback your friends won&apos;t give you.
           </p>
         </motion.div>
 
-        <div ref={marqueeRef} className="marquee-container mb-16 md:mb-20 py-5 border-y border-nexus-800/30 overflow-hidden">
+        <div ref={marqueeRef} className="marquee-container mb-16 md:mb-20 py-5 border-y border-[var(--border-primary)] overflow-hidden">
           <div
             className="marquee-content"
             style={{
@@ -87,10 +87,10 @@ export function CommunitySection() {
                 {marqueeItems.map((word) => (
                   <span
                     key={word}
-                    className="text-3xl md:text-5xl font-display italic text-white/[0.04] tracking-tight whitespace-nowrap"
+                    className="text-3xl md:text-5xl font-display italic text-[var(--text-primary)]/[0.05] tracking-tight whitespace-nowrap"
                   >
                     {word}
-                    <span className="text-aurum-400/15 mx-5">&bull;</span>
+                    <span className="text-aurum-400/20 mx-5">&bull;</span>
                   </span>
                 ))}
               </div>
@@ -113,12 +113,12 @@ export function CommunitySection() {
               }}
               whileHover={{ y: -6, transition: { duration: 0.3 } }}
             >
-              <SpotlightCard className="h-full rounded-xl">
+              <SpotlightCard spotlightColor="rgba(185, 139, 86, 0.15)" className="h-full rounded-xl">
               <div className="flex items-center justify-between mb-5">
-                <span className="type-mono text-[0.55rem] text-aurum-400 tracking-widest bg-aurum-400/10 px-2.5 py-1 rounded">
+                <span className="type-mono text-[0.55rem] text-[var(--accent-mocha)] tracking-widest bg-aurum-400/15 px-2.5 py-1 rounded">
                   {post.tag}
                 </span>
-                <span className="type-mono text-[0.5rem] text-nexus-300/40 tracking-widest">
+                <span className="type-mono text-[0.5rem] text-[var(--text-muted)] tracking-widest">
                   #{String(index + 1).padStart(3, "0")}
                 </span>
               </div>
@@ -127,25 +127,25 @@ export function CommunitySection() {
                 <div className="text-5xl font-display font-bold text-gradient-aurum leading-none">
                   {post.score}
                 </div>
-                <div className="type-mono text-[0.5rem] text-nexus-300/40 tracking-widest mt-2">
+                <div className="type-mono text-[0.5rem] text-[var(--text-muted)] tracking-widest mt-2">
                   FACEIQ SCORE
                 </div>
               </div>
 
-              <p className="text-sm text-nexus-200/60 font-body italic mb-5 leading-relaxed">
+              <p className="text-sm text-[var(--text-secondary)] font-body italic mb-5 leading-relaxed">
                 &ldquo;{post.quote}&rdquo;
               </p>
 
-              <div className="flex items-center gap-4 pt-4 border-t border-nexus-800/30">
+              <div className="flex items-center gap-4 pt-4 border-t border-[var(--border-primary)]">
                 <div className="flex items-center gap-1.5">
-                  <Star className="w-3 h-3 text-aurum-400" fill="#FFCB20" />
-                  <span className="type-mono text-[0.65rem] text-white/80">
+                  <Star className="w-3 h-3 text-aurum-400" fill="#C8963E" />
+                  <span className="type-mono text-[0.65rem] text-[color-mix(in_srgb,var(--text-primary)_80%,transparent)]">
                     {post.rating}
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <MessageCircle className="w-3 h-3 text-nexus-300/40" />
-                  <span className="type-mono text-[0.65rem] text-nexus-300/40">
+                  <MessageCircle className="w-3 h-3 text-[var(--text-muted)]" />
+                  <span className="type-mono text-[0.65rem] text-[var(--text-muted)]">
                     {post.comments}
                   </span>
                 </div>
@@ -155,12 +155,12 @@ export function CommunitySection() {
               </div>
 
               <div className="mt-4 flex items-center gap-2.5">
-                <div className="w-7 h-7 rounded-full bg-nexus-800/50 border border-nexus-600/30 flex items-center justify-center">
-                  <span className="text-[0.5rem] font-mono text-nexus-300 font-bold">
+                <div className="w-7 h-7 rounded-full bg-[var(--bg-tertiary)] border border-[var(--border-primary)] flex items-center justify-center">
+                  <span className="text-[0.5rem] font-mono text-[var(--accent-mocha)] font-bold">
                     {post.name[0]}
                   </span>
                 </div>
-                <span className="type-mono text-[0.6rem] text-nexus-300/40">
+                <span className="type-mono text-[0.6rem] text-[var(--text-muted)]">
                   {post.name}
                 </span>
               </div>
@@ -180,8 +180,8 @@ export function CommunitySection() {
             <div className="text-2xl font-display font-bold text-gradient-aurum">
               <StatsCounter target={12400} suffix="+" />
             </div>
-            <div className="h-8 w-px bg-nexus-800/30" />
-            <p className="type-mono text-[0.65rem] text-nexus-300/60 tracking-widest">
+            <div className="h-8 w-px bg-[var(--border-primary)]" />
+            <p className="type-mono text-[0.65rem] text-[var(--text-muted)] tracking-widest">
               STYLE PROFILES CREATED
             </p>
           </div>

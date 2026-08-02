@@ -61,7 +61,7 @@ export function KineticHeadline({
   text,
   className = "",
   fillClassName = "text-gradient-aurum",
-  dimClassName = "text-white/15",
+  dimClassName = "text-[color-mix(in_srgb,var(--text-primary)_15%,transparent)]",
   as = "h2",
 }: KineticHeadlineProps) {
   const ref = useRef<HTMLDivElement>(null);
