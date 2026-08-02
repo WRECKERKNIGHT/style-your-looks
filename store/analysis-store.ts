@@ -33,6 +33,16 @@ export interface PercentileRanking {
   comparisonText: string;
 }
 
+export interface PhotoQualityGate {
+  brightness: number;
+  sharpness: number;
+  faceSizeRatio: number;
+  headRoll: number;
+  headPitch: number;
+  issues: string[];
+  warnings: string[];
+}
+
 export interface FaceAnalysisResult {
   overallScore: number;
   symmetry: number;
@@ -78,6 +88,7 @@ export interface FaceAnalysisResult {
   consistencyScore: number;
   analysisConfidence: number;
   photoCount: number;
+  qualityGate?: PhotoQualityGate;
 }
 
 export interface BodyAnalysisResult {

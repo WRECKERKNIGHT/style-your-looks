@@ -12,7 +12,7 @@ import {
   type FaceScoreResult,
   type FaceScoreSample,
 } from "@/lib/ml/scoring";
-import { assessPhotoQuality } from "@/lib/ml/face-quality";
+import { assessPhotoQuality, type PhotoQualityReport } from "@/lib/ml/face-quality";
 import { generateRecommendations } from "@/lib/ml/outfit-recommender";
 import { useAnalysisStore } from "@/store/analysis-store";
 
@@ -80,7 +80,8 @@ function computeSkinClarityScore(
 function buildStoreFaceResult(
   scoreResult: FaceScoreResult,
   landmarks: number[][],
-  skinTone: ReturnType<typeof analyzeSkinTone>
+  skinTone: ReturnType<typeof analyzeSkinTone>,
+  quality: PhotoQualityReport | null
 ) {
   return {
     overallScore: scoreResult.overallScore,
@@ -126,6 +127,17 @@ function buildStoreFaceResult(
     consistencyScore: scoreResult.consistencyScore,
     analysisConfidence: scoreResult.analysisConfidence,
     photoCount: scoreResult.photoCount,
+    qualityGate: quality
+      ? {
+          brightness: quality.brightness,
+          sharpness: quality.sharpness,
+          faceSizeRatio: quality.faceSizeRatio,
+          headRoll: quality.headRoll,
+          headPitch: quality.headPitch,
+          issues: quality.issues,
+          warnings: quality.warnings,
+        }
+      : undefined,
   };
 }
 
@@ -165,7 +177,8 @@ export function useMediaPipe() {
           buildStoreFaceResult(
             scoreResult,
             faceResult.faceLandmarks?.[0]?.map((l) => [l.x, l.y, l.z]) || [],
-            skinTone
+            skinTone,
+            quality
           )
         );
 
@@ -191,6 +204,7 @@ export function useMediaPipe() {
         const rejected: { index: number; issues: string[] }[] = [];
         let bestResult: Awaited<ReturnType<typeof analyzeFace>> | null = null;
         let bestQuality = -1;
+        let bestQualityReport: PhotoQualityReport | null = null;
         let bestSkinTone: ReturnType<typeof analyzeSkinTone> = null;
 
         for (let i = 0; i < imageElements.length; i++) {
@@ -219,6 +233,7 @@ export function useMediaPipe() {
           if (quality.score > bestQuality) {
             bestQuality = quality.score;
             bestResult = faceResult;
+            bestQualityReport = quality;
             bestSkinTone = analyzeSkinTone(canvas, faceResult);
           }
         }
@@ -235,7 +250,7 @@ export function useMediaPipe() {
         const landmarks =
           bestResult?.faceLandmarks?.[0]?.map((l) => [l.x, l.y, l.z]) || [];
 
-        setFaceResult(buildStoreFaceResult(scoreResult, landmarks, bestSkinTone));
+        setFaceResult(buildStoreFaceResult(scoreResult, landmarks, bestSkinTone, bestQualityReport));
 
         setAnalysisProgress(100);
         return { scoreResult, samples, rejected, photoCount: samples.length };

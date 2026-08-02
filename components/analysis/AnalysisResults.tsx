@@ -27,6 +27,9 @@ import {
   Eye,
   Radar,
   Award,
+  Check,
+  X,
+  ShieldCheck,
 } from "lucide-react";
 
 function ordinalSuffix(n: number) {
@@ -386,6 +389,96 @@ export function AnalysisResults() {
           </p>
         </div>
       </CollapsibleSection>
+
+      {faceResult.qualityGate && (
+        <CollapsibleSection icon={ShieldCheck} title="PHOTO QUALITY GATE" badge={faceResult.qualityGate.issues.length === 0 ? "PASSED" : "FLAGGED"}>
+          <p className="text-nexus-400 dark:text-cosmic-muted font-body text-sm mb-6 leading-relaxed">
+            Automated checks run on your best photo before scoring. Flags warn when geometry accuracy may be reduced.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[
+              {
+                label: "Brightness",
+                ok: faceResult.qualityGate.brightness >= 6,
+                warn: faceResult.qualityGate.brightness >= 4 && faceResult.qualityGate.brightness < 6,
+                value: `${faceResult.qualityGate.brightness.toFixed(1)}/10`,
+              },
+              {
+                label: "Sharpness",
+                ok: faceResult.qualityGate.sharpness >= 6,
+                warn: faceResult.qualityGate.sharpness >= 4 && faceResult.qualityGate.sharpness < 6,
+                value: `${faceResult.qualityGate.sharpness.toFixed(1)}/10`,
+              },
+              {
+                label: "Face Size in Frame",
+                ok: faceResult.qualityGate.faceSizeRatio >= 0.2 && faceResult.qualityGate.faceSizeRatio <= 0.6,
+                warn: (faceResult.qualityGate.faceSizeRatio >= 0.12 && faceResult.qualityGate.faceSizeRatio < 0.2) || (faceResult.qualityGate.faceSizeRatio > 0.6 && faceResult.qualityGate.faceSizeRatio <= 0.95),
+                value: `${(faceResult.qualityGate.faceSizeRatio * 100).toFixed(0)}%`,
+              },
+              {
+                label: "Head Pose",
+                ok: Math.abs(faceResult.qualityGate.headRoll) < 15 && Math.abs(faceResult.qualityGate.headPitch) < 20,
+                warn: false,
+                value: `roll ${faceResult.qualityGate.headRoll.toFixed(1)}° · pitch ${faceResult.qualityGate.headPitch.toFixed(1)}°`,
+              },
+            ].map((check) => {
+              const status = check.ok ? "pass" : check.warn ? "warn" : "fail";
+              return (
+                <div key={check.label} className="flex items-center gap-4 bg-light-base dark:bg-cosmic-elevated p-4 border border-light-border dark:border-cosmic-border rounded-sm">
+                  <div
+                    className={`w-8 h-8 rounded-full flex items-center justify-center border shrink-0 ${
+                      status === "pass"
+                        ? "bg-emerald-500/10 border-emerald-500/40 text-emerald-500"
+                        : status === "warn"
+                          ? "bg-amber-500/10 border-amber-500/40 text-amber-500"
+                          : "bg-red-500/10 border-red-500/40 text-red-500"
+                    }`}
+                  >
+                    {status === "pass" ? (
+                      <Check className="w-4 h-4" />
+                    ) : status === "warn" ? (
+                      <AlertTriangle className="w-4 h-4" />
+                    ) : (
+                      <X className="w-4 h-4" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-body font-bold text-nexus-800 dark:text-white">{check.label}</p>
+                    <p className="text-xs font-mono text-nexus-400 dark:text-cosmic-muted mt-0.5">{check.value}</p>
+                  </div>
+                  <span
+                    className={`shrink-0 text-[0.6rem] font-mono tracking-widest px-2 py-0.5 rounded-sm border ${
+                      status === "pass"
+                        ? "text-emerald-500 border-emerald-500/30"
+                        : status === "warn"
+                          ? "text-amber-500 border-amber-500/30"
+                          : "text-red-500 border-red-500/30"
+                    }`}
+                  >
+                    {status === "pass" ? "PASS" : status === "warn" ? "WARN" : "FLAG"}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+          {faceResult.qualityGate.warnings.length + faceResult.qualityGate.issues.length > 0 && (
+            <div className="mt-4 space-y-2">
+              {faceResult.qualityGate.warnings.map((w) => (
+                <p key={w} className="flex items-center gap-2 text-xs text-amber-500/90 font-body">
+                  <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                  {w}
+                </p>
+              ))}
+              {faceResult.qualityGate.issues.map((w) => (
+                <p key={w} className="flex items-center gap-2 text-xs text-red-500/90 font-body">
+                  <X className="w-3.5 h-3.5 shrink-0" />
+                  {w}
+                </p>
+              ))}
+            </div>
+          )}
+        </CollapsibleSection>
+      )}
 
       <CollapsibleSection icon={Fingerprint} title="FACE SHAPE PROFILE">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start mb-6">
