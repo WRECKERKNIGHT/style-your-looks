@@ -183,7 +183,7 @@ export function AnalysisResults() {
           </div>
           <div className="flex-1 space-y-3">
             <p className="text-sm text-nexus-400 dark:text-cosmic-muted font-body leading-relaxed">
-              The Beauty Index combines all 10 facial metrics into a single composite score (0-100),
+              The Beauty Index combines all 15 facial metrics into a single composite score (0-100),
               weighted by research-backed attractiveness perception studies.
             </p>
             <div className="h-4 bg-light-border dark:bg-cosmic-border rounded-full overflow-hidden">
@@ -267,6 +267,50 @@ export function AnalysisResults() {
         </div>
       </CollapsibleSection>
 
+      <CollapsibleSection icon={Fingerprint} title="ANALYSIS QUALITY & CONFIDENCE" badge={`${faceResult.analysisConfidence}%`}>
+        <p className="text-nexus-400 dark:text-cosmic-muted font-body text-sm mb-6 leading-relaxed">
+          {faceResult.photoCount > 1
+            ? `Your result aggregates ${faceResult.photoCount} photos. Confidence rises with photo quality and how consistently your geometry scores across shots.`
+            : "A single photo was analysed. For the most reliable score, upload 2-3 photos and retry."}
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[
+            { label: "Photo Quality", value: faceResult.photoQualityScore, hint: "/10" },
+            { label: "Cross-Photo Consistency", value: faceResult.consistencyScore, hint: "/10" },
+            { label: "Analysis Confidence", value: faceResult.analysisConfidence, hint: "%" },
+          ].map((item) => (
+            <div key={item.label} className="bg-light-base dark:bg-cosmic-elevated p-5 border border-light-border dark:border-cosmic-border rounded-sm">
+              <span className="text-xs font-body text-nexus-400 dark:text-cosmic-muted tracking-wider uppercase">{item.label}</span>
+              <div className="flex items-baseline gap-1 mt-1">
+                <p className="font-body font-bold text-aurum-500 text-3xl">{item.value}</p>
+                <span className="text-xs text-nexus-400 dark:text-cosmic-muted font-mono">{item.hint}</span>
+              </div>
+              <div className="h-2 bg-light-border dark:bg-cosmic-border rounded-full mt-3 overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  whileInView={{ width: `${Math.min(100, item.value / (item.hint === "%" ? 1 : 10) * 100)}%` }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+                  className="h-full rounded-full bg-gradient-to-r from-aurum-600 to-aurum-400"
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+        {faceResult.photoCount > 1 && (
+          <p className="text-xs text-nexus-400 dark:text-cosmic-muted font-body mt-4">
+            Metrics marked with &quot;±x across photos&quot; are the spread (standard deviation) between your photos.
+            Lower spread means more reliable scoring for that feature.
+          </p>
+        )}
+        <div className="mt-5 bg-aurum-500/5 border border-aurum-500/20 p-4 rounded-sm">
+          <p className="text-xs text-nexus-400 dark:text-cosmic-muted font-body leading-relaxed">
+            Scores are estimates from 2D geometry and are sensitive to pose, lens distortion, and lighting.
+            They describe facial proportions for styling guidance — not a measure of worth.
+          </p>
+        </div>
+      </CollapsibleSection>
+
       <CollapsibleSection icon={Fingerprint} title="FACE SHAPE PROFILE">
         <p className="text-nexus-400 dark:text-cosmic-muted font-body text-sm mb-6 leading-relaxed">
           {faceResult.faceShapeDetails.description}
@@ -311,29 +355,21 @@ export function AnalysisResults() {
       <CollapsibleSection icon={Sparkles} title="DETAILED METRICS" defaultOpen>
         <p className="text-nexus-400 dark:text-cosmic-muted font-body text-sm mb-6">
           Each metric is computed from MediaPipe 478-landmark facial geometry.
+          {faceResult.photoCount > 1 && " Scores are the median across your uploaded photos."}
         </p>
         <div className="space-y-6">
-          {topMetrics.map((metric) => {
-            const scoreMap: Record<string, number> = {
-              symmetry: faceResult.symmetry,
-              goldenRatio: faceResult.goldenRatio,
-              jawline: faceResult.jawline,
-              proportions: faceResult.proportions,
-              skinClarity: faceResult.skinClarity,
-              eyeSpacing: faceResult.eyeSpacing,
-              cheekboneDefinition: faceResult.cheekboneDefinition,
-              lipFullness: faceResult.lipFullness,
-              noseProfile: faceResult.noseProfile,
-            };
-            return (
+          {[...faceResult.breakdown]
+            .sort((a, b) => b.weight - a.weight)
+            .map((metric) => (
               <MetricBar
-                key={metric.key}
+                key={metric.label}
                 label={metric.label}
-                score={scoreMap[metric.key] || 0}
+                score={metric.score}
                 description={metric.description}
+                value={metric.value}
+                spread={metric.spread}
               />
-            );
-          })}
+            ))}
         </div>
       </CollapsibleSection>
 
@@ -386,7 +422,7 @@ export function AnalysisResults() {
       <CollapsibleSection icon={Target} title="HOW WE SCORED YOU">
         <div className="space-y-4 text-sm text-nexus-400 dark:text-cosmic-muted font-body leading-relaxed">
           <p>
-            Your overall FaceIQ score is a weighted composite of 9 facial metrics, each computed from
+            Your overall FaceIQ score is a weighted composite of 15 facial metrics, each computed from
             478 MediaPipe facial landmarks. Weights are based on attractiveness perception research.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

@@ -2,10 +2,10 @@
 
 export const dynamic = "force-dynamic";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Mail, Lock, Eye, EyeOff, Sparkles, AlertCircle, Loader2 } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, Sparkles, AlertCircle, Loader2, Send } from "lucide-react";
 import { motion } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 
@@ -16,7 +16,38 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [resent, setResent] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const err = params.get("error");
+    if (err) setError(err);
+  }, []);
+
+  const isEmailNotConfirmed = error?.toLowerCase().includes("not confirmed") ?? false;
+
+  async function handleResend() {
+    if (!email) {
+      setError("Enter your email first, then click resend.");
+      return;
+    }
+    setResending(true);
+    setError(null);
+    const supabase = createClient();
+    const { error: resendError } = await supabase.auth.resend({
+      type: "signup",
+      email,
+      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+    });
+    setResending(false);
+    if (resendError) {
+      setError(resendError.message);
+      return;
+    }
+    setResent(true);
+  }
 
   async function handleEmailLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -123,10 +154,30 @@ export default function LoginPage() {
           <p className="text-nexus-400 dark:text-cosmic-muted mt-1 font-body text-sm mb-8">Sign in to continue your style journey.</p>
 
           {error && (
-            <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 text-xs font-body mb-4 rounded-sm">
+            <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 text-xs font-body mb-2 rounded-sm">
               <AlertCircle className="w-4 h-4 shrink-0" />
-              {error}
+              <span className="flex-1">{error}</span>
             </div>
+          )}
+          {resent && (
+            <div className="flex items-center gap-2 p-3 bg-aurum-500/10 border border-aurum-500/30 text-aurum-600 dark:text-aurum-400 text-xs font-body mb-2 rounded-sm">
+              <Send className="w-4 h-4 shrink-0" />
+              Confirmation email resent. Check your inbox and spam folder.
+            </div>
+          )}
+          {isEmailNotConfirmed && (
+            <button
+              type="button"
+              onClick={handleResend}
+              disabled={resending}
+              className="w-full py-2.5 mb-2 bg-aurum-500/10 border border-aurum-500/40 text-aurum-600 dark:text-aurum-400 font-mono text-xs tracking-widest hover:bg-aurum-500/20 transition-colors disabled:opacity-50 rounded-sm"
+            >
+              {resending ? (
+                <Loader2 className="w-4 h-4 animate-spin mx-auto" />
+              ) : (
+                "RESEND CONFIRMATION EMAIL"
+              )}
+            </button>
           )}
 
           <form onSubmit={handleEmailLogin} className="space-y-4">

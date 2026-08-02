@@ -111,14 +111,21 @@ export const COLOR_PALETTES = {
 
 export const SCORE_METRICS = {
   face: [
-    { key: "symmetry", label: "Facial Symmetry", description: "Balance between left and right sides", weight: 0.18 },
-    { key: "goldenRatio", label: "Golden Ratio", description: "How closely your proportions match φ (1.618)", weight: 0.15 },
-    { key: "jawline", label: "Jawline Definition", description: "Jaw angle sharpness and chin prominence", weight: 0.15 },
-    { key: "proportions", label: "Proportional Harmony", description: "Upper, middle, and lower third balance", weight: 0.12 },
-    { key: "skinClarity", label: "Skin Clarity", description: "Surface smoothness and tone evenness", weight: 0.12 },
-    { key: "eyeSpacing", label: "Eye Spacing", description: "Interpupillary distance ratio", weight: 0.10 },
+    { key: "symmetry", label: "Facial Symmetry", description: "Balance between left and right sides", weight: 0.13 },
+    { key: "goldenRatio", label: "Golden Ratio", description: "How closely your proportions match φ (1.618)", weight: 0.11 },
+    { key: "jawline", label: "Jawline Definition", description: "Jaw angle sharpness and chin prominence", weight: 0.11 },
+    { key: "proportions", label: "Proportional Harmony", description: "Upper, middle, and lower third balance", weight: 0.06 },
+    { key: "horizontalFifths", label: "Horizontal Fifths", description: "Five-band eye placement across face width", weight: 0.03 },
+    { key: "skinClarity", label: "Skin Clarity", description: "Surface smoothness and tone evenness", weight: 0.10 },
+    { key: "eyeSpacing", label: "Eye Spacing", description: "Interpupillary distance ratio", weight: 0.07 },
     { key: "cheekboneDefinition", label: "Cheekbone Definition", description: "Cheek prominence relative to jaw", weight: 0.08 },
+    { key: "fwhr", label: "FWHR", description: "Facial width-to-height ratio", weight: 0.06 },
+    { key: "canthalTilt", label: "Canthal Tilt", description: "Eye corner angle (positive = lifted)", weight: 0.05 },
+    { key: "eyeNoseRatio", label: "Eye–Nose Ratio", description: "Eye width to nose width", weight: 0.04 },
     { key: "lipFullness", label: "Lip Proportion", description: "Upper-to-lower lip ratio and fullness", weight: 0.05 },
     { key: "noseProfile", label: "Nose Profile", description: "Nose width relative to face width", weight: 0.05 },
+    { key: "foreheadBalance", label: "Forehead Balance", description: "Vertical thirds evenness", weight: 0.03 },
+    { key: "noseChinRatio", label: "Nose–Chin Balance", description: "Nose length to facial height", weight: 0.02 },
+    { key: "midfaceRatio", label: "Midface Harmony", description: "Upper-midface to lower face height", weight: 0.01 },
   ],
 } as const;

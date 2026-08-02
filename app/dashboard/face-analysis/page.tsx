@@ -10,40 +10,40 @@ import { useMediaPipe } from "@/hooks/useMediaPipe";
 import { useWebcam } from "@/hooks/useWebcam";
 import { useToast } from "@/components/shared/Toast";
 import { motion } from "framer-motion";
-import { ScanFace, Camera, AlertCircle, Eye, Save, CheckCircle } from "lucide-react";
+import { ScanFace, Camera, AlertCircle, Eye, Save, CheckCircle, X, ShieldCheck } from "lucide-react";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
   show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
 };
 
+const MAX_PHOTOS = 3;
+const MIN_PHOTOS = 2;
+
 export default function FaceAnalysisPage() {
-  const { uploadedImage, setUploadedImage, faceResult } =
+  const { uploadedImage, setUploadedImage, faceResult, isAnalyzing } =
     useAnalysisStore();
-  const { analyzeFaceFromImage } = useMediaPipe();
+  const { analyzeFacePhotos } = useMediaPipe();
   const { videoRef, isStreaming, startWebcam, stopWebcam, captureFrame } = useWebcam();
   const { addToast } = useToast();
   const [error, setError] = useState<string | null>(null);
   const [showLandmarks, setShowLandmarks] = useState(true);
   const [saved, setSaved] = useState(false);
+  const [photos, setPhotos] = useState<string[]>([]);
   const imageRef = useRef<HTMLImageElement>(null);
 
   const handleImageUpload = useCallback(
-    async (imageData: string) => {
-      setUploadedImage(imageData);
-      setError(null);
-
-      const img = new Image();
-      img.onload = async () => {
-        try {
-          await analyzeFaceFromImage(img);
-        } catch (err) {
-          setError("Failed to analyse face. Please try a clearer photo.");
+    (imageData: string) => {
+      setPhotos((prev) => {
+        if (prev.length >= MAX_PHOTOS) {
+          addToast(`Maximum ${MAX_PHOTOS} photos`, "error");
+          return prev;
         }
-      };
-      img.src = imageData;
+        return [...prev, imageData];
+      });
+      setError(null);
     },
-    [setUploadedImage, analyzeFaceFromImage]
+    [addToast]
   );
 
   const handleWebcamCapture = useCallback(async () => {
@@ -59,6 +59,50 @@ export default function FaceAnalysisPage() {
     }
   }, [isStreaming, captureFrame, startWebcam, stopWebcam, handleImageUpload]);
 
+  const removePhoto = useCallback((index: number) => {
+    setPhotos((prev) => prev.filter((_, i) => i !== index));
+    setError(null);
+  }, []);
+
+  const handleAnalyze = useCallback(async () => {
+    if (photos.length < MIN_PHOTOS) {
+      setError(`Add at least ${MIN_PHOTOS} photos for a reliable result.`);
+      return;
+    }
+
+    setError(null);
+    setUploadedImage(photos[0]);
+
+    try {
+      const images = await Promise.all(
+        photos.map(
+          (dataUrl) =>
+            new Promise<HTMLImageElement>((resolve, reject) => {
+              const img = new Image();
+              img.onload = () => resolve(img);
+              img.onerror = () => reject(new Error("Could not load a photo"));
+              img.src = dataUrl;
+            })
+        )
+      );
+
+      const { photoCount, rejected } = await analyzeFacePhotos(images);
+      if (rejected.length > 0) {
+        addToast(
+          `${rejected.length} photo(s) skipped: ${rejected.map((r) => r.issues.join(", ")).join(" | ")}`,
+          "info"
+        );
+      }
+      if (photoCount === 1) {
+        addToast("Only one usable photo — results will be less reliable", "info");
+      }
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to analyse face. Please try clearer photos."
+      );
+    }
+  }, [photos, setUploadedImage, analyzeFacePhotos, addToast]);
+
   return (
     <div className="space-y-8">
       <motion.div variants={fadeUp} initial="hidden" animate="show">
@@ -70,7 +114,7 @@ export default function FaceAnalysisPage() {
           </h1>
         </div>
         <p className="text-[var(--text-muted)] font-body type-subhead max-w-xl">
-          Upload a front-facing photo for 478-landmark facial geometry analysis, golden ratio scoring,
+          Upload 2–3 front-facing photos for 478-landmark facial geometry analysis, golden ratio scoring,
           and detailed grooming recommendations.
         </p>
       </motion.div>
@@ -78,12 +122,86 @@ export default function FaceAnalysisPage() {
       {!faceResult && (
         <motion.div variants={fadeUp} initial="hidden" animate="show" className="space-y-5">
           <div className="glass-card p-8">
-            <ImageUploader
-              onImageUpload={handleImageUpload}
-              onWebcamCapture={handleWebcamCapture}
-              label="Upload a face photo"
-              accept="face"
-            />
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="type-subhead text-[var(--text-primary)] tracking-wider">
+                UPLOAD {MIN_PHOTOS}–{MAX_PHOTOS} PHOTOS
+              </h2>
+              <span className="type-mono text-[0.6rem] text-[var(--text-muted)] tracking-widest">
+                {photos.length}/{MAX_PHOTOS} ADDED
+              </span>
+            </div>
+
+            {photos.length < MAX_PHOTOS && (
+              <ImageUploader
+                key={photos.length}
+                onImageUpload={handleImageUpload}
+                onWebcamCapture={handleWebcamCapture}
+                label="Upload a face photo"
+                accept="face"
+              />
+            )}
+
+            {photos.length > 0 && (
+              <div className="grid grid-cols-3 gap-3 mt-5">
+                {photos.map((photo, i) => (
+                  <div
+                    key={i}
+                    className="relative aspect-square overflow-hidden border border-[var(--border-primary)] bg-[var(--bg-base)]"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={photo} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" />
+                    <span className="absolute top-2 left-2 w-6 h-6 bg-[color-mix(in_srgb,var(--bg-primary)_80%,transparent)] border border-[var(--border-primary)] text-[0.6rem] font-mono flex items-center justify-center">
+                      {i + 1}
+                    </span>
+                    <button
+                      onClick={() => removePhoto(i)}
+                      className="absolute top-2 right-2 w-6 h-6 bg-[color-mix(in_srgb,var(--bg-primary)_80%,transparent)] border border-[var(--border-primary)] flex items-center justify-center hover:border-red-500/50 hover:text-red-400 transition-colors"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {photos.length > 0 && photos.length < MIN_PHOTOS && (
+              <p className="text-sm text-[var(--text-muted)] font-body mt-4">
+                Add {MIN_PHOTOS - photos.length} more photo(s) — a second photo makes the result far more reliable.
+              </p>
+            )}
+
+            {photos.length >= MIN_PHOTOS && (
+              <motion.button
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                onClick={handleAnalyze}
+                disabled={isAnalyzing}
+                className="btn-nexus w-full justify-center mt-5 disabled:opacity-50"
+              >
+                <ScanFace className="w-5 h-5" />
+                {isAnalyzing ? "ANALYSING..." : `ANALYSE ${photos.length} PHOTOS`}
+              </motion.button>
+            )}
+          </div>
+
+          <div className="glass-card p-5 border border-[var(--border-primary)]/50">
+            <div className="flex items-start gap-3">
+              <ShieldCheck className="w-5 h-5 text-[var(--accent-aurum)] shrink-0 mt-0.5" />
+              <p className="text-sm text-[var(--text-muted)] font-body leading-relaxed">
+                <span className="font-bold text-[var(--text-primary)]">Privacy: </span>
+                analysis runs entirely in your browser via MediaPipe — no photo is uploaded or stored
+                on a server.
+              </p>
+            </div>
+            <div className="flex items-start gap-3 mt-3">
+              <Eye className="w-5 h-5 text-[var(--accent-aurum)] shrink-0 mt-0.5" />
+              <p className="text-sm text-[var(--text-muted)] font-body leading-relaxed">
+                <span className="font-bold text-[var(--text-primary)]">Accuracy: </span>
+                scores come from 2D geometry and are sensitive to pose, lens distortion, and lighting.
+                Use multiple photos, face the camera directly, and take photos at eye level. Scores are
+                styling guidance — not a measure of worth.
+              </p>
+            </div>
           </div>
 
           <video
@@ -178,11 +296,12 @@ export default function FaceAnalysisPage() {
           <button
             onClick={() => {
               useAnalysisStore.getState().reset();
+              setPhotos([]);
               setError(null);
             }}
             className="btn-outline w-full justify-center"
           >
-            Analyse Another Photo
+            Analyse Another Set of Photos
           </button>
         </motion.div>
       )}

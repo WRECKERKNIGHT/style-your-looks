@@ -8,6 +8,8 @@ export interface FacialMetric {
   description: string;
   rating: string;
   tip: string;
+  value?: string;
+  spread?: number;
 }
 
 export interface BlendshapeAnalysis {
@@ -52,6 +54,15 @@ export interface FaceAnalysisResult {
   noseProfile: number;
   foreheadBalance: number;
   cheekboneDefinition: number;
+  fwhr: number;
+  canthalTilt: number;
+  eyeNoseRatio: number;
+  noseChinRatio: number;
+  midfaceRatio: number;
+  horizontalFifths: number;
+  rawFwhr: number;
+  rawCanthalTilt: number;
+  rawEyeNoseRatio: number;
   facialHarmony: number;
   breakdown: FacialMetric[];
   overallRating: string;
@@ -63,6 +74,10 @@ export interface FaceAnalysisResult {
   percentile: PercentileRanking;
   beautyIndex: number;
   faceShapeDetails: { description: string; characteristics: string[]; idealHairstyles: string[]; idealGlasses: string[] };
+  photoQualityScore: number;
+  consistencyScore: number;
+  analysisConfidence: number;
+  photoCount: number;
 }
 
 export interface BodyAnalysisResult {

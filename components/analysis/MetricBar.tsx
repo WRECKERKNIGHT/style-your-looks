@@ -7,6 +7,8 @@ interface MetricBarProps {
   score: number;
   maxScore?: number;
   description?: string;
+  value?: string;
+  spread?: number;
   className?: string;
 }
 
@@ -15,6 +17,8 @@ export function MetricBar({
   score,
   maxScore = 10,
   description,
+  value,
+  spread,
   className,
 }: MetricBarProps) {
   const percentage = (score / maxScore) * 100;
@@ -52,6 +56,20 @@ export function MetricBar({
       </div>
       {description && (
         <p className="text-sm text-nexus-400 dark:text-cosmic-muted font-body">{description}</p>
+      )}
+      {(value || spread !== undefined) && (
+        <div className="flex items-center gap-3">
+          {value && (
+            <span className="inline-block px-2 py-0.5 bg-aurum-500/10 border border-aurum-500/25 text-aurum-500 text-xs font-mono rounded-sm">
+              {value}
+            </span>
+          )}
+          {spread !== undefined && spread > 0 && (
+            <span className="text-xs font-mono text-nexus-400 dark:text-cosmic-muted">
+              ±{spread.toFixed(2)} across photos
+            </span>
+          )}
+        </div>
       )}
     </div>
   );

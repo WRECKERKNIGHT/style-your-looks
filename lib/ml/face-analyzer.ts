@@ -16,7 +16,7 @@ export async function initializeFaceLandmarker(): Promise<FaceLandmarker> {
       delegate: "GPU",
     },
     runningMode: "IMAGE",
-    numFaces: 1,
+    numFaces: 5,
     outputFaceBlendshapes: true,
     outputFacialTransformationMatrixes: true,
   });
@@ -148,6 +148,151 @@ export function getEyeSpacingScore(result: FaceLandmarkerResult): number {
 
   const score = Math.max(0, 10 - deviation * 15);
   return Math.min(10, score);
+}
+
+function dist2(ax: number, ay: number, bx: number, by: number): number {
+  return Math.sqrt(Math.pow(ax - bx, 2) + Math.pow(ay - by, 2));
+}
+
+/** Facial Width-to-Height Ratio (FWHR) — bizygomatic width over upper-lip-to-brow height. */
+export function getFwhrScore(result: FaceLandmarkerResult): number {
+  if (!result.faceLandmarks || result.faceLandmarks.length === 0) return 5;
+  const lm = result.faceLandmarks[0];
+
+  const bizygomaticWidth = Math.abs(lm[234].x - lm[454].x);
+  const browToLip = Math.abs(lm[13].y - lm[9].y);
+  if (bizygomaticWidth === 0 || browToLip === 0) return 5;
+
+  const fwhr = bizygomaticWidth / browToLip;
+  const ideal = 1.95;
+  const score = 10 - Math.abs(fwhr - ideal) * 12;
+  return Math.max(2, Math.min(10, score));
+}
+
+/** Raw FWHR value (for display) — 1.8–2.1 is the researched attractive range. */
+export function getRawFwhr(result: FaceLandmarkerResult): number {
+  if (!result.faceLandmarks || result.faceLandmarks.length === 0) return 0;
+  const lm = result.faceLandmarks[0];
+  const bizygomaticWidth = Math.abs(lm[234].x - lm[454].x);
+  const browToLip = Math.abs(lm[13].y - lm[9].y);
+  if (bizygomaticWidth === 0 || browToLip === 0) return 0;
+  return Math.round((bizygomaticWidth / browToLip) * 100) / 100;
+}
+
+/** Canthal tilt — angle of the line between eye corners. Positive = outer corner raised. */
+export function getCanthalTiltScore(result: FaceLandmarkerResult): number {
+  if (!result.faceLandmarks || result.faceLandmarks.length === 0) return 5;
+  const lm = result.faceLandmarks[0];
+
+  const tilt = (inner: number, outer: number): number => {
+    const a = lm[inner];
+    const b = lm[outer];
+    const angle = Math.atan2(a.y - b.y, b.x - a.x) * (180 / Math.PI);
+    return angle;
+  };
+
+  const leftTilt = tilt(133, 33);
+  const rightTilt = tilt(362, 263);
+  const avgTilt = (leftTilt + rightTilt) / 2;
+
+  const ideal = 5;
+  const score = 10 - Math.abs(avgTilt - ideal) * 1.2;
+  return Math.max(2, Math.min(10, score));
+}
+
+/** Raw canthal tilt in degrees (display value). */
+export function getRawCanthalTilt(result: FaceLandmarkerResult): number {
+  if (!result.faceLandmarks || result.faceLandmarks.length === 0) return 0;
+  const lm = result.faceLandmarks[0];
+  const tilt = (inner: number, outer: number): number =>
+    Math.atan2(lm[inner].y - lm[outer].y, lm[outer].x - lm[inner].x) * (180 / Math.PI);
+  const avg = (tilt(133, 33) + tilt(362, 263)) / 2;
+  return Math.round(avg * 10) / 10;
+}
+
+/** Horizontal fifths balance — the face ideally divides into five equal widths. */
+export function getHorizontalFifthsScore(result: FaceLandmarkerResult): number {
+  if (!result.faceLandmarks || result.faceLandmarks.length === 0) return 5;
+  const lm = result.faceLandmarks[0];
+
+  const leftOuter = lm[33].x;
+  const leftInner = lm[133].x;
+  const rightInner = lm[362].x;
+  const rightOuter = lm[263].x;
+
+  const faceWidth = rightOuter - leftOuter;
+  if (faceWidth <= 0) return 5;
+
+  const leftEyeWidth = leftInner - leftOuter;
+  const intercanthal = rightInner - leftInner;
+  const rightEyeWidth = rightOuter - rightInner;
+  const outerBands = (faceWidth - (leftEyeWidth + intercanthal + rightEyeWidth)) / 2;
+
+  const fifths = [outerBands, leftEyeWidth, intercanthal, rightEyeWidth, outerBands];
+  const ideal = faceWidth / 5;
+
+  let deviation = 0;
+  for (const f of fifths) {
+    deviation += Math.abs(f - ideal) / ideal;
+  }
+
+  const score = 10 - deviation * 9;
+  return Math.max(2, Math.min(10, score));
+}
+
+/** Eye width to nose width ratio (golden ideal ~1.618). */
+export function getEyeNoseRatioScore(result: FaceLandmarkerResult): number {
+  if (!result.faceLandmarks || result.faceLandmarks.length === 0) return 5;
+  const lm = result.faceLandmarks[0];
+
+  const eyeWidth = Math.abs(lm[263].x - lm[33].x);
+  const noseWidth = Math.abs(lm[278].x - lm[94].x);
+  if (eyeWidth === 0 || noseWidth === 0) return 5;
+
+  const ratio = eyeWidth / noseWidth;
+  const ideal = 1.618;
+  const score = 10 - Math.abs(ratio - ideal) * 6;
+  return Math.max(2, Math.min(10, score));
+}
+
+/** Raw eye/nose ratio for display. */
+export function getRawEyeNoseRatio(result: FaceLandmarkerResult): number {
+  if (!result.faceLandmarks || result.faceLandmarks.length === 0) return 0;
+  const lm = result.faceLandmarks[0];
+  const eyeWidth = Math.abs(lm[263].x - lm[33].x);
+  const noseWidth = Math.abs(lm[278].x - lm[94].x);
+  if (eyeWidth === 0 || noseWidth === 0) return 0;
+  return Math.round((eyeWidth / noseWidth) * 100) / 100;
+}
+
+/** Nose-to-chin (nasofacial) ratio — nose length over facial height, ideal ~0.30. */
+export function getNoseChinRatioScore(result: FaceLandmarkerResult): number {
+  if (!result.faceLandmarks || result.faceLandmarks.length === 0) return 5;
+  const lm = result.faceLandmarks[0];
+
+  const noseLength = Math.abs(lm[6].y - lm[2].y);
+  const faceLength = Math.abs(lm[10].y - lm[152].y);
+  if (noseLength === 0 || faceLength === 0) return 5;
+
+  const ratio = noseLength / faceLength;
+  const ideal = 0.3;
+  const score = 10 - Math.abs(ratio - ideal) * 35;
+  return Math.max(2, Math.min(10, score));
+}
+
+/** Midface ratio — glabella-to-subnasale over subnasale-to-menton, ideal ~1.0. */
+export function getMidfaceRatioScore(result: FaceLandmarkerResult): number {
+  if (!result.faceLandmarks || result.faceLandmarks.length === 0) return 5;
+  const lm = result.faceLandmarks[0];
+
+  const upper = Math.abs(lm[9].y - lm[2].y);
+  const lower = Math.abs(lm[2].y - lm[152].y);
+  if (upper === 0 || lower === 0) return 5;
+
+  const ratio = upper / lower;
+  const ideal = 1.0;
+  const score = 10 - Math.abs(ratio - ideal) * 15;
+  return Math.max(2, Math.min(10, score));
 }
 
 export function getSkinClarity(
