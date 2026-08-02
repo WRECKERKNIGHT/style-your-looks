@@ -9,7 +9,7 @@ import { useAnalysisStore } from "@/store/analysis-store";
 import { useMediaPipe } from "@/hooks/useMediaPipe";
 import { useWebcam } from "@/hooks/useWebcam";
 import { useToast } from "@/components/shared/Toast";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { ScanFace, Camera, AlertCircle, Eye, Save, CheckCircle, X, ShieldCheck, Copy, Check } from "lucide-react";
 
 const fadeUp = {
@@ -30,12 +30,13 @@ export default function FaceAnalysisPage() {
   const [showLandmarks, setShowLandmarks] = useState(true);
   const [saved, setSaved] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
   const [photos, setPhotos] = useState<string[]>([]);
   const imageRef = useRef<HTMLImageElement>(null);
 
-  const copyReport = useCallback(async () => {
-    if (!faceResult) return;
-    const lines = [
+  const buildReport = useCallback(() => {
+    if (!faceResult) return "";
+    return [
       "NEXARI — FACEIQ ANALYSIS REPORT",
       "=================================",
       `FaceIQ Score:  ${faceResult.overallScore.toFixed(1)}/10  (${faceResult.overallRating})`,
@@ -58,16 +59,19 @@ export default function FaceAnalysisPage() {
       "GROOMING TIPS",
       faceResult.groomingSuggestions.map((s) => `  > ${s}`).join("\n"),
     ].join("\n");
+  }, [faceResult]);
 
+  const copyReport = useCallback(async () => {
+    if (!faceResult) return;
     try {
-      await navigator.clipboard.writeText(lines);
+      await navigator.clipboard.writeText(buildReport());
       setCopied(true);
       addToast("Report copied to clipboard", "success");
       setTimeout(() => setCopied(false), 3000);
     } catch {
       addToast("Could not copy report", "error");
     }
-  }, [faceResult, addToast]);
+  }, [faceResult, addToast, buildReport]);
 
   const handleImageUpload = useCallback(
     (imageData: string) => {
@@ -309,6 +313,13 @@ export default function FaceAnalysisPage() {
               {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
               {copied ? "COPIED" : "COPY REPORT"}
             </button>
+            <button
+              onClick={() => setReportOpen(true)}
+              className="flex items-center gap-2 px-6 py-3 font-body text-sm tracking-wider uppercase transition-all btn-outline"
+            >
+              <ScanFace className="w-5 h-5" />
+              VIEW FULL REPORT
+            </button>
           </motion.div>
 
           {uploadedImage && (
@@ -374,6 +385,58 @@ export default function FaceAnalysisPage() {
           </button>
         </motion.div>
       )}
+
+      <AnimatePresence>
+        {reportOpen && faceResult && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            onClick={() => setReportOpen(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 16 }}
+              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-2xl max-h-[80vh] flex flex-col border border-[var(--border-primary)] bg-[var(--bg-primary)]"
+            >
+              <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border-primary)]">
+                <div>
+                  <p className="font-body font-bold text-[var(--text-primary)] tracking-wider text-sm">
+                    NEXARI — FULL ANALYSIS REPORT
+                  </p>
+                  <p className="text-xs font-mono text-aurum-500 mt-0.5">
+                    FaceIQ {faceResult.overallScore.toFixed(1)}/10 · Beauty Index {faceResult.beautyIndex}/100
+                  </p>
+                </div>
+                <button
+                  onClick={() => setReportOpen(false)}
+                  className="p-2 border border-[var(--border-primary)] text-[var(--text-primary)] transition-colors hover:text-aurum-500"
+                  aria-label="Close report"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-6">
+                <pre className="whitespace-pre-wrap font-mono text-xs text-[var(--text-primary)] leading-relaxed">
+                  {buildReport()}
+                </pre>
+              </div>
+              <div className="flex justify-end gap-3 px-6 py-4 border-t border-[var(--border-primary)]">
+                <button onClick={() => setReportOpen(false)} className="btn-outline">
+                  Close
+                </button>
+                <button onClick={copyReport} className="btn-nexus">
+                  {copied ? "Copied!" : "Copy Report"}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
