@@ -4,6 +4,9 @@ import { useState } from "react";
 import { useAnalysisStore } from "@/store/analysis-store";
 import { ScoreGauge } from "./ScoreGauge";
 import { MetricBar } from "./MetricBar";
+import { MetricRadar } from "./MetricRadar";
+import { FaceShapeDiagram } from "./FaceShapeDiagram";
+import { AnimatedCounter } from "@/components/shared/AnimatedCounter";
 import { SCORE_METRICS } from "@/lib/constants";
 import { motion, AnimatePresence } from "framer-motion";
 import { ScrollReveal, ScrollRevealItem, ScrollProgress } from "@/components/shared/ScrollReveal";
@@ -22,6 +25,8 @@ import {
   BarChart3,
   ChevronDown,
   Eye,
+  Radar,
+  Award,
 } from "lucide-react";
 
 function CollapsibleSection({
@@ -178,7 +183,12 @@ export function AnalysisResults() {
       <CollapsibleSection icon={BarChart3} title="BEAUTY INDEX" defaultOpen badge={`${faceResult.beautyIndex}/100`}>
         <div className="flex flex-col md:flex-row items-center gap-8">
           <div className="text-center">
-            <div className="text-6xl font-body font-bold text-gradient-aurum">{faceResult.beautyIndex}</div>
+            <AnimatedCounter
+              target={faceResult.beautyIndex}
+              duration={1.6}
+              decimals={1}
+              className="text-6xl font-body font-bold text-gradient-aurum"
+            />
             <span className="type-mono text-[0.6rem] text-nexus-400/50 dark:text-cosmic-muted/50 tracking-widest">/100 COMPOSITE</span>
           </div>
           <div className="flex-1 space-y-3">
@@ -312,23 +322,32 @@ export function AnalysisResults() {
       </CollapsibleSection>
 
       <CollapsibleSection icon={Fingerprint} title="FACE SHAPE PROFILE">
-        <p className="text-nexus-400 dark:text-cosmic-muted font-body text-sm mb-6 leading-relaxed">
-          {faceResult.faceShapeDetails.description}
-        </p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-light-base dark:bg-cosmic-elevated p-5 border border-light-border dark:border-cosmic-border rounded-sm">
-            <h4 className="text-xs font-body font-bold text-aurum-500 tracking-wider mb-3">CHARACTERISTICS</h4>
-            <ul className="space-y-2">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start mb-6">
+          <div className="md:col-span-1 flex justify-center">
+            <FaceShapeDiagram
+              landmarks={faceResult.landmarks}
+              facialShape={faceResult.facialShape}
+              width={240}
+              height={280}
+            />
+          </div>
+          <div className="md:col-span-2">
+            <p className="text-nexus-400 dark:text-cosmic-muted font-body text-sm leading-relaxed">
+              {faceResult.faceShapeDetails.description}
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
               {faceResult.faceShapeDetails.characteristics.map((c, i) => (
-                <li key={i} className="flex items-center gap-2 text-sm text-nexus-800 dark:text-white font-body">
+                <div key={i} className="flex items-center gap-2 text-sm text-nexus-800 dark:text-white font-body bg-light-base dark:bg-cosmic-elevated p-3 border border-light-border dark:border-cosmic-border rounded-sm">
                   <div className="w-1.5 h-1.5 bg-aurum-500 rounded-full flex-shrink-0" />
                   {c}
-                </li>
+                </div>
               ))}
-            </ul>
+            </div>
           </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="bg-light-base dark:bg-cosmic-elevated p-5 border border-light-border dark:border-cosmic-border rounded-sm">
-            <h4 className="text-xs font-body font-bold text-nexus-400 tracking-wider mb-3">IDEAL HAIRSTYLES</h4>
+            <h4 className="text-xs font-body font-bold text-aurum-500 tracking-wider mb-3">IDEAL HAIRSTYLES</h4>
             <ul className="space-y-2">
               {faceResult.faceShapeDetails.idealHairstyles.map((h, i) => (
                 <li key={i} className="flex items-center gap-2 text-sm text-nexus-800 dark:text-white font-body">
@@ -370,6 +389,68 @@ export function AnalysisResults() {
                 spread={metric.spread}
               />
             ))}
+        </div>
+      </CollapsibleSection>
+
+      <CollapsibleSection icon={Radar} title="GEOMETRY RADAR" defaultOpen>
+        <p className="text-nexus-400 dark:text-cosmic-muted font-body text-sm mb-6 leading-relaxed">
+          Your complete 15-metric profile plotted at once. The larger the polygon, the more balanced
+          and harmonious your facial geometry.
+        </p>
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-center">
+          <div className="lg:col-span-3">
+            <MetricRadar
+              metrics={faceResult.breakdown.map((m) => ({ label: m.label, score: m.score }))}
+              size={430}
+            />
+          </div>
+          <div className="lg:col-span-2 space-y-4">
+            <div className="bg-light-base dark:bg-cosmic-elevated p-5 border border-aurum-500/20 rounded-sm">
+              <div className="flex items-center gap-2 mb-3">
+                <Award className="w-5 h-5 text-aurum-500" />
+                <span className="text-xs font-body font-bold text-aurum-500 tracking-wider">SIGNATURE STRENGTHS</span>
+              </div>
+              <div className="space-y-3">
+                {[...faceResult.breakdown]
+                  .sort((a, b) => b.score - a.score)
+                  .slice(0, 3)
+                  .map((m, i) => (
+                    <div key={m.label} className="flex items-center justify-between gap-3">
+                      <span className="flex items-center gap-2 text-sm font-body text-nexus-800 dark:text-white min-w-0">
+                        <span className="text-aurum-500 font-mono text-xs">{["A", "B", "C"][i]}</span>
+                        <span className="truncate">{m.label}</span>
+                      </span>
+                      <span className="font-mono font-bold text-aurum-500 shrink-0">{m.score.toFixed(1)}</span>
+                    </div>
+                  ))}
+              </div>
+            </div>
+            <div className="bg-light-base dark:bg-cosmic-elevated p-5 border border-light-border dark:border-cosmic-border rounded-sm">
+              <div className="flex items-center gap-2 mb-3">
+                <Target className="w-5 h-5 text-nexus-400" />
+                <span className="text-xs font-body font-bold text-nexus-400 tracking-wider">FOCUS AREAS</span>
+              </div>
+              <div className="space-y-3">
+                {[...faceResult.breakdown]
+                  .sort((a, b) => a.score - b.score)
+                  .slice(0, 3)
+                  .map((m, i) => (
+                    <div key={m.label} className="flex items-center justify-between gap-3">
+                      <span className="flex items-center gap-2 text-sm font-body text-nexus-800 dark:text-white min-w-0">
+                        <span className="text-nexus-400 font-mono text-xs">0{i + 1}</span>
+                        <span className="truncate">{m.label}</span>
+                      </span>
+                      <span className="font-mono font-bold text-nexus-400 shrink-0">{m.score.toFixed(1)}</span>
+                    </div>
+                  ))}
+              </div>
+            </div>
+            <p className="text-xs text-nexus-400 dark:text-cosmic-muted font-body leading-relaxed px-1">
+              {faceResult.beautyIndex >= 70
+                ? "A large, well-rounded radar polygon — rare and striking geometry."
+                : "Every face has shape. Targeted styling can lift your lowest sectors fastest."}
+            </p>
+          </div>
         </div>
       </CollapsibleSection>
 
