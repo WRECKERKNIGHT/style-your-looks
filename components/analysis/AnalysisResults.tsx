@@ -520,7 +520,69 @@ export function AnalysisResults() {
         </div>
       </CollapsibleSection>
 
-      {faceResult.strengths.length > 0 && (
+      <CollapsibleSection icon={Award} title="METRIC SPOTLIGHT" defaultOpen>
+        <p className="text-nexus-400 dark:text-cosmic-muted font-body text-sm mb-6 leading-relaxed">
+          The most heavily weighted metrics behind your score, with the raw measurements detected
+          from your geometry.
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {[...faceResult.breakdown]
+            .sort((a, b) => b.weight - a.weight)
+            .slice(0, 6)
+            .map((m, i) => (
+              <motion.div
+                key={m.label}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.08, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                className="bg-light-base dark:bg-cosmic-elevated p-5 border border-light-border dark:border-cosmic-border rounded-sm card-nexus"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-xs font-body font-bold text-nexus-800 dark:text-white tracking-wider uppercase truncate">
+                    {m.label}
+                  </span>
+                  <span
+                    className={`shrink-0 text-[0.6rem] font-mono tracking-widest px-2 py-0.5 rounded-sm ${
+                      m.score >= 70
+                        ? "bg-aurum-500 text-white"
+                        : m.score >= 50
+                          ? "bg-nexus-400/20 text-nexus-400"
+                          : "bg-light-border dark:bg-cosmic-border text-nexus-400 dark:text-cosmic-muted"
+                    }`}
+                  >
+                    {m.rating}
+                  </span>
+                </div>
+                <div className="flex items-baseline gap-2 mt-2">
+                  <span className="font-mono font-bold text-2xl text-gradient-aurum">
+                    {m.value ?? m.score.toFixed(1)}
+                  </span>
+                  <span className="font-mono text-xs text-nexus-400 dark:text-cosmic-muted">
+                    {m.score.toFixed(1)}/10
+                  </span>
+                  <span className="ml-auto font-mono text-[0.6rem] text-nexus-400/60 dark:text-cosmic-muted/60">
+                    {(m.weight * 100).toFixed(0)}% weight
+                  </span>
+                </div>
+                <div className="h-1.5 bg-light-border dark:bg-cosmic-border rounded-full mt-3 overflow-hidden">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    whileInView={{ width: `${m.score * 10}%` }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.8, delay: 0.2 + i * 0.05, ease: [0.16, 1, 0.3, 1] }}
+                    className="h-full rounded-full bg-gradient-to-r from-aurum-600 to-aurum-400"
+                  />
+                </div>
+                {m.tip && (
+                  <p className="text-xs text-nexus-400 dark:text-cosmic-muted font-body leading-relaxed mt-3">
+                    {m.tip}
+                  </p>
+                )}
+              </motion.div>
+            ))}
+        </div>
+      </CollapsibleSection>
         <CollapsibleSection icon={TrendingUp} title="YOUR STRENGTHS" badge={`${faceResult.strengths.length} found`}>
           <div className="space-y-3">
             {faceResult.strengths.map((strength, i) => (
