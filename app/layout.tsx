@@ -9,6 +9,8 @@ import { SkipLink } from "@/components/shared/SkipLink";
 import { AutoSave } from "@/components/shared/AutoSave";
 import { JsonLd } from "@/components/shared/JsonLd";
 import ClientDecorations from "@/components/shared/ClientDecorations";
+import { CursorGlow } from "@/components/shared/CursorGlow";
+import { ScrollProgressBar } from "@/components/landing/ScrollProgressBar";
 
 const baseUrl = "https://nexari.app";
 
@@ -95,6 +97,8 @@ export default function RootLayout({
         <ServiceWorkerRegister />
         <AutoSave />
         <ClientDecorations />
+        <CursorGlow />
+        <ScrollProgressBar />
         <ToastProvider>
           <SmoothScroll>
             {children}
