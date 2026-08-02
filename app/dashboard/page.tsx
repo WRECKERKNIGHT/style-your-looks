@@ -120,8 +120,8 @@ const quickActions = [
 ];
 
 const accentStyles: Record<string, { bg: string; text: string; border: string }> = {
-  nexus: { bg: "bg-[var(--accent-nexus)]/10", text: "text-[var(--accent-nexus)]", border: "border-[var(--accent-nexus)]/30" },
-  aurum: { bg: "bg-[var(--accent-aurum)]/10", text: "text-[var(--accent-aurum)]", border: "border-[var(--accent-aurum)]/30" },
+  nexus: { bg: "bg-[color-mix(in_srgb,var(--accent-nexus)_10%,transparent)]", text: "text-[var(--accent-nexus)]", border: "border-[color-mix(in_srgb,var(--accent-nexus)_30%,transparent)]" },
+  aurum: { bg: "bg-[color-mix(in_srgb,var(--accent-aurum)_10%,transparent)]", text: "text-[var(--accent-aurum)]", border: "border-[color-mix(in_srgb,var(--accent-aurum)_30%,transparent)]" },
 };
 
 const container = {
@@ -185,7 +185,7 @@ function ProgressRing({ score, label, size = 120 }: { score: number; label: stri
             cy={size / 2}
             r={radius}
             fill="none"
-            stroke="rgba(108,43,217,0.15)"
+            stroke="rgba(185,139,86,0.18)"
             strokeWidth={strokeWidth}
           />
           <motion.circle
@@ -203,19 +203,19 @@ function ProgressRing({ score, label, size = 120 }: { score: number; label: stri
           />
           <defs>
             <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#8C59FF" />
-              <stop offset="50%" stopColor="#6C2BD9" />
-              <stop offset="100%" stopColor="#FFCB20" />
+              <stop offset="0%" stopColor="#CCA066" />
+              <stop offset="50%" stopColor="#B98B56" />
+              <stop offset="100%" stopColor="#C8963E" />
             </linearGradient>
           </defs>
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-2xl font-display font-bold text-[#E8E0FF] dark:text-[#C4B5FD]">
+          <span className="text-2xl font-display font-bold text-[var(--text-primary)]">
             {animatedScore.toFixed(0)}
           </span>
         </div>
       </div>
-      <span className="type-mono text-[#7C6BC4] dark:text-[#5B4BA4]">{label}</span>
+      <span className="type-mono text-[var(--text-muted)]">{label}</span>
     </motion.div>
   );
 }
@@ -252,21 +252,21 @@ export default function DashboardHome() {
 
       {/* Style Score Overview */}
       <ScrollReveal>
-        <div className="relative overflow-hidden rounded-sm bg-[#0F0A2E]/60 dark:bg-[#0A0618]/80 border border-[#6C2BD9]/30 p-8">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#6C2BD9]/10 via-transparent to-[#FFCB20]/5 pointer-events-none" />
+        <div className="relative overflow-hidden rounded-sm bg-[var(--bg-secondary)] border border-[var(--border-primary)] shadow-paper-lg p-8">
+          <div className="absolute inset-0 bg-gradient-to-br from-[color-mix(in_srgb,var(--accent-caramel)_12%,transparent)] via-transparent to-[color-mix(in_srgb,var(--accent-honey)_8%,transparent)] pointer-events-none" />
           <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-8 items-center">
             <div>
               <div className="flex items-center gap-2 mb-3">
-                <Sparkles className="w-4 h-4 text-[#8C59FF]" />
-                <span className="type-label text-[#8C59FF]">STYLE SCORE OVERVIEW</span>
+                <Sparkles className="w-4 h-4 text-[var(--accent-caramel)]" />
+                <span className="type-label text-[var(--accent-mocha)]">STYLE SCORE OVERVIEW</span>
               </div>
               <div className="flex items-baseline gap-4">
                 <span className="text-6xl font-display font-bold text-gradient-aurum">
                   <AnimatedCounter target={overallScore} decimals={1} />
                 </span>
-                <span className="text-sm text-[#7C6BC4] dark:text-[#5B4BA4] font-body">/ 100</span>
+                <span className="text-sm text-[var(--text-muted)] font-body">/ 100</span>
               </div>
-              <p className="text-sm text-[#7C6BC4] dark:text-[#5B4BA4] font-body mt-2">
+              <p className="text-sm text-[var(--text-muted)] font-body mt-2">
                 {overallScore >= 85
                   ? "Exceptional harmony. Your style profile is in peak condition."
                   : overallScore >= 70
@@ -298,17 +298,17 @@ export default function DashboardHome() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-            className="relative overflow-hidden rounded-sm bg-[#0F0A2E]/60 dark:bg-[#0A0618]/80 border border-[#6C2BD9]/30 p-6"
+            className="relative overflow-hidden rounded-sm bg-[var(--bg-secondary)] border border-[var(--border-primary)] shadow-paper p-6"
           >
             <div className="flex items-center gap-2 mb-4">
-              <Lightbulb className="w-4 h-4 text-[#FFCB20]" />
-              <span className="type-label text-[#FFCB20]">AI TIP OF THE DAY</span>
+              <Lightbulb className="w-4 h-4 text-[var(--accent-honey)]" />
+              <span className="type-label text-[var(--accent-mocha)]">AI TIP OF THE DAY</span>
               <button
                 onClick={() => setTipIndex((prev) => (prev + 1) % aiTips.length)}
-                className="ml-auto p-1 hover:bg-[#6C2BD9]/20 rounded transition-colors"
+                className="ml-auto p-1 hover:bg-[color-mix(in_srgb,var(--accent-caramel)_15%,transparent)] rounded transition-colors"
                 aria-label="Next tip"
               >
-                <RotateCw className="w-3.5 h-3.5 text-[#6C2BD9]" />
+                <RotateCw className="w-3.5 h-3.5 text-[var(--accent-mocha)]" />
               </button>
             </div>
             <AnimatePresence mode="wait">
@@ -318,7 +318,7 @@ export default function DashboardHome() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -12 }}
                 transition={{ duration: 0.4 }}
-                className="text-sm text-[#E8E0FF] dark:text-[#C4B5FD] font-body leading-relaxed min-h-[3rem]"
+                className="text-sm text-[var(--text-primary)] font-body leading-relaxed min-h-[3rem]"
               >
                 &ldquo;{aiTips[tipIndex]}&rdquo;
               </motion.p>
@@ -330,13 +330,13 @@ export default function DashboardHome() {
                   onClick={() => setTipIndex(i)}
                   className={`h-1 rounded-full transition-all duration-300 ${
                     i === Math.min(tipIndex, 4)
-                      ? "w-5 bg-[#FFCB20]"
-                      : "w-1.5 bg-[#6C2BD9]/30 hover:bg-[#6C2BD9]/50"
+                      ? "w-5 bg-[var(--accent-honey)]"
+                      : "w-1.5 bg-[color-mix(in_srgb,var(--accent-caramel)_30%,transparent)] hover:bg-[color-mix(in_srgb,var(--accent-caramel)_50%,transparent)]"
                   }`}
                   aria-label={`Tip ${i + 1}`}
                 />
               ))}
-              <span className="type-mono text-[#6C2BD9] ml-auto">{(tipIndex % aiTips.length) + 1}/{aiTips.length}</span>
+              <span className="type-mono text-[var(--accent-mocha)] ml-auto">{(tipIndex % aiTips.length) + 1}/{aiTips.length}</span>
             </div>
           </motion.div>
         </ScrollReveal>
@@ -419,7 +419,7 @@ export default function DashboardHome() {
               ].map((item) => (
                 <ScrollRevealItem key={item.step}>
                   <div className="flex gap-5">
-                    <span className="text-5xl font-display font-bold text-[var(--accent-nexus)]/20 leading-none mt-1">{item.step}</span>
+                    <span className="text-5xl font-display font-bold text-[color-mix(in_srgb,var(--accent-nexus)_20%,transparent)] leading-none mt-1">{item.step}</span>
                     <div>
                       <h4 className="type-label text-[var(--text-primary)] mb-2">
                         {item.title}

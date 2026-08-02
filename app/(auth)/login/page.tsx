@@ -64,7 +64,7 @@ export default function LoginPage() {
         className="hidden lg:flex flex-1 bg-light-elevated dark:bg-cosmic-elevated items-center justify-center p-12 relative overflow-hidden"
       >
         <div className="absolute inset-0 opacity-[0.04] pointer-events-none" style={{
-          backgroundImage: "repeating-linear-gradient(45deg, #6C2BD9 0, #6C2BD9 1px, transparent 0, transparent 50%)",
+          backgroundImage: "repeating-linear-gradient(45deg, #B98B56 0, #B98B56 1px, transparent 0, transparent 50%)",
           backgroundSize: "40px 40px",
         }} />
 

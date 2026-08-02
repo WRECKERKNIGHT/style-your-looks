@@ -181,7 +181,7 @@ export default function ProfilePage() {
                 { icon: BarChart3, label: "Trends", value: "View progress", href: "/dashboard/face-comparison" },
               ].map((item) => (
                 <Link key={item.label} href={item.href}
-                  className="flex items-center justify-between p-3 border border-[var(--border-primary)] card-nexus hover:border-[var(--accent-aurum)]/40 transition-all group">
+                  className="flex items-center justify-between p-3 border border-[var(--border-primary)] card-nexus hover:border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)] transition-all group">
                   <div className="flex items-center gap-2">
                     <item.icon className="w-4 h-4 text-[var(--accent-aurum)]" />
                     <div>
@@ -230,7 +230,7 @@ export default function ProfilePage() {
             <div className="flex flex-wrap gap-2">
               {["Classic", "Minimalist", "Neutral Palette", "Structured Silhouettes", "Sustainable", "Quality Over Quantity"].map((pref) => (
                 <span key={pref}
-                  className="px-3 py-1.5 border border-[var(--border-primary)] card-nexus text-xs text-[var(--text-primary)] hover:border-[var(--accent-aurum)]/40 transition-all">{pref}</span>
+                  className="px-3 py-1.5 border border-[var(--border-primary)] card-nexus text-xs text-[var(--text-primary)] hover:border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)] transition-all">{pref}</span>
               ))}
             </div>
           </motion.div>

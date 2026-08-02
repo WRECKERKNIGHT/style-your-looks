@@ -83,8 +83,8 @@ function getProductRecommendations(metrics: SkinMetric[]): SkincareProduct[] {
 
 function ProductCard({ product }: { product: SkincareProduct }) {
   const priorityColors: Record<string, string> = {
-    essential: "bg-[var(--accent-aurum)]/10 border-[var(--accent-aurum)]/30 text-[var(--accent-aurum)]",
-    recommended: "bg-[var(--accent-nexus)]/10 border-[var(--accent-nexus)]/30 text-[var(--accent-nexus)]",
+    essential: "bg-[color-mix(in_srgb,var(--accent-aurum)_10%,transparent)] border-[color-mix(in_srgb,var(--accent-aurum)_30%,transparent)] text-[var(--accent-aurum)]",
+    recommended: "bg-[color-mix(in_srgb,var(--accent-nexus)_10%,transparent)] border-[color-mix(in_srgb,var(--accent-nexus)_30%,transparent)] text-[var(--accent-nexus)]",
     advanced: "bg-purple-500/10 border-purple-500/30 text-purple-400",
   };
   return (
@@ -103,7 +103,7 @@ function ProductCard({ product }: { product: SkincareProduct }) {
       </div>
       <div className="flex flex-wrap gap-1 mt-2">
         {product.skinType.map((type) => (
-          <span key={type} className="text-[0.55rem] font-body text-[var(--text-muted)] bg-[var(--bg-secondary)]/50 px-1.5 py-0.5">{type}</span>
+          <span key={type} className="text-[0.55rem] font-body text-[var(--text-muted)] bg-[color-mix(in_srgb,var(--bg-secondary)_50%,transparent)] px-1.5 py-0.5">{type}</span>
         ))}
       </div>
     </div>
@@ -132,7 +132,7 @@ function MetricCard({ metric, index }: { metric: SkinMetric; index: number }) {
               viewport={{ once: true }}
               transition={{ duration: 1, delay: index * 0.1, ease: [0.16, 1, 0.3, 1] }}
               className="h-full rounded-full"
-              style={{ background: metric.score >= 7 ? "linear-gradient(90deg, var(--accent-nexus), var(--accent-aurum))" : metric.score >= 5 ? "linear-gradient(90deg, var(--accent-aurum), #FFCB20)" : "linear-gradient(90deg, #FF4444, #FF6B35)" }}
+              style={{ background: metric.score >= 7 ? "linear-gradient(90deg, var(--accent-nexus), var(--accent-aurum))" : metric.score >= 5 ? "linear-gradient(90deg, var(--accent-aurum), var(--accent-honey))" : "linear-gradient(90deg, #C07A5A, #A13B2F)" }}
             />
           </div>
         </button>
@@ -140,7 +140,7 @@ function MetricCard({ metric, index }: { metric: SkinMetric; index: number }) {
           {expanded && (
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }} className="overflow-hidden">
               <div className="px-5 pb-5 space-y-2">
-                <div className="h-px bg-gradient-to-r from-[var(--accent-nexus)]/50 to-transparent" />
+                <div className="h-px bg-gradient-to-r from-[color-mix(in_srgb,var(--accent-nexus)_50%,transparent)] to-transparent" />
                 <p className="text-xs text-[var(--text-muted)] font-body">{metric.description}</p>
                 <div className="flex items-start gap-2 bg-[var(--bg-tertiary)] p-3">
                   <Sparkles className="w-3.5 h-3.5 text-[var(--accent-aurum)] mt-0.5 shrink-0" />
@@ -174,7 +174,7 @@ export default function SkinHealthPage() {
         </ScrollReveal>
         <ScrollReveal delay={0.1}>
           <div className="glass-card p-12 text-center">
-            <Droplets className="w-16 h-16 text-[var(--accent-aurum)]/30 mx-auto mb-4" />
+            <Droplets className="w-16 h-16 text-[color-mix(in_srgb,var(--accent-aurum)_30%,transparent)] mx-auto mb-4" />
             <h2 className="type-heading text-[var(--text-primary)] mb-2">NO ANALYSIS YET</h2>
             <p className="text-[var(--text-muted)] font-body mb-6">Complete a face analysis to unlock your skin health dashboard.</p>
             <Link href="/dashboard/face-analysis" className="btn-nexus inline-flex">START FACE ANALYSIS <ArrowRight className="w-4 h-4 ml-2" /></Link>
@@ -249,14 +249,14 @@ export default function SkinHealthPage() {
               <div className="space-y-3">
                 {routine.filter((r) => r.time === "morning" || r.time === "both").map((step) => (
                   <div key={step.product} className="flex items-start gap-3 p-3 bg-[var(--bg-tertiary)] card-nexus">
-                    <div className="w-6 h-6 bg-[var(--accent-aurum)]/15 flex items-center justify-center rounded-full shrink-0 mt-0.5">
+                    <div className="w-6 h-6 bg-[color-mix(in_srgb,var(--accent-aurum)_15%,transparent)] flex items-center justify-center rounded-full shrink-0 mt-0.5">
                       <span className="text-[0.6rem] font-mono font-bold text-[var(--accent-aurum)]">{step.step}</span>
                     </div>
                     <div>
                       <p className="text-sm font-body font-bold text-[var(--text-primary)]">{step.product}</p>
                       <p className="text-xs text-[var(--text-muted)] font-body">{step.description}</p>
                       {step.priority !== "essential" && (
-                        <span className={`inline-block mt-1 type-label px-1.5 py-0.5 ${step.priority === "advanced" ? "bg-purple-500/10 text-purple-400" : "bg-[var(--accent-nexus)]/10 text-[var(--accent-nexus)]"}`}>{step.priority}</span>
+                        <span className={`inline-block mt-1 type-label px-1.5 py-0.5 ${step.priority === "advanced" ? "bg-purple-500/10 text-purple-400" : "bg-[color-mix(in_srgb,var(--accent-nexus)_10%,transparent)] text-[var(--accent-nexus)]"}`}>{step.priority}</span>
                       )}
                     </div>
                   </div>
@@ -274,14 +274,14 @@ export default function SkinHealthPage() {
               <div className="space-y-3">
                 {routine.filter((r) => r.time === "evening" || r.time === "both").map((step) => (
                   <div key={step.product} className="flex items-start gap-3 p-3 bg-[var(--bg-tertiary)] card-nexus">
-                    <div className="w-6 h-6 bg-[var(--accent-aurum)]/15 flex items-center justify-center rounded-full shrink-0 mt-0.5">
+                    <div className="w-6 h-6 bg-[color-mix(in_srgb,var(--accent-aurum)_15%,transparent)] flex items-center justify-center rounded-full shrink-0 mt-0.5">
                       <span className="text-[0.6rem] font-mono font-bold text-[var(--accent-aurum)]">{step.step}</span>
                     </div>
                     <div>
                       <p className="text-sm font-body font-bold text-[var(--text-primary)]">{step.product}</p>
                       <p className="text-xs text-[var(--text-muted)] font-body">{step.description}</p>
                       {step.priority !== "essential" && (
-                        <span className={`inline-block mt-1 type-label px-1.5 py-0.5 ${step.priority === "advanced" ? "bg-purple-500/10 text-purple-400" : "bg-[var(--accent-nexus)]/10 text-[var(--accent-nexus)]"}`}>{step.priority}</span>
+                        <span className={`inline-block mt-1 type-label px-1.5 py-0.5 ${step.priority === "advanced" ? "bg-purple-500/10 text-purple-400" : "bg-[color-mix(in_srgb,var(--accent-nexus)_10%,transparent)] text-[var(--accent-nexus)]"}`}>{step.priority}</span>
                       )}
                     </div>
                   </div>

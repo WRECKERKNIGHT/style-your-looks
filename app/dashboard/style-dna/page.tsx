@@ -34,8 +34,8 @@ function ScoreTrendChart({ trends }: { trends: ScoreTrendPoint[] }) {
   const metrics = [
     { key: "overall" as const, label: "Overall", color: "var(--accent-aurum)" },
     { key: "symmetry" as const, label: "Symmetry", color: "var(--accent-nexus)" },
-    { key: "goldenRatio" as const, label: "Golden Ratio", color: "#8C59FF" },
-    { key: "harmony" as const, label: "Harmony", color: "#4A1A96" },
+    { key: "goldenRatio" as const, label: "Golden Ratio", color: "#A0764E" },
+    { key: "harmony" as const, label: "Harmony", color: "#8A5F3D" },
   ];
 
   const w = 560;
@@ -141,9 +141,9 @@ function ScoreTrendChart({ trends }: { trends: ScoreTrendPoint[] }) {
 }
 
 function ScoreBadge({ label, score }: { label: string; score: number }) {
-  let color = "bg-[var(--accent-aurum)]/15 text-[var(--accent-aurum)] border-[var(--accent-aurum)]/30";
-  if (score >= 8) color = "bg-[var(--accent-aurum)]/20 text-[var(--accent-aurum)] border-[var(--accent-aurum)]/40";
-  else if (score >= 6) color = "bg-[var(--accent-nexus)]/15 text-[var(--accent-nexus)] border-[var(--accent-nexus)]/30";
+  let color = "bg-[color-mix(in_srgb,var(--accent-aurum)_15%,transparent)] text-[var(--accent-aurum)] border-[color-mix(in_srgb,var(--accent-aurum)_30%,transparent)]";
+  if (score >= 8) color = "bg-[color-mix(in_srgb,var(--accent-aurum)_20%,transparent)] text-[var(--accent-aurum)] border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)]";
+  else if (score >= 6) color = "bg-[color-mix(in_srgb,var(--accent-nexus)_15%,transparent)] text-[var(--accent-nexus)] border-[color-mix(in_srgb,var(--accent-nexus)_30%,transparent)]";
   else if (score < 5) color = "bg-purple-500/15 text-purple-400 border-purple-500/30";
 
   return (
@@ -182,7 +182,7 @@ export default function StyleDnaPage() {
 
       {!hasData && (
         <div className="glass-card p-12 text-center">
-          <Dna className="w-12 h-12 text-[var(--text-muted)]/40 mx-auto mb-4" />
+          <Dna className="w-12 h-12 text-[color-mix(in_srgb,var(--text-muted)_40%,transparent)] mx-auto mb-4" />
           <h3 className="type-heading text-[var(--text-primary)] mb-2">NO ANALYSIS DATA YET</h3>
           <p className="text-[var(--text-muted)] font-body max-w-md mx-auto">
             Run a face analysis and body analysis first. Your Style DNA will be automatically generated from the combined results.
@@ -193,7 +193,7 @@ export default function StyleDnaPage() {
       {hasData && (
         <motion.div variants={stagger} initial="hidden" animate="show" className="space-y-8">
           <motion.div variants={fadeUp} className="glass-card p-10 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--accent-nexus)]/5 rounded-full -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute top-0 right-0 w-64 h-64 bg-[color-mix(in_srgb,var(--accent-nexus)_5%,transparent)] rounded-full -translate-y-1/2 translate-x-1/2" />
             <div className="relative">
               <div className="flex items-center gap-3 mb-6">
                 <Crown className="w-5 h-5 text-[var(--accent-aurum)]" />
@@ -360,41 +360,41 @@ function generateReport(face: any, body: any, color: any) {
   svg.setAttribute("height", `${h}`);
 
   svg.innerHTML = `
-    <rect width="${w}" height="${h}" fill="#0A0618"/>
-    <rect width="${w}" height="8" fill="#6C2BD9"/>
-    <text x="${w/2}" y="40" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#8C59FF" letter-spacing="4">N E X A R I</text>
-    <text x="${w/2}" y="68" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" fill="#D4BFFF" font-weight="bold">Style Analysis Report</text>
-    <text x="${w/2}" y="88" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#E8B620">${new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}</text>
-    <line x1="40" y1="100" x2="${w-40}" y2="100" stroke="#6C2BD9" stroke-width="1"/>
+    <rect width="${w}" height="${h}" fill="#241812"/>
+    <rect width="${w}" height="8" fill="#8A5F3D"/>
+    <text x="${w/2}" y="40" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#C9B18C" letter-spacing="4">N E X A R I</text>
+    <text x="${w/2}" y="68" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" fill="#F3EAD9" font-weight="bold">Style Analysis Report</text>
+    <text x="${w/2}" y="88" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#C8963E">${new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}</text>
+    <line x1="40" y1="100" x2="${w-40}" y2="100" stroke="#8A5F3D" stroke-width="1"/>
 
     ${face ? `
-      <text x="40" y="125" font-family="Arial, sans-serif" font-size="14" fill="#D4BFFF" font-weight="bold">FACE ANALYSIS</text>
-      <text x="40" y="145" font-family="Arial, sans-serif" font-size="10" fill="#8C59FF">${face.facialShape} Shape · ${face.styleProfile} · ${face.overallRating}</text>
+      <text x="40" y="125" font-family="Arial, sans-serif" font-size="14" fill="#F3EAD9" font-weight="bold">FACE ANALYSIS</text>
+      <text x="40" y="145" font-family="Arial, sans-serif" font-size="10" fill="#C9B18C">${face.facialShape} Shape · ${face.styleProfile} · ${face.overallRating}</text>
       ${faceMetrics.map((m, i) => `
-        <text x="40" y="${barY + i * 32}" font-family="Arial, sans-serif" font-size="10" fill="#8C59FF">${m.label}</text>
-        <rect x="130" y="${barY + i * 32 - 10}" width="${(m.score / 10) * barMaxW}" height="${barH}" rx="3" fill="${m.score >= 7 ? 'var(--accent-nexus)' : m.score >= 5 ? 'var(--accent-aurum)' : '#FF4444'}"/>
-        <text x="${135 + (m.score / 10) * barMaxW}" y="${barY + i * 32}" font-family="monospace" font-size="10" fill="#D4BFFF" font-weight="bold">${m.score.toFixed(1)}</text>
+        <text x="40" y="${barY + i * 32}" font-family="Arial, sans-serif" font-size="10" fill="#C9B18C">${m.label}</text>
+        <rect x="130" y="${barY + i * 32 - 10}" width="${(m.score / 10) * barMaxW}" height="${barH}" rx="3" fill="${m.score >= 7 ? 'var(--accent-nexus)' : m.score >= 5 ? 'var(--accent-aurum)' : '#A13B2F'}"/>
+        <text x="${135 + (m.score / 10) * barMaxW}" y="${barY + i * 32}" font-family="monospace" font-size="10" fill="#F3EAD9" font-weight="bold">${m.score.toFixed(1)}</text>
       `).join("")}
     ` : ""}
 
     ${body ? `
-      <text x="40" y="${barY + faceMetrics.length * 32 + 30}" font-family="Arial, sans-serif" font-size="14" fill="#D4BFFF" font-weight="bold">BODY ANALYSIS</text>
+      <text x="40" y="${barY + faceMetrics.length * 32 + 30}" font-family="Arial, sans-serif" font-size="14" fill="#F3EAD9" font-weight="bold">BODY ANALYSIS</text>
       ${bodyMetrics.map((m, i) => `
-        <text x="40" y="${barY + faceMetrics.length * 32 + 55 + i * 24}" font-family="Arial, sans-serif" font-size="10" fill="#8C59FF">${m.label}:</text>
-        <text x="180" y="${barY + faceMetrics.length * 32 + 55 + i * 24}" font-family="Arial, sans-serif" font-size="11" fill="#D4BFFF" font-weight="bold">${m.value}</text>
+        <text x="40" y="${barY + faceMetrics.length * 32 + 55 + i * 24}" font-family="Arial, sans-serif" font-size="10" fill="#C9B18C">${m.label}:</text>
+        <text x="180" y="${barY + faceMetrics.length * 32 + 55 + i * 24}" font-family="Arial, sans-serif" font-size="11" fill="#F3EAD9" font-weight="bold">${m.value}</text>
       `).join("")}
     ` : ""}
 
     ${color ? `
-      <text x="40" y="${h - 180}" font-family="Arial, sans-serif" font-size="14" fill="#D4BFFF" font-weight="bold">COLOR PALETTE</text>
-      <text x="40" y="${h - 160}" font-family="Arial, sans-serif" font-size="10" fill="#8C59FF">${color.subType} · ${color.metalPreference} Metals</text>
-      ${color.bestColors.slice(0, 8).map((c: string, i: number) => `<rect x="${40 + i * 65}" y="${h - 145}" width="55" height="30" rx="4" fill="${c}" stroke="#6C2BD9" stroke-width="1"/>`).join("")}
-      ${color.bestColors.slice(0, 8).map((c: string, i: number) => `<text x="${67 + i * 65}" y="${h - 125}" text-anchor="middle" font-family="monospace" font-size="7" fill="#D4BFFF">${c}</text>`).join("")}
+      <text x="40" y="${h - 180}" font-family="Arial, sans-serif" font-size="14" fill="#F3EAD9" font-weight="bold">COLOR PALETTE</text>
+      <text x="40" y="${h - 160}" font-family="Arial, sans-serif" font-size="10" fill="#C9B18C">${color.subType} · ${color.metalPreference} Metals</text>
+      ${color.bestColors.slice(0, 8).map((c: string, i: number) => `<rect x="${40 + i * 65}" y="${h - 145}" width="55" height="30" rx="4" fill="${c}" stroke="#8A5F3D" stroke-width="1"/>`).join("")}
+      ${color.bestColors.slice(0, 8).map((c: string, i: number) => `<text x="${67 + i * 65}" y="${h - 125}" text-anchor="middle" font-family="monospace" font-size="7" fill="#F3EAD9">${c}</text>`).join("")}
     ` : ""}
 
-    <line x1="40" y1="${h - 80}" x2="${w-40}" y2="${h - 80}" stroke="#6C2BD9" stroke-width="1"/>
-    <text x="${w/2}" y="${h - 55}" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#E8B620">Generated by NEXARI</text>
-    <text x="${w/2}" y="${h - 40}" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" fill="#E8B620">nexari.app</text>
+    <line x1="40" y1="${h - 80}" x2="${w-40}" y2="${h - 80}" stroke="#8A5F3D" stroke-width="1"/>
+    <text x="${w/2}" y="${h - 55}" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#C8963E">Generated by NEXARI</text>
+    <text x="${w/2}" y="${h - 40}" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" fill="#C8963E">nexari.app</text>
   `;
 
   const svgData = new XMLSerializer().serializeToString(svg);
@@ -420,7 +420,7 @@ function generateReport(face: any, body: any, color: any) {
 function StyleRec({ icon, title, text }: { icon: React.ReactNode; title: string; text: string }) {
   return (
     <div className="flex items-start gap-4 bg-[var(--bg-tertiary)] p-5 border border-[var(--border-primary)] card-nexus">
-      <div className="w-10 h-10 bg-[var(--accent-aurum)]/10 flex items-center justify-center flex-shrink-0 rounded-full border border-[var(--accent-aurum)]/20">
+      <div className="w-10 h-10 bg-[color-mix(in_srgb,var(--accent-aurum)_10%,transparent)] flex items-center justify-center flex-shrink-0 rounded-full border border-[color-mix(in_srgb,var(--accent-aurum)_20%,transparent)]">
         {icon}
       </div>
       <div>
@@ -433,8 +433,8 @@ function StyleRec({ icon, title, text }: { icon: React.ReactNode; title: string;
 
 function MetricTile({ label, score }: { label: string; score: number }) {
   let borderColor = "border-[var(--border-primary)]";
-  if (score >= 8) borderColor = "border-[var(--accent-aurum)]/40";
-  else if (score >= 6) borderColor = "border-[var(--accent-nexus)]/30";
+  if (score >= 8) borderColor = "border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)]";
+  else if (score >= 6) borderColor = "border-[color-mix(in_srgb,var(--accent-nexus)_30%,transparent)]";
   else if (score < 5) borderColor = "border-purple-500/30";
 
   return (

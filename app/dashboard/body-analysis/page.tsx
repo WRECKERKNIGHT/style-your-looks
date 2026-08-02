@@ -32,9 +32,9 @@ function BodyProportionViz({ shoulderWidth, waistWidth, hipWidth }: { shoulderWi
         <circle cx={100 - scale(waistWidth)} cy="55" r="3" fill="var(--accent-aurum)" />
         <circle cx={100 + scale(waistWidth)} cy="55" r="3" fill="var(--accent-aurum)" />
         <text x="100" y="48" textAnchor="middle" fill="var(--text-muted)" fontSize="7" fontFamily="DM Sans">WAIST</text>
-        <line x1={100 - scale(hipWidth)} y1="95" x2={100 + scale(hipWidth)} y2="95" stroke="#8C59FF" strokeWidth="3" strokeLinecap="round" />
-        <circle cx={100 - scale(hipWidth)} cy="95" r="3" fill="#8C59FF" />
-        <circle cx={100 + scale(hipWidth)} cy="95" r="3" fill="#8C59FF" />
+        <line x1={100 - scale(hipWidth)} y1="95" x2={100 + scale(hipWidth)} y2="95" stroke="#B98B56" strokeWidth="3" strokeLinecap="round" />
+        <circle cx={100 - scale(hipWidth)} cy="95" r="3" fill="#B98B56" />
+        <circle cx={100 + scale(hipWidth)} cy="95" r="3" fill="#B98B56" />
         <text x="100" y="88" textAnchor="middle" fill="var(--text-muted)" fontSize="7" fontFamily="DM Sans">HIP</text>
         <line x1={100 - scale(shoulderWidth)} y1="15" x2={100 - scale(waistWidth)} y2="55" stroke="var(--accent-nexus)" strokeWidth="1" strokeDasharray="3,3" />
         <line x1={100 + scale(shoulderWidth)} y1="15" x2={100 + scale(waistWidth)} y2="55" stroke="var(--accent-nexus)" strokeWidth="1" strokeDasharray="3,3" />
@@ -46,7 +46,7 @@ function BodyProportionViz({ shoulderWidth, waistWidth, hipWidth }: { shoulderWi
         {[
           { label: "Shoulder", value: shoulderWidth, color: "var(--accent-nexus)" },
           { label: "Waist", value: waistWidth, color: "var(--accent-aurum)" },
-          { label: "Hip", value: hipWidth, color: "#8C59FF" },
+          { label: "Hip", value: hipWidth, color: "#B98B56" },
         ].map((m) => (
           <div key={m.label} className="text-center">
             <div className="h-24 bg-[var(--bg-tertiary)] border border-[var(--border-primary)] relative overflow-hidden flex items-end justify-center mb-2">
@@ -90,7 +90,7 @@ function BodySilhouette({ bodyType }: { bodyType: string }) {
       />
       <path
         d={silhouettes[bodyType] || silhouettes.Rectangle}
-        fill="rgba(108, 43, 217, 0.08)"
+        fill="rgba(185, 139, 86, 0.08)"
       />
     </svg>
   );

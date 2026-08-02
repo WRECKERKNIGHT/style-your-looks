@@ -89,12 +89,12 @@ export default function FaceComparisonPage() {
         ctx.setLineDash([]);
 
         if (splitX + 60 < w) {
-          ctx.fillStyle = "rgba(108,43,217,0.7)";
+          ctx.fillStyle = "rgba(138,95,61,0.7)";
           ctx.font = "10px monospace";
           ctx.fillText("BEFORE", splitX + 8, h - 12);
         }
         if (splitX > 70) {
-          ctx.fillStyle = "rgba(108,43,217,0.7)";
+          ctx.fillStyle = "rgba(138,95,61,0.7)";
           ctx.font = "10px monospace";
           ctx.textAlign = "right";
           ctx.fillText("AFTER", splitX - 8, h - 12);

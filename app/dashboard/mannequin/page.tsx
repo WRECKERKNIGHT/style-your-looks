@@ -48,7 +48,7 @@ function drawMannequin(ctx: CanvasRenderingContext2D, w: number, h: number, pose
   const cp = pose === "three-quarter" ? 0.85 : 1;
 
   function drawBody() {
-    ctx.strokeStyle = "rgba(108,43,217,0.25)";
+    ctx.strokeStyle = "rgba(185,139,86,0.25)";
     ctx.lineWidth = 1.5;
     ctx.fillStyle = "rgba(255,255,255,0.06)";
 
@@ -238,7 +238,7 @@ export default function MannequinPage() {
               {(["front", "three-quarter", "side"] as MannequinPose[]).map(p => (
                 <button key={p} onClick={() => setPose(p)}
                   className={`px-3 py-1 text-xs border transition-all ${
-                    pose === p ? "border-[var(--accent-aurum)] text-[var(--accent-aurum)]" : "border-[var(--border-primary)] text-[var(--text-muted)] hover:border-[var(--accent-aurum)]/40"
+                    pose === p ? "border-[var(--accent-aurum)] text-[var(--accent-aurum)]" : "border-[var(--border-primary)] text-[var(--text-muted)] hover:border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)]"
                   }`}>{p.replace("-", " ").toUpperCase()}</button>
               ))}
             </div>
@@ -246,7 +246,7 @@ export default function MannequinPage() {
               {(["hourglass", "rectangle", "triangle", "inverted-triangle", "oval"] as BodyType[]).map(bt => (
                 <button key={bt} onClick={() => setBodyType(bt)}
                   className={`px-3 py-1 text-xs border transition-all ${
-                    bodyType === bt ? "border-[var(--accent-aurum)] text-[var(--accent-aurum)]" : "border-[var(--border-primary)] text-[var(--text-muted)] hover:border-[var(--accent-aurum)]/40"
+                    bodyType === bt ? "border-[var(--accent-aurum)] text-[var(--accent-aurum)]" : "border-[var(--border-primary)] text-[var(--text-muted)] hover:border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)]"
                   }`}>{bt.replace("-", " ").toUpperCase()}</button>
               ))}
             </div>
@@ -288,7 +288,7 @@ export default function MannequinPage() {
                 <div className="mt-1 space-y-1 pl-2">
                   {GARMENTS.filter(g => g.type === type).map(g => (
                     <button key={g.id} onClick={() => addGarment(g)}
-                      className="w-full text-left text-xs text-[var(--text-primary)] p-1.5 border border-[var(--border-primary)] hover:border-[var(--accent-aurum)]/40 flex items-center gap-2">
+                      className="w-full text-left text-xs text-[var(--text-primary)] p-1.5 border border-[var(--border-primary)] hover:border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)] flex items-center gap-2">
                       <div className="w-4 h-4 rounded" style={{ background: g.color }} />
                       {g.name}
                     </button>

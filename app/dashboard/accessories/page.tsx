@@ -184,8 +184,8 @@ export default function AccessoriesPage() {
                   onClick={() => setSelectedGlasses(selectedGlasses?.id === style.id ? null : style)}
                   className={`p-3 border text-left transition-all duration-300 ${
                     selectedGlasses?.id === style.id
-                      ? "border-[var(--accent-aurum)] bg-[var(--accent-aurum)]/10"
-                      : "border-[var(--border-primary)] hover:border-[var(--accent-aurum)]/40 bg-[var(--bg-tertiary)] card-nexus"
+                      ? "border-[var(--accent-aurum)] bg-[color-mix(in_srgb,var(--accent-aurum)_10%,transparent)]"
+                      : "border-[var(--border-primary)] hover:border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)] bg-[var(--bg-tertiary)] card-nexus"
                   }`}
                 >
                   <div className="w-full h-8 mb-2" style={{ background: `linear-gradient(135deg, ${style.color} 0%, ${style.lensColor.replace(/[\d.]+\)/, "0.6)")}) 100%)`, border: `2px solid ${style.color}` }} />

@@ -135,8 +135,8 @@ export default function CommunityPage() {
           <button key={tab} onClick={() => setActiveTab(tab)}
             className={`px-4 py-2 border type-label transition-all ${
               activeTab === tab
-                ? "border-[var(--accent-aurum)] bg-[var(--accent-aurum)]/10 text-[var(--accent-aurum)]"
-                : "border-[var(--border-primary)] text-[var(--text-muted)] hover:border-[var(--accent-aurum)]/40 card-nexus"
+                ? "border-[var(--accent-aurum)] bg-[color-mix(in_srgb,var(--accent-aurum)_10%,transparent)] text-[var(--accent-aurum)]"
+                : "border-[var(--border-primary)] text-[var(--text-muted)] hover:border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)] card-nexus"
             }`}>{tab.toUpperCase()}</button>
         ))}
         <button
@@ -145,7 +145,7 @@ export default function CommunityPage() {
           className={`ml-auto flex items-center gap-2 px-3 py-2 border type-mono text-[0.6rem] transition-all ${
             live
               ? "border-emerald-400/40 text-emerald-400"
-              : "border-[var(--border-primary)] text-[var(--text-muted)] hover:border-[var(--accent-aurum)]/40"
+              : "border-[var(--border-primary)] text-[var(--text-muted)] hover:border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)]"
           }`}
           aria-label="Refresh feed"
         >
@@ -200,7 +200,7 @@ export default function CommunityPage() {
             <motion.div variants={stagger} initial="hidden" animate="show" className="space-y-4">
               {MEMBERS.map((member) => (
                 <motion.div key={member.id} variants={fadeUp}
-                  className="glass-card p-4 flex items-center justify-between group hover:border-[var(--accent-aurum)]/40 transition-all">
+                  className="glass-card p-4 flex items-center justify-between group hover:border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)] transition-all">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--accent-nexus)] to-[var(--accent-aurum)] flex items-center justify-center type-mono text-sm text-white">{member.avatar}</div>
                     <div>
@@ -228,7 +228,7 @@ export default function CommunityPage() {
               <div className="flex flex-wrap gap-3">
                 {TRENDING_TAGS.map((tag) => (
                   <motion.button key={tag} variants={fadeUp}
-                    className="px-4 py-2 border border-[var(--border-primary)] card-nexus hover:border-[var(--accent-aurum)]/40 transition-all type-mono text-xs text-[var(--text-muted)] hover:text-[var(--accent-aurum)]">
+                    className="px-4 py-2 border border-[var(--border-primary)] card-nexus hover:border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)] transition-all type-mono text-xs text-[var(--text-muted)] hover:text-[var(--accent-aurum)]">
                     #{tag}
                   </motion.button>
                 ))}
@@ -261,7 +261,7 @@ export default function CommunityPage() {
             </div>
           </div>
 
-          <Link href="/dashboard/history" className="glass-card p-4 flex items-center justify-between group hover:border-[var(--accent-aurum)]/40 transition-all">
+          <Link href="/dashboard/history" className="glass-card p-4 flex items-center justify-between group hover:border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)] transition-all">
             <span className="type-label text-[var(--text-primary)]">HISTORY</span>
             <ArrowRight className="w-4 h-4 text-[var(--text-muted)] group-hover:text-[var(--accent-aurum)] transition-colors" />
           </Link>

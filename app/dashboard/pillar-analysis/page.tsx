@@ -9,7 +9,7 @@ import { ScrollReveal, ScrollRevealItem, ScrollProgress } from "@/components/sha
 import { Target, TrendingUp, ArrowRight, Sparkles, Dumbbell, Scissors, Droplets, Shirt, Zap, ChevronDown, CheckCircle2 } from "lucide-react";
 
 const impactColors: Record<string, string> = { high: "text-[var(--accent-aurum)]", medium: "text-[var(--accent-nexus)]", low: "text-[var(--text-muted)]" };
-const impactBg: Record<string, string> = { high: "bg-[var(--accent-aurum)]/10 border-[var(--accent-aurum)]/25", medium: "bg-[var(--accent-nexus)]/10 border-[var(--accent-nexus)]/25", low: "bg-[var(--bg-tertiary)] border-[var(--border-primary)]" };
+const impactBg: Record<string, string> = { high: "bg-[color-mix(in_srgb,var(--accent-aurum)_10%,transparent)] border-[color-mix(in_srgb,var(--accent-aurum)_25%,transparent)]", medium: "bg-[color-mix(in_srgb,var(--accent-nexus)_10%,transparent)] border-[color-mix(in_srgb,var(--accent-nexus)_25%,transparent)]", low: "bg-[var(--bg-tertiary)] border-[var(--border-primary)]" };
 const effortLabels: Record<string, string> = { easy: "Quick Win", moderate: "Moderate Effort", significant: "Major Change" };
 const categoryIcons: Record<string, any> = { grooming: Scissors, skincare: Droplets, style: Shirt, fitness: Dumbbell, "non-surgical": Zap };
 
@@ -25,7 +25,7 @@ function PillarCard({ pillar, index }: { pillar: { name: string; score: number; 
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-[var(--accent-aurum)]/10 border border-[var(--accent-aurum)]/25 flex items-center justify-center rounded-full">
+              <div className="w-12 h-12 bg-[color-mix(in_srgb,var(--accent-aurum)_10%,transparent)] border border-[color-mix(in_srgb,var(--accent-aurum)_25%,transparent)] flex items-center justify-center rounded-full">
                 <span className="text-lg font-display font-bold text-[var(--accent-aurum)]">{index + 1}</span>
               </div>
               <div>
@@ -67,7 +67,7 @@ function PillarCard({ pillar, index }: { pillar: { name: string; score: number; 
               className="overflow-hidden"
             >
               <div className="px-6 pb-6 space-y-4">
-                <div className="h-px bg-gradient-to-r from-[var(--accent-nexus)]/50 to-transparent" />
+                <div className="h-px bg-gradient-to-r from-[color-mix(in_srgb,var(--accent-nexus)_50%,transparent)] to-transparent" />
                 <p className="text-sm text-[var(--text-muted)] font-body leading-relaxed">{pillar.description}</p>
                 <div className="space-y-3">
                   {pillar.metrics.map((m) => (
@@ -118,7 +118,7 @@ export default function PillarAnalysisPage() {
         </ScrollReveal>
         <ScrollReveal delay={0.1}>
           <div className="glass-card p-12 text-center">
-            <Target className="w-16 h-16 text-[var(--accent-aurum)]/30 mx-auto mb-4" />
+            <Target className="w-16 h-16 text-[color-mix(in_srgb,var(--accent-aurum)_30%,transparent)] mx-auto mb-4" />
             <h2 className="type-heading text-[var(--text-primary)] mb-2">NO ANALYSIS YET</h2>
             <p className="text-[var(--text-muted)] font-body mb-6">Complete a face analysis first to unlock your 4-pillar breakdown.</p>
             <Link href="/dashboard/face-analysis" className="btn-nexus inline-flex">
@@ -157,7 +157,7 @@ export default function PillarAnalysisPage() {
               <p className="type-label text-[var(--text-muted)] mb-1">CURRENT</p>
               <p className="text-2xl font-display font-bold text-[var(--text-primary)]">{analysis.projection.current}</p>
             </div>
-            <div className="bg-[var(--accent-aurum)]/10 p-4 border border-[var(--accent-aurum)]/25">
+            <div className="bg-[color-mix(in_srgb,var(--accent-aurum)_10%,transparent)] p-4 border border-[color-mix(in_srgb,var(--accent-aurum)_25%,transparent)]">
               <p className="type-label text-[var(--accent-aurum)] mb-1">POTENTIAL</p>
               <p className="text-2xl font-display font-bold text-[var(--accent-aurum)]">{analysis.projection.potential}</p>
             </div>

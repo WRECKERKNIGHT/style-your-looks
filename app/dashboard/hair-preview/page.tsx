@@ -161,8 +161,8 @@ export default function HairPreviewPage() {
                   onClick={() => setSelectedColor(selectedColor?.id === color.id ? null : color)}
                   className={`p-3 border text-center transition-all duration-300 ${
                     selectedColor?.id === color.id
-                      ? "border-[var(--accent-aurum)] bg-[var(--accent-aurum)]/10"
-                      : "border-[var(--border-primary)] hover:border-[var(--accent-aurum)]/40 bg-[var(--bg-tertiary)] card-nexus"
+                      ? "border-[var(--accent-aurum)] bg-[color-mix(in_srgb,var(--accent-aurum)_10%,transparent)]"
+                      : "border-[var(--border-primary)] hover:border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)] bg-[var(--bg-tertiary)] card-nexus"
                   }`}
                 >
                   <div className="w-full h-8 mb-2 rounded-full border border-[var(--border-primary)]" style={{ backgroundColor: color.color }} />

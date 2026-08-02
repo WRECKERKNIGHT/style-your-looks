@@ -163,7 +163,7 @@ export default function FaceAnalysisPage() {
               )}
               <button
                 onClick={() => setShowLandmarks(!showLandmarks)}
-                className="absolute top-4 right-4 flex items-center gap-2 bg-[var(--bg-primary)]/80 text-[var(--text-primary)] px-3 py-1.5 text-xs font-body tracking-wider transition-colors border border-[var(--border-primary)]"
+                className="absolute top-4 right-4 flex items-center gap-2 bg-[color-mix(in_srgb,var(--bg-primary)_80%,transparent)] text-[var(--text-primary)] px-3 py-1.5 text-xs font-body tracking-wider transition-colors border border-[var(--border-primary)]"
               >
                 <Eye className="w-3.5 h-3.5" />
                 {showLandmarks ? "HIDE" : "SHOW"} LANDMARKS

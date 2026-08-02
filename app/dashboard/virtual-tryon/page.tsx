@@ -271,7 +271,7 @@ export default function VirtualTryOnPage() {
             )}
 
             {selectedItems.length > 0 && (
-              <div className="absolute bottom-3 left-3 flex items-center gap-1 type-mono text-[var(--text-muted)]/60">
+              <div className="absolute bottom-3 left-3 flex items-center gap-1 type-mono text-[color-mix(in_srgb,var(--text-muted)_60%,transparent)]">
                 <Move className="w-3 h-3" />
                 DRAG TO REPOSITION
               </div>
@@ -293,8 +293,8 @@ export default function VirtualTryOnPage() {
                           onClick={() => isSelected ? removeClothingItem(item.id) : addClothingItem(item)}
                           className={`p-4 border text-left transition-all duration-300 ${
                             isSelected
-                              ? "border-[var(--accent-aurum)] bg-[var(--accent-aurum)]/10"
-                              : "border-[var(--border-primary)] hover:border-[var(--accent-aurum)]/40 bg-[var(--bg-tertiary)] card-nexus"
+                              ? "border-[var(--accent-aurum)] bg-[color-mix(in_srgb,var(--accent-aurum)_10%,transparent)]"
+                              : "border-[var(--border-primary)] hover:border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)] bg-[var(--bg-tertiary)] card-nexus"
                           }`}
                         >
                           <div className="w-full h-14 mb-3 border border-[var(--border-primary)]" style={{ backgroundColor: item.color }} />

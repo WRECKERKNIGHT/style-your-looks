@@ -166,7 +166,7 @@ export default function StyleQuizPage() {
                 <div className="space-y-3">
                   {QUIZ_DATA[currentQuestion].options.map(opt => (
                     <button key={opt.value} onClick={() => selectOption(opt.value)}
-                      className="w-full text-left p-4 border border-[var(--border-primary)] bg-[var(--bg-tertiary)] card-nexus hover:border-[var(--accent-aurum)]/40 transition-all group">
+                      className="w-full text-left p-4 border border-[var(--border-primary)] bg-[var(--bg-tertiary)] card-nexus hover:border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)] transition-all group">
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="type-body text-[var(--text-primary)]">{opt.label}</p>

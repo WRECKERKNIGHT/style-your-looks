@@ -120,8 +120,8 @@ export default function RecommendationsPage() {
                 <button key={cat.id} onClick={() => setActiveCategory(cat.id)}
                   className={`flex items-center gap-2 px-4 py-2 border whitespace-nowrap transition-all ${
                     activeCategory === cat.id
-                      ? "border-[var(--accent-aurum)] bg-[var(--accent-aurum)]/10 text-[var(--accent-aurum)]"
-                      : "border-[var(--border-primary)] text-[var(--text-muted)] hover:border-[var(--accent-aurum)]/40 card-nexus"
+                      ? "border-[var(--accent-aurum)] bg-[color-mix(in_srgb,var(--accent-aurum)_10%,transparent)] text-[var(--accent-aurum)]"
+                      : "border-[var(--border-primary)] text-[var(--text-muted)] hover:border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)] card-nexus"
                   }`}>
                   <Icon className="w-4 h-4" />
                   <span className="type-label">{cat.title}</span>
@@ -136,7 +136,7 @@ export default function RecommendationsPage() {
               <div className="space-y-3">
                 {activeRecs.items.map((item, i) => (
                   <motion.div key={i} variants={fadeUp}
-                    className="flex items-center justify-between p-4 border border-[var(--border-primary)] bg-[var(--bg-tertiary)] card-nexus group hover:border-[var(--accent-aurum)]/40 transition-all">
+                    className="flex items-center justify-between p-4 border border-[var(--border-primary)] bg-[var(--bg-tertiary)] card-nexus group hover:border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)] transition-all">
                     <div className="flex items-center gap-3">
                       <span className="type-mono text-[var(--accent-aurum)] text-xs">{String(i + 1).padStart(2, "0")}</span>
                       <div>

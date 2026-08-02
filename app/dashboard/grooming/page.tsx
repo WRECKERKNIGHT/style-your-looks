@@ -135,8 +135,8 @@ export default function GroomingPage() {
                     key={rec.styleId}
                     className={`p-5 border transition-all cursor-pointer ${
                       selectedBeardStyle === rec.styleId
-                        ? "bg-[var(--accent-aurum)]/10 border-[var(--accent-aurum)]/40"
-                        : "bg-[var(--bg-tertiary)] border-[var(--border-primary)] hover:border-[var(--accent-aurum)]/30"
+                        ? "bg-[color-mix(in_srgb,var(--accent-aurum)_10%,transparent)] border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)]"
+                        : "bg-[var(--bg-tertiary)] border-[var(--border-primary)] hover:border-[color-mix(in_srgb,var(--accent-aurum)_30%,transparent)]"
                     }`}
                     onClick={() => setSelectedBeardStyle(rec.styleId)}
                   >
@@ -159,8 +159,8 @@ export default function GroomingPage() {
                     key={rec.styleId}
                     className={`p-5 border transition-all cursor-pointer ${
                       selectedMustacheStyle === rec.styleId
-                        ? "bg-[var(--accent-aurum)]/10 border-[var(--accent-aurum)]/40"
-                        : "bg-[var(--bg-tertiary)] border-[var(--border-primary)] hover:border-[var(--accent-aurum)]/30"
+                        ? "bg-[color-mix(in_srgb,var(--accent-aurum)_10%,transparent)] border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)]"
+                        : "bg-[var(--bg-tertiary)] border-[var(--border-primary)] hover:border-[color-mix(in_srgb,var(--accent-aurum)_30%,transparent)]"
                     }`}
                     onClick={() => setSelectedMustacheStyle(rec.styleId)}
                   >
@@ -192,7 +192,7 @@ export default function GroomingPage() {
                   className={`p-4 text-left text-base font-body transition-all duration-300 ${
                     selectedBeardStyle === style.id
                       ? "btn-nexus justify-center"
-                      : "bg-[var(--bg-tertiary)] text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]/50 border border-[var(--border-primary)] card-nexus"
+                      : "bg-[var(--bg-tertiary)] text-[var(--text-primary)] hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_50%,transparent)] border border-[var(--border-primary)] card-nexus"
                   }`}
                 >
                   <div className="flex items-center gap-2">
@@ -214,7 +214,7 @@ export default function GroomingPage() {
                   className={`p-4 text-left text-base font-body transition-all duration-300 ${
                     selectedMustacheStyle === style.id
                       ? "btn-nexus justify-center"
-                      : "bg-[var(--bg-tertiary)] text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]/50 border border-[var(--border-primary)] card-nexus"
+                      : "bg-[var(--bg-tertiary)] text-[var(--text-primary)] hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_50%,transparent)] border border-[var(--border-primary)] card-nexus"
                   }`}
                 >
                   <div className="flex items-center gap-2">
