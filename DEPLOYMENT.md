@@ -3,6 +3,19 @@
 Target platform is **Vercel** (edge-adjacent Next.js hosting, free tier, built-in
 CDN, service worker support) with **Supabase** for auth + community data.
 
+## Live deployment
+
+| | |
+| --- | --- |
+| Production URL | https://nexari-ten.vercel.app |
+| Vercel project | `nexari` (team `harshithardik312-9603s-projects`) |
+| Supabase project | `aurastyler` (`ujgrjatrthhqrzasssuh`) |
+| Deploy method | GitHub connection — pushes to `main` auto-deploy |
+| CI | `.github/workflows/ci.yml` — lint + build on every push/PR |
+
+Supabase auth is configured with **email confirmation disabled**
+(`mailer_autoconfirm = true`) for instant signup.
+
 ## Prerequisites
 
 - Node **20.x** (pinned in `.nvmrc`). Vercel detects and honors `.nvmrc`.
