@@ -1,0 +1,363 @@
+"use client";
+
+import { motion } from "framer-motion";
+import { useMemo } from "react";
+
+export interface SkeletonMeasurements {
+  fwhr?: number;
+  canthalTilt?: number;
+  eyeNoseRatio?: number;
+}
+
+interface FaceSkeletonOverlayProps {
+  landmarks: number[][];
+  width: number;
+  height: number;
+  facialShape?: string;
+  measurements?: SkeletonMeasurements;
+  animate?: boolean;
+  className?: string;
+}
+
+const COLORS = {
+  oval: "#C8963E",
+  eye: "#E8C88A",
+  brow: "#A0764E",
+  nose: "#8A5F3D",
+  mouth: "#CCA066",
+  innerMouth: "#9C7142",
+  centerline: "rgba(200, 150, 62, 0.35)",
+  measure: "#E8C88A",
+  dot: "#F2D9A8",
+};
+
+const REGIONS: { id: string; color: string; indices: number[]; delay: number; width: number }[] = [
+  {
+    id: "oval",
+    color: COLORS.oval,
+    width: 1.6,
+    delay: 0,
+    indices: [
+      10, 338, 297, 332, 284, 251, 389, 356, 454, 323, 361, 288, 397, 365, 379, 378, 400, 377,
+      152, 148, 176, 149, 150, 136, 172, 58, 132, 93, 234, 127, 162, 21, 54, 103, 67, 109,
+    ],
+  },
+  {
+    id: "left-eye",
+    color: COLORS.eye,
+    width: 1.6,
+    delay: 0.55,
+    indices: [33, 7, 163, 144, 145, 153, 154, 155, 133, 173, 157, 158, 159, 160, 161, 246],
+  },
+  {
+    id: "right-eye",
+    color: COLORS.eye,
+    width: 1.6,
+    delay: 0.62,
+    indices: [263, 249, 390, 373, 374, 380, 381, 382, 398, 384, 385, 386, 387, 388, 466],
+  },
+  {
+    id: "left-brow",
+    color: COLORS.brow,
+    width: 1.3,
+    delay: 0.78,
+    indices: [46, 53, 52, 65, 55, 70, 63, 105, 66, 107],
+  },
+  {
+    id: "right-brow",
+    color: COLORS.brow,
+    width: 1.3,
+    delay: 0.84,
+    indices: [285, 295, 282, 283, 300, 293, 296, 336, 334, 263],
+  },
+  {
+    id: "nose",
+    color: COLORS.nose,
+    width: 1.5,
+    delay: 0.9,
+    indices: [168, 6, 197, 195, 5, 4, 1, 19, 94, 2, 98, 97, 326, 327],
+  },
+  {
+    id: "mouth",
+    color: COLORS.mouth,
+    width: 1.7,
+    delay: 1.05,
+    indices: [0, 39, 40, 185, 61, 146, 91, 181, 84, 17, 314, 405, 321, 375, 291, 409, 270, 269, 267],
+  },
+  {
+    id: "inner-mouth",
+    color: COLORS.innerMouth,
+    width: 1.2,
+    delay: 1.15,
+    indices: [78, 95, 88, 178, 87, 14, 317, 402, 318, 324, 308, 415, 310, 311, 312, 13, 82, 81, 80, 191],
+  },
+];
+
+const KEY_DOTS: { index: number; delay: number; r: number }[] = [
+  { index: 33, delay: 1.25, r: 3.4 },
+  { index: 133, delay: 1.25, r: 3.4 },
+  { index: 263, delay: 1.3, r: 3.4 },
+  { index: 362, delay: 1.3, r: 3.4 },
+  { index: 1, delay: 1.4, r: 4 },
+  { index: 152, delay: 1.45, r: 3.4 },
+  { index: 61, delay: 1.5, r: 3 },
+  { index: 291, delay: 1.5, r: 3 },
+  { index: 234, delay: 1.55, r: 3.4 },
+  { index: 454, delay: 1.55, r: 3.4 },
+  { index: 9, delay: 1.6, r: 3 },
+];
+
+function polylinePoints(landmarks: number[][], indices: number[]): string | null {
+  const pts: string[] = [];
+  for (const i of indices) {
+    const lm = landmarks[i];
+    if (!lm) return null;
+    pts.push(`${(lm[0] * 1000).toFixed(1)},${(lm[1] * 1000).toFixed(1)}`);
+  }
+  return pts.join(" ");
+}
+
+export function FaceSkeletonOverlay({
+  landmarks,
+  width,
+  height,
+  facialShape,
+  measurements,
+  animate = true,
+  className,
+}: FaceSkeletonOverlayProps) {
+  const total = useMemo(
+    () => landmarks.reduce((acc, lm) => acc + lm[0] + lm[1] + lm[2], 0),
+    [landmarks]
+  );
+
+  const x = (i: number) => landmarks[i][0] * width;
+  const y = (i: number) => landmarks[i][1] * height;
+
+  const canSee = (i: number) => Boolean(landmarks[i]);
+  const shapeLabel = facialShape?.toUpperCase() ?? "";
+
+  const fwhrLine =
+    measurements?.fwhr !== undefined && canSee(234) && canSee(454) && canSee(9) && canSee(13)
+      ? {
+          yw: (y(9) + y(13)) / 2,
+          x1: x(234),
+          x2: x(454),
+          yh1: y(9),
+          yh2: y(13),
+          xv: (x(234) + x(454)) / 2,
+        }
+      : null;
+
+  const canthalLine = canSee(133) && canSee(33) ? { x1: x(133), y1: y(133), x2: x(33), y2: y(33) } : null;
+  const eyeNoseLine =
+    measurements?.eyeNoseRatio !== undefined && canSee(33) && canSee(263)
+      ? { x1: x(33), y1: (y(33) + y(263)) / 2, x2: x(263), y2: (y(33) + y(263)) / 2 }
+      : null;
+
+  const centerline = canSee(10) && canSee(152) && canSee(1) ? { x: x(1), y1: y(10), y2: y(152) } : null;
+
+  const drawDelay = animate ? 0.2 : 0;
+
+  return (
+    <div
+      key={total}
+      className={`absolute inset-0 pointer-events-none overflow-hidden ${className || ""}`}
+      style={{ width, height }}
+    >
+      <svg
+        viewBox={`0 0 ${width} ${height}`}
+        width={width}
+        height={height}
+        className="absolute inset-0"
+      >
+        <defs>
+          <filter id="skel-glow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="2.2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+
+        <g filter="url(#skel-glow)">
+          {REGIONS.map((region) => {
+            const points = polylinePoints(landmarks, region.indices);
+            if (!points) return null;
+            return (
+              <motion.polyline
+                key={region.id}
+                points={points}
+                fill="none"
+                stroke={region.color}
+                strokeWidth={region.width}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                initial={animate ? { pathLength: 0, opacity: 0 } : false}
+                animate={animate ? { pathLength: 1, opacity: 0.95 } : { opacity: 0.95 }}
+                transition={{
+                  pathLength: { duration: 0.8, delay: drawDelay + region.delay, ease: "easeInOut" },
+                  opacity: { duration: 0.4, delay: drawDelay + region.delay },
+                }}
+              />
+            );
+          })}
+
+          {centerline && (
+            <motion.line
+              x1={centerline.x}
+              y1={centerline.y1}
+              x2={centerline.x}
+              y2={centerline.y2}
+              stroke={COLORS.centerline}
+              strokeWidth={1.2}
+              strokeDasharray="5 6"
+              initial={animate ? { pathLength: 0, opacity: 0 } : false}
+              animate={animate ? { pathLength: 1, opacity: 1 } : { opacity: 1 }}
+              transition={{ pathLength: { duration: 0.6, delay: drawDelay + 1.2 } }}
+            />
+          )}
+
+          {KEY_DOTS.map((dot) =>
+            canSee(dot.index) ? (
+              <motion.circle
+                key={`dot-${dot.index}`}
+                cx={x(dot.index)}
+                cy={y(dot.index)}
+                r={dot.r}
+                fill={COLORS.dot}
+                initial={animate ? { scale: 0, opacity: 0 } : false}
+                animate={animate ? { scale: 1, opacity: 1 } : { opacity: 1 }}
+                transition={{ delay: drawDelay + dot.delay, duration: 0.35, type: "spring" }}
+              />
+            ) : null
+          )}
+        </g>
+
+        {fwhrLine && (
+          <motion.g
+            initial={animate ? { opacity: 0 } : false}
+            animate={{ opacity: 1 }}
+            transition={{ delay: drawDelay + 1.7, duration: 0.5 }}
+          >
+            <line
+              x1={fwhrLine.x1}
+              y1={fwhrLine.yw}
+              x2={fwhrLine.x2}
+              y2={fwhrLine.yw}
+              stroke={COLORS.measure}
+              strokeWidth={1.4}
+              strokeDasharray="7 5"
+            />
+            <line
+              x1={fwhrLine.xv}
+              y1={fwhrLine.yh1}
+              x2={fwhrLine.xv}
+              y2={fwhrLine.yh2}
+              stroke={COLORS.measure}
+              strokeWidth={1.4}
+              strokeDasharray="7 5"
+            />
+            <text
+              x={Math.min(fwhrLine.x1, fwhrLine.x2) + 8}
+              y={fwhrLine.yw - 6}
+              fill="#fff"
+              fontSize="11"
+              fontFamily="monospace"
+              style={{ paintOrder: "stroke", stroke: "rgba(0,0,0,0.65)", strokeWidth: 3 }}
+            >
+              FWHR {measurements?.fwhr?.toFixed(2)}
+            </text>
+          </motion.g>
+        )}
+
+        {canthalLine && measurements?.canthalTilt !== undefined && (
+          <motion.g
+            initial={animate ? { opacity: 0 } : false}
+            animate={{ opacity: 1 }}
+            transition={{ delay: drawDelay + 1.9, duration: 0.5 }}
+          >
+            <line
+              x1={canthalLine.x1}
+              y1={canthalLine.y1}
+              x2={canthalLine.x2}
+              y2={canthalLine.y2}
+              stroke={COLORS.measure}
+              strokeWidth={1.4}
+              strokeDasharray="4 4"
+            />
+            <text
+              x={canthalLine.x2 - 4}
+              y={canthalLine.y2 - 8}
+              fill="#fff"
+              fontSize="11"
+              fontFamily="monospace"
+              style={{ paintOrder: "stroke", stroke: "rgba(0,0,0,0.65)", strokeWidth: 3 }}
+            >
+              {measurements.canthalTilt >= 0 ? "+" : ""}
+              {measurements.canthalTilt.toFixed(1)}°
+            </text>
+          </motion.g>
+        )}
+
+        {eyeNoseLine && (
+          <motion.g
+            initial={animate ? { opacity: 0 } : false}
+            animate={{ opacity: 1 }}
+            transition={{ delay: drawDelay + 2.05, duration: 0.5 }}
+          >
+            <line
+              x1={eyeNoseLine.x1}
+              y1={eyeNoseLine.y1}
+              x2={eyeNoseLine.x2}
+              y2={eyeNoseLine.y2}
+              stroke={COLORS.measure}
+              strokeWidth={1.4}
+              strokeDasharray="4 4"
+            />
+            <text
+              x={(eyeNoseLine.x1 + eyeNoseLine.x2) / 2 - 40}
+              y={eyeNoseLine.y1 - 8}
+              fill="#fff"
+              fontSize="11"
+              fontFamily="monospace"
+              style={{ paintOrder: "stroke", stroke: "rgba(0,0,0,0.65)", strokeWidth: 3 }}
+            >
+              E/N {measurements?.eyeNoseRatio?.toFixed(2)}
+            </text>
+          </motion.g>
+        )}
+      </svg>
+
+      {shapeLabel && (
+        <motion.div
+          initial={animate ? { opacity: 0, y: -10 } : false}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: drawDelay + 2.2, duration: 0.5 }}
+          className="absolute bottom-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-sm border bg-black/45 backdrop-blur-sm"
+          style={{ borderColor: "rgba(200,150,62,0.5)" }}
+        >
+          <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: COLORS.oval }} />
+          <span className="text-[0.65rem] font-mono tracking-[0.25em] text-[#F2D9A8]">
+            SHAPE: {shapeLabel}
+          </span>
+        </motion.div>
+      )}
+
+      {measurements?.fwhr !== undefined && (
+        <motion.div
+          initial={animate ? { opacity: 0 } : false}
+          animate={{ opacity: 1 }}
+          transition={{ delay: drawDelay + 2.3, duration: 0.5 }}
+          className="absolute top-4 right-4 px-3 py-1.5 rounded-sm border bg-black/45 backdrop-blur-sm"
+          style={{ borderColor: "rgba(232,200,138,0.45)" }}
+        >
+          <span className="text-[0.6rem] font-mono tracking-widest text-[#E8C88A]">
+            VERIFIED GEOMETRY
+          </span>
+        </motion.div>
+      )}
+    </div>
+  );
+}
