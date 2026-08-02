@@ -5,6 +5,8 @@ import { ImageUploader } from "@/components/shared/ImageUploader";
 import { AnalysisResults } from "@/components/analysis/AnalysisResults";
 import { FaceSkeletonOverlay } from "@/components/analysis/FaceSkeletonOverlay";
 import { ProcessingOverlay } from "@/components/analysis/ProcessingOverlay";
+import { PhotoGuidelines } from "@/components/analysis/PhotoGuidelines";
+import { PhotoReviewPanel, type RejectedPhoto } from "@/components/analysis/PhotoReviewPanel";
 import { useAnalysisStore } from "@/store/analysis-store";
 import { useMediaPipe } from "@/hooks/useMediaPipe";
 import { useWebcam } from "@/hooks/useWebcam";
@@ -32,6 +34,7 @@ export default function FaceAnalysisPage() {
   const [copied, setCopied] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const [photos, setPhotos] = useState<string[]>([]);
+  const [rejectedPhotos, setRejectedPhotos] = useState<RejectedPhoto[]>([]);
   const imageRef = useRef<HTMLImageElement>(null);
 
   const buildReport = useCallback(() => {
@@ -83,6 +86,7 @@ export default function FaceAnalysisPage() {
         return [...prev, imageData];
       });
       setError(null);
+      setRejectedPhotos([]);
     },
     [addToast]
   );
@@ -103,6 +107,7 @@ export default function FaceAnalysisPage() {
   const removePhoto = useCallback((index: number) => {
     setPhotos((prev) => prev.filter((_, i) => i !== index));
     setError(null);
+    setRejectedPhotos([]);
   }, []);
 
   const handleAnalyze = useCallback(async () => {
@@ -128,6 +133,7 @@ export default function FaceAnalysisPage() {
       );
 
       const { photoCount, rejected } = await analyzeFacePhotos(images);
+      setRejectedPhotos(rejected);
       if (rejected.length > 0) {
         addToast(
           `${rejected.length} photo(s) skipped: ${rejected.map((r) => r.issues.join(", ")).join(" | ")}`,
@@ -184,24 +190,49 @@ export default function FaceAnalysisPage() {
 
             {photos.length > 0 && (
               <div className="grid grid-cols-3 gap-3 mt-5">
-                {photos.map((photo, i) => (
-                  <div
-                    key={i}
-                    className="relative aspect-square overflow-hidden border border-[var(--border-primary)] bg-[var(--bg-base)]"
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={photo} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" />
-                    <span className="absolute top-2 left-2 w-6 h-6 bg-[color-mix(in_srgb,var(--bg-primary)_80%,transparent)] border border-[var(--border-primary)] text-[0.6rem] font-mono flex items-center justify-center">
-                      {i + 1}
-                    </span>
-                    <button
-                      onClick={() => removePhoto(i)}
-                      className="absolute top-2 right-2 w-6 h-6 bg-[color-mix(in_srgb,var(--bg-primary)_80%,transparent)] border border-[var(--border-primary)] flex items-center justify-center hover:border-red-500/50 hover:text-red-400 transition-colors"
+                {photos.map((photo, i) => {
+                  const issues = rejectedPhotos.find((r) => r.index === i)?.issues;
+                  const isRejected = !!issues;
+                  return (
+                    <div
+                      key={i}
+                      className={`relative aspect-square overflow-hidden border ${
+                        isRejected ? "border-red-500/40" : "border-[var(--border-primary)]"
+                      } bg-[var(--bg-base)]`}
                     >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                ))}
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={photo}
+                        alt={`Photo ${i + 1}`}
+                        className={`w-full h-full object-cover ${isRejected ? "opacity-40 grayscale" : ""}`}
+                      />
+                      <span className="absolute top-2 left-2 w-6 h-6 bg-[color-mix(in_srgb,var(--bg-primary)_80%,transparent)] border border-[var(--border-primary)] text-[0.6rem] font-mono flex items-center justify-center">
+                        {i + 1}
+                      </span>
+                      {isRejected && (
+                        <div className="absolute top-2 left-10 right-9 bg-red-500/90 text-white text-[0.55rem] font-mono uppercase tracking-wider px-2 py-1 flex items-center gap-1">
+                          <X className="w-3 h-3" />
+                          Rejected
+                        </div>
+                      )}
+                      <button
+                        onClick={() => removePhoto(i)}
+                        className="absolute top-2 right-2 w-6 h-6 bg-[color-mix(in_srgb,var(--bg-primary)_80%,transparent)] border border-[var(--border-primary)] flex items-center justify-center hover:border-red-500/50 hover:text-red-400 transition-colors"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                      {isRejected && (
+                        <div className="absolute bottom-0 left-0 right-0 bg-black/70 backdrop-blur-sm px-2 py-1.5">
+                          {issues.map((issue) => (
+                            <p key={issue} className="text-[0.6rem] text-red-200 font-body leading-snug">
+                              {issue}
+                            </p>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
 
@@ -224,6 +255,8 @@ export default function FaceAnalysisPage() {
               </motion.button>
             )}
           </div>
+
+          <PhotoGuidelines />
 
           <div className="glass-card p-5 border border-[var(--border-primary)]/50">
             <div className="flex items-start gap-3">
@@ -322,6 +355,10 @@ export default function FaceAnalysisPage() {
             </button>
           </motion.div>
 
+          {rejectedPhotos.length > 0 && (
+            <PhotoReviewPanel photos={photos} rejected={rejectedPhotos} />
+          )}
+
           {uploadedImage && (
             <motion.div
               variants={fadeUp}
@@ -377,6 +414,7 @@ export default function FaceAnalysisPage() {
             onClick={() => {
               useAnalysisStore.getState().reset();
               setPhotos([]);
+              setRejectedPhotos([]);
               setError(null);
             }}
             className="btn-outline w-full justify-center"
