@@ -18,7 +18,6 @@ export function CtaSection() {
   });
 
   const textScale = useTransform(smoothProgress, [0.15, 0.5], [1.2, 1]);
-  const textOpacity = useTransform(smoothProgress, [0.1, 0.35], [0, 1]);
 
   return (
     <section ref={ref} className="relative py-40 md:py-52 overflow-hidden bg-cosmic-elevated">
@@ -31,7 +30,13 @@ export function CtaSection() {
       </motion.div>
 
       <div className="relative z-10 max-w-[1400px] mx-auto px-8 md:px-16 lg:px-24 text-center">
-        <motion.div style={{ scale: textScale, opacity: textOpacity }}>
+        <motion.div
+          style={{ scale: textScale }}
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+        >
           <h2 className="type-massive text-[color-mix(in_srgb,var(--text-primary)_90%,transparent)] leading-[0.85] mb-8">
             READY TO
             <br />
@@ -65,8 +70,8 @@ export function CtaSection() {
         <motion.p
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.8, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
           className="mt-8 text-[var(--text-secondary)] text-lg max-w-md mx-auto font-body leading-relaxed"
         >
           Your style. Your data. Your rules. Free forever.
@@ -76,8 +81,8 @@ export function CtaSection() {
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
           className="mt-14"
         >
           <MagneticButton>
@@ -98,8 +103,8 @@ export function CtaSection() {
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 1, delay: 0.8 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 1, delay: 0.4 }}
           className="mt-16 flex items-center justify-center gap-8 flex-wrap"
         >
           {[
@@ -112,8 +117,8 @@ export function CtaSection() {
               key={item.label}
               initial={{ opacity: 0, y: 10 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 1 + i * 0.1 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ delay: 0.5 + i * 0.1 }}
               className="flex items-center gap-2"
             >
               <div className={`w-1.5 h-1.5 rounded-full ${item.color}`} />

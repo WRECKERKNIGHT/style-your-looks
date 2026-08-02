@@ -1,7 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import {
+  motion,
+  useScroll,
+  useTransform,
+  type MotionValue,
+} from "framer-motion";
 import { Camera, Cpu, Shirt, Share2 } from "lucide-react";
 
 const pipelineSteps = [
@@ -43,6 +48,66 @@ const pipelineSteps = [
   },
 ];
 
+function StepCard({
+  step,
+  index,
+  scrollYProgress,
+}: {
+  step: (typeof pipelineSteps)[number];
+  index: number;
+  scrollYProgress: MotionValue<number>;
+}) {
+  const start = 0.16 + index * 0.17;
+  const opacity = useTransform(scrollYProgress, [start - 0.03, start + 0.06], [0, 1]);
+  const scale = useTransform(scrollYProgress, [start - 0.03, start + 0.06], [0.88, 1]);
+  const y = useTransform(scrollYProgress, [start - 0.03, start + 0.06], [32, 0]);
+
+  return (
+    <div
+      className="relative w-[78vw] md:w-[420px] flex-shrink-0 group"
+    >
+      <div className="absolute -top-16 left-0 right-0 flex items-center gap-4 opacity-40">
+        <span className="type-mono text-[0.7rem] text-[var(--accent-mocha)] tracking-[0.3em]">
+          STEP {step.number}
+        </span>
+        <div className="h-px flex-1 bg-gradient-to-r from-[color-mix(in_srgb,var(--accent-caramel)_40%,transparent)] to-transparent" />
+      </div>
+
+      <motion.div
+        style={{ opacity, scale, y }}
+        className="glass-card rounded-xl p-8 md:p-12 h-[420px] md:h-[480px] flex flex-col justify-between relative overflow-hidden"
+      >
+        <div
+          className={`absolute -top-20 -right-20 w-56 h-56 rounded-full bg-gradient-to-br ${step.accent} opacity-10 blur-[70px]`}
+        />
+
+        <div>
+          <div className="text-6xl md:text-7xl font-display font-bold text-[var(--text-primary)]/[0.08] leading-none">
+            {step.number}
+          </div>
+          <div className="mt-8 w-14 h-14 rounded-full bg-gradient-aurum flex items-center justify-center shadow-aurum">
+            <step.icon className="w-6 h-6 text-white" />
+          </div>
+        </div>
+
+        <div>
+          <h3 className="type-heading text-[var(--text-primary)] mb-3">
+            {step.title}
+          </h3>
+          <p className="type-mono text-[0.65rem] text-[var(--accent-mocha)] tracking-[0.15em] mb-4 uppercase">
+            {step.tagline}
+          </p>
+          <p className="text-sm text-[var(--text-secondary)] font-body leading-relaxed">
+            {step.description}
+          </p>
+        </div>
+
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-nexus-500 to-aurum-400 origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-700" />
+      </motion.div>
+    </div>
+  );
+}
+
 export function HorizontalPipeline() {
   const sectionRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
@@ -65,13 +130,13 @@ export function HorizontalPipeline() {
     offset: ["start start", "end end"],
   });
 
-  const x = useTransform(scrollYProgress, [0.03, 0.97], [0, -scrollDistance]);
+  const x = useTransform(scrollYProgress, [0.02, 0.98], [0, -scrollDistance]);
 
   return (
     <section
       ref={sectionRef}
       id="pipeline"
-      className="relative h-[360vh] bg-cosmic-surface"
+      className="relative h-[260vh] bg-cosmic-surface"
     >
       <div className="sticky top-0 h-screen overflow-hidden flex items-center">
         <div className="absolute inset-0 grid-bg opacity-40" />
@@ -112,15 +177,9 @@ export function HorizontalPipeline() {
                   <span className="type-mono text-[0.6rem] text-[var(--text-secondary)] tracking-widest">
                     {step.title}
                   </span>
-                  <motion.span
-                    initial={{ opacity: 0, x: -6 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: 0.3 + i * 0.1, duration: 0.4 }}
-                    className="ml-auto text-[var(--accent-caramel)]"
-                  >
+                  <span className="ml-auto text-[var(--accent-caramel)]">
                     &rarr;
-                  </motion.span>
+                  </span>
                 </div>
               ))}
             </div>
@@ -140,74 +199,41 @@ export function HorizontalPipeline() {
           </div>
 
           {pipelineSteps.map((step, i) => (
-            <div
+            <StepCard
               key={step.number}
-              className="relative w-[78vw] md:w-[420px] flex-shrink-0 group"
-            >
-              <div className="absolute -top-16 left-0 right-0 flex items-center gap-4 opacity-40">
-                <span className="type-mono text-[0.7rem] text-[var(--accent-mocha)] tracking-[0.3em]">
-                  STEP {step.number}
-                </span>
-                <div className="h-px flex-1 bg-gradient-to-r from-[color-mix(in_srgb,var(--accent-caramel)_40%,transparent)] to-transparent" />
-              </div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.04, ease: [0.16, 1, 0.3, 1] }}
-                className="glass-card rounded-xl p-8 md:p-12 h-[420px] md:h-[480px] flex flex-col justify-between relative overflow-hidden"
-              >
-                <div
-                  className={`absolute -top-20 -right-20 w-56 h-56 rounded-full bg-gradient-to-br ${step.accent} opacity-10 blur-[70px]`}
-                />
-
-                <div>
-                  <div className="text-6xl md:text-7xl font-display font-bold text-[var(--text-primary)]/[0.08] leading-none">
-                    {step.number}
-                  </div>
-                  <div className="mt-8 w-14 h-14 rounded-full bg-gradient-aurum flex items-center justify-center shadow-aurum">
-                    <step.icon className="w-6 h-6 text-white" />
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="type-heading text-[var(--text-primary)] mb-3">
-                    {step.title}
-                  </h3>
-                  <p className="type-mono text-[0.65rem] text-[var(--accent-mocha)] tracking-[0.15em] mb-4 uppercase">
-                    {step.tagline}
-                  </p>
-                  <p className="text-sm text-[var(--text-secondary)] font-body leading-relaxed">
-                    {step.description}
-                  </p>
-                </div>
-
-                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-nexus-500 to-aurum-400 origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-700" />
-              </motion.div>
-            </div>
+              step={step}
+              index={i}
+              scrollYProgress={scrollYProgress}
+            />
           ))}
 
           <div className="w-[60vw] md:w-[26vw] flex-shrink-0 flex flex-col items-center gap-6 text-center">
             <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+              style={{ opacity: useTransform(scrollYProgress, [0.85, 0.95], [0, 1]) }}
               className="w-20 h-20 rounded-full border border-aurum-400/40 flex items-center justify-center"
             >
               <span className="text-gradient-aurum text-3xl font-display font-bold">
                 &rarr;
               </span>
             </motion.div>
-            <p className="type-mono text-[0.6rem] text-[var(--text-muted)] tracking-[0.3em] uppercase">
+            <motion.p
+              style={{ opacity: useTransform(scrollYProgress, [0.85, 0.95], [0, 1]) }}
+              className="type-mono text-[0.6rem] text-[var(--text-muted)] tracking-[0.3em] uppercase"
+            >
               End of the pipeline
-            </p>
+            </motion.p>
           </div>
         </motion.div>
 
         <div className="pointer-events-none absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-[var(--bg-primary)] to-transparent z-20" />
         <div className="pointer-events-none absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-[var(--bg-primary)] to-transparent z-20" />
+
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-[color-mix(in_srgb,var(--text-muted)_18%,transparent)]">
+          <motion.div
+            className="h-full origin-left bg-gradient-to-r from-nexus-500 via-aurum-400 to-aurum-300"
+            style={{ scaleX: scrollYProgress }}
+          />
+        </div>
       </div>
     </section>
   );

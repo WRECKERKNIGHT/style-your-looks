@@ -90,10 +90,10 @@ function Chapter({
 
   const opacity = useTransform(
     scrollYProgress,
-    [start + 0.04, center - 0.04, center + 0.04, end - 0.04],
+    [start, center - 0.03, center + 0.03, end],
     [0, 1, 1, 0]
   );
-  const y = useTransform(scrollYProgress, [start + 0.04, center, end - 0.04], [48, 0, -48]);
+  const y = useTransform(scrollYProgress, [start, center, end], [48, 0, -48]);
   const chapterProgress = useTransform(
     scrollYProgress,
     [start, end],
@@ -208,7 +208,7 @@ export function StorySection() {
   });
 
   return (
-    <section ref={ref} className="relative h-[360vh] bg-cosmic-elevated">
+    <section ref={ref} className="relative h-[300vh] bg-cosmic-elevated">
       <div className="sticky top-0 h-screen overflow-hidden">
         <div className="absolute inset-0 grid-bg opacity-30" />
 

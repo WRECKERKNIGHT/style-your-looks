@@ -45,7 +45,13 @@ export function Footer() {
       >
         AURAYA
       </motion.div>
-      <div className="max-w-[1400px] mx-auto px-8 md:px-16 lg:px-24 py-20">
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.1 }}
+        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        className="max-w-[1400px] mx-auto px-8 md:px-16 lg:px-24 py-20"
+      >
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-12">
           <div className="lg:col-span-2 space-y-5">
             <Link href="/" className="inline-block">
@@ -54,8 +60,7 @@ export function Footer() {
                 alt="AURAYA"
                 className="h-8 w-auto"
               />
-            </Link>
-            <p className="text-sm text-[var(--text-muted)] font-body max-w-xs leading-relaxed">
+            </Link>            <p className="text-sm text-[var(--text-muted)] font-body max-w-xs leading-relaxed">
               AI-powered style intelligence. Your photos never leave your
               device.
             </p>
@@ -147,7 +152,7 @@ export function Footer() {
             </span>
           </div>
         </div>
-      </div>
+      </motion.div>
     </footer>
   );
 }
