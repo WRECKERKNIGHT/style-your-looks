@@ -112,7 +112,7 @@ export default function HairPreviewPage() {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const link = document.createElement("a");
-    link.download = `nexari-hair-${selectedColor?.id || "preview"}.png`;
+    link.download = `auraya-hair-${selectedColor?.id || "preview"}.png`;
     link.href = canvas.toDataURL("image/png");
     link.click();
     addToast("Hair preview saved", "success");

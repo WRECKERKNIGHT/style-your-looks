@@ -43,15 +43,15 @@ export function Footer() {
         style={{ y: watermarkY }}
         className="pointer-events-none absolute -bottom-16 left-1/2 -translate-x-1/2 text-[24vw] font-display font-black text-[var(--text-primary)]/[0.02] tracking-tight whitespace-nowrap select-none"
       >
-        NEXARI
+        AURAYA
       </motion.div>
       <div className="max-w-[1400px] mx-auto px-8 md:px-16 lg:px-24 py-20">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-12">
           <div className="lg:col-span-2 space-y-5">
             <Link href="/" className="inline-block">
               <img
-                src="/nexari-logo.svg"
-                alt="NEXARI"
+                src="/auraya-logo.svg"
+                alt="AURAYA"
                 className="h-8 w-auto"
               />
             </Link>
@@ -135,7 +135,7 @@ export function Footer() {
 
         <div className="mt-16 pt-8 border-t border-[var(--border-primary)] flex flex-col md:flex-row items-center justify-between gap-4">
           <span className="type-mono text-[0.5rem] text-[var(--text-muted)] tracking-widest">
-            &copy; 2026 NEXARI. ALL RIGHTS RESERVED.
+            &copy; 2026 AURAYA. ALL RIGHTS RESERVED.
           </span>
           <div className="flex items-center gap-4">
             <span className="type-mono text-[0.45rem] text-[var(--text-muted)] tracking-widest uppercase">

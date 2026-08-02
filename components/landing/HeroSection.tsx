@@ -31,7 +31,7 @@ const itemVariants = {
   },
 };
 
-const headlineWords = ["NEXARI."];
+const headlineWords = ["AURAYA."];
 
 const stats = [
   { target: 47, suffix: "-Point", label: "Analysis" },

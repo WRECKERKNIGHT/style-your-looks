@@ -83,7 +83,7 @@ export default function DashboardLayout({
           <div className="w-7 h-7 bg-gradient-to-br from-aurum-500 to-aurum-300 flex items-center justify-center rounded-sm shadow-aurum">
             <Sparkles className="w-3.5 h-3.5 text-white" />
           </div>
-          <span className="text-sm font-display font-bold text-[var(--text-primary)] tracking-wider">NEXARI</span>
+          <span className="text-sm font-display font-bold text-[var(--text-primary)] tracking-wider">AURAYA</span>
         </div>
       </div>
 
@@ -102,7 +102,7 @@ export default function DashboardLayout({
               <Sparkles className="w-4 h-4 text-white" />
             </div>
             <div>
-              <span className="text-base font-display font-bold text-[var(--text-primary)] tracking-wider block leading-none">NEXARI</span>
+              <span className="text-base font-display font-bold text-[var(--text-primary)] tracking-wider block leading-none">AURAYA</span>
               <span className="text-[10px] font-mono text-[var(--text-muted)] tracking-widest uppercase">STYLE INTELLIGENCE</span>
             </div>
           </Link>

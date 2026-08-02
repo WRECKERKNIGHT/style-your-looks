@@ -2,10 +2,10 @@ export function JsonLd() {
   const schema = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "NEXARI",
+    name: "AURAYA",
     description:
       "AI-powered facial analysis, virtual try-on, and outfit recommendations. All analysis runs in your browser.",
-    url: "https://nexari.app",
+    url: "https://auraya.app",
     applicationCategory: "LifestyleApplication",
     operatingSystem: "Web",
     browserRequirements: "Requires WebGL and camera access for full functionality",
@@ -16,7 +16,7 @@ export function JsonLd() {
     },
     author: {
       "@type": "Organization",
-      name: "NEXARI",
+      name: "AURAYA",
     },
   };
 

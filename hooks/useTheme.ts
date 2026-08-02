@@ -11,7 +11,7 @@ interface ThemeState {
   toggleTheme: () => void;
 }
 
-const STORAGE_KEY = "nexari_theme";
+const STORAGE_KEY = "auraya_theme";
 
 function getInitialTheme(): Theme {
   if (typeof window === "undefined") return "light";

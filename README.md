@@ -1,6 +1,6 @@
-# NEXARI — AI Style Intelligence
+# AURAYA — AI Style Intelligence
 
-NEXARI (formerly AuraStyle) is a privacy-first style analysis platform. It performs
+AURAYA (formerly AuraStyle) is a privacy-first style analysis platform. It performs
 47-point facial analysis, body typing, color-season detection, and outfit
 recommendations — entirely **on-device** via MediaPipe. Photos never leave the
 browser.

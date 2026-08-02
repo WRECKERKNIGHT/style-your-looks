@@ -1,11 +1,11 @@
-const CACHE = "nexari-v3";
+const CACHE = "auraya-v1";
 const STATIC_ASSETS = [
   "/",
   "/manifest.json",
   "/icon.svg",
   "/icon-192.svg",
   "/icon-512.svg",
-  "/nexari-logo.svg",
+  "/auraya-logo.svg",
 ];
 
 const CACHE_FIRST = ["style", "script", "font"];

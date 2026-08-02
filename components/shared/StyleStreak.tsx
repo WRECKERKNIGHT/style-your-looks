@@ -4,8 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Flame, Zap, Check, Crown } from "lucide-react";
 
-const STREAK_KEY = "nexari_streak";
-const CHALLENGE_KEY = "nexari_challenge_done";
+const STREAK_KEY = "auraya_streak";
+const CHALLENGE_KEY = "auraya_challenge_done";
 
 interface StreakState {
   lastVisit: string;

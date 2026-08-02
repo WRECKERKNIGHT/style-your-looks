@@ -98,7 +98,7 @@ export function HorizontalPipeline() {
             </h2>
             <p className="mt-8 text-[var(--text-secondary)] text-base md:text-lg font-body leading-relaxed max-w-md">
               Four steps. Zero servers. Scroll through the entire journey your
-              photo takes inside NEXARI.
+              photo takes inside AURAYA.
             </p>
             <div className="mt-8 grid grid-cols-2 gap-3 max-w-md">
               {pipelineSteps.map((step, i) => (

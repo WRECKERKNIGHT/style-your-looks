@@ -126,7 +126,7 @@ export default function CommunityPage() {
           </h1>
         </div>
         <p className="text-[var(--text-muted)] font-body type-subhead max-w-xl">
-          Connect, share, and discover with fellow NEXARI users.
+          Connect, share, and discover with fellow AURAYA users.
         </p>
       </motion.div>
 

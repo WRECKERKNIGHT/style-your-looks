@@ -146,7 +146,7 @@ export default function LoginPage() {
             <div className="w-7 h-7 bg-gradient-to-br from-aurum-500 to-aurum-300 flex items-center justify-center rounded-sm">
               <Sparkles className="w-3.5 h-3.5 text-cosmic-base" />
             </div>
-            <span className="text-sm font-body font-bold text-nexus-800 dark:text-white tracking-wider">NEXARI</span>
+            <span className="text-sm font-body font-bold text-nexus-800 dark:text-white tracking-wider">AURAYA</span>
           </Link>
 
           <span className="section-number">AUTH // LOGIN</span>

@@ -37,7 +37,7 @@ export default function FaceAnalysisPage() {
   const buildReport = useCallback(() => {
     if (!faceResult) return "";
     return [
-      "NEXARI — FACEIQ ANALYSIS REPORT",
+      "AURAYA — FACEIQ ANALYSIS REPORT",
       "=================================",
       `FaceIQ Score:  ${faceResult.overallScore.toFixed(1)}/10  (${faceResult.overallRating})`,
       `Beauty Index:  ${faceResult.beautyIndex}/100`,
@@ -406,7 +406,7 @@ export default function FaceAnalysisPage() {
               <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border-primary)]">
                 <div>
                   <p className="font-body font-bold text-[var(--text-primary)] tracking-wider text-sm">
-                    NEXARI — FULL ANALYSIS REPORT
+                    AURAYA — FULL ANALYSIS REPORT
                   </p>
                   <p className="text-xs font-mono text-aurum-500 mt-0.5">
                     FaceIQ {faceResult.overallScore.toFixed(1)}/10 · Beauty Index {faceResult.beautyIndex}/100

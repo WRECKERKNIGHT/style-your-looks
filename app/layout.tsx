@@ -12,13 +12,13 @@ import ClientDecorations from "@/components/shared/ClientDecorations";
 import { CursorGlow } from "@/components/shared/CursorGlow";
 import { ScrollProgressBar } from "@/components/landing/ScrollProgressBar";
 
-const baseUrl = "https://nexari.app";
+const baseUrl = "https://auraya.app";
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
   title: {
-    default: "NEXARI — AI-Powered Style Intelligence",
-    template: "%s | NEXARI",
+    default: "AURAYA — AI-Powered Style Intelligence",
+    template: "%s | AURAYA",
   },
   description:
     "AI-powered facial analysis, virtual try-on, and outfit recommendations. All analysis runs in your browser. Your photos never leave your device.",
@@ -34,31 +34,31 @@ export const metadata: Metadata = {
     "color analysis",
     "personal styling",
   ],
-  authors: [{ name: "NEXARI", url: baseUrl }],
-  creator: "NEXARI",
-  publisher: "NEXARI",
+  authors: [{ name: "AURAYA", url: baseUrl }],
+  creator: "AURAYA",
+  publisher: "AURAYA",
   robots: { index: true, follow: true },
   alternates: { canonical: baseUrl },
   openGraph: {
     type: "website",
     locale: "en_US",
-    siteName: "NEXARI",
-    title: "NEXARI — AI-Powered Style Intelligence",
+    siteName: "AURAYA",
+    title: "AURAYA — AI-Powered Style Intelligence",
     description:
       "AI-powered facial analysis, virtual try-on, and outfit recommendations. All analysis runs in your browser.",
     url: baseUrl,
-    images: [{ url: `${baseUrl}/icon-512.svg`, width: 512, height: 512, alt: "NEXARI" }],
+    images: [{ url: `${baseUrl}/icon-512.svg`, width: 512, height: 512, alt: "AURAYA" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "NEXARI — AI-Powered Style Intelligence",
+    title: "AURAYA — AI-Powered Style Intelligence",
     description:
       "AI-powered facial analysis, virtual try-on, and outfit recommendations. All analysis runs in your browser.",
     images: [`${baseUrl}/icon-512.svg`],
   },
   appleWebApp: {
     capable: true,
-    title: "NEXARI",
+    title: "AURAYA",
     statusBarStyle: "black-translucent",
   },
   formatDetection: { telephone: false, email: false, address: false },
