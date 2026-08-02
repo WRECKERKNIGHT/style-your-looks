@@ -10,7 +10,7 @@ import { useMediaPipe } from "@/hooks/useMediaPipe";
 import { useWebcam } from "@/hooks/useWebcam";
 import { useToast } from "@/components/shared/Toast";
 import { motion } from "framer-motion";
-import { ScanFace, Camera, AlertCircle, Eye, Save, CheckCircle, X, ShieldCheck } from "lucide-react";
+import { ScanFace, Camera, AlertCircle, Eye, Save, CheckCircle, X, ShieldCheck, Copy, Check } from "lucide-react";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -29,8 +29,45 @@ export default function FaceAnalysisPage() {
   const [error, setError] = useState<string | null>(null);
   const [showLandmarks, setShowLandmarks] = useState(true);
   const [saved, setSaved] = useState(false);
+  const [copied, setCopied] = useState(false);
   const [photos, setPhotos] = useState<string[]>([]);
   const imageRef = useRef<HTMLImageElement>(null);
+
+  const copyReport = useCallback(async () => {
+    if (!faceResult) return;
+    const lines = [
+      "NEXARI — FACEIQ ANALYSIS REPORT",
+      "=================================",
+      `FaceIQ Score:  ${faceResult.overallScore.toFixed(1)}/10  (${faceResult.overallRating})`,
+      `Beauty Index:  ${faceResult.beautyIndex}/100`,
+      `Face Shape:    ${faceResult.facialShape}`,
+      `Style Profile: ${faceResult.styleProfile}`,
+      `Confidence:    ${faceResult.analysisConfidence}%  (${faceResult.photoCount} photo(s))`,
+      "",
+      "METRIC BREAKDOWN",
+      faceResult.breakdown
+        .map((m) => `  - ${m.label}: ${m.score.toFixed(1)}/10${m.value ? `  [${m.value}]` : ""}`)
+        .join("\n"),
+      "",
+      "STRENGTHS",
+      faceResult.strengths.map((s) => `  + ${s}`).join("\n"),
+      "",
+      "IMPROVEMENTS",
+      faceResult.improvements.map((s) => `  - ${s}`).join("\n"),
+      "",
+      "GROOMING TIPS",
+      faceResult.groomingSuggestions.map((s) => `  > ${s}`).join("\n"),
+    ].join("\n");
+
+    try {
+      await navigator.clipboard.writeText(lines);
+      setCopied(true);
+      addToast("Report copied to clipboard", "success");
+      setTimeout(() => setCopied(false), 3000);
+    } catch {
+      addToast("Could not copy report", "error");
+    }
+  }, [faceResult, addToast]);
 
   const handleImageUpload = useCallback(
     (imageData: string) => {
@@ -260,6 +297,17 @@ export default function FaceAnalysisPage() {
             >
               {saved ? <CheckCircle className="w-5 h-5" /> : <Save className="w-5 h-5" />}
               {saved ? "SAVED TO HISTORY" : "SAVE ANALYSIS"}
+            </button>
+            <button
+              onClick={copyReport}
+              className={`flex items-center gap-2 px-6 py-3 font-body text-sm tracking-wider uppercase transition-all border ${
+                copied
+                  ? "bg-[var(--accent-aurum)] text-[var(--bg-primary)] border-transparent"
+                  : "btn-outline"
+              }`}
+            >
+              {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+              {copied ? "COPIED" : "COPY REPORT"}
             </button>
           </motion.div>
 
