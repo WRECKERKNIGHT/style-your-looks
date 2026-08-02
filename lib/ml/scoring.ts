@@ -360,17 +360,59 @@ const WEIGHTS = {
   midfaceRatio: 0.01,
 };
 
+export type AnalysisProfile = "masculine" | "feminine" | "neutral";
+
+const WEIGHTS_MASCULINE: typeof WEIGHTS = {
+  ...WEIGHTS,
+  symmetry: 0.12,
+  goldenRatio: 0.10,
+  jawline: 0.15,
+  lipFullness: 0.03,
+  cheekboneDefinition: 0.10,
+  foreheadBalance: 0.02,
+  fwhr: 0.09,
+  canthalTilt: 0.04,
+};
+
+const WEIGHTS_FEMININE: typeof WEIGHTS = {
+  ...WEIGHTS,
+  symmetry: 0.14,
+  goldenRatio: 0.12,
+  jawline: 0.08,
+  eyeSpacing: 0.06,
+  cheekboneDefinition: 0.09,
+  lipFullness: 0.08,
+  noseProfile: 0.04,
+  foreheadBalance: 0.04,
+  fwhr: 0.04,
+  canthalTilt: 0.07,
+};
+
+function normalizeWeights(weights: typeof WEIGHTS): typeof WEIGHTS {
+  const total = Object.values(weights).reduce((a, b) => a + b, 0);
+  return Object.fromEntries(
+    Object.entries(weights).map(([k, v]) => [k, v / total])
+  ) as typeof WEIGHTS;
+}
+
+function weightsForProfile(profile: AnalysisProfile): typeof WEIGHTS {
+  if (profile === "masculine") return normalizeWeights(WEIGHTS_MASCULINE);
+  if (profile === "feminine") return normalizeWeights(WEIGHTS_FEMININE);
+  return WEIGHTS;
+}
+
 const WEIGHT_KEYS = Object.keys(WEIGHTS) as Exclude<keyof typeof WEIGHTS, "skinClarity">[];
 
 function calculateBeautyIndex(
   metrics: FaceMetricScores,
-  skinClarityScore: number
+  skinClarityScore: number,
+  weights: typeof WEIGHTS = WEIGHTS
 ): number {
   const weighted = WEIGHT_KEYS.reduce(
-    (acc, key) => acc + (metrics[key] as number) * WEIGHTS[key],
+    (acc, key) => acc + (metrics[key] as number) * weights[key],
     0
   );
-  const beautyIndex = weighted + skinClarityScore * WEIGHTS.skinClarity;
+  const beautyIndex = weighted + skinClarityScore * weights.skinClarity;
   const normalizedScore = Math.max(0, Math.min(100, beautyIndex * 10));
   return Math.round(normalizedScore * 10) / 10;
 }
@@ -466,7 +508,8 @@ export function buildFaceScoreFromMetrics(
   metrics: FaceMetricScores,
   skinClarityScore: number,
   options: BuildOptions = {},
-  sourceResult?: FaceLandmarkerResult
+  sourceResult?: FaceLandmarkerResult,
+  profile: AnalysisProfile = "neutral"
 ): FaceScoreResult {
   const {
     photoQualityScore = 8,
@@ -474,6 +517,8 @@ export function buildFaceScoreFromMetrics(
     analysisConfidence = 80,
     photoCount = 1,
   } = options;
+
+  const weights = weightsForProfile(profile);
 
   const {
     symmetry,
@@ -504,100 +549,100 @@ export function buildFaceScoreFromMetrics(
   const metricDefs: Omit<FacialMetric, "score" | "rating" | "spread">[] = [
     {
       label: "Facial Symmetry",
-      weight: WEIGHTS.symmetry,
+      weight: weights.symmetry,
       description: "Balance between left and right sides of your face. Measured by comparing 10 bilateral landmark pairs against the nose centerline.",
       tip: symmetry >= 7 ? "Your symmetry is a major asset — highlight it with centered hairstyles." : "Strategic eyebrow grooming and asymmetric hairstyles can enhance perceived balance.",
     },
     {
       label: "Golden Ratio Adherence",
-      weight: WEIGHTS.goldenRatio,
+      weight: weights.goldenRatio,
       description: "How closely your facial proportions match the φ (1.618) ideal. Measures face width-to-length and mouth-to-face-width ratios.",
       tip: goldenRatio >= 7 ? "Your proportions are mathematically harmonious — a rare trait." : "Most faces deviate from φ. Your unique ratios give character — lean into it.",
     },
     {
       label: "Jawline Definition",
-      weight: WEIGHTS.jawline,
+      weight: weights.jawline,
       description: "Jaw angle sharpness, chin prominence, and jaw-to-face ratio. Strong jawlines signal structural confidence.",
       tip: jawline >= 7 ? "Your jawline is a defining feature. Keep it clean and well-groomed." : "Angular beard styles (Van Dyke, Anchor) can create the illusion of a sharper jawline.",
     },
     {
       label: "Proportional Harmony",
-      weight: WEIGHTS.proportions,
+      weight: weights.proportions,
       description: "How evenly your face divides into upper, middle, and lower thirds. The ideal is equal thirds.",
       tip: proportions >= 7 ? "Your thirds are well-balanced — most hairstyles will suit you." : "Hairstyles that add volume to underrepresented thirds can create better visual balance.",
     },
     {
       label: "Horizontal Fifths",
-      weight: WEIGHTS.horizontalFifths,
+      weight: weights.horizontalFifths,
       description: "The face ideally divides into five equal widths: two eye bands, the intercanthal gap, and two outer bands.",
       tip: horizontalFifths >= 7 ? "Your eye placement is balanced across the face width." : "Strategic eye makeup/eyebrow shaping can optically adjust perceived eye band widths.",
     },
     {
       label: "Eye Spacing",
-      weight: WEIGHTS.eyeSpacing,
+      weight: weights.eyeSpacing,
       description: "Interpupillary distance relative to eye width. Ideal spacing is approximately one eye-width apart.",
       tip: eyeSpacing >= 7 ? "Your eye spacing is ideal for most eyewear and makeup styles." : "Glasses with wider frames can create the illusion of more balanced spacing.",
     },
     {
       label: "Skin Clarity",
-      weight: WEIGHTS.skinClarity,
+      weight: weights.skinClarity,
       description: "Surface smoothness and evenness of skin tone. Measured by brightness variance across 7 facial zones.",
       tip: skinClarityScore >= 7 ? "Your skin texture is smooth — maintain with SPF and hydration." : "A consistent skincare routine (cleanser, exfoliant, moisturizer, SPF) can significantly improve this.",
     },
     {
       label: "Cheekbone Definition",
-      weight: WEIGHTS.cheekboneDefinition,
+      weight: weights.cheekboneDefinition,
       description: "Prominence of cheekbones relative to jaw width. Higher cheek-to-jaw ratios create more angular, editorial features.",
       tip: cheekboneDefinition >= 7 ? "Your cheekbones are a standout feature — contour and lighting will love them." : "Highlighting techniques and angular hairstyles can enhance perceived cheekbone height.",
     },
     {
       label: "FWHR (Facial Width-to-Height)",
-      weight: WEIGHTS.fwhr,
+      weight: weights.fwhr,
       description: "Bizygomatic width over upper-lip-to-brow height. Research links a higher FWHR to perceived dominance and attractiveness in men.",
       value: rawFwhr !== undefined ? `Ratio ${rawFwhr.toFixed(2)} (ideal ≈ 1.95)` : undefined,
       tip: fwhr >= 7 ? "Your facial width-to-height ratio is in the researched attractive range." : "The ratio is partly structural; hairstyle volume and beard width subtly affect the look.",
     },
     {
       label: "Canthal Tilt",
-      weight: WEIGHTS.canthalTilt,
+      weight: weights.canthalTilt,
       description: "Angle of the line between inner and outer eye corners. A positive tilt (outer corner slightly raised) reads as alert and attractive.",
       value: rawCanthalTilt !== undefined ? `${rawCanthalTilt.toFixed(1)}° (ideal ≈ +5°)` : undefined,
       tip: canthalTilt >= 7 ? "Your positive canthal tilt gives a naturally alert, youthful look." : "Eye-cream hydration and gentle brow grooming help keep the eye area looking lifted.",
     },
     {
       label: "Eye–Nose Ratio",
-      weight: WEIGHTS.eyeNoseRatio,
+      weight: weights.eyeNoseRatio,
       description: "Eye width relative to nose width. Near the golden ratio ≈ 1.62, eye width is proportionate to the nose.",
       value: rawEyeNoseRatio !== undefined ? `Ratio ${rawEyeNoseRatio.toFixed(2)} (ideal ≈ 1.62)` : undefined,
       tip: eyeNoseRatio >= 7 ? "Your eye-to-nose proportions are mathematically harmonious." : "Features work together as a whole — small deviations here read as character.",
     },
     {
       label: "Nose–Chin Balance",
-      weight: WEIGHTS.noseChinRatio,
+      weight: weights.noseChinRatio,
       description: "Nose length over facial height. The ideal nasofacial proportion centers the nose within the lower face.",
       tip: noseChinRatio >= 7 ? "Your nose sits in strong proportion to your face length." : "The nose–chin balance is structural; contouring can refine its perceived length.",
     },
     {
       label: "Midface Harmony",
-      weight: WEIGHTS.midfaceRatio,
+      weight: weights.midfaceRatio,
       description: "Upper-midface height (brow to nose base) relative to lower face height (nose base to chin). Ideal is near 1:1.",
       tip: midfaceRatio >= 7 ? "Your midface and lower face are evenly balanced." : "Lower-face fullness via beard style can shift perceived midface balance.",
     },
     {
       label: "Lip Proportion",
-      weight: WEIGHTS.lipFullness,
+      weight: weights.lipFullness,
       description: "Upper-to-lower lip ratio and fullness relative to facial area. Balanced lips contribute to overall facial harmony.",
       tip: "Your lip proportions contribute to your overall facial balance.",
     },
     {
       label: "Nose Profile",
-      weight: WEIGHTS.noseProfile,
+      weight: weights.noseProfile,
       description: "Nose width relative to face width. The ideal nose-to-face width ratio is approximately 0.45.",
       tip: "Your nose proportions work with your facial structure for a cohesive look.",
     },
     {
       label: "Forehead Balance",
-      weight: WEIGHTS.foreheadBalance,
+      weight: weights.foreheadBalance,
       description: "Vertical thirds evenness — the forehead, midface, and lower face should be roughly equal height.",
       tip: "Hairstyles that balance your forehead height improve overall thirds harmony.",
     },
@@ -668,7 +713,7 @@ export function buildFaceScoreFromMetrics(
     bracket: getPercentileBracket(calculatePercentile(roundedScore)),
     comparisonText: `You scored higher than ${calculatePercentile(roundedScore)}% of analyzed faces.`,
   };
-  const beautyIndex = calculateBeautyIndex(metrics, skinClarityScore);
+  const beautyIndex = calculateBeautyIndex(metrics, skinClarityScore, weights);
   const faceShapeDetails = FACE_SHAPE_INFO[facialShape] || FACE_SHAPE_INFO.Oval;
 
   return {
@@ -763,7 +808,10 @@ const MERGE_KEYS: Exclude<keyof FaceMetricScores, "facialShape">[] = [
  * - consistencyScore reflects how tightly the photos agree (lower CV = higher consistency).
  * - analysisConfidence combines photo quality and cross-photo consistency.
  */
-export function mergeFaceScores(samples: FaceScoreSample[]): {
+export function mergeFaceScores(
+  samples: FaceScoreSample[],
+  profile: AnalysisProfile = "neutral"
+): {
   result: FaceScoreResult;
   metricSpread: Record<string, number>;
 } {
@@ -816,7 +864,8 @@ export function mergeFaceScores(samples: FaceScoreSample[]): {
       analysisConfidence,
       photoCount: samples.length,
     },
-    bestSample?.sourceResult
+    bestSample?.sourceResult,
+    profile
   );
 
   result.breakdown = result.breakdown.map((m) => {
@@ -854,50 +903,89 @@ function labelForKey(key: keyof FaceMetricScores): string {
 
 export function getGroomingSuggestions(
   facialShape: string,
-  score: FaceScoreResult
+  score: FaceScoreResult,
+  profile: AnalysisProfile = "neutral"
 ): string[] {
   const suggestions: string[] = [];
 
-  switch (facialShape) {
-    case "Round":
-      suggestions.push("Van Dyke or Anchor beard — adds angular definition to soft jawline");
-      suggestions.push("Short sides + textured top hairstyle adds vertical length");
-      suggestions.push("Avoid chin curtains and full rounded beards that emphasize circular shape");
-      suggestions.push("Clean-shaven or light stubble on cheeks with defined chin hair works best");
-      break;
-    case "Square":
-      suggestions.push("Short, well-groomed stubble complements your naturally strong jaw");
-      suggestions.push("Textured crop or classic side part enhances angular bone structure");
-      suggestions.push("Avoid overly long beards — they mask your best feature (the jaw)");
-      suggestions.push("A light goatee or soul patch adds character without hiding structure");
-      break;
-    case "Heart":
-      suggestions.push("Chin-focused styles (goatee, circle beard) balance your wider forehead");
-      suggestions.push("Side-swept fringe or textured bangs soften the forehead line");
-      suggestions.push("Fuller lower-face beards create visual balance with your forehead");
-      suggestions.push("Avoid heavy sideburns that widen the upper face further");
-      break;
-    case "Oval":
-      suggestions.push("Most styles work with your balanced proportions — you have freedom to experiment");
-      suggestions.push("Classic full beard or well-maintained stubble both suit you");
-      suggestions.push("Side parts and swept-back styles maintain your natural symmetry");
-      suggestions.push("This is the most versatile face shape — use it to try trending styles");
-      break;
-    case "Oblong":
-      suggestions.push("Fuller beards on the sides add width and shorten the face visually");
-      suggestions.push("Avoid height in hairstyles — opt for volume on the sides");
-      suggestions.push("Cheek-focused beards and sideburns balance facial length");
-      suggestions.push("Medium-length styles with horizontal lines work well");
-      break;
-    case "Diamond":
-      suggestions.push("Chin straps and goatees complement a narrow chin");
-      suggestions.push("Fringe or side-swept styles soften wider cheekbones");
-      suggestions.push("Full beards add volume to the chin area, balancing the cheekbone prominence");
-      suggestions.push("Textured, messy styles work better than slick, tight ones");
-      break;
-    default:
-      suggestions.push("Maintain regular grooming routine for best appearance");
-      suggestions.push("Keep beard edges clean and defined for a polished look");
+  if (profile === "feminine") {
+    switch (facialShape) {
+      case "Round":
+        suggestions.push("Longer layers or a side-swept part elongate a soft face — add height at the crown");
+        suggestions.push("Angular or browline glasses add definition beside a rounded jawline");
+        suggestions.push("Contour under the cheekbones and jaw for gentle definition");
+        break;
+      case "Square":
+        suggestions.push("Soft waves and textured layers soften an angular jaw beautifully");
+        suggestions.push("Rounded or oval frames balance strong facial angles");
+        suggestions.push("Highlight the center of the face to draw the eye inward and soften edges");
+        break;
+      case "Heart":
+        suggestions.push("Chin-length bobs and side-swept bangs balance a wider forehead");
+        suggestions.push("Bottom-heavy frames (round, cat-eye) add width to a narrow chin");
+        suggestions.push("Contour the temples lightly to soften forehead width");
+        break;
+      case "Oval":
+        suggestions.push("Your balanced proportions suit most cuts — curls, sleek, or straight all work");
+        suggestions.push("Almost any frame shape works; experiment freely");
+        suggestions.push("Keep brow arches natural — they frame your symmetry well");
+        break;
+      case "Oblong":
+        suggestions.push("Add width with volume at the sides and soft fringe to shorten the face visually");
+        suggestions.push("Oversized or round frames break up vertical length elegantly");
+        suggestions.push("Keep cheek contour soft and horizontal for a fuller midface");
+        break;
+      case "Diamond":
+        suggestions.push("Side-swept styles and textured layers soften prominent cheekbones");
+        suggestions.push("Oval and rimless frames sit best beside angular features");
+        suggestions.push("Highlight the brow bone and soften the cheekbone hollow");
+        break;
+      default:
+        suggestions.push("A consistent haircare routine (mask + leave-in) keeps your hair as polished as your face");
+        suggestions.push("Keep brows shaped and defined — the frame of the face");
+    }
+  } else {
+    switch (facialShape) {
+      case "Round":
+        suggestions.push("Van Dyke or Anchor beard — adds angular definition to soft jawline");
+        suggestions.push("Short sides + textured top hairstyle adds vertical length");
+        suggestions.push("Avoid chin curtains and full rounded beards that emphasize circular shape");
+        suggestions.push("Clean-shaven or light stubble on cheeks with defined chin hair works best");
+        break;
+      case "Square":
+        suggestions.push("Short, well-groomed stubble complements your naturally strong jaw");
+        suggestions.push("Textured crop or classic side part enhances angular bone structure");
+        suggestions.push("Avoid overly long beards — they mask your best feature (the jaw)");
+        suggestions.push("A light goatee or soul patch adds character without hiding structure");
+        break;
+      case "Heart":
+        suggestions.push("Chin-focused styles (goatee, circle beard) balance your wider forehead");
+        suggestions.push("Side-swept fringe or textured bangs soften the forehead line");
+        suggestions.push("Fuller lower-face beards create visual balance with your forehead");
+        suggestions.push("Avoid heavy sideburns that widen the upper face further");
+        break;
+      case "Oval":
+        suggestions.push("Most styles work with your balanced proportions — you have freedom to experiment");
+        suggestions.push("Classic full beard or well-maintained stubble both suit you");
+        suggestions.push("Side parts and swept-back styles maintain your natural symmetry");
+        suggestions.push("This is the most versatile face shape — use it to try trending styles");
+        break;
+      case "Oblong":
+        suggestions.push("Fuller beards on the sides add width and shorten the face visually");
+        suggestions.push("Avoid height in hairstyles — opt for volume on the sides");
+        suggestions.push("Cheek-focused beards and sideburns balance facial length");
+        suggestions.push("Medium-length styles with horizontal lines work well");
+        break;
+      case "Diamond":
+        suggestions.push("Chin straps and goatees complement a narrow chin");
+        suggestions.push("Fringe or side-swept styles soften wider cheekbones");
+        suggestions.push("Full beards add volume to the chin area, balancing the cheekbone prominence");
+        suggestions.push("Textured, messy styles work better than slick, tight ones");
+        break;
+      default:
+        suggestions.push("Maintain regular grooming routine for best appearance");
+        suggestions.push("Keep beard edges clean and defined for a polished look");
+    }
   }
 
   if (score.skinClarity < 6) {
@@ -914,8 +1002,13 @@ export function getGroomingSuggestions(
   }
 
   if (score.jawline < 6) {
-    suggestions.push("Chew gum daily to strengthen masseter muscles and define jawline");
-    suggestions.push("Neck exercises (chin tucks, jaw juts) can improve jawline visibility");
+    if (profile === "feminine") {
+      suggestions.push("Facial massage and chin-tuck exercises can subtly refine jawline definition");
+      suggestions.push("A soft highlight above the cheekbone lifts the whole lower face visually");
+    } else {
+      suggestions.push("Chew gum daily to strengthen masseter muscles and define jawline");
+      suggestions.push("Neck exercises (chin tucks, jaw juts) can improve jawline visibility");
+    }
   }
 
   if (score.canthalTilt < 6) {
@@ -923,9 +1016,11 @@ export function getGroomingSuggestions(
     suggestions.push("Winged liner or subtle eyeshadow can optically increase canthal tilt");
   }
 
-  suggestions.push("Trim beard edges every 2-3 weeks for maintained sharpness");
-  suggestions.push("Use beard oil daily — argan or jojoba base for healthy, conditioned hair");
-  suggestions.push("Match beard length to face shape: shorter for round, longer for long faces");
+  if (profile !== "feminine") {
+    suggestions.push("Trim beard edges every 2-3 weeks for maintained sharpness");
+    suggestions.push("Use beard oil daily — argan or jojoba base for healthy, conditioned hair");
+    suggestions.push("Match beard length to face shape: shorter for round, longer for long faces");
+  }
 
   return suggestions;
 }

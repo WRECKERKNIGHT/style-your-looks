@@ -23,7 +23,7 @@ const MAX_PHOTOS = 3;
 const MIN_PHOTOS = 2;
 
 export default function FaceAnalysisPage() {
-  const { uploadedImage, setUploadedImage, faceResult, isAnalyzing } =
+  const { uploadedImage, setUploadedImage, faceResult, isAnalyzing, genderProfile, setGenderProfile } =
     useAnalysisStore();
   const { analyzeFacePhotos } = useMediaPipe();
   const { videoRef, isStreaming, startWebcam, stopWebcam, captureFrame } = useWebcam();
@@ -132,7 +132,7 @@ export default function FaceAnalysisPage() {
         )
       );
 
-      const { photoCount, rejected } = await analyzeFacePhotos(images);
+      const { photoCount, rejected } = await analyzeFacePhotos(images, genderProfile);
       setRejectedPhotos(rejected);
       if (rejected.length > 0) {
         addToast(
@@ -148,7 +148,7 @@ export default function FaceAnalysisPage() {
         err instanceof Error ? err.message : "Failed to analyse face. Please try clearer photos."
       );
     }
-  }, [photos, setUploadedImage, analyzeFacePhotos, addToast]);
+  }, [photos, setUploadedImage, analyzeFacePhotos, addToast, genderProfile]);
 
   return (
     <div className="space-y-8">
@@ -176,6 +176,43 @@ export default function FaceAnalysisPage() {
               <span className="type-mono text-[0.6rem] text-[var(--text-muted)] tracking-widest">
                 {photos.length}/{MAX_PHOTOS} ADDED
               </span>
+            </div>
+
+            <div className="mt-2 mb-6">
+              <span className="type-mono text-[0.6rem] text-[var(--text-muted)] tracking-widest block mb-2">
+                ANALYSIS PROFILE
+              </span>
+              <div className="grid grid-cols-3 gap-2">
+                {(["masculine", "feminine", "neutral"] as const).map((p) => (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => setGenderProfile(p)}
+                    className={`border px-3 py-2.5 text-left transition-all ${
+                      genderProfile === p
+                        ? "border-aurum-500/70 bg-aurum-500/[0.07]"
+                        : "border-[var(--border-primary)] hover:border-aurum-500/40"
+                    }`}
+                  >
+                    <span
+                      className={`block text-xs font-bold font-body uppercase tracking-wider ${
+                        genderProfile === p
+                          ? "text-[var(--accent-aurum)]"
+                          : "text-[var(--text-primary)]"
+                      }`}
+                    >
+                      {p}
+                    </span>
+                    <span className="block text-[0.6rem] font-body text-[var(--text-muted)] mt-0.5 leading-snug">
+                      {p === "masculine"
+                        ? "Jaw & FWHR weighted"
+                        : p === "feminine"
+                        ? "Lips, tilt & cheeks weighted"
+                        : "Balanced standards"}
+                    </span>
+                  </button>
+                ))}
+              </div>
             </div>
 
             {photos.length < MAX_PHOTOS && (
@@ -318,7 +355,10 @@ export default function FaceAnalysisPage() {
           transition={{ duration: 0.5 }}
           className="space-y-8"
         >
-          <motion.div variants={fadeUp} initial="hidden" animate="show" className="flex gap-4">
+          <motion.div variants={fadeUp} initial="hidden" animate="show" className="flex flex-wrap items-center gap-3">
+            <span className="type-mono text-[0.6rem] tracking-[0.25em] uppercase px-3 py-1.5 border border-aurum-500/40 text-[var(--accent-aurum)] bg-aurum-500/[0.06]">
+              {faceResult.genderProfile.toUpperCase()} PROFILE
+            </span>
             <button
               onClick={() => {
                 useAnalysisStore.getState().saveCurrentAnalysis();

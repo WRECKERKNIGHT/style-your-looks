@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { saveToHistory, type AnalysisEntry } from "@/lib/history";
+import type { AnalysisProfile } from "@/lib/ml/scoring";
 
 export interface FacialMetric {
   label: string;
@@ -55,6 +56,7 @@ export interface FaceAnalysisResult {
   undertone: string;
   ageEstimation: number;
   genderEstimation: string;
+  genderProfile: AnalysisProfile;
   emotionDetected: string;
   groomingSuggestions: string[];
   landmarks: number[][];
@@ -139,6 +141,7 @@ interface AnalysisState {
   fullBodyImage: string | null;
   isAnalyzing: boolean;
   analysisProgress: number;
+  genderProfile: AnalysisProfile;
   selectedBeardStyle: string;
   selectedMustacheStyle: string;
   lastSavedEntry: AnalysisEntry | null;
@@ -151,6 +154,7 @@ interface AnalysisState {
   setFullBodyImage: (image: string | null) => void;
   setIsAnalyzing: (val: boolean) => void;
   setAnalysisProgress: (val: number) => void;
+  setGenderProfile: (profile: AnalysisProfile) => void;
   setSelectedBeardStyle: (style: string) => void;
   setSelectedMustacheStyle: (style: string) => void;
   saveCurrentAnalysis: (label?: string) => AnalysisEntry;
@@ -166,6 +170,7 @@ export const useAnalysisStore = create<AnalysisState>((set, get) => ({
   fullBodyImage: null,
   isAnalyzing: false,
   analysisProgress: 0,
+  genderProfile: "neutral",
   selectedBeardStyle: "clean-shaven",
   selectedMustacheStyle: "none",
   lastSavedEntry: null,
@@ -178,6 +183,7 @@ export const useAnalysisStore = create<AnalysisState>((set, get) => ({
   setFullBodyImage: (image) => set({ fullBodyImage: image }),
   setIsAnalyzing: (val) => set({ isAnalyzing: val }),
   setAnalysisProgress: (val) => set({ analysisProgress: val }),
+  setGenderProfile: (genderProfile) => set({ genderProfile }),
   setSelectedBeardStyle: (style) => set({ selectedBeardStyle: style }),
   setSelectedMustacheStyle: (style) => set({ selectedMustacheStyle: style }),
 

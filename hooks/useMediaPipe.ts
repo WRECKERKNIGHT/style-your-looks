@@ -11,6 +11,7 @@ import {
   getGroomingSuggestions,
   type FaceScoreResult,
   type FaceScoreSample,
+  type AnalysisProfile,
 } from "@/lib/ml/scoring";
 import { assessPhotoQuality, type PhotoQualityReport } from "@/lib/ml/face-quality";
 import { generateRecommendations } from "@/lib/ml/outfit-recommender";
@@ -81,7 +82,8 @@ function buildStoreFaceResult(
   scoreResult: FaceScoreResult,
   landmarks: number[][],
   skinTone: ReturnType<typeof analyzeSkinTone>,
-  quality: PhotoQualityReport | null
+  quality: PhotoQualityReport | null,
+  genderProfile: AnalysisProfile = "neutral"
 ) {
   return {
     overallScore: scoreResult.overallScore,
@@ -94,9 +96,14 @@ function buildStoreFaceResult(
     skinTone: skinTone?.monkScale.label || "Unknown",
     undertone: skinTone?.undertone || "Neutral",
     ageEstimation: 25,
-    genderEstimation: "Unknown",
+    genderEstimation: genderProfile === "neutral" ? "Neutral" : genderProfile,
+    genderProfile,
     emotionDetected: scoreResult.blendshapes.emotion,
-    groomingSuggestions: getGroomingSuggestions(scoreResult.facialShape, scoreResult),
+    groomingSuggestions: getGroomingSuggestions(
+      scoreResult.facialShape,
+      scoreResult,
+      genderProfile
+    ),
     landmarks,
     goldenRatio: scoreResult.goldenRatio,
     lipFullness: scoreResult.lipFullness,
@@ -151,7 +158,7 @@ export function useMediaPipe() {
   } = useAnalysisStore();
 
   const analyzeFaceFromImage = useCallback(
-    async (imageElement: HTMLImageElement) => {
+    async (imageElement: HTMLImageElement, genderProfile: AnalysisProfile = "neutral") => {
       setIsAnalyzing(true);
       setAnalysisProgress(0);
 
@@ -171,14 +178,18 @@ export function useMediaPipe() {
         const skinClarityScore = computeSkinClarityScore(canvas, ctx, numFaces);
         const quality = assessPhotoQuality(canvas, faceResult, numFaces);
         const metrics = computeFaceMetrics(faceResult);
-        const scoreResult = mergeFaceScores([{ metrics, skinClarity: skinClarityScore, quality }]).result;
+        const scoreResult = mergeFaceScores(
+          [{ metrics, skinClarity: skinClarityScore, quality }],
+          genderProfile
+        ).result;
 
         setFaceResult(
           buildStoreFaceResult(
             scoreResult,
             faceResult.faceLandmarks?.[0]?.map((l) => [l.x, l.y, l.z]) || [],
             skinTone,
-            quality
+            quality,
+            genderProfile
           )
         );
 
@@ -195,7 +206,7 @@ export function useMediaPipe() {
   );
 
   const analyzeFacePhotos = useCallback(
-    async (imageElements: HTMLImageElement[]) => {
+    async (imageElements: HTMLImageElement[], genderProfile: AnalysisProfile = "neutral") => {
       setIsAnalyzing(true);
       setAnalysisProgress(0);
 
@@ -246,11 +257,19 @@ export function useMediaPipe() {
         }
 
         setAnalysisProgress(88);
-        const { result: scoreResult } = mergeFaceScores(samples);
+        const { result: scoreResult } = mergeFaceScores(samples, genderProfile);
         const landmarks =
           bestResult?.faceLandmarks?.[0]?.map((l) => [l.x, l.y, l.z]) || [];
 
-        setFaceResult(buildStoreFaceResult(scoreResult, landmarks, bestSkinTone, bestQualityReport));
+        setFaceResult(
+          buildStoreFaceResult(
+            scoreResult,
+            landmarks,
+            bestSkinTone,
+            bestQualityReport,
+            genderProfile
+          )
+        );
 
         setAnalysisProgress(100);
         return { scoreResult, samples, rejected, photoCount: samples.length };
@@ -264,8 +283,7 @@ export function useMediaPipe() {
     [setFaceResult, setIsAnalyzing, setAnalysisProgress]
   );
 
-  const analyzeBodyFromImage = useCallback(
-    async (imageElement: HTMLImageElement) => {
+  const analyzeBodyFromImage = useCallback(    async (imageElement: HTMLImageElement) => {
       setIsAnalyzing(true);
       setAnalysisProgress(0);
 
