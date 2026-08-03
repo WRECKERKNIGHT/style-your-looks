@@ -1,16 +1,28 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="96" fill="#241812"/>
   <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#3A2A22"/>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#2A1C14"/>
+      <stop offset="100%" stop-color="#1A0F0A"/>
+    </linearGradient>
+    <linearGradient id="ring" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#CCA066"/>
       <stop offset="50%" stop-color="#8A5F3D"/>
       <stop offset="100%" stop-color="#C8963E"/>
     </linearGradient>
+    <linearGradient id="mark" x1="96" y1="128" x2="416" y2="384" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#DCB987"/>
+      <stop offset="55%" stop-color="#B98B56"/>
+      <stop offset="100%" stop-color="#C8963E"/>
+    </linearGradient>
   </defs>
-  <g transform="translate(256, 256) scale(6.4)" fill="url(#g)">
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <rect x="14" y="14" width="484" height="484" rx="98" fill="none" stroke="url(#ring)" stroke-width="7" opacity="0.55"/>
+  <g transform="translate(256, 268) scale(6.4)" fill="url(#mark)">
     <polygon points="-10,0 -4,0 -14,14 -20,14"/>
     <polygon points="4,0 10,0 20,14 14,14"/>
     <polygon points="-7,9 7,9 7,10.5 -7,10.5"/>
     <polygon points="-4,0 4,0 4,3.5 -4,3.5"/>
   </g>
+  <polygon points="398,88 404,104 420,110 404,116 398,132 392,116 376,110 392,104" fill="#DCB987" opacity="0.9"/>
+  <polygon points="122,396 126,406 136,410 126,414 122,424 118,414 108,410 118,406" fill="#B98B56" opacity="0.6"/>
 </svg>

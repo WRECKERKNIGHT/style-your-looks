@@ -1,14 +1,26 @@
 {
-  "name": "ZERVEY",
+  "id": "/",
+  "name": "ZERVEY — AI-Powered Style Intelligence",
   "short_name": "ZERVEY",
-  "description": "AI-Powered Style Intelligence Platform",
+  "description": "AI-powered facial analysis, virtual try-on, and outfit recommendations. All analysis runs in your browser — your photos never leave your device.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#F6F0E5",
-  "theme_color": "#6F4A30",
+  "display_override": ["window-controls-overlay", "standalone"],
+  "background_color": "#241812",
+  "theme_color": "#241812",
   "orientation": "portrait",
+  "lang": "en",
+  "categories": ["fashion", "lifestyle", "photo"],
   "icons": [
-    { "src": "/icon-192.svg", "sizes": "192x192", "type": "image/svg+xml" },
-    { "src": "/icon-512.svg", "sizes": "512x512", "type": "image/svg+xml" }
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icon-192.svg", "sizes": "192x192", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/icon-512.svg", "sizes": "512x512", "type": "image/svg+xml", "purpose": "any" }
+  ],
+  "shortcuts": [
+    { "name": "Face IQ", "short_name": "Face IQ", "url": "/dashboard/face-analysis", "icons": [{ "src": "/icon-192.svg", "sizes": "192x192" }] },
+    { "name": "History", "short_name": "History", "url": "/dashboard/history", "icons": [{ "src": "/icon-192.svg", "sizes": "192x192" }] }
   ]
 }

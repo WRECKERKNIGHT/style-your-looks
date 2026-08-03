@@ -1,10 +1,12 @@
-const CACHE = "zervey-v2";
+const CACHE = "zervey-v3";
 const STATIC_ASSETS = [
   "/",
   "/manifest.json",
   "/icon.svg",
   "/icon-192.svg",
   "/icon-512.svg",
+  "/icon-192.png",
+  "/icon-512.png",
   "/zervey-logo.svg",
 ];
 
