@@ -163,7 +163,7 @@ export function calculatePillarAnalysis(faceResult: FaceScoreResult): PillarAnal
   improvements.push({
     id: "style-color",
     title: "Optimize Color Palette",
-    description: `Your analysis suggests a ${faceResult.styleProfile} profile. Use the Color Analysis tool to find your seasonal palette and choose clothing colors that complement your skin tone.`,
+    description: `Your analysis suggests a ${faceResult.styleProfile} profile. Use the Tone Studio tool to find your seasonal palette and choose clothing colors that complement your skin tone.`,
     impact: "medium",
     category: "style",
     effort: "easy",

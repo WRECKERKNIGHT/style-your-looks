@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     "AI fashion",
     "grooming",
     "beard simulator",
-    "color analysis",
+    "tone studio",
     "personal styling",
   ],
   authors: [{ name: "ZERVEY", url: baseUrl }],

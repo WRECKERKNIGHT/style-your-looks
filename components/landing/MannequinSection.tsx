@@ -8,7 +8,7 @@ import { Reveal } from "@/components/shared/Reveal";
 
 const hotspots = [
   { id: "face", label: "Face IQ", sublabel: "478-point analysis", x: "75%", y: "10%", side: "right" as const },
-  { id: "skin", label: "Color Analysis", sublabel: "ITA skin tone", x: "75%", y: "25%", side: "right" as const },
+  { id: "skin", label: "Tone Studio", sublabel: "ITA skin tone", x: "75%", y: "25%", side: "right" as const },
   { id: "body", label: "Body Analysis", sublabel: "Pose landmarks", x: "25%", y: "45%", side: "left" as const },
   { id: "grooming", label: "Grooming", sublabel: "15+ styles", x: "75%", y: "42%", side: "right" as const },
   { id: "tryon", label: "Virtual Try-On", sublabel: "Outfit overlay", x: "25%", y: "62%", side: "left" as const },

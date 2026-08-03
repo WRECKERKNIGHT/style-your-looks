@@ -37,7 +37,7 @@ const features: (FeaturePreviewData & {
     icon: Droplets,
     title: "Skin Tone",
     description:
-      "ITA color science with CIELAB conversion. Monk Scale, Fitzpatrick, undertone mapping. Seasonal color classification.",
+      "ITA color science with CIELAB conversion. Skin Tone Scale, Fitzpatrick, undertone mapping. Seasonal color classification.",
     image: "/images/features/skin.jpg",
     route: "/dashboard/color-analysis",
     tags: ["ITA Science", "Undertone", "Seasonal Palette"],

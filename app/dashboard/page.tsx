@@ -72,7 +72,7 @@ const quickActions = [
   },
   {
     href: "/dashboard/color-analysis",
-    label: "COLOR ANALYSIS",
+    label: "TONE STUDIO",
     description: "Seasonal type. Best palettes. Harmony tester.",
     icon: Palette,
     accent: "aurum",

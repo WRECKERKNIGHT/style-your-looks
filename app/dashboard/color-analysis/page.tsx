@@ -478,11 +478,11 @@ export default function ColorAnalysisPage() {
   return (
     <div className="space-y-8">
       <div>
-        <span className="section-number">EST. MMXXIV // COLOR ANALYSIS</span>
+        <span className="section-number">EST. MMXXIV // TONE STUDIO</span>
         <div className="flex items-center gap-3 mt-3 mb-2">
           <Palette className="w-7 h-7 text-[var(--accent-aurum)]" />
           <h1 className="type-display text-[var(--text-primary)] tracking-tight">
-            COLOR <span className="text-gradient-aurum">ANALYSIS.</span>
+            TONE <span className="text-gradient-aurum">STUDIO.</span>
           </h1>
         </div>
         <p className="text-[var(--text-muted)] font-body type-subhead max-w-xl">
@@ -495,7 +495,7 @@ export default function ColorAnalysisPage() {
           <div className="glass-card p-8">
             <ImageUploader
               onImageUpload={handleImageUpload}
-              label="Upload a photo for color analysis"
+              label="Upload a photo for tone analysis"
               accept="face"
             />
           </div>
