@@ -2,6 +2,7 @@
 
 import { useCallback } from "react";
 import { analyzeFace, prepareCanvas } from "@/lib/ml/face-analyzer";
+import { preprocessImage, quickQualityGate } from "@/lib/ml/preprocessing";
 import { analyzeBody } from "@/lib/ml/body-analyzer";
 import { analyzeSkinTone } from "@/lib/ml/skin-tone";
 import {
@@ -172,7 +173,7 @@ export function useMediaPipe() {
           throw new Error("Could not load the photo. Try re-uploading it.");
         }
 
-        const canvas = prepareCanvas(imageElement);
+        const { canvas } = preprocessImage(imageElement);
         const ctx = canvas.getContext("2d")!;
 
         setAnalysisProgress(10);
@@ -241,8 +242,14 @@ export function useMediaPipe() {
             continue;
           }
 
-          const canvas = prepareCanvas(image);
+          const { canvas } = preprocessImage(image);
           const ctx = canvas.getContext("2d")!;
+
+          const gate = quickQualityGate(canvas);
+          if (!gate.usable) {
+            rejected.push({ index: i, issues: gate.issues });
+            continue;
+          }
 
           const faceResult = await analyzeFace(canvas);
           onPreview?.(
