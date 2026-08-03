@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, Fragment } from "react";
 import { ImageUploader } from "@/components/shared/ImageUploader";
 import { AnalysisResults } from "@/components/analysis/AnalysisResults";
 import { FaceSkeletonOverlay } from "@/components/analysis/FaceSkeletonOverlay";
@@ -8,6 +8,7 @@ import { ProcessingOverlay } from "@/components/analysis/ProcessingOverlay";
 import { PhotoGuidelines } from "@/components/analysis/PhotoGuidelines";
 import { PhotoReviewPanel, type RejectedPhoto } from "@/components/analysis/PhotoReviewPanel";
 import { TryItOnPanel } from "@/components/analysis/TryItOnPanel";
+import { FaceCalibration } from "@/components/analysis/FaceCalibration";
 import { useAnalysisStore } from "@/store/analysis-store";
 import { useMediaPipe } from "@/hooks/useMediaPipe";
 import { useWebcam } from "@/hooks/useWebcam";
@@ -148,6 +149,7 @@ export default function FaceAnalysisPage() {
   const [reportOpen, setReportOpen] = useState(false);
   const [photos, setPhotos] = useState<string[]>([]);
   const [rejectedPhotos, setRejectedPhotos] = useState<RejectedPhoto[]>([]);
+  const [step, setStep] = useState<"calibrate" | "capture">("calibrate");
   const imageRef = useRef<HTMLImageElement>(null);
 
   const buildReport = useCallback(() => {
@@ -288,8 +290,89 @@ export default function FaceAnalysisPage() {
       </motion.div>
 
       {!faceResult && (
-        <motion.div variants={fadeUp} initial="hidden" animate="show" className="space-y-5">
-          <div className="glass-card p-8">
+        <motion.div variants={fadeUp} initial="hidden" animate="show">
+          {/* Step indicator */}
+          <div className="flex items-center gap-2 mb-8">
+            {[
+              { id: "calibrate", label: "CALIBRATE" },
+              { id: "capture", label: "CAPTURE" },
+              { id: "results", label: "RESULTS" },
+            ].map((s, i) => {
+              const isCurrent =
+                s.id === "results"
+                  ? false
+                  : step === s.id;
+              const isDone =
+                s.id === "calibrate"
+                  ? step === "capture"
+                  : s.id === "capture"
+                  ? step === "capture"
+                  : false;
+              return (
+                <Fragment key={s.id}>
+                  {i > 0 && (
+                    <div className={`flex-1 h-px max-w-16 ${isDone || (i === 1 && step === "capture") ? "bg-[var(--accent-aurum)]" : "bg-[var(--border-primary)]"}`} />
+                  )}
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`w-6 h-6 flex items-center justify-center rounded-full border text-[0.55rem] font-mono transition-all ${
+                        isDone
+                          ? "bg-[var(--accent-aurum)] border-[var(--accent-aurum)] text-[var(--bg-primary)]"
+                          : isCurrent
+                          ? "border-[var(--accent-aurum)] text-[var(--accent-aurum)]"
+                          : "border-[var(--border-primary)] text-[var(--text-muted)]"
+                      }`}
+                    >
+                      {isDone ? <Check className="w-3 h-3" /> : i + 1}
+                    </span>
+                    <span
+                      className={`type-mono text-[0.55rem] tracking-widest ${
+                        isCurrent || isDone
+                          ? "text-[var(--text-primary)]"
+                          : "text-[var(--text-muted)]"
+                      }`}
+                    >
+                      {s.label}
+                    </span>
+                  </div>
+                </Fragment>
+              );
+            })}
+          </div>
+
+          <AnimatePresence mode="wait">
+            {step === "calibrate" ? (
+              <motion.div
+                key="calibrate"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+              >
+                <FaceCalibration onBegin={() => setStep("capture")} />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="capture"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                className="space-y-5"
+              >
+                <div className="flex items-center justify-between">
+                  <button
+                    onClick={() => setStep("calibrate")}
+                    className="flex items-center gap-1.5 text-xs type-mono tracking-widest text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
+                  >
+                    &larr; RECALIBRATE
+                  </button>
+                  <span className="type-mono text-[0.6rem] text-[var(--text-muted)] tracking-widest">
+                    STEP 2/3 &middot; CAPTURE
+                  </span>
+                </div>
+
+                <div className="glass-card p-8">
             <div className="flex items-center justify-between mb-5">
               <h2 className="type-subhead text-[var(--text-primary)] tracking-wider">
                 UPLOAD {MIN_PHOTOS}–{MAX_PHOTOS} PHOTOS
@@ -466,6 +549,9 @@ export default function FaceAnalysisPage() {
               <p className="text-sm text-red-400 font-body">{error}</p>
             </motion.div>
           )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.div>
       )}
 
@@ -613,6 +699,7 @@ export default function FaceAnalysisPage() {
               setPhotos([]);
               setRejectedPhotos([]);
               setError(null);
+              setStep("calibrate");
             }}
             className="btn-outline w-full justify-center"
           >
