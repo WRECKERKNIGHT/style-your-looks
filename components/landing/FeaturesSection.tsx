@@ -105,6 +105,7 @@ export function FeaturesSection() {
               delay={index * 0.08}
               y={40}
               scale={0.97}
+              amount={0.2}
               className="group h-full"
             >
               <div className="h-full transition-transform duration-500 group-hover:-translate-y-1.5">
