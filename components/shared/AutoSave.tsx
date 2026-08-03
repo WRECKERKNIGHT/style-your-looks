@@ -21,6 +21,7 @@ export function AutoSave() {
     lastSaveRef.current = now;
     const entry = useAnalysisStore.getState().saveCurrentAnalysis("Auto-saved");
     if (entry) addToast("Analysis auto-saved", "success");
+    else addToast("Could not auto-save — browser storage is full", "error");
   }, [faceResult, bodyResult, colorAnalysis, outfitRecommendations, uploadedImage, addToast]);
   return null;
 }

@@ -11,7 +11,7 @@ import { TryItOnPanel } from "@/components/analysis/TryItOnPanel";
 import { FaceCalibration } from "@/components/analysis/FaceCalibration";
 import { FaceView3D } from "@/components/analysis/FaceView3D";
 import { useAnalysisStore } from "@/store/analysis-store";
-import { useMediaPipe } from "@/hooks/useMediaPipe";
+import { useMediaPipe, AnalysisCancelledError } from "@/hooks/useMediaPipe";
 import { useWebcam } from "@/hooks/useWebcam";
 import { useToast } from "@/components/shared/Toast";
 import { motion, AnimatePresence } from "framer-motion";
@@ -140,7 +140,7 @@ function DiagnosticStrip({
 export default function FaceAnalysisPage() {
   const { uploadedImage, setUploadedImage, faceResult, isAnalyzing, genderProfile, setGenderProfile, setProcessingPreview } =
     useAnalysisStore();
-  const { analyzeFacePhotos } = useMediaPipe();
+  const { analyzeFacePhotos, cancelAnalysis } = useMediaPipe();
   const { videoRef, isStreaming, startWebcam, stopWebcam, captureFrame } = useWebcam();
   const { addToast } = useToast();
   const [error, setError] = useState<string | null>(null);
@@ -152,6 +152,7 @@ export default function FaceAnalysisPage() {
   const [rejectedPhotos, setRejectedPhotos] = useState<RejectedPhoto[]>([]);
   const [step, setStep] = useState<"calibrate" | "capture">("calibrate");
   const imageRef = useRef<HTMLImageElement>(null);
+  const [imageDims, setImageDims] = useState<{ w: number; h: number; aspect?: number } | null>(null);
 
   const buildReport = useCallback(() => {
     if (!faceResult) return "";
@@ -267,6 +268,7 @@ export default function FaceAnalysisPage() {
         addToast("Only one usable photo — results will be less reliable", "info");
       }
     } catch (err) {
+      if (err instanceof AnalysisCancelledError) return;
       setError(
         err instanceof Error ? err.message : "Failed to analyse face. Please try clearer photos."
       );
@@ -570,10 +572,14 @@ export default function FaceAnalysisPage() {
             </span>
             <button
               onClick={() => {
-                useAnalysisStore.getState().saveCurrentAnalysis();
-                setSaved(true);
-                addToast("Analysis saved to history", "success");
-                setTimeout(() => setSaved(false), 3000);
+                const entry = useAnalysisStore.getState().saveCurrentAnalysis();
+                if (entry) {
+                  setSaved(true);
+                  addToast("Analysis saved to history", "success");
+                  setTimeout(() => setSaved(false), 3000);
+                } else {
+                  addToast("Could not save to history — browser storage is full", "error");
+                }
               }}
               className={`flex items-center gap-2 px-6 py-3 font-body text-sm tracking-wider uppercase transition-all ${
                 saved
@@ -609,6 +615,7 @@ export default function FaceAnalysisPage() {
                 setRejectedPhotos([]);
                 setError(null);
                 setStep("calibrate");
+                cancelAnalysis();
               }}
               className="flex items-center gap-2 px-6 py-3 font-body text-sm tracking-wider uppercase transition-all btn-outline"
             >
@@ -633,6 +640,14 @@ export default function FaceAnalysisPage() {
                 ref={imageRef}
                 src={uploadedImage}
                 alt="Analysed face"
+                onLoad={(e) => {
+                  const el = e.currentTarget;
+                  setImageDims({
+                    w: el.clientWidth,
+                    h: el.clientHeight,
+                    aspect: el.naturalWidth > 0 ? el.naturalWidth / el.naturalHeight : undefined,
+                  });
+                }}
                 className="w-full max-h-[480px] object-cover"
               />
               <motion.div
@@ -648,8 +663,9 @@ export default function FaceAnalysisPage() {
               {showLandmarks && faceResult.landmarks.length > 0 && (
                 <FaceSkeletonOverlay
                   landmarks={faceResult.landmarks}
-                  width={imageRef.current?.clientWidth || 600}
-                  height={imageRef.current?.clientHeight || 480}
+                  width={imageDims?.w || imageRef.current?.clientWidth || 600}
+                  height={imageDims?.h || imageRef.current?.clientHeight || 480}
+                  imageAspect={imageDims?.aspect}
                   facialShape={faceResult.facialShape}
                   measurements={{
                     fwhr: faceResult.rawFwhr || undefined,
@@ -681,6 +697,7 @@ export default function FaceAnalysisPage() {
               <SymmetrySplit
                 image={uploadedImage}
                 centerX={faceResult.landmarks[1]?.[0] ?? 0.5}
+                imageAspect={imageDims?.aspect}
                 symmetryScore={faceResult.symmetry}
               />
             </motion.div>
@@ -725,6 +742,7 @@ export default function FaceAnalysisPage() {
               setRejectedPhotos([]);
               setError(null);
               setStep("calibrate");
+              cancelAnalysis();
             }}
             className="btn-outline w-full justify-center"
           >

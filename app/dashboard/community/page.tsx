@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Users, Heart, MessageCircle, Share2, UserPlus, ArrowRight, Search, RefreshCw, Wifi, WifiOff } from "lucide-react";
+import { Users, Heart, MessageCircle, Share2, UserPlus, ArrowRight, Search, RefreshCw, Wifi, WifiOff, ExternalLink } from "lucide-react";
 
 interface Post {
   id: string;
@@ -55,21 +56,23 @@ const stagger = {
 
 function mapPost(raw: Record<string, unknown>, index: number): Post {
   const user = (raw.user as { full_name?: string }) || {};
+  const category = String(raw.category || "outfit");
   return {
     id: String(raw.id || `seed_${index}`),
     user: user.full_name || `Member${index + 1}`,
     avatar: (user.full_name || "NX").split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase(),
     badge: "STYLE ICON",
-    content: String(raw.content || ""),
-    likes: Number(raw.likes ?? 0),
-    comments: Number(raw.comments ?? 0),
-    tags: Array.isArray(raw.tags) ? (raw.tags as string[]).map(String) : [],
+    content: String(raw.title || raw.description || raw.content || ""),
+    likes: Number(raw.rating_count ?? 0),
+    comments: 0,
+    tags: category ? [category] : [],
     time: raw.created_at ? timeAgo(String(raw.created_at)) : "recently",
   };
 }
 
 function timeAgo(iso: string): string {
   const then = new Date(iso).getTime();
+  if (!Number.isFinite(then)) return "recently";
   const mins = Math.max(1, Math.round((Date.now() - then) / 60000));
   if (mins < 60) return `${mins}m ago`;
   const hrs = Math.round(mins / 60);
@@ -78,34 +81,44 @@ function timeAgo(iso: string): string {
 }
 
 export default function CommunityPage() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<"feed" | "members" | "tags">("feed");
   const [feed, setFeed] = useState<Post[]>(FEED);
   const [live, setLive] = useState(false);
   const [loading, setLoading] = useState(true);
   const [liked, setLiked] = useState<Record<string, boolean>>({});
 
-  const refresh = useCallback(async () => {
+  const loadFeed = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
     try {
-      const res = await fetch("/api/community/feed?limit=20");
-      if (!res.ok) throw new Error(String(res.status));
+      const res = await fetch("/api/community/feed?limit=20", { signal });
+      if (signal?.aborted) return;
+      if (res.status === 503 || !res.ok) {
+        setLive(false);
+        return;
+      }
       const data = await res.json();
-      if (Array.isArray(data.posts) && data.posts.length) {
-        setFeed(data.posts.map(mapPost));
+      if (signal?.aborted) return;
+      if (Array.isArray(data.posts)) {
+        setFeed(data.posts.length ? data.posts.map(mapPost) : []);
         setLive(true);
       }
     } catch {
-      setLive(false);
+      if (!signal?.aborted) setLive(false);
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    refresh();
-  }, [refresh]);
+    const controller = new AbortController();
+    loadFeed(controller.signal);
+    return () => controller.abort();
+  }, [loadFeed]);
 
-  const toggleLike = (id: string) => {
+  const toggleLike = (e: React.MouseEvent, id: string) => {
+    e.preventDefault();
+    e.stopPropagation();
     setLiked((prev) => {
       const next = { ...prev, [id]: !prev[id] };
       setFeed((f) =>
@@ -140,7 +153,7 @@ export default function CommunityPage() {
             }`}>{tab.toUpperCase()}</button>
         ))}
         <button
-          onClick={refresh}
+          onClick={() => loadFeed()}
           disabled={loading}
           className={`ml-auto flex items-center gap-2 px-3 py-2 border type-mono text-[0.6rem] transition-all ${
             live
@@ -159,8 +172,23 @@ export default function CommunityPage() {
         <div className="lg:col-span-2 space-y-4">
           {activeTab === "feed" && (
             <motion.div variants={stagger} initial="hidden" animate="show" className="space-y-4">
+              {feed.length === 0 && !loading && (
+                <div className="glass-card p-10 text-center">
+                  <p className="text-[var(--text-muted)] font-body text-sm mb-2">
+                    No posts yet.
+                  </p>
+                  <p className="text-xs text-[var(--text-muted)]">
+                    Run an analysis, then share your results to start the feed.
+                  </p>
+                </div>
+              )}
               {feed.map((post) => (
-                <motion.div key={post.id} variants={fadeUp} className="glass-card p-5">
+                <motion.div
+                  key={post.id}
+                  variants={fadeUp}
+                  onClick={() => router.push(`/dashboard/community/${post.id}`)}
+                  className="glass-card p-5 cursor-pointer hover:border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)] transition-colors group"
+                >
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--accent-nexus)] to-[var(--accent-aurum)] flex items-center justify-center type-mono text-sm text-white">{post.avatar}</div>
@@ -172,24 +200,25 @@ export default function CommunityPage() {
                         <p className="text-xs text-[var(--text-muted)]">{post.time}</p>
                       </div>
                     </div>
+                    <ExternalLink className="w-4 h-4 text-[var(--text-muted)] opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
-                  <p className="text-sm text-[var(--text-primary)] mb-3">{post.content}</p>
+                  <p className="text-sm text-[var(--text-primary)] mb-3 line-clamp-3">{post.content}</p>
                   <div className="flex flex-wrap gap-2 mb-3">
                     {post.tags.map((tag) => (
                       <span key={tag} className="type-mono text-[0.55rem] px-2 py-0.5 border border-[var(--border-primary)] text-[var(--text-muted)]">#{tag}</span>
                     ))}
                   </div>
                   <div className="flex items-center gap-4 text-xs text-[var(--text-muted)]">
-                    <button onClick={() => toggleLike(post.id)}
+                    <button onClick={(e) => toggleLike(e, post.id)}
                       className={`flex items-center gap-1 transition-colors ${liked[post.id] ? "text-[var(--accent-aurum)]" : "hover:text-[var(--accent-aurum)]"}`}>
                       <Heart className={`w-3.5 h-3.5 ${liked[post.id] ? "fill-current" : ""}`} /> {post.likes}
                     </button>
-                    <button className="flex items-center gap-1 hover:text-[var(--accent-aurum)] transition-colors">
+                    <span className="flex items-center gap-1">
                       <MessageCircle className="w-3.5 h-3.5" /> {post.comments}
-                    </button>
-                    <button className="flex items-center gap-1 hover:text-[var(--accent-aurum)] transition-colors">
+                    </span>
+                    <span className="flex items-center gap-1">
                       <Share2 className="w-3.5 h-3.5" /> SHARE
-                    </button>
+                    </span>
                   </div>
                 </motion.div>
               ))}

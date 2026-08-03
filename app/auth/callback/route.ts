@@ -13,7 +13,14 @@ const ALLOWED_TYPES = new Set([
 
 function safeNext(raw: string | null): string {
   if (!raw) return "/dashboard";
-  if (!raw.startsWith("/") || raw.startsWith("//")) return "/dashboard";
+  if (
+    !raw.startsWith("/") ||
+    raw.startsWith("//") ||
+    raw.includes("\\") ||
+    raw.includes(":")
+  ) {
+    return "/dashboard";
+  }
   return raw;
 }
 
@@ -25,6 +32,13 @@ export async function GET(request: Request) {
   const type = searchParams.get("type") ?? "email";
 
   const supabase = await createClient();
+  if (!supabase) {
+    return NextResponse.redirect(
+      `${origin}/login?error=${encodeURIComponent(
+        "Sign-in service is unavailable. Please try again later."
+      )}`
+    );
+  }
 
   // Supabase auth error params (e.g. Google denied, confirmation failed)
   const errorParam = searchParams.get("error");

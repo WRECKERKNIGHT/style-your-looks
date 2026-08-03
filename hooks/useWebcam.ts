@@ -54,6 +54,8 @@ export function useWebcam(): UseWebcamReturn {
     if (!videoRef.current || !isStreaming) return null;
 
     const video = videoRef.current;
+    if (!video.videoWidth || !video.videoHeight) return null;
+
     const canvas = document.createElement("canvas");
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;

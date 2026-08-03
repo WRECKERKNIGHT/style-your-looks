@@ -35,3 +35,12 @@ export function clampInt(value: unknown, min: number, max: number, fallback: num
 export function isAllowedCategory(value: string): boolean {
   return ["outfit", "face", "grooming", "party"].includes(value);
 }
+
+export function safeNextPath(
+  raw: string | null | undefined,
+  fallback = "/dashboard"
+): string {
+  if (typeof raw !== "string" || !raw.startsWith("/")) return fallback;
+  if (raw.startsWith("//") || raw.includes("\\") || raw.includes(":")) return fallback;
+  return raw;
+}

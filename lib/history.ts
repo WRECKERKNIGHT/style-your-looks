@@ -54,7 +54,7 @@ export function saveToHistory(entry: Omit<AnalysisEntry, "id" | "timestamp" | "d
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
     } catch {
-      // Give up
+      throw new Error("Could not save to history — browser storage is full.");
     }
   }
 

@@ -4,26 +4,46 @@ import {
   type PoseLandmarkerResult,
 } from "@mediapipe/tasks-vision";
 
+const WASM_BASE =
+  "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.18/wasm";
+const MODEL_URL =
+  "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_heavy/float16/1/pose_landmarker_heavy.task";
+
 let poseLandmarker: PoseLandmarker | null = null;
+let poseInitPromise: Promise<PoseLandmarker> | null = null;
 
-export async function initializePoseLandmarker(): Promise<PoseLandmarker> {
-  if (poseLandmarker) return poseLandmarker;
-
-  const vision = await FilesetResolver.forVisionTasks(
-    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
-  );
-
-  poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
+async function createPoseLandmarker(
+  delegate: "GPU" | "CPU"
+): Promise<PoseLandmarker> {
+  const vision = await FilesetResolver.forVisionTasks(WASM_BASE);
+  return PoseLandmarker.createFromOptions(vision, {
     baseOptions: {
-      modelAssetPath:
-        "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_heavy/float16/1/pose_landmarker_heavy.task",
-      delegate: "GPU",
+      modelAssetPath: MODEL_URL,
+      delegate,
     },
     runningMode: "IMAGE",
     numPoses: 1,
   });
+}
 
-  return poseLandmarker;
+export function initializePoseLandmarker(): Promise<PoseLandmarker> {
+  if (poseLandmarker) return Promise.resolve(poseLandmarker);
+  if (poseInitPromise) return poseInitPromise;
+
+  poseInitPromise = (async () => {
+    try {
+      poseLandmarker = await createPoseLandmarker("GPU");
+    } catch (err) {
+      console.warn("GPU delegate unavailable — falling back to CPU:", err);
+      poseLandmarker = await createPoseLandmarker("CPU");
+    }
+    return poseLandmarker;
+  })().catch((err) => {
+    poseInitPromise = null;
+    throw err;
+  });
+
+  return poseInitPromise;
 }
 
 export interface BodyMeasurements {

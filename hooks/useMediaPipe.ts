@@ -1,10 +1,10 @@
 "use client";
 
-import { useCallback } from "react";
-import { analyzeFace, prepareCanvas } from "@/lib/ml/face-analyzer";
-import { preprocessImage, quickQualityGate } from "@/lib/ml/preprocessing";
-import { analyzeBody } from "@/lib/ml/body-analyzer";
-import { analyzeSkinTone } from "@/lib/ml/skin-tone";
+import { useCallback, useRef, useEffect } from "react";
+import { analyzeFace } from "@/lib/ml/face-analyzer";
+import { preprocessImage, quickQualityGate, prepareCanvas } from "@/lib/ml/preprocessing";
+import { analyzeBody, extractBodyMeasurements, classifyBodyType } from "@/lib/ml/body-analyzer";
+import { analyzeSkinTone, analyzeSkinToneFromImage } from "@/lib/ml/skin-tone";
 import {
   calculateFaceScore,
   computeFaceMetrics,
@@ -17,6 +17,13 @@ import {
 import { assessPhotoQuality, type PhotoQualityReport } from "@/lib/ml/face-quality";
 import { generateRecommendations } from "@/lib/ml/outfit-recommender";
 import { useAnalysisStore } from "@/store/analysis-store";
+
+export class AnalysisCancelledError extends Error {
+  constructor() {
+    super("Analysis cancelled");
+    this.name = "AnalysisCancelledError";
+  }
+}
 
 function computeSkinClarityScore(
   canvas: HTMLCanvasElement,
@@ -159,12 +166,30 @@ export function useMediaPipe() {
     saveCurrentAnalysis,
   } = useAnalysisStore();
 
+  const cancelledRef = useRef(false);
+
+  useEffect(() => {
+    const ref = cancelledRef;
+    return () => {
+      ref.current = true;
+    };
+  }, []);
+
+  const cancelAnalysis = useCallback(() => {
+    cancelledRef.current = true;
+  }, []);
+
+  const throwIfCancelled = useCallback(() => {
+    if (cancelledRef.current) throw new AnalysisCancelledError();
+  }, []);
+
   const analyzeFaceFromImage = useCallback(
     async (
       imageElement: HTMLImageElement,
       genderProfile: AnalysisProfile = "neutral",
       onPreview?: (landmarks: number[][]) => void
     ) => {
+      cancelledRef.current = false;
       setIsAnalyzing(true);
       setAnalysisProgress(0);
 
@@ -176,23 +201,36 @@ export function useMediaPipe() {
         const { canvas } = preprocessImage(imageElement);
         const ctx = canvas.getContext("2d")!;
 
+        const gate = quickQualityGate(canvas);
+        if (!gate.usable) {
+          throw new Error(
+            `Could not analyse this photo: ${gate.issues.join("; ")}. Use a clearer, front-facing photo.`
+          );
+        }
+
         setAnalysisProgress(10);
         const faceResult = await analyzeFace(canvas, setAnalysisProgress);
-        onPreview?.(
-          faceResult.faceLandmarks?.[0]?.map((l) => [l.x, l.y, l.z]) || []
-        );
+        throwIfCancelled();
         setAnalysisProgress(60);
 
         const skinTone = analyzeSkinTone(canvas, faceResult);
         const numFaces = faceResult.faceLandmarks?.length || 0;
         const skinClarityScore = computeSkinClarityScore(canvas, ctx, numFaces);
         const quality = assessPhotoQuality(canvas, faceResult, numFaces);
+        if (!quality.usable) {
+          throw new Error(
+            `Could not analyse this photo: ${quality.issues.join("; ")}. Use a clearer, front-facing photo.`
+          );
+        }
         const metrics = computeFaceMetrics(faceResult);
         const scoreResult = mergeFaceScores(
           [{ metrics, skinClarity: skinClarityScore, quality }],
           genderProfile
         ).result;
 
+        onPreview?.(
+          faceResult.faceLandmarks?.[0]?.map((l) => [l.x, l.y, l.z]) || []
+        );
         setFaceResult(
           buildStoreFaceResult(
             scoreResult,
@@ -222,6 +260,7 @@ export function useMediaPipe() {
       genderProfile: AnalysisProfile = "neutral",
       onPreview?: (index: number, landmarks: number[][]) => void
     ) => {
+      cancelledRef.current = false;
       setIsAnalyzing(true);
       setAnalysisProgress(0);
 
@@ -252,10 +291,7 @@ export function useMediaPipe() {
           }
 
           const faceResult = await analyzeFace(canvas);
-          onPreview?.(
-            i,
-            faceResult.faceLandmarks?.[0]?.map((l) => [l.x, l.y, l.z]) || []
-          );
+          throwIfCancelled();
           const numFaces = faceResult.faceLandmarks?.length || 0;
           const quality = assessPhotoQuality(canvas, faceResult, numFaces);
 
@@ -264,6 +300,10 @@ export function useMediaPipe() {
             continue;
           }
 
+          onPreview?.(
+            i,
+            faceResult.faceLandmarks?.[0]?.map((l) => [l.x, l.y, l.z]) || []
+          );
           const skinClarityScore = computeSkinClarityScore(canvas, ctx, numFaces);
           const metrics = computeFaceMetrics(faceResult);
           samples.push({ metrics, skinClarity: skinClarityScore, quality, sourceResult: faceResult });
@@ -285,6 +325,7 @@ export function useMediaPipe() {
 
         setAnalysisProgress(88);
         const { result: scoreResult } = mergeFaceScores(samples, genderProfile);
+        throwIfCancelled();
         const landmarks =
           bestResult?.faceLandmarks?.[0]?.map((l) => [l.x, l.y, l.z]) || [];
 
@@ -311,23 +352,21 @@ export function useMediaPipe() {
     [setFaceResult, setIsAnalyzing, setAnalysisProgress, saveCurrentAnalysis]
   );
 
-  const analyzeBodyFromImage = useCallback(    async (imageElement: HTMLImageElement) => {
+  const analyzeBodyFromImage = useCallback(
+    async (imageElement: HTMLImageElement) => {
+      cancelledRef.current = false;
       setIsAnalyzing(true);
       setAnalysisProgress(0);
 
       try {
         setAnalysisProgress(10);
         const bodyResult = await analyzeBody(imageElement, setAnalysisProgress);
+        throwIfCancelled();
         setAnalysisProgress(50);
 
         const canvas = prepareCanvas(imageElement);
+        const skinTone = analyzeSkinToneFromImage(canvas);
 
-        const faceResult = await analyzeFace(imageElement);
-        const skinTone = analyzeSkinTone(canvas, faceResult);
-
-        const { extractBodyMeasurements, classifyBodyType } = await import(
-          "@/lib/ml/body-analyzer"
-        );
         const measurements = extractBodyMeasurements(bodyResult);
 
         let bodyType = "Unknown";
@@ -395,5 +434,6 @@ export function useMediaPipe() {
     analyzeFaceFromImage,
     analyzeFacePhotos,
     analyzeBodyFromImage,
+    cancelAnalysis,
   };
 }

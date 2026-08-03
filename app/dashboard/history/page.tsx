@@ -20,6 +20,7 @@ interface HistoryRow {
   date: string;
   score?: number;
   result?: string;
+  thumbnail?: string | null;
 }
 
 const TYPE_ICONS: Record<string, string> = {
@@ -41,6 +42,7 @@ function toRow(entry: AnalysisEntry): HistoryRow {
       date: entry.date,
       score: entry.faceResult.overallScore,
       result: entry.faceResult.facialShape,
+      thumbnail: entry.thumbnailUrl,
     };
   }
   if (entry.bodyResult) {
@@ -52,6 +54,7 @@ function toRow(entry: AnalysisEntry): HistoryRow {
       date: entry.date,
       score: entry.bodyResult.bodyProportionScore ?? undefined,
       result: entry.bodyResult.bodyType,
+      thumbnail: entry.thumbnailUrl,
     };
   }
   if (entry.colorAnalysis) {
@@ -62,6 +65,7 @@ function toRow(entry: AnalysisEntry): HistoryRow {
       label: entry.label,
       date: entry.date,
       result: entry.colorAnalysis.seasonalType,
+      thumbnail: entry.thumbnailUrl,
     };
   }
   return {
@@ -70,7 +74,28 @@ function toRow(entry: AnalysisEntry): HistoryRow {
     route: "/dashboard/face-analysis",
     label: entry.label,
     date: entry.date,
+    thumbnail: entry.thumbnailUrl,
   };
+}
+
+function HistoryThumb({ entry }: { entry: HistoryRow }) {
+  const [failed, setFailed] = useState(false);
+  if (!entry.thumbnail || failed) {
+    return (
+      <span className="w-12 h-12 flex items-center justify-center text-lg bg-[var(--bg-tertiary)] border border-[var(--border-primary)]">
+        {TYPE_ICONS[entry.type] || "📄"}
+      </span>
+    );
+  }
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={entry.thumbnail}
+      alt=""
+      onError={() => setFailed(true)}
+      className="w-12 h-12 object-cover border border-[var(--border-primary)]"
+    />
+  );
 }
 
 export default function HistoryPage() {
@@ -152,7 +177,7 @@ export default function HistoryPage() {
             <div key={entry.id}
               className="glass-card p-4 flex items-center justify-between group hover:border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)] transition-all">
               <div className="flex items-center gap-3 min-w-0">
-                <span className="text-lg">{TYPE_ICONS[entry.type] || "📄"}</span>
+                <HistoryThumb entry={entry} />
                 <div className="min-w-0">
                   <p className="type-body text-[var(--text-primary)] truncate">{entry.label}</p>
                   <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">

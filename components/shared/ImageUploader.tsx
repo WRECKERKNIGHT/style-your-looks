@@ -8,7 +8,7 @@ import { useToastStore } from "./Toast";
 interface ImageUploaderProps {
   onImageUpload?: (imageData: string) => void;
   onImageSelect?: (file: File) => void;
-  onWebcamCapture?: (imageData: string) => void;
+  onWebcamCapture?: () => void;
   className?: string;
   maxSizeMB?: number;
   aspectRatio?: "square" | "portrait" | "landscape" | "any";
@@ -29,9 +29,50 @@ const acceptMessages: Record<NonNullable<ImageUploaderProps["accept"]>, string> 
   "full-body": "Full-body photo",
 };
 
+const MAX_DIM = 1600;
+
+function downscaleDataUrl(dataUrl: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const scale = Math.min(
+          1,
+          MAX_DIM / Math.max(img.naturalWidth, img.naturalHeight)
+        );
+        if (scale === 1 && dataUrl.length < 512 * 1024) {
+          resolve(dataUrl);
+          return;
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
+        canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          resolve(dataUrl);
+          return;
+        }
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        let out = canvas.toDataURL("image/webp", 0.88);
+        if (!out.startsWith("data:image/webp")) {
+          out = canvas.toDataURL("image/jpeg", 0.88);
+        }
+        resolve(out);
+      } catch {
+        resolve(dataUrl);
+      }
+    };
+    img.onerror = () => reject(new Error("Could not read the image file."));
+    img.src = dataUrl;
+  });
+}
+
 export function ImageUploader({
   onImageUpload,
   onImageSelect,
+  onWebcamCapture,
   className = "",
   maxSizeMB = 10,
   aspectRatio = "any",
@@ -64,17 +105,25 @@ export function ImageUploader({
       }
 
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = async (e) => {
         const result = e.target?.result as string;
-        setPreview(result);
-        onImageUpload?.(result);
+        try {
+          const optimized = await downscaleDataUrl(result);
+          setPreview(optimized);
+          onImageUpload?.(optimized);
+          addToast("Image loaded successfully", "success");
+        } catch (err) {
+          addToast(err instanceof Error ? err.message : "Could not load the image", "error");
+        }
+      };
+      reader.onerror = () => {
+        addToast("Could not read the file", "error");
       };
       reader.readAsDataURL(file);
 
       setFileName(file.name);
       setFileSize(formatSize(file.size));
       onImageSelect?.(file);
-      addToast("Image loaded successfully", "success");
     },
     [onImageUpload, onImageSelect, maxSizeMB, addToast]
   );
@@ -167,6 +216,20 @@ export function ImageUploader({
             >
               Browse Files
             </button>
+
+            {onWebcamCapture && (
+              <button
+                type="button"
+                className="btn-nexus text-xs py-2.5 px-6"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onWebcamCapture();
+                }}
+              >
+                <Camera className="w-3.5 h-3.5" />
+                Use Camera
+              </button>
+            )}
 
             <input
               ref={inputRef}

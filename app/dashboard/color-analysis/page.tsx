@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { ImageUploader } from "@/components/shared/ImageUploader";
 import { useAnalysisStore } from "@/store/analysis-store";
-import { useMediaPipe } from "@/hooks/useMediaPipe";
+import { useMediaPipe, AnalysisCancelledError } from "@/hooks/useMediaPipe";
 import { analyzeColorSeason, getSeasonEmoji, getColorHarmonyScore } from "@/lib/ml/color-analysis";
 import { ProcessingOverlay } from "@/components/analysis/ProcessingOverlay";
 import { motion } from "framer-motion";
@@ -366,7 +366,7 @@ export default function ColorAnalysisPage() {
     uploadedImage,
     setUploadedImage,
   } = useAnalysisStore();
-  const { analyzeFaceFromImage } = useMediaPipe();
+  const { analyzeFaceFromImage, cancelAnalysis } = useMediaPipe();
   const [error, setError] = useState<string | null>(null);
   const [testColor, setTestColor] = useState("#C89D7C");
 
@@ -399,8 +399,12 @@ export default function ColorAnalysisPage() {
             setColorAnalysis(analysis);
           }
         } catch (err) {
+          if (err instanceof AnalysisCancelledError) return;
           setError("Failed to analyse skin tone. Please try a clearer photo.");
         }
+      };
+      img.onerror = () => {
+        setError("Could not load that photo. Please try re-uploading a different image.");
       };
       img.src = imageData;
     },
@@ -801,6 +805,7 @@ export default function ColorAnalysisPage() {
               setColorAnalysis(null);
               useAnalysisStore.getState().reset();
               setError(null);
+              cancelAnalysis();
             }}
             className="btn-outline w-full justify-center"
           >

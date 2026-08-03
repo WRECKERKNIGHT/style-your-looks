@@ -1,7 +1,5 @@
 "use client";
 
-export const dynamic = "force-dynamic";
-
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -10,6 +8,7 @@ import { motion } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import { Logo } from "@/components/shared/Logo";
 import { OAuthErrorPanel, isGoogleBlockError } from "@/components/shared/OAuthErrorPanel";
+import { safeNextPath } from "@/lib/validation";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -20,10 +19,12 @@ export default function LoginPage() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [resending, setResending] = useState(false);
   const [resent, setResent] = useState(false);
+  const [nextPath, setNextPath] = useState("/dashboard");
   const router = useRouter();
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    setNextPath(safeNextPath(params.get("next")));
     const err = params.get("error");
     if (err) setError(err);
   }, []);
@@ -70,7 +71,7 @@ export default function LoginPage() {
         return;
       }
 
-      router.push("/dashboard");
+      router.push(nextPath);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not sign in. Try again.");
@@ -88,7 +89,7 @@ export default function LoginPage() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath)}`,
         },
       });
 
@@ -240,7 +241,7 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <button type="submit" disabled={loading} className="w-full btn-nexus justify-center disabled:opacity-50">
+            <button type="submit" disabled={loading || googleLoading} className="w-full btn-nexus justify-center disabled:opacity-50">
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "SIGN IN"}
             </button>
           </form>
@@ -256,7 +257,7 @@ export default function LoginPage() {
 
           <button
             onClick={handleGoogleLogin}
-            disabled={googleLoading}
+            disabled={googleLoading || loading}
             className="w-full py-3 bg-light-surface dark:bg-cosmic-surface border border-light-border dark:border-cosmic-border text-nexus-800 dark:text-white font-mono text-sm hover:border-aurum-500 transition-colors disabled:opacity-50 rounded-sm flex items-center justify-center gap-3"
           >
             {googleLoading ? (

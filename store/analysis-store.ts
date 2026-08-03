@@ -159,7 +159,7 @@ interface AnalysisState {
   setGenderProfile: (profile: AnalysisProfile) => void;
   setSelectedBeardStyle: (style: string) => void;
   setSelectedMustacheStyle: (style: string) => void;
-  saveCurrentAnalysis: (label?: string) => AnalysisEntry;
+  saveCurrentAnalysis: (label?: string) => AnalysisEntry | null;
   reset: () => void;
 }
 
@@ -193,16 +193,31 @@ export const useAnalysisStore = create<AnalysisState>((set, get) => ({
 
   saveCurrentAnalysis: (label?: string) => {
     const state = get();
-    const entry = saveToHistory({
-      faceResult: state.faceResult,
-      bodyResult: state.bodyResult,
-      colorAnalysis: state.colorAnalysis,
-      outfitRecommendations: state.outfitRecommendations,
-      thumbnailUrl: state.uploadedImage,
-      label: label || (state.faceResult ? `${state.faceResult.facialShape} Face — ${state.faceResult.overallRating}` : "Untitled Analysis"),
-    });
-    set({ lastSavedEntry: entry });
-    return entry;
+    const thumbnailUrl = state.bodyResult
+      ? state.fullBodyImage
+      : state.uploadedImage;
+    try {
+      const entry = saveToHistory({
+        faceResult: state.faceResult,
+        bodyResult: state.bodyResult,
+        colorAnalysis: state.colorAnalysis,
+        outfitRecommendations: state.outfitRecommendations,
+        thumbnailUrl,
+        label:
+          label ||
+          (state.faceResult
+            ? `${state.faceResult.facialShape} Face — ${state.faceResult.overallRating}`
+            : state.bodyResult
+            ? `${state.bodyResult.bodyType} Body`
+            : state.colorAnalysis
+            ? `${state.colorAnalysis.subType} Palette`
+            : "Untitled Analysis"),
+      });
+      set({ lastSavedEntry: entry });
+      return entry;
+    } catch {
+      return null;
+    }
   },
 
   reset: () =>

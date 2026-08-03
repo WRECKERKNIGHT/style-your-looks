@@ -106,7 +106,7 @@ export default function RootLayout({
         <ScrollProgressBar />
         <ToastProvider>
           <SmoothScroll>
-            {children}
+            <main id="main-content">{children}</main>
           </SmoothScroll>
         </ToastProvider>
       </body>

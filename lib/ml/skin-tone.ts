@@ -188,3 +188,84 @@ export function analyzeSkinTone(
     rgb: avgColor,
   };
 }
+
+function isSkinLike(c: RGB): boolean {
+  const { r, g, b } = c;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  if (max < 30 || max > 245 || min < 10) return false;
+
+  if (!(r >= g && g >= b)) return false;
+
+  const rg = r - g;
+  const gb = g - b;
+  if (rg < 2 || rg > 95) return false;
+  if (gb < 0 || gb > 95) return false;
+  if (max - min < 10) return false;
+
+  return true;
+}
+
+/**
+ * Skin-tone estimate that does NOT require face landmarks. Samples a grid of
+ * patches, keeps the most skin-like ones, and averages them. Used by the
+ * body-analysis flow so it can run fully independently of the face model.
+ */
+export function analyzeSkinToneFromImage(
+  canvas: HTMLCanvasElement
+): {
+  monkScale: { id: number; label: string; hex: string };
+  fitzpatrick: string;
+  undertone: "Warm" | "Cool" | "Neutral";
+  ita: number;
+  rgb: RGB;
+} | null {
+  const ctx = canvas.getContext("2d");
+  if (!ctx || canvas.width < 2 || canvas.height < 2) return null;
+
+  const cols = 6;
+  const rows = 8;
+  const cellW = canvas.width / cols;
+  const cellH = canvas.height / rows;
+  const patches: RGB[] = [];
+
+  for (let gy = 1; gy < rows - 1; gy++) {
+    for (let gx = 1; gx < cols - 1; gx++) {
+      const cx = Math.floor((gx + 0.5) * cellW);
+      const cy = Math.floor((gy + 0.5) * cellH);
+      const color = getAverageColor(ctx, cx, cy, Math.max(3, Math.round(Math.min(cellW, cellH) / 4)));
+      if (color && isSkinLike(color)) patches.push(color);
+    }
+  }
+
+  if (patches.length === 0) {
+    const fallback = getAverageColor(ctx, Math.floor(canvas.width / 2), Math.floor(canvas.height / 3), 8);
+    if (fallback && isSkinLike(fallback)) patches.push(fallback);
+  }
+
+  if (patches.length === 0) return null;
+
+  const avgColor: RGB = patches.reduce(
+    (acc, p) => ({ r: acc.r + p.r, g: acc.g + p.g, b: acc.b + p.b }),
+    { r: 0, g: 0, b: 0 }
+  );
+  const count = patches.length;
+  avgColor.r = Math.round(avgColor.r / count);
+  avgColor.g = Math.round(avgColor.g / count);
+  avgColor.b = Math.round(avgColor.b / count);
+
+  const xyz = rgbToXYZ(avgColor);
+  const lab = xyzToCIELAB(xyz.X, xyz.Y, xyz.Z);
+  const ita = calculateITA(lab);
+  const monkScale = mapITAToMonkScale(ita);
+  const fitzpatrick = mapITAToFitzpatrick(ita);
+  const undertone = detectUndertone(lab, avgColor);
+
+  return {
+    monkScale,
+    fitzpatrick,
+    undertone,
+    ita,
+    rgb: avgColor,
+  };
+}

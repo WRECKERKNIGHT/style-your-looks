@@ -1,20 +1,35 @@
 "use client";
 
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import { GitCompareArrows } from "lucide-react";
+import { mapCoverPoint } from "@/lib/image-geometry";
 
 interface SymmetrySplitProps {
   image: string;
   centerX: number;
+  imageAspect?: number;
   symmetryScore?: number;
 }
 
-export function SymmetrySplit({ image, centerX, symmetryScore }: SymmetrySplitProps) {
+const CONTAINER_ASPECT = 4 / 5;
+
+export function SymmetrySplit({ image, centerX, imageAspect, symmetryScore }: SymmetrySplitProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [split, setSplit] = useState<number | null>(null);
   const [mirrorLeft, setMirrorLeft] = useState(true);
   const draggingRef = useRef(false);
+
+  const mappedCenter = useMemo(() => {
+    const boxW = 4;
+    const boxH = 5;
+    const p = mapCoverPoint(centerX, 0.5, {
+      boxW,
+      boxH,
+      imageAspect: imageAspect && imageAspect > 0 ? imageAspect : CONTAINER_ASPECT,
+    });
+    return Math.max(0, Math.min(1, p.x / boxW));
+  }, [centerX, imageAspect]);
 
   const handlePointer = useCallback((clientX: number) => {
     const el = containerRef.current;
@@ -45,7 +60,7 @@ export function SymmetrySplit({ image, centerX, symmetryScore }: SymmetrySplitPr
     draggingRef.current = false;
   }, []);
 
-  const frac = split ?? centerX;
+  const frac = split ?? mappedCenter;
   const realLayer = mirrorLeft ? "left" : "right";
   const mirroredX = frac * 100;
 
@@ -83,7 +98,7 @@ export function SymmetrySplit({ image, centerX, symmetryScore }: SymmetrySplitPr
           className="absolute inset-0 w-full h-full object-cover"
           style={{
             transform: "scaleX(-1)",
-            transformOrigin: `${centerX * 100}% 50%`,
+            transformOrigin: `${mappedCenter * 100}% 50%`,
             clipPath:
               realLayer === "left"
                 ? `inset(0 0 0 ${frac * 100}%)`

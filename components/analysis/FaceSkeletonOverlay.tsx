@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useMemo } from "react";
+import { mapCoverPoint } from "@/lib/image-geometry";
 
 export interface SkeletonMeasurements {
   fwhr?: number;
@@ -13,6 +14,7 @@ interface FaceSkeletonOverlayProps {
   landmarks: number[][];
   width: number;
   height: number;
+  imageAspect?: number;
   facialShape?: string;
   measurements?: SkeletonMeasurements;
   animate?: boolean;
@@ -107,12 +109,17 @@ const KEY_DOTS: { index: number; delay: number; r: number }[] = [
   { index: 9, delay: 1.6, r: 3 },
 ];
 
-function polylinePoints(landmarks: number[][], indices: number[]): string | null {
+function polylinePoints(
+  landmarks: number[][],
+  indices: number[],
+  map: (u: number, v: number) => { x: number; y: number }
+): string | null {
   const pts: string[] = [];
   for (const i of indices) {
     const lm = landmarks[i];
     if (!lm) return null;
-    pts.push(`${(lm[0] * 1000).toFixed(1)},${(lm[1] * 1000).toFixed(1)}`);
+    const p = map(lm[0], lm[1]);
+    pts.push(`${p.x.toFixed(1)},${p.y.toFixed(1)}`);
   }
   return pts.join(" ");
 }
@@ -121,18 +128,20 @@ export function FaceSkeletonOverlay({
   landmarks,
   width,
   height,
+  imageAspect,
   facialShape,
   measurements,
   animate = true,
   className,
 }: FaceSkeletonOverlayProps) {
-  const total = useMemo(
-    () => landmarks.reduce((acc, lm) => acc + lm[0] + lm[1] + lm[2], 0),
-    [landmarks]
+  const map = useMemo(
+    () => (u: number, v: number) =>
+      mapCoverPoint(u, v, { boxW: width, boxH: height, imageAspect: imageAspect ?? width / height }),
+    [width, height, imageAspect]
   );
 
-  const x = (i: number) => landmarks[i][0] * width;
-  const y = (i: number) => landmarks[i][1] * height;
+  const x = (i: number) => map(landmarks[i][0], landmarks[i][1]).x;
+  const y = (i: number) => map(landmarks[i][0], landmarks[i][1]).y;
 
   const canSee = (i: number) => Boolean(landmarks[i]);
   const shapeLabel = facialShape?.toUpperCase() ?? "";
@@ -161,7 +170,6 @@ export function FaceSkeletonOverlay({
 
   return (
     <div
-      key={total}
       className={`absolute inset-0 pointer-events-none overflow-hidden ${className || ""}`}
       style={{ width, height }}
     >
@@ -227,7 +235,7 @@ export function FaceSkeletonOverlay({
 
         <g filter="url(#skel-glow)">
           {REGIONS.map((region) => {
-            const points = polylinePoints(landmarks, region.indices);
+            const points = polylinePoints(landmarks, region.indices, map);
             if (!points) return null;
             return (
               <motion.polyline

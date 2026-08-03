@@ -1,4 +1,5 @@
 import { FaceLandmarker, FilesetResolver, type FaceLandmarkerResult } from "@mediapipe/tasks-vision";
+import { prepareCanvas } from "./preprocessing";
 
 const WASM_BASE = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.18/wasm";
 const MODEL_URL =
@@ -38,39 +39,7 @@ export async function initializeFaceLandmarker(): Promise<FaceLandmarker> {
   return landmarkerInitPromise;
 }
 
-export function getSourceSize(
-  source: HTMLImageElement | HTMLVideoElement | HTMLCanvasElement
-): { width: number; height: number } {
-  if (source instanceof HTMLVideoElement) {
-    return { width: source.videoWidth || 0, height: source.videoHeight || 0 };
-  }
-  if (source instanceof HTMLImageElement) {
-    return { width: source.naturalWidth || 0, height: source.naturalHeight || 0 };
-  }
-  return { width: source.width, height: source.height };
-}
-
-/**
- * Draw the source onto a downscaled canvas (max dimension 1600px).
- * Prevents oversized phone photos from blowing up canvas memory, slowing
- * getImageData, or exceeding canvas limits in the browser.
- */
-export function prepareCanvas(
-  source: HTMLImageElement | HTMLVideoElement | HTMLCanvasElement,
-  maxDim = 1600
-): HTMLCanvasElement {
-  const { width: sw, height: sh } = getSourceSize(source);
-  if (!sw || !sh) throw new Error("Could not read the photo dimensions.");
-
-  const scale = Math.min(1, maxDim / Math.max(sw, sh));
-  const canvas = document.createElement("canvas");
-  canvas.width = Math.max(1, Math.round(sw * scale));
-  canvas.height = Math.max(1, Math.round(sh * scale));
-  const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("Canvas is not supported in this browser.");
-  ctx.drawImage(source, 0, 0, canvas.width, canvas.height);
-  return canvas;
-}
+export { prepareCanvas };
 
 export function getFaceSymmetry(result: FaceLandmarkerResult): number {
   if (!result.faceLandmarks || result.faceLandmarks.length === 0) return 0;

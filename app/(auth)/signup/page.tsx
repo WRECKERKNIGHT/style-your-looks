@@ -1,8 +1,6 @@
 "use client";
 
-export const dynamic = "force-dynamic";
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Mail, Lock, User, Eye, EyeOff, AlertCircle, Loader2, CheckCircle2 } from "lucide-react";
@@ -10,6 +8,7 @@ import { motion } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import { Logo } from "@/components/shared/Logo";
 import { OAuthErrorPanel, isGoogleBlockError } from "@/components/shared/OAuthErrorPanel";
+import { safeNextPath } from "@/lib/validation";
 
 export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -20,7 +19,15 @@ export default function SignupPage() {
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [nextPath, setNextPath] = useState("/dashboard");
   const router = useRouter();
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setNextPath(safeNextPath(params.get("next")));
+    const err = params.get("error");
+    if (err) setError(err);
+  }, []);
 
   async function handleEmailSignup(e: React.FormEvent) {
     e.preventDefault();
@@ -44,7 +51,7 @@ export default function SignupPage() {
       }
 
       if (data.session) {
-        router.push("/dashboard");
+        router.push(nextPath);
         router.refresh();
         return;
       }
@@ -66,7 +73,7 @@ export default function SignupPage() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath)}`,
         },
       });
 
@@ -236,7 +243,7 @@ export default function SignupPage() {
               </div>
             </div>
 
-            <button type="submit" disabled={loading} className="w-full btn-nexus justify-center disabled:opacity-50">
+            <button type="submit" disabled={loading || googleLoading} className="w-full btn-nexus justify-center disabled:opacity-50">
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "CREATE ACCOUNT"}
             </button>
           </form>
@@ -252,7 +259,7 @@ export default function SignupPage() {
 
           <button
             onClick={handleGoogleSignup}
-            disabled={googleLoading}
+            disabled={googleLoading || loading}
             className="w-full py-3 bg-light-surface dark:bg-cosmic-surface border border-light-border dark:border-cosmic-border text-nexus-800 dark:text-white font-mono text-sm hover:border-aurum-500 transition-colors disabled:opacity-50 rounded-sm flex items-center justify-center gap-3"
           >
             {googleLoading ? (

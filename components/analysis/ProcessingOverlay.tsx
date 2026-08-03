@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState, useCallback } from "react";
+import { useMemo, useRef, useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Scan,
@@ -31,13 +31,21 @@ export function ProcessingOverlay({
   const progress = useAnalysisStore((s) => s.analysisProgress);
   const preview = useAnalysisStore((s) => s.processingPreview);
   const previewRef = useRef<HTMLImageElement>(null);
-  const [previewDims, setPreviewDims] = useState<{ w: number; h: number } | null>(null);
+  const [previewDims, setPreviewDims] = useState<{ w: number; h: number; aspect?: number } | null>(null);
+
+  const previewImage = preview?.image ?? null;
+
+  useEffect(() => {
+    setPreviewDims(null);
+  }, [previewImage]);
 
   const handlePreviewLoad = useCallback(() => {
     if (previewRef.current) {
+      const el = previewRef.current;
       setPreviewDims({
-        w: previewRef.current.clientWidth,
-        h: previewRef.current.clientHeight,
+        w: el.clientWidth,
+        h: el.clientHeight,
+        aspect: el.naturalWidth > 0 ? el.naturalWidth / el.naturalHeight : undefined,
       });
     }
   }, []);
@@ -100,6 +108,7 @@ export function ProcessingOverlay({
                     landmarks={preview!.landmarks}
                     width={previewDims.w}
                     height={previewDims.h}
+                    imageAspect={previewDims.aspect}
                     animate
                   />
                 )}

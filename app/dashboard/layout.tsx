@@ -28,7 +28,6 @@ import { useState } from "react";
 import dynamic from "next/dynamic";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { PageTransition } from "@/components/shared/PageTransition";
-import { AutoSave } from "@/components/shared/AutoSave";
 import { InstallApp } from "@/components/shared/InstallApp";
 import { UserAvatar } from "@/components/shared/UserAvatar";
 
@@ -164,14 +163,13 @@ export default function DashboardLayout({
       )}
 
       {/* Main content */}
-      <main className="lg:ml-64 pt-16 lg:pt-0 min-h-screen">
+      <div className="lg:ml-64 pt-16 lg:pt-0 min-h-screen">
         <div className="p-6 lg:p-10 max-w-7xl">
           <PageTransition>{children}</PageTransition>
         </div>
-      </main>
+      </div>
 
       <OnboardingTour />
-      <AutoSave />
     </div>
   );
 }

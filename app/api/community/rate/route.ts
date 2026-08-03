@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { rateLimit } from "@/lib/rate-limit";
-import { sanitizeText, isUuid, clampInt } from "@/lib/validation";
+import { sanitizeText, isUuid } from "@/lib/validation";
 
 export const dynamic = "force-dynamic";
 
@@ -23,67 +23,88 @@ export async function POST(request: Request) {
     }
 
     const postId = body.postId;
-    const score = clampInt(body.score, 1, 10, -1);
-    const comment = sanitizeText(body.comment, 280);
-
     if (typeof postId !== "string" || !isUuid(postId)) {
       return NextResponse.json({ error: "Invalid post ID" }, { status: 400 });
     }
 
-    if (score < 1 || score > 10) {
+    // Reject out-of-range scores instead of silently clamping them.
+    const rawScore = body.score;
+    const score = typeof rawScore === "number" ? rawScore : Number(rawScore);
+    if (!Number.isInteger(score) || score < 1 || score > 10) {
       return NextResponse.json(
-        { error: "Score must be between 1 and 10" },
+        { error: "Score must be an integer between 1 and 10" },
         { status: 400 }
       );
     }
 
+    const comment = sanitizeText(body.comment, 280);
+
     const supabase = await createClient();
+    if (!supabase) {
+      return NextResponse.json(
+        { error: "Community is not configured", demo: true },
+        { status: 503 }
+      );
+    }
+
     const {
       data: { user },
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
     }
 
-    const { error: ratingError } = await supabase.from("community_ratings").upsert(
-      {
-        post_id: postId,
-        user_id: user.id,
-        score,
-      },
-      { onConflict: "post_id,user_id" }
-    );
+    // Ensure the target post exists and is visible to the caller (private posts
+    // owned by someone else are filtered out by RLS and treated as not found).
+    const { data: post, error: postError } = await supabase
+      .from("community_posts")
+      .select("id")
+      .eq("id", postId)
+      .maybeSingle();
+
+    if (postError || !post) {
+      return NextResponse.json({ error: "Post not found" }, { status: 404 });
+    }
+
+    const { error: ratingError } = await supabase
+      .from("community_ratings")
+      .upsert(
+        {
+          post_id: postId,
+          user_id: user.id,
+          score,
+        },
+        { onConflict: "post_id,user_id" }
+      );
 
     if (ratingError) {
       return NextResponse.json({ error: ratingError.message }, { status: 500 });
     }
 
     if (comment) {
-      const { error: commentError } = await supabase.from("community_comments").insert({
-        post_id: postId,
-        user_id: user.id,
-        text: comment,
-        rating: score,
-      });
+      const { error: commentError } = await supabase
+        .from("community_comments")
+        .insert({
+          post_id: postId,
+          user_id: user.id,
+          text: comment,
+          rating: score,
+        });
 
       if (commentError) {
         return NextResponse.json({ error: commentError.message }, { status: 500 });
       }
     }
 
-    const { data: ratings } = await supabase
-      .from("community_ratings")
-      .select("score")
-      .eq("post_id", postId);
-
-    if (ratings && ratings.length > 0) {
-      const avg = ratings.reduce((sum, r) => sum + r.score, 0) / ratings.length;
-      await supabase
-        .from("community_posts")
-        .update({ avg_rating: Math.round(avg * 10) / 10, rating_count: ratings.length })
-        .eq("id", postId);
-    }
+    // Refresh the post average via a security-definer helper (the DB trigger
+    // also covers this; a failure here is non-fatal).
+    await supabase.rpc("recompute_post_rating", {
+      target_post_id: postId,
+    });
 
     return NextResponse.json({ success: true, message: "Rating submitted" });
   } catch {

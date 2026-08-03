@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react";
 import { ImageUploader } from "@/components/shared/ImageUploader";
 import { useAnalysisStore } from "@/store/analysis-store";
-import { useMediaPipe } from "@/hooks/useMediaPipe";
+import { useMediaPipe, AnalysisCancelledError } from "@/hooks/useMediaPipe";
 import { ProcessingOverlay } from "@/components/analysis/ProcessingOverlay";
 import { motion } from "framer-motion";
 import { Layers, AlertCircle, Shirt, Droplets, Ruler, TrendingUp, Activity } from "lucide-react";
@@ -103,7 +103,7 @@ export default function BodyAnalysisPage() {
     bodyResult,
     outfitRecommendations,
   } = useAnalysisStore();
-  const { analyzeBodyFromImage } = useMediaPipe();
+  const { analyzeBodyFromImage, cancelAnalysis } = useMediaPipe();
   const [error, setError] = useState<string | null>(null);
 
   const handleImageUpload = useCallback(
@@ -116,8 +116,12 @@ export default function BodyAnalysisPage() {
         try {
           await analyzeBodyFromImage(img);
         } catch (err) {
+          if (err instanceof AnalysisCancelledError) return;
           setError("Failed to analyse body. Please try a clearer full-body photo.");
         }
+      };
+      img.onerror = () => {
+        setError("Could not load that photo. Please try re-uploading a different image.");
       };
       img.src = imageData;
     },
@@ -323,6 +327,7 @@ export default function BodyAnalysisPage() {
             onClick={() => {
               useAnalysisStore.getState().reset();
               setError(null);
+              cancelAnalysis();
             }}
             className="btn-outline w-full justify-center"
           >
