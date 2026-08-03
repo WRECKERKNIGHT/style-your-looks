@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { analyzeFace } from "@/lib/ml/face-analyzer";
+import { analyzeFace, prepareCanvas } from "@/lib/ml/face-analyzer";
 import { analyzeBody } from "@/lib/ml/body-analyzer";
 import { analyzeSkinTone } from "@/lib/ml/skin-tone";
 import {
@@ -155,6 +155,7 @@ export function useMediaPipe() {
     setOutfitRecommendations,
     setIsAnalyzing,
     setAnalysisProgress,
+    saveCurrentAnalysis,
   } = useAnalysisStore();
 
   const analyzeFaceFromImage = useCallback(
@@ -171,14 +172,11 @@ export function useMediaPipe() {
           throw new Error("Could not load the photo. Try re-uploading it.");
         }
 
-        const canvas = document.createElement("canvas");
-        canvas.width = imageElement.naturalWidth;
-        canvas.height = imageElement.naturalHeight;
+        const canvas = prepareCanvas(imageElement);
         const ctx = canvas.getContext("2d")!;
-        ctx.drawImage(imageElement, 0, 0);
 
         setAnalysisProgress(10);
-        const faceResult = await analyzeFace(imageElement, setAnalysisProgress);
+        const faceResult = await analyzeFace(canvas, setAnalysisProgress);
         onPreview?.(
           faceResult.faceLandmarks?.[0]?.map((l) => [l.x, l.y, l.z]) || []
         );
@@ -205,6 +203,7 @@ export function useMediaPipe() {
         );
 
         setAnalysisProgress(100);
+        saveCurrentAnalysis();
         return { faceResult, skinTone, scoreResult };
       } catch (err) {
         console.error("Face analysis error:", err);
@@ -213,7 +212,7 @@ export function useMediaPipe() {
         setIsAnalyzing(false);
       }
     },
-    [setFaceResult, setIsAnalyzing, setAnalysisProgress]
+    [setFaceResult, setIsAnalyzing, setAnalysisProgress, saveCurrentAnalysis]
   );
 
   const analyzeFacePhotos = useCallback(
@@ -242,13 +241,10 @@ export function useMediaPipe() {
             continue;
           }
 
-          const canvas = document.createElement("canvas");
-          canvas.width = image.naturalWidth;
-          canvas.height = image.naturalHeight;
+          const canvas = prepareCanvas(image);
           const ctx = canvas.getContext("2d")!;
-          ctx.drawImage(image, 0, 0);
 
-          const faceResult = await analyzeFace(image);
+          const faceResult = await analyzeFace(canvas);
           onPreview?.(
             i,
             faceResult.faceLandmarks?.[0]?.map((l) => [l.x, l.y, l.z]) || []
@@ -274,9 +270,9 @@ export function useMediaPipe() {
         }
 
         if (samples.length === 0) {
+          const details = rejected.map((r) => r.issues.join("; ")).join(" | ");
           throw new Error(
-            "None of the photos could be analyzed: " +
-              rejected.map((r) => r.issues.join("; ")).join(" | ")
+            `We couldn't analyze any photo.${details ? ` ${details}` : ""} Use a clearer, front-facing photo with your face centered and well-lit.`
           );
         }
 
@@ -296,6 +292,7 @@ export function useMediaPipe() {
         );
 
         setAnalysisProgress(100);
+        saveCurrentAnalysis();
         return { scoreResult, samples, rejected, photoCount: samples.length };
       } catch (err) {
         console.error("Multi-photo face analysis error:", err);
@@ -304,7 +301,7 @@ export function useMediaPipe() {
         setIsAnalyzing(false);
       }
     },
-    [setFaceResult, setIsAnalyzing, setAnalysisProgress]
+    [setFaceResult, setIsAnalyzing, setAnalysisProgress, saveCurrentAnalysis]
   );
 
   const analyzeBodyFromImage = useCallback(    async (imageElement: HTMLImageElement) => {
@@ -316,11 +313,7 @@ export function useMediaPipe() {
         const bodyResult = await analyzeBody(imageElement, setAnalysisProgress);
         setAnalysisProgress(50);
 
-        const canvas = document.createElement("canvas");
-        canvas.width = imageElement.naturalWidth;
-        canvas.height = imageElement.naturalHeight;
-        const ctx = canvas.getContext("2d")!;
-        ctx.drawImage(imageElement, 0, 0);
+        const canvas = prepareCanvas(imageElement);
 
         const faceResult = await analyzeFace(imageElement);
         const skinTone = analyzeSkinTone(canvas, faceResult);
@@ -379,6 +372,7 @@ export function useMediaPipe() {
         }
 
         setAnalysisProgress(100);
+        saveCurrentAnalysis();
         return { bodyType, skinTone, measurements };
       } catch (err) {
         console.error("Body analysis error:", err);
@@ -387,7 +381,7 @@ export function useMediaPipe() {
         setIsAnalyzing(false);
       }
     },
-    [setBodyResult, setOutfitRecommendations, setIsAnalyzing, setAnalysisProgress]
+    [setBodyResult, setOutfitRecommendations, setIsAnalyzing, setAnalysisProgress, saveCurrentAnalysis]
   );
 
   return {

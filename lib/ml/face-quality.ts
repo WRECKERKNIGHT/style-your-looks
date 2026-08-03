@@ -42,8 +42,8 @@ function getLuminance(
 }
 
 function assessBrightness(mean: number): { score: number; issue?: string; warning?: string } {
-  if (mean < 35) return { score: Math.max(0.5, (mean / 35) * 2), issue: "Photo too dark" };
-  if (mean > 240) return { score: 1.5, issue: "Photo overexposed" };
+  if (mean < 35) return { score: Math.max(0.5, (mean / 35) * 2), warning: "Photo is dark — lighting will affect accuracy" };
+  if (mean > 240) return { score: 1.5, warning: "Photo is overexposed — accuracy may be reduced" };
   if (mean < 55) return { score: 3 + (mean / 55) * 3, warning: "Photo is dim — lighting will affect accuracy" };
   const b = mean / 255;
   const score = Math.max(0, Math.min(10, 10 - Math.abs(b - 0.62) * 14));
@@ -64,7 +64,7 @@ function assessSharpness(data: Uint8Array, w: number, h: number): { score: numbe
   }
   edge = edge / count;
   const score = Math.min(10, edge / 11);
-  if (edge < 2.2) return { score: Math.max(0.5, Math.round(score * 10) / 10), issue: "Photo is blurry" };
+  if (edge < 2.2) return { score: Math.max(0.5, Math.round(score * 10) / 10), warning: "Photo is slightly blurry — accuracy may be reduced" };
   if (edge < 4) return { score: Math.round(score * 10) / 10, warning: "Photo may be slightly blurry" };
   return { score: Math.round(score * 10) / 10 };
 }
@@ -158,7 +158,7 @@ export function assessPhotoQuality(
 
   const pose = headPose(result);
   if (Math.abs(pose.roll) > 18) {
-    issues.push("Face is tilted — hold your head straight for accurate symmetry analysis");
+    warnings.push("Face is tilted — symmetry results are less accurate. Hold your head straight.");
   } else if (Math.abs(pose.roll) > 10) {
     warnings.push("Slight head tilt detected — try to face the camera directly");
   }

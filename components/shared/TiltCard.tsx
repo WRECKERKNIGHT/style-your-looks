@@ -1,80 +1,57 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { useRef, useState, type ReactNode } from "react";
+import { motion } from "framer-motion";
 
 interface TiltCardProps {
-  children: React.ReactNode;
+  children: ReactNode;
   className?: string;
-  tiltAmount?: number;
-  glareEnabled?: boolean;
+  intensity?: number;
+  glowColor?: string;
 }
 
 export function TiltCard({
   children,
   className = "",
-  tiltAmount = 8,
-  glareEnabled = true,
+  intensity = 7,
+  glowColor = "rgba(200, 150, 62, 0.16)",
 }: TiltCardProps) {
   const ref = useRef<HTMLDivElement>(null);
-  const [isHovered, setIsHovered] = useState(false);
+  const [pose, setPose] = useState({ rotateX: 0, rotateY: 0, glowX: 50, glowY: 50 });
 
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-
-  const mouseXSpring = useSpring(x, { stiffness: 150, damping: 20 });
-  const mouseYSpring = useSpring(y, { stiffness: 150, damping: 20 });
-
-  const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], [tiltAmount, -tiltAmount]);
-  const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], [-tiltAmount, tiltAmount]);
-
-  const glareOpacity = useTransform(
-    [x, y],
-    ([px, py]: number[]) => {
-      const dist = Math.sqrt((px as number) ** 2 + (py as number) ** 2);
-      return isHovered ? Math.min(dist * 0.5, 0.15) : 0;
-    }
-  );
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!ref.current) return;
-    const rect = ref.current.getBoundingClientRect();
-    const xPct = (e.clientX - rect.left) / rect.width - 0.5;
-    const yPct = (e.clientY - rect.top) / rect.height - 0.5;
-    x.set(xPct);
-    y.set(yPct);
+  const handleMove = (e: React.MouseEvent) => {
+    const el = ref.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const px = (e.clientX - rect.left) / rect.width;
+    const py = (e.clientY - rect.top) / rect.height;
+    setPose({
+      rotateX: (0.5 - py) * intensity,
+      rotateY: (px - 0.5) * intensity,
+      glowX: px * 100,
+      glowY: py * 100,
+    });
   };
 
-  const handleMouseLeave = () => {
-    setIsHovered(false);
-    x.set(0);
-    y.set(0);
-  };
+  const reset = () => setPose({ rotateX: 0, rotateY: 0, glowX: 50, glowY: 50 });
 
   return (
     <motion.div
       ref={ref}
+      onMouseMove={handleMove}
+      onMouseLeave={reset}
+      style={{ transformStyle: "preserve-3d", perspective: 900 }}
+      animate={{ rotateX: pose.rotateX, rotateY: pose.rotateY }}
+      transition={{ type: "spring", stiffness: 260, damping: 22 }}
       className={`relative ${className}`}
-      style={{
-        rotateX,
-        rotateY,
-        transformStyle: "preserve-3d",
-      }}
-      onMouseMove={handleMouseMove}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={handleMouseLeave}
     >
+      <div
+        className="pointer-events-none absolute inset-0 transition-opacity duration-300"
+        style={{
+          background: `radial-gradient(480px circle at ${pose.glowX}% ${pose.glowY}%, ${glowColor}, transparent 60%)`,
+        }}
+      />
       {children}
-      {glareEnabled && (
-        <motion.div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            opacity: glareOpacity,
-            background:
-              "radial-gradient(circle at 50% 50%, rgba(185, 139, 86, 0.3), transparent 70%)",
-          }}
-        />
-      )}
     </motion.div>
   );
 }

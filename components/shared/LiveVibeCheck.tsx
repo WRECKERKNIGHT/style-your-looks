@@ -10,10 +10,16 @@ function generateBarHeights(): number[] {
   return Array.from({ length: 24 }, () => Math.random());
 }
 
-export function LiveVibeCheck() {
+export function LiveVibeCheck({ score }: { score?: number }) {
   const [currentMoodIndex, setCurrentMoodIndex] = useState(0);
   const [bars, setBars] = useState(generateBarHeights);
   const intervalRef = useRef<ReturnType<typeof setInterval>>();
+
+  const hasScore = typeof score === "number" && score > 0;
+  const vibeIndex = hasScore ? Math.round(score * 10) / 10 : null;
+  const moodIndex = hasScore
+    ? score >= 85 ? 0 : score >= 72 ? 1 : score >= 60 ? 2 : score >= 45 ? 3 : 4
+    : currentMoodIndex;
 
   useEffect(() => {
     intervalRef.current = setInterval(() => {
@@ -118,19 +124,19 @@ export function LiveVibeCheck() {
 
           <AnimatePresence mode="wait">
             <motion.span
-              key={moods[currentMoodIndex]}
+              key={hasScore ? `real-${moodIndex}` : "awaiting"}
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -12 }}
               transition={{ duration: 0.35 }}
-              className={`type-heading font-display font-bold bg-gradient-to-r ${moodColors[currentMoodIndex]} bg-clip-text text-transparent tracking-tight`}
+              className={`type-heading font-display font-bold bg-gradient-to-r ${moodColors[moodIndex]} bg-clip-text text-transparent tracking-tight`}
             >
-              {moods[currentMoodIndex]}
+              {hasScore ? moods[moodIndex] : "AWAITING ANALYSIS"}
             </motion.span>
           </AnimatePresence>
 
           <span className="type-mono text-[var(--accent-mocha)]">
-            vibe index &middot; {Math.floor(Math.random() * 30 + 70)}%
+            vibe index &middot; {vibeIndex !== null ? `${vibeIndex}/10` : "--/10"}
           </span>
         </div>
 

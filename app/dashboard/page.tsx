@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { motion, useInView, AnimatePresence } from "framer-motion";
 import { ScrollReveal, ScrollRevealItem, ScrollProgress } from "@/components/shared/ScrollReveal";
+import { TiltCard } from "@/components/shared/TiltCard";
 import {
   ScanFace,
   Layers,
@@ -19,7 +20,6 @@ import {
   GitCompareArrows,
   Dna,
   Clock,
-  User,
   TrendingUp,
   Lightbulb,
   RotateCw,
@@ -44,6 +44,15 @@ const aiTips = [
   "Matte finishes beat glossy on your skin texture. Go for velvet-matte formulations.",
   "Your eye spacing favors wider lapels. Double-breasted jackets will balance your proportions.",
   "Earth tones amplify your natural contrast. Olive and rust outperform gray and charcoal.",
+];
+
+const onboardingTips = [
+  "Upload 2–3 front-facing photos of your face in good, even lighting for the most accurate Face IQ scan.",
+  "All analysis runs entirely on your device via MediaPipe — no photo ever leaves your browser.",
+  "Face the camera directly at eye level. Slight tilts reduce symmetry accuracy.",
+  "After your first scan, every module (Style DNA, Color, Grooming, Try-On) unlocks with real data.",
+  "Save analyses to history to build your Style Evolution Timeline over time.",
+  "Your Style Score is generated only from your real measurements — no default placeholders.",
 ];
 
 const quickActions = [
@@ -225,18 +234,20 @@ export default function DashboardHome() {
   const [tipIndex, setTipIndex] = useState(0);
   const [analysesDone, setAnalysesDone] = useState(0);
 
+  const hasAnalysis = !!faceResult;
+  const overallScore = faceResult ? faceResult.overallScore : null;
+  const tips = hasAnalysis ? aiTips : onboardingTips;
+
   useEffect(() => {
     const interval = setInterval(() => {
-      setTipIndex((prev) => (prev + 1) % aiTips.length);
+      setTipIndex((prev) => (prev + 1) % tips.length);
     }, 6000);
     return () => clearInterval(interval);
-  }, []);
+  }, [tips.length]);
 
   useEffect(() => {
     setAnalysesDone(getHistory().length);
-  }, [faceResult]);
-
-  const overallScore = faceResult?.overallScore ?? 78;
+  }, [faceResult, bodyResult]);
 
   return (
     <div className="space-y-16">
@@ -246,47 +257,78 @@ export default function DashboardHome() {
           WELCOME <span className="text-gradient-aurum">BACK.</span>
         </h1>
         <p className="text-[var(--text-muted)] font-body type-subhead max-w-xl mt-3">
-          Pick a tool. All analysis runs on your device. Zero server calls.
+          {hasAnalysis
+            ? "Pick a tool. All analysis runs on your device. Zero server calls."
+            : "Run your first Face IQ scan — every module unlocks with real data from your measurements."}
         </p>
       </ScrollReveal>
 
-      {/* Style Score Overview */}
+      {/* Style Score Overview / Onboarding */}
       <ScrollReveal>
         <div className="relative overflow-hidden rounded-sm bg-[var(--bg-secondary)] border border-[var(--border-primary)] shadow-paper-lg p-8">
           <div className="absolute inset-0 bg-gradient-to-br from-[color-mix(in_srgb,var(--accent-caramel)_12%,transparent)] via-transparent to-[color-mix(in_srgb,var(--accent-honey)_8%,transparent)] pointer-events-none" />
-          <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-8 items-center">
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <Sparkles className="w-4 h-4 text-[var(--accent-caramel)]" />
-                <span className="type-label text-[var(--accent-mocha)]">STYLE SCORE OVERVIEW</span>
+          {hasAnalysis && faceResult ? (
+            <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-8 items-center">
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <Sparkles className="w-4 h-4 text-[var(--accent-caramel)]" />
+                  <span className="type-label text-[var(--accent-mocha)]">STYLE SCORE OVERVIEW</span>
+                </div>
+                <div className="flex items-baseline gap-4">
+                  <span className="text-6xl font-display font-bold text-gradient-aurum">
+                    <AnimatedCounter target={overallScore!} decimals={1} />
+                  </span>
+                  <span className="text-sm text-[var(--text-muted)] font-body">/ 100</span>
+                </div>
+                <p className="text-sm text-[var(--text-muted)] font-body mt-2">
+                  {overallScore! >= 85
+                    ? "Exceptional harmony. Your style profile is in peak condition."
+                    : overallScore! >= 70
+                    ? "Strong foundation. Targeted improvements will elevate your score."
+                    : "Room for growth. Each analysis unlocks new optimization paths."}
+                </p>
+                <p className="type-mono text-[0.55rem] text-[var(--accent-mocha)] mt-3 tracking-widest">
+                  {faceResult.analysisConfidence}% CONFIDENCE &middot; {faceResult.photoCount} PHOTO{faceResult.photoCount === 1 ? "" : "S"} &middot; {faceResult.facialShape.toUpperCase()} SHAPE
+                </p>
               </div>
-              <div className="flex items-baseline gap-4">
-                <span className="text-6xl font-display font-bold text-gradient-aurum">
-                  <AnimatedCounter target={overallScore} decimals={1} />
-                </span>
-                <span className="text-sm text-[var(--text-muted)] font-body">/ 100</span>
+              <div className="relative">
+                <ProgressRing score={overallScore!} label="OVERALL" size={120} />
               </div>
-              <p className="text-sm text-[var(--text-muted)] font-body mt-2">
-                {overallScore >= 85
-                  ? "Exceptional harmony. Your style profile is in peak condition."
-                  : overallScore >= 70
-                  ? "Strong foundation. Targeted improvements will elevate your score."
-                  : "Room for growth. Each analysis unlocks new optimization paths."}
-              </p>
             </div>
-            <div className="relative">
-              <ProgressRing score={overallScore} label="OVERALL" size={120} />
+          ) : (
+            <div className="flex flex-col md:flex-row md:items-center gap-8">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-3">
+                  <Sparkles className="w-4 h-4 text-[var(--accent-caramel)]" />
+                  <span className="type-label text-[var(--accent-mocha)]">STYLE SCORE OVERVIEW</span>
+                </div>
+                <h2 className="type-display text-[var(--text-primary)] tracking-tight mb-2">
+                  YOUR SCORE <span className="text-gradient-aurum">AWAITS.</span>
+                </h2>
+                <p className="text-sm text-[var(--text-muted)] font-body leading-relaxed max-w-lg">
+                  We don&apos;t show you a fake number. Run your first Face IQ scan and your Style Score
+                  is generated from your real facial geometry — symmetry, jawline, proportions, skin.
+                </p>
+              </div>
+              <Link
+                href="/dashboard/face-analysis"
+                className="btn-nexus shrink-0 justify-center gap-2"
+              >
+                <ScanFace className="w-5 h-5" />
+                RUN FACE IQ SCAN
+                <ArrowRight className="w-4 h-4" />
+              </Link>
             </div>
-          </div>
+          )}
         </div>
       </ScrollReveal>
 
       {/* Quick Stats */}
       <motion.div variants={container} initial="hidden" animate="show" className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCounter value={analysesDone > 0 ? String(analysesDone) : "--"} label="Analyses Done" icon={Activity} />
-        <StatCounter value={overallScore > 0 ? overallScore.toFixed(1) : "--"} label="Style Score" icon={TrendingUp} />
-        <StatCounter value={faceResult ? "4" : "--"} label="Pillars Scored" icon={Target} />
-        <StatCounter value={faceResult?.improvements?.length ? String(faceResult.improvements.length) : "3"} label="Improvements" icon={Lightbulb} />
+        <StatCounter value={overallScore != null ? overallScore.toFixed(1) : "--"} label="Style Score" icon={TrendingUp} />
+        <StatCounter value={hasAnalysis ? "4" : "--"} label="Pillars Scored" icon={Target} />
+        <StatCounter value={hasAnalysis && faceResult?.improvements?.length ? String(faceResult.improvements.length) : "--"} label="Improvements" icon={Lightbulb} />
       </motion.div>
 
       <ScrollProgress />
@@ -302,9 +344,11 @@ export default function DashboardHome() {
           >
             <div className="flex items-center gap-2 mb-4">
               <Lightbulb className="w-4 h-4 text-[var(--accent-honey)]" />
-              <span className="type-label text-[var(--accent-mocha)]">AI TIP OF THE DAY</span>
+              <span className="type-label text-[var(--accent-mocha)]">
+                {hasAnalysis ? "AI TIP OF THE DAY" : "GETTING STARTED"}
+              </span>
               <button
-                onClick={() => setTipIndex((prev) => (prev + 1) % aiTips.length)}
+                onClick={() => setTipIndex((prev) => (prev + 1) % tips.length)}
                 className="ml-auto p-1 hover:bg-[color-mix(in_srgb,var(--accent-caramel)_15%,transparent)] rounded transition-colors"
                 aria-label="Next tip"
               >
@@ -320,11 +364,11 @@ export default function DashboardHome() {
                 transition={{ duration: 0.4 }}
                 className="text-sm text-[var(--text-primary)] font-body leading-relaxed min-h-[3rem]"
               >
-                &ldquo;{aiTips[tipIndex]}&rdquo;
+                {tips[tipIndex]}
               </motion.p>
             </AnimatePresence>
             <div className="flex gap-1 mt-4">
-              {aiTips.slice(0, 5).map((_, i) => (
+              {tips.slice(0, 5).map((_, i) => (
                 <button
                   key={i}
                   onClick={() => setTipIndex(i)}
@@ -336,12 +380,12 @@ export default function DashboardHome() {
                   aria-label={`Tip ${i + 1}`}
                 />
               ))}
-              <span className="type-mono text-[var(--accent-mocha)] ml-auto">{(tipIndex % aiTips.length) + 1}/{aiTips.length}</span>
+              <span className="type-mono text-[var(--accent-mocha)] ml-auto">{(tipIndex % tips.length) + 1}/{tips.length}</span>
             </div>
           </motion.div>
         </ScrollReveal>
 
-        <LiveVibeCheck />
+        <LiveVibeCheck score={overallScore ?? undefined} />
 
         <ScrollReveal>
           <StyleStreak />
@@ -351,7 +395,7 @@ export default function DashboardHome() {
       <ScrollProgress />
 
       {/* AI Insights */}
-      <AIInsights />
+      <AIInsights faceResult={faceResult} />
 
       <ScrollProgress />
 
@@ -367,23 +411,25 @@ export default function DashboardHome() {
             const colors = accentStyles[action.accent];
             return (
               <ScrollRevealItem key={action.href}>
-                <Link
-                  href={action.href}
-                  className="card-nexus group block p-7 h-full"
-                >
-                  <div className="flex items-start justify-between mb-4">
-                    <div className={`w-11 h-11 ${colors.bg} border ${colors.border} flex items-center justify-center`}>
-                      <action.icon className={`w-5 h-5 ${colors.text}`} />
+                <TiltCard>
+                  <Link
+                    href={action.href}
+                    className="card-nexus group block p-7 h-full"
+                  >
+                    <div className="flex items-start justify-between mb-4">
+                      <div className={`w-11 h-11 ${colors.bg} border ${colors.border} flex items-center justify-center transition-transform duration-300 group-hover:scale-110`}>
+                        <action.icon className={`w-5 h-5 ${colors.text}`} />
+                      </div>
+                      <ArrowRight className="w-4 h-4 text-[var(--text-muted)] group-hover:text-[var(--accent-aurum)] group-hover:translate-x-1 transition-all" />
                     </div>
-                    <ArrowRight className="w-4 h-4 text-[var(--text-muted)] group-hover:text-[var(--accent-aurum)] group-hover:translate-x-1 transition-all" />
-                  </div>
-                  <h3 className="type-label text-[var(--text-primary)] mb-1.5">
-                    {action.label}
-                  </h3>
-                  <p className="text-xs text-[var(--text-muted)] font-body leading-relaxed">
-                    {action.description}
-                  </p>
-                </Link>
+                    <h3 className="type-label text-[var(--text-primary)] mb-1.5">
+                      {action.label}
+                    </h3>
+                    <p className="text-xs text-[var(--text-muted)] font-body leading-relaxed">
+                      {action.description}
+                    </p>
+                  </Link>
+                </TiltCard>
               </ScrollRevealItem>
             );
           })}
