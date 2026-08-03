@@ -18,7 +18,7 @@ const GOOGLE_BLOCK_PATTERNS = [
   "400",
 ];
 
-export function isGoogleBlockError(message: string | null): boolean {
+export function isGoogleBlockError(message: string | null): message is string {
   if (!message) return false;
   const lower = message.toLowerCase();
   return GOOGLE_BLOCK_PATTERNS.some((p) => lower.includes(p));
