@@ -232,6 +232,7 @@ export default function FaceAnalysisPage() {
     }
 
     setError(null);
+    useAnalysisStore.getState().reset();
     setUploadedImage(photos[0]);
     setProcessingPreview({ image: photos[0], landmarks: [] });
 
@@ -599,6 +600,19 @@ export default function FaceAnalysisPage() {
             >
               <ScanFace className="w-5 h-5" />
               VIEW FULL REPORT
+            </button>
+            <button
+              onClick={() => {
+                useAnalysisStore.getState().reset();
+                setPhotos([]);
+                setRejectedPhotos([]);
+                setError(null);
+                setStep("calibrate");
+              }}
+              className="flex items-center gap-2 px-6 py-3 font-body text-sm tracking-wider uppercase transition-all btn-outline"
+            >
+              <Camera className="w-5 h-5" />
+              NEW SCAN
             </button>
           </motion.div>
 
