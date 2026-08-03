@@ -47,7 +47,7 @@ const navItems = [
   { href: "/dashboard/style-dna", label: "STYLE DNA", icon: Dna },
   { href: "/dashboard/color-analysis", label: "TONE STUDIO", icon: Droplets },
   { href: "/dashboard/virtual-tryon", label: "TRY-ON", icon: Shirt },
-  { href: "/dashboard/mannequin", label: "COLOR LAB", icon: Palette },
+  { href: "/dashboard/mannequin", label: "OUTFIT LAB", icon: Palette },
   { href: "/dashboard/grooming", label: "GROOMING", icon: Scissors },
   { href: "/dashboard/accessories", label: "GLASSES", icon: Glasses },
   { href: "/dashboard/hair-preview", label: "HAIR COLOR", icon: Palette },

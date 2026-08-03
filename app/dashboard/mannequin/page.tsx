@@ -212,17 +212,17 @@ export default function MannequinPage() {
     link.download = "zervey-mannequin.png";
     link.href = canvas.toDataURL("image/png");
     link.click();
-    addToast("Mannequin saved", "success");
+    addToast("Outfit saved", "success");
   };
 
   return (
     <div className="space-y-8">
       <motion.div variants={fadeUp} initial="hidden" animate="show">
-        <span className="section-number">EST. MMXXIV // MANNEQUIN</span>
+        <span className="section-number">EST. MMXXIV // OUTFIT LAB</span>
         <div className="flex items-center gap-3 mt-3 mb-2">
           <Shirt className="w-7 h-7 text-[var(--accent-aurum)]" />
           <h1 className="type-display text-[var(--text-primary)] tracking-tight">
-            DIGITAL <span className="text-gradient-aurum">MANNEQUIN.</span>
+            OUTFIT <span className="text-gradient-aurum">LAB.</span>
           </h1>
         </div>
         <p className="text-[var(--text-muted)] font-body type-subhead max-w-xl">
