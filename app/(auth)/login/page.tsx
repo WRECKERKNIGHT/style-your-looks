@@ -8,6 +8,7 @@ import Link from "next/link";
 import { Mail, Lock, Eye, EyeOff, AlertCircle, Loader2, Send } from "lucide-react";
 import { motion } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
+import { Logo } from "@/components/shared/Logo";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -116,12 +117,7 @@ export default function LoginPage() {
         <div className="absolute bottom-20 right-20 w-96 h-96 bg-aurum-500/5 rounded-full blur-3xl animate-float" style={{ animationDelay: "-3s" }} />
 
         <div className="relative z-10 text-center">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/zervey-logo.svg"
-            alt="ZERVEY"
-            className="h-12 w-auto mx-auto mb-8 drop-shadow-aurum"
-          />
+          <Logo className="h-12 w-auto mx-auto mb-8 drop-shadow-aurum" />
           <h2 className="text-4xl font-body font-bold text-nexus-800 dark:text-white mb-3 tracking-tight">
             YOUR FACE
             <br />
@@ -159,12 +155,7 @@ export default function LoginPage() {
       >
         <div className="w-full max-w-sm">
           <Link href="/" className="flex items-center gap-2 mb-10">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/zervey-logo.svg"
-              alt="ZERVEY"
-              className="h-7 w-auto drop-shadow-aurum"
-            />
+            <Logo className="h-7 w-auto drop-shadow-aurum" />
             <span className="text-sm font-body font-bold text-nexus-800 dark:text-white tracking-wider">ZERVEY</span>
           </Link>
 

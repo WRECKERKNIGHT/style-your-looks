@@ -6,6 +6,7 @@ import { Star, MessageCircle, TrendingUp } from "lucide-react";
 import { StatsCounter } from "./StatsCounter";
 import { SpotlightCard } from "@/components/shared/SpotlightCard";
 import { KineticHeadline } from "./KineticHeadline";
+import { Reveal } from "@/components/shared/Reveal";
 
 const posts = [
   {
@@ -56,13 +57,7 @@ export function CommunitySection() {
       <div className="absolute inset-0 grid-bg opacity-40" />
 
       <div className="relative z-10 max-w-[1400px] mx-auto px-8 md:px-16 lg:px-24">
-        <motion.div
-          initial={{ opacity: 0, x: -30 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="mb-20"
-        >
+        <Reveal x={-30} className="mb-20">
           <div className="flex items-center gap-4 mb-4">
             <div className="section-divider" />
             <span className="section-number">04 // Community</span>
@@ -72,7 +67,7 @@ export function CommunitySection() {
             Real people. Real ratings. No filters, no fakery. The kind of
             feedback your friends won&apos;t give you.
           </p>
-        </motion.div>
+        </Reveal>
 
         <div ref={marqueeRef} className="marquee-container mb-16 md:mb-20 py-5 border-y border-[var(--border-primary)] overflow-hidden">
           <div
@@ -100,18 +95,12 @@ export function CommunitySection() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {posts.map((post, index) => (
-            <motion.div
+            <Reveal
               key={post.name}
+              y={50}
+              rotate={index % 2 === 0 ? -1.5 : 1.5}
+              delay={index * 0.1}
               className="glass-card rounded-xl p-6 group cursor-default"
-              initial={{ opacity: 0, y: 50, rotate: index % 2 === 0 ? -1.5 : 1.5 }}
-              whileInView={{ opacity: 1, y: 0, rotate: 0 }}
-              viewport={{ once: true }}
-              transition={{
-                duration: 0.8,
-                delay: index * 0.1,
-                ease: [0.16, 1, 0.3, 1],
-              }}
-              whileHover={{ y: -6, transition: { duration: 0.3 } }}
             >
               <SpotlightCard spotlightColor="rgba(185, 139, 86, 0.15)" className="h-full rounded-xl">
               <div className="flex items-center justify-between mb-5">
@@ -165,17 +154,11 @@ export function CommunitySection() {
                 </span>
               </div>
               </SpotlightCard>
-            </motion.div>
+            </Reveal>
           ))}
         </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8, delay: 0.6, ease: [0.16, 1, 0.3, 1] }}
-          className="mt-16 text-center"
-        >
+        <Reveal y={30} delay={0.6} className="mt-16 text-center">
           <div className="inline-flex items-center gap-4 glass-card rounded-full px-8 py-4">
             <div className="text-2xl font-display font-bold text-gradient-aurum">
               <StatsCounter target={12400} suffix="+" />
@@ -185,7 +168,7 @@ export function CommunitySection() {
               STYLE PROFILES CREATED
             </p>
           </div>
-        </motion.div>
+        </Reveal>
       </div>
     </section>
   );

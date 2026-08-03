@@ -8,6 +8,8 @@ import { HorizontalPipeline } from "./HorizontalPipeline";
 import { StorySection } from "./StorySection";
 import { MannequinSection } from "./MannequinSection";
 import { CommunitySection } from "./CommunitySection";
+import { TestimonialsSection } from "./TestimonialsSection";
+import { FaqSection } from "./FaqSection";
 import { CtaSection } from "./CtaSection";
 import { Footer } from "./Footer";
 
@@ -22,6 +24,8 @@ export function Hero() {
       <StorySection />
       <MannequinSection />
       <CommunitySection />
+      <TestimonialsSection />
+      <FaqSection />
       <CtaSection />
       <Footer />
     </div>

@@ -1,9 +1,10 @@
 "use client";
 
 import { useRef } from "react";
-import { motion, useInView, useScroll, useTransform, useSpring } from "framer-motion";
+import { motion, useScroll, useTransform, useSpring } from "framer-motion";
 import { Camera, Cpu, Shirt } from "lucide-react";
 import { KineticHeadline } from "./KineticHeadline";
+import { Reveal } from "@/components/shared/Reveal";
 
 const steps = [
   {
@@ -32,22 +33,8 @@ const steps = [
   },
 ];
 
-const stepVariants = {
-  hidden: { opacity: 0, y: 50 },
-  visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.8,
-      delay: i * 0.2,
-      ease: [0.16, 1, 0.3, 1],
-    },
-  }),
-};
-
 export function HowItWorksSection() {
   const sectionRef = useRef<HTMLDivElement>(null);
-  const isInView = useInView(sectionRef, { once: true, amount: 0.2 });
 
   const { scrollYProgress } = useScroll({
     target: sectionRef,
@@ -60,19 +47,13 @@ export function HowItWorksSection() {
       <div className="absolute inset-0 grid-bg opacity-40" />
 
       <div className="relative z-10 max-w-[1400px] mx-auto px-8 md:px-16 lg:px-24">
-        <motion.div
-          initial={{ opacity: 0, x: -30 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="mb-20"
-        >
+        <Reveal x={-30} className="mb-20">
           <div className="flex items-center gap-4 mb-4">
             <div className="section-divider" />
             <span className="section-number">02 // Process</span>
           </div>
           <KineticHeadline text="HOW IT WORKS." className="type-display text-[var(--text-primary)]" />
-        </motion.div>
+        </Reveal>
 
         <div className="relative">
           <div className="absolute top-24 left-[2.25rem] md:left-[2.75rem] bottom-24 w-px bg-[var(--border-primary)] hidden md:block" />
@@ -83,14 +64,7 @@ export function HowItWorksSection() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
             {steps.map((step, index) => (
-              <motion.div
-                key={step.number}
-                custom={index}
-                variants={stepVariants}
-                initial="hidden"
-                animate={isInView ? "visible" : "hidden"}
-                className="relative"
-              >
+              <Reveal key={step.number} delay={index * 0.2} y={50} className="relative">
                 <div className="glass-card rounded-xl p-8 md:p-10 h-full relative overflow-hidden group">
                   <div className="absolute -top-10 -right-10 w-24 h-24 rounded-full bg-gradient-aurum opacity-[0.06] group-hover:opacity-[0.12] transition-opacity duration-700" />
                   <div className="absolute -bottom-16 -left-16 w-40 h-40 rounded-full bg-aurum-400/0 blur-[60px] group-hover:bg-aurum-400/10 transition-colors duration-700" />
@@ -128,7 +102,7 @@ export function HowItWorksSection() {
                     </div>
                   </div>
                 )}
-              </motion.div>
+              </Reveal>
             ))}
           </div>
         </div>

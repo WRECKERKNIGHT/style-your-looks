@@ -3,6 +3,8 @@
 import { useRef } from "react";
 import { motion, useScroll, useTransform, useSpring } from "framer-motion";
 import Link from "next/link";
+import { Logo } from "@/components/shared/Logo";
+import { Reveal } from "@/components/shared/Reveal";
 
 const productLinks = [
   { label: "Features", href: "#features" },
@@ -45,21 +47,11 @@ export function Footer() {
       >
         ZERVEY
       </motion.div>
-      <motion.div
-        initial={{ opacity: 0, y: 24 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.1 }}
-        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className="max-w-[1400px] mx-auto px-8 md:px-16 lg:px-24 py-20"
-      >
+      <Reveal y={24} amount={0.1} className="max-w-[1400px] mx-auto px-8 md:px-16 lg:px-24 py-20">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-12">
           <div className="lg:col-span-2 space-y-5">
             <Link href="/" className="inline-block">
-              <img
-                src="/zervey-logo.svg"
-                alt="ZERVEY"
-                className="h-8 w-auto"
-              />
+              <Logo className="h-8 w-auto" />
             </Link>            <p className="text-sm text-[var(--text-muted)] font-body max-w-xs leading-relaxed">
               AI-powered style intelligence. Your photos never leave your
               device.
@@ -152,7 +144,7 @@ export function Footer() {
             </span>
           </div>
         </div>
-      </motion.div>
+      </Reveal>
     </footer>
   );
 }

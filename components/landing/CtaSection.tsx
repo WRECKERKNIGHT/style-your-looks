@@ -4,6 +4,7 @@ import { useRef } from "react";
 import { motion, useScroll, useTransform, useSpring } from "framer-motion";
 import Link from "next/link";
 import { MagneticButton } from "@/components/shared/MagneticButton";
+import { Reveal } from "@/components/shared/Reveal";
 
 export function CtaSection() {
   const ref = useRef<HTMLDivElement>(null);
@@ -30,21 +31,17 @@ export function CtaSection() {
       </motion.div>
 
       <div className="relative z-10 max-w-[1400px] mx-auto px-8 md:px-16 lg:px-24 text-center">
-        <motion.div
-          style={{ scale: textScale }}
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true, amount: 0.2 }}
-          transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-        >
-          <h2 className="type-massive text-[color-mix(in_srgb,var(--text-primary)_90%,transparent)] leading-[0.85] mb-8">
-            READY TO
-            <br />
-            DISCOVER YOUR
-            <br />
-            <span className="text-gradient-aurum hand-underline">STYLE DNA?</span>
-          </h2>
-        </motion.div>
+        <Reveal>
+          <motion.div style={{ scale: textScale }}>
+            <h2 className="type-massive text-[color-mix(in_srgb,var(--text-primary)_90%,transparent)] leading-[0.85] mb-8">
+              READY TO
+              <br />
+              DISCOVER YOUR
+              <br />
+              <span className="text-gradient-aurum hand-underline">STYLE DNA?</span>
+            </h2>
+          </motion.div>
+        </Reveal>
 
         <motion.div
           animate={{ rotate: 360 }}
@@ -67,67 +64,50 @@ export function CtaSection() {
           </div>
         </motion.div>
 
-        <motion.p
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.2 }}
-          transition={{ duration: 0.8, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-          className="mt-8 text-[var(--text-secondary)] text-lg max-w-md mx-auto font-body leading-relaxed"
-        >
-          Your style. Your data. Your rules. Free forever.
-          No account required to start.
-        </motion.p>
+        <Reveal delay={0.15} y={30}>
+          <p className="mt-8 text-[var(--text-secondary)] text-lg max-w-md mx-auto font-body leading-relaxed">
+            Your style. Your data. Your rules. Free forever.
+            No account required to start.
+          </p>
+        </Reveal>
 
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.2 }}
-          transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-          className="mt-14"
-        >
-          <MagneticButton>
-            <Link href="/signup" className="btn-nexus text-sm py-4 px-10">
-              GET STARTED FREE
-              <span
-                className="text-xl inline-block"
-                style={{
-                  animation: "none",
-                }}
-              >
-                &rarr;
-              </span>
-            </Link>
-          </MagneticButton>
-        </motion.div>
+        <Reveal delay={0.3} y={30}>
+          <div className="mt-14">
+            <MagneticButton>
+              <Link href="/signup" className="btn-nexus text-sm py-4 px-10">
+                GET STARTED FREE
+                <span
+                  className="text-xl inline-block"
+                  style={{
+                    animation: "none",
+                  }}
+                >
+                  &rarr;
+                </span>
+              </Link>
+            </MagneticButton>
+          </div>
+        </Reveal>
 
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true, amount: 0.2 }}
-          transition={{ duration: 1, delay: 0.4 }}
-          className="mt-16 flex items-center justify-center gap-8 flex-wrap"
-        >
-          {[
-            { label: "100% ON-DEVICE", color: "bg-nexus-500/60" },
-            { label: "ZERO SERVER CALLS", color: "bg-aurum-400/50" },
-            { label: "FREE FOREVER", color: "bg-aurum-400/50" },
-            { label: "YOUR DATA STAYS YOURS", color: "bg-nexus-500/60" },
-          ].map((item, i) => (
-            <motion.div
-              key={item.label}
-              initial={{ opacity: 0, y: 10 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.2 }}
-              transition={{ delay: 0.5 + i * 0.1 }}
-              className="flex items-center gap-2"
-            >
-              <div className={`w-1.5 h-1.5 rounded-full ${item.color}`} />
-              <span className="type-mono text-[0.55rem] text-[var(--text-muted)] tracking-widest">
-                {item.label}
-              </span>
-            </motion.div>
-          ))}
-        </motion.div>
+        <Reveal delay={0.4}>
+          <div className="mt-16 flex items-center justify-center gap-8 flex-wrap">
+            {[
+              { label: "100% ON-DEVICE", color: "bg-nexus-500/60" },
+              { label: "ZERO SERVER CALLS", color: "bg-aurum-400/50" },
+              { label: "FREE FOREVER", color: "bg-aurum-400/50" },
+              { label: "YOUR DATA STAYS YOURS", color: "bg-nexus-500/60" },
+            ].map((item, i) => (
+              <Reveal key={item.label} delay={0.5 + i * 0.1} y={10}>
+                <div className="flex items-center gap-2">
+                  <div className={`w-1.5 h-1.5 rounded-full ${item.color}`} />
+                  <span className="type-mono text-[0.55rem] text-[var(--text-muted)] tracking-widest">
+                    {item.label}
+                  </span>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </Reveal>
       </div>
 
       <div className="absolute top-10 left-10 w-10 h-10 border-l-[1.5px] border-t-[1.5px] border-[var(--border-primary)]" />

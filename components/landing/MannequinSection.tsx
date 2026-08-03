@@ -1,9 +1,10 @@
 "use client";
 
 import { useRef } from "react";
-import { motion, useInView, useScroll, useTransform, useSpring } from "framer-motion";
+import { motion, useScroll, useTransform, useSpring } from "framer-motion";
 import { Mannequin3D } from "./Mannequin3D";
 import { KineticHeadline } from "./KineticHeadline";
+import { Reveal } from "@/components/shared/Reveal";
 
 const hotspots = [
   { id: "face", label: "Face IQ", sublabel: "478-point analysis", x: "75%", y: "10%", side: "right" as const },
@@ -16,7 +17,6 @@ const hotspots = [
 
 export function MannequinSection() {
   const ref = useRef<HTMLDivElement>(null);
-  const isInView = useInView(ref, { once: true, amount: 0.2 });
 
   const { scrollYProgress } = useScroll({
     target: ref,
@@ -32,28 +32,16 @@ export function MannequinSection() {
       <div className="absolute inset-0 grid-bg opacity-40" />
 
       <div className="relative z-10 max-w-[1400px] mx-auto px-8 md:px-16 lg:px-24">
-        <motion.div
-          initial={{ opacity: 0, x: -30 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="mb-16"
-        >
+        <Reveal x={-30} className="mb-16">
           <div className="flex items-center gap-4 mb-4">
             <div className="section-divider" />
             <span className="section-number">03 // Analysis</span>
           </div>
           <KineticHeadline text="EVERY FEATURE. MAPPED." className="type-display text-[var(--text-primary)]" />
-        </motion.div>
+        </Reveal>
 
         <div className="relative flex flex-col lg:flex-row items-center gap-12 lg:gap-24">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            className="relative w-[220px] md:w-[300px] flex-shrink-0"
-          >
+          <Reveal scale={0.9} className="relative w-[220px] md:w-[300px] flex-shrink-0">
             <div className="absolute inset-0 rounded-full bg-gradient-aurum opacity-[0.1] blur-[80px]" />
             <motion.div style={{ y: mannequinY }} className="scan-line relative">
               <Mannequin3D className="w-full relative z-10" />
@@ -64,16 +52,16 @@ export function MannequinSection() {
             </div>
 
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[130%] h-4 bg-[var(--overlay)] blur-[20px] rounded-full" />
-          </motion.div>
+          </Reveal>
 
           <div className="relative flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4">
             {hotspots.map((spot, index) => (
-              <motion.div
+              <Reveal
                 key={spot.id}
-                initial={{ opacity: 0, y: 20, x: spot.side === "right" ? 30 : -30 }}
-                whileInView={{ opacity: 1, y: 0, x: 0 }}
-                viewport={{ once: true, margin: "-40px" }}
-                transition={{ duration: 0.55, delay: index * 0.08, ease: [0.16, 1, 0.3, 1] }}
+                y={20}
+                x={spot.side === "right" ? 30 : -30}
+                delay={index * 0.08}
+                duration={0.55}
                 className="glass-card rounded-lg p-5 flex items-start gap-4 group hover:border-aurum-400/40 transition-colors duration-500"
               >
                 <div className="relative mt-1">
@@ -88,20 +76,14 @@ export function MannequinSection() {
                     {spot.sublabel}
                   </p>
                 </div>
-              </motion.div>
+              </Reveal>
             ))}
           </div>
         </div>
 
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8, delay: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="mt-16 text-center text-[var(--text-muted)] text-sm font-body max-w-xl mx-auto"
-        >
+        <Reveal y={20} delay={0.8} className="mt-16 text-center text-[var(--text-muted)] text-sm font-body max-w-xl mx-auto">
           Every analysis runs on your device. Your data never leaves your hands.
-        </motion.p>
+        </Reveal>
       </div>
     </section>
   );

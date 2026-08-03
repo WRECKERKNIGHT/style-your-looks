@@ -122,7 +122,29 @@ export function HorizontalPipeline() {
 
     measure();
     window.addEventListener("resize", measure);
-    return () => window.removeEventListener("resize", measure);
+    window.addEventListener("load", measure);
+
+    const schedule = () => {
+      requestAnimationFrame(measure);
+    };
+
+    let fontsCancelled = false;
+    if (document.fonts?.ready) {
+      document.fonts.ready.then(() => {
+        if (!fontsCancelled) schedule();
+      });
+    }
+
+    const t1 = window.setTimeout(measure, 300);
+    const t2 = window.setTimeout(measure, 1000);
+
+    return () => {
+      window.removeEventListener("resize", measure);
+      window.removeEventListener("load", measure);
+      fontsCancelled = true;
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+    };
   }, []);
 
   const { scrollYProgress } = useScroll({

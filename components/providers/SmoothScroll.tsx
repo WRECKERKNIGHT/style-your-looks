@@ -21,6 +21,14 @@ export function SmoothScroll({ children }: { children: React.ReactNode }) {
 
     lenis.on("scroll", ScrollTrigger.update);
 
+    const refresh = () => ScrollTrigger.refresh();
+    window.addEventListener("load", refresh);
+    if (document.fonts?.ready) {
+      document.fonts.ready.then(refresh).catch(() => {});
+    }
+    const t1 = window.setTimeout(refresh, 400);
+    const t2 = window.setTimeout(refresh, 1200);
+
     const tickerCallback = (time: number) => {
       lenis.raf(time * 1000);
     };
@@ -31,6 +39,9 @@ export function SmoothScroll({ children }: { children: React.ReactNode }) {
     return () => {
       lenis.destroy();
       gsap.ticker.remove(tickerCallback);
+      window.removeEventListener("load", refresh);
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
     };
   }, []);
 
