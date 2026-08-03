@@ -33,26 +33,51 @@ export function Footer() {
     target: ref,
     offset: ["start end", "end end"],
   });
-  const watermarkY = useSpring(useTransform(scrollYProgress, [0, 1], [120, 0]), {
-    stiffness: 80,
-    damping: 24,
+  const watermarkY = useSpring(useTransform(scrollYProgress, [0, 1], [160, 0]), {
+    stiffness: 70,
+    damping: 22,
   });
+  const watermarkOpacity = useTransform(scrollYProgress, [0, 0.6], [0, 1]);
 
   return (
     <footer ref={ref} className="bg-[var(--bg-primary)] border-t border-[var(--border-primary)] relative overflow-hidden">
       <motion.div
         aria-hidden
-        style={{ y: watermarkY }}
+        style={{ y: watermarkY, opacity: watermarkOpacity }}
         className="pointer-events-none absolute -bottom-16 left-1/2 -translate-x-1/2 text-[24vw] font-display font-black text-[var(--text-primary)]/[0.02] tracking-tight whitespace-nowrap select-none"
       >
         ZERVEY
       </motion.div>
-      <Reveal y={24} amount={0.1} className="max-w-[1400px] mx-auto px-8 md:px-16 lg:px-24 py-20">
+
+      {/* CTA band */}
+      <Reveal amount={0.2} className="relative z-10 max-w-[1400px] mx-auto px-8 md:px-16 lg:px-24 pt-20 md:pt-28">
+        <div className="relative overflow-hidden rounded-lg border border-[var(--border-primary)] bg-[var(--bg-secondary)] shadow-paper-lg px-8 md:px-16 py-14 md:py-20 text-center">
+          <div className="absolute inset-0 grid-bg opacity-40 pointer-events-none" />
+          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-aurum-400/60 to-transparent" />
+          <div className="relative z-10">
+            <span className="section-number">READY WHEN YOU ARE</span>
+            <h2 className="type-display text-[var(--text-primary)] tracking-tight mt-3">
+              MEASURED LIKE A <span className="text-gradient-aurum">TAILOR.</span>
+            </h2>
+            <p className="text-[var(--text-muted)] font-body max-w-md mx-auto mt-3 leading-relaxed">
+              Face, body, and color — computed privately on your device. No servers, no uploads.
+            </p>
+            <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} className="mt-8">
+              <Link href="/signup" className="btn-nexus">
+                START YOUR ANALYSIS <span className="text-lg leading-none inline-block">&rarr;</span>
+              </Link>
+            </motion.div>
+          </div>
+        </div>
+      </Reveal>
+
+      <Reveal y={24} amount={0.1} className="relative z-10 max-w-[1400px] mx-auto px-8 md:px-16 lg:px-24 py-20">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-12">
           <div className="lg:col-span-2 space-y-5">
-            <Link href="/" className="inline-block">
-              <Logo className="h-8 w-auto" />
-            </Link>            <p className="text-sm text-[var(--text-muted)] font-body max-w-xs leading-relaxed">
+            <Link href="/" className="inline-block group">
+              <Logo className="h-8 w-auto transition-transform duration-500 group-hover:-rotate-3 group-hover:scale-105" />
+            </Link>
+            <p className="text-sm text-[var(--text-muted)] font-body max-w-xs leading-relaxed">
               AI-powered style intelligence. Your photos never leave your
               device.
             </p>
@@ -136,7 +161,7 @@ export function Footer() {
           </span>
           <div className="flex items-center gap-4">
             <span className="type-mono text-[0.45rem] text-[var(--text-muted)] tracking-widest uppercase">
-              Built with intention
+              Made by Harshit Mishra
             </span>
             <span className="text-[color-mix(in_srgb,var(--text-muted)_50%,transparent)]">|</span>
             <span className="type-mono text-[0.45rem] text-[var(--text-muted)] tracking-widest uppercase">
