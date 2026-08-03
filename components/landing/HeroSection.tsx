@@ -57,7 +57,6 @@ export function HeroSection() {
     damping: 30,
   });
 
-  const bgY = useTransform(smoothProgress, [0, 1], [0, 120]);
   const mannequinY = useTransform(smoothProgress, [0, 1], [0, -120]);
   const typeY = useTransform(smoothProgress, [0, 1], [0, 140]);
   const typeScale = useTransform(smoothProgress, [0, 1], [1, 1.08]);
@@ -84,11 +83,11 @@ export function HeroSection() {
     >
       <div className="absolute inset-0 grid-bg opacity-60" />
 
-      <motion.div style={{ y: bgY }} className="absolute inset-0 pointer-events-none">
+      <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-[10%] right-[10%] w-[520px] h-[520px] rounded-full bg-aurum-400/15 blur-[160px] animate-drift" />
         <div className="absolute top-[45%] left-[5%] w-[420px] h-[420px] rounded-full bg-nexus-500/10 blur-[140px] animate-drift" style={{ animationDelay: "-5s" }} />
         <div className="absolute bottom-[5%] right-[25%] w-[360px] h-[360px] rounded-full bg-aurum-300/12 blur-[120px] animate-drift" style={{ animationDelay: "-10s" }} />
-      </motion.div>
+      </div>
 
       <div
         aria-hidden
@@ -112,7 +111,7 @@ export function HeroSection() {
                 <span className="section-number">AI Style Intelligence</span>
               </motion.div>
 
-              <motion.div variants={itemVariants} style={{ y: typeY, scale: typeScale, opacity: typeOpacity }}>
+              <motion.div variants={itemVariants} style={{ y: typeY, scale: typeScale, opacity: typeOpacity, willChange: "transform" }}>
                 <h1 className="type-massive text-[var(--text-primary)] leading-[0.85] mb-6">
                   {headlineWords.map((word, i) => (
                     <span key={i} className="inline-block overflow-hidden align-bottom">
@@ -216,7 +215,7 @@ export function HeroSection() {
 
                 {/* the mannequin */}
                 <motion.div
-                  style={{ y: mannequinY }}
+                  style={{ y: mannequinY, willChange: "transform" }}
                   className="absolute inset-0 z-10"
                 >
                   <Mannequin3D className="w-full h-full" />

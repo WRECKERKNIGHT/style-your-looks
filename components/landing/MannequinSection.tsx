@@ -43,7 +43,7 @@ export function MannequinSection() {
         <div className="relative flex flex-col lg:flex-row items-center gap-12 lg:gap-24">
           <Reveal scale={0.9} className="relative w-[220px] md:w-[300px] flex-shrink-0">
             <div className="absolute inset-0 rounded-full bg-gradient-aurum opacity-[0.1] blur-[80px]" />
-            <motion.div style={{ y: mannequinY }} className="scan-line relative">
+            <motion.div style={{ y: mannequinY, willChange: "transform" }} className="scan-line relative">
               <Mannequin3D className="w-full relative z-10" />
             </motion.div>
 

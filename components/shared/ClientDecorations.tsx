@@ -6,10 +6,6 @@ const CustomCursor = dynamic(
   () => import("@/components/shared/CustomCursor").then((m) => m.CustomCursor),
   { ssr: false }
 );
-const ParticleField = dynamic(
-  () => import("@/components/shared/ParticleField").then((m) => m.ParticleField),
-  { ssr: false }
-);
 const LoadingScreen = dynamic(
   () => import("@/components/shared/LoadingScreen").then((m) => m.LoadingScreen),
   { ssr: false }
@@ -27,7 +23,6 @@ export default function ClientDecorations() {
   return (
     <>
       <LoadingScreen />
-      <ParticleField />
       <CustomCursor />
       <CommandPalette />
       <KeyboardShortcutHint />

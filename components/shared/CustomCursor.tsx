@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 
 export function CustomCursor() {
+  const [enabled, setEnabled] = useState(false);
   const cursorRef = useRef<HTMLDivElement>(null);
   const followerRef = useRef<HTMLDivElement>(null);
   const requestRef = useRef<number>(0);
@@ -10,6 +11,13 @@ export function CustomCursor() {
   const followerPos = useRef({ x: -100, y: -100 });
   const isVisible = useRef(false);
   const isHoveringElement = useRef(false);
+
+  useEffect(() => {
+    const fine = window.matchMedia("(pointer: fine)").matches;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!fine || reduced) return;
+    setEnabled(true);
+  }, []);
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
     mousePos.current = { x: e.clientX, y: e.clientY };
@@ -51,6 +59,7 @@ export function CustomCursor() {
   }, []);
 
   useEffect(() => {
+    if (!enabled) return;
     document.addEventListener("mousemove", handleMouseMove);
     document.addEventListener("mouseleave", handleMouseLeave);
 
@@ -107,7 +116,9 @@ export function CustomCursor() {
       observer.disconnect();
       cancelAnimationFrame(requestRef.current);
     };
-  }, [handleMouseMove, handleMouseLeave, handleHoverStart, handleHoverEnd]);
+  }, [enabled, handleMouseMove, handleMouseLeave, handleHoverStart, handleHoverEnd]);
+
+  if (!enabled) return null;
 
   return (
     <>

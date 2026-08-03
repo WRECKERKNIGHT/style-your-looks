@@ -160,7 +160,7 @@ export function HorizontalPipeline() {
       id="pipeline"
       className="relative h-[260vh] bg-cosmic-surface"
     >
-      <div className="sticky top-0 h-screen overflow-hidden flex items-center">
+      <div className="sticky top-0 h-screen overflow-hidden flex items-center will-change-transform">
         <div className="absolute inset-0 grid-bg opacity-40" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1200px] h-[1200px] rounded-full bg-aurum-400/10 blur-[200px] pointer-events-none" />
 

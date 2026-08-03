@@ -209,7 +209,7 @@ export function StorySection() {
 
   return (
     <section ref={ref} className="relative h-[300vh] bg-cosmic-elevated">
-      <div className="sticky top-0 h-screen overflow-hidden">
+      <div className="sticky top-0 h-screen overflow-hidden will-change-transform">
         <div className="absolute inset-0 grid-bg opacity-30" />
 
         {chapters.map((chapter, i) => (

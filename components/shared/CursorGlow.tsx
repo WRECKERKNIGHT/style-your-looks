@@ -13,6 +13,7 @@ export function CursorGlow() {
 
   useEffect(() => {
     if (!window.matchMedia("(pointer: fine)").matches) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     setEnabled(true);
 
     const onMove = (e: MouseEvent) => {
@@ -27,15 +28,18 @@ export function CursorGlow() {
   if (!enabled) return null;
 
   return (
-    <motion.div
-      aria-hidden
-      className="pointer-events-none fixed top-0 left-0 z-[5] w-[500px] h-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full"
-      style={{
-        left: glowX,
-        top: glowY,
-        background:
-          "radial-gradient(circle, rgba(185,139,86,0.16) 0%, rgba(200,150,62,0.08) 35%, transparent 70%)",
-      }}
-    />
+    <div aria-hidden className="pointer-events-none fixed top-0 left-0 z-[5]">
+      <motion.div
+        className="w-[500px] h-[500px] rounded-full"
+        style={{
+          x: glowX,
+          y: glowY,
+          marginLeft: -250,
+          marginTop: -250,
+          background:
+            "radial-gradient(circle, rgba(185,139,86,0.16) 0%, rgba(200,150,62,0.08) 35%, transparent 70%)",
+        }}
+      />
+    </div>
   );
 }
