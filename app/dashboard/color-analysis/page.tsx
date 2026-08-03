@@ -21,6 +21,11 @@ import {
   Shirt,
   Download,
   Share2,
+  Layers,
+  Contrast,
+  Archive,
+  Plus,
+  Trash2,
 } from "lucide-react";
 
 const stagger = {
@@ -66,6 +71,287 @@ function ColorSwatch({ color, label, variant }: { color: string; label?: string;
       <span className="text-[10px] font-mono text-[var(--text-muted)] opacity-0 group-hover:opacity-100 transition-opacity">{color}</span>
       {label && (
         <span className="text-[10px] font-body text-[var(--text-muted)] text-center">{label}</span>
+      )}
+    </div>
+  );
+}
+
+function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
+  const m = /^#?([a-f\d]{6})$/i.exec(hex.trim());
+  if (!m) return null;
+  const n = parseInt(m[1], 16);
+  return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+}
+
+function relativeLuminance(hex: string): number {
+  const rgb = hexToRgb(hex);
+  if (!rgb) return 0;
+  const [r, g, b] = [rgb.r, rgb.g, rgb.b].map((v) => {
+    const s = v / 255;
+    return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+function contrastRatio(a: string, b: string): number {
+  const la = relativeLuminance(a);
+  const lb = relativeLuminance(b);
+  const [hi, lo] = la >= lb ? [la, lb] : [lb, la];
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+function hexToRgba(hex: string, alpha: number): string {
+  const rgb = hexToRgb(hex);
+  if (!rgb) return `rgba(0,0,0,${alpha})`;
+  return `rgba(${rgb.r},${rgb.g},${rgb.b},${alpha})`;
+}
+
+function DrapeTool({ photo, palette }: { photo: string | null; palette: string[] }) {
+  const [drape, setDrape] = useState("#C4703F");
+  const [mode, setMode] = useState<"multiply" | "color" | "overlay">("color");
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+      <div className="relative overflow-hidden border border-[var(--border-primary)] bg-[var(--bg-base)] aspect-[3/4] max-w-sm mx-auto w-full">
+        {photo ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={photo} alt="Drape preview" className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full" style={{ background: "linear-gradient(160deg,#C89D7C 0%,#A0764E 60%,#8A5F3D 100%)" }} />
+        )}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{ backgroundColor: drape, mixBlendMode: mode }}
+        />
+        <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between bg-black/60 backdrop-blur-sm px-3 py-2">
+          <span className="font-mono text-[0.6rem] text-white">{drape}</span>
+          <span className="type-mono text-[0.5rem] text-white/70 tracking-widest uppercase">
+            {mode} blend
+          </span>
+        </div>
+      </div>
+
+      <div className="space-y-5">
+        <div>
+          <span className="type-label text-[var(--text-primary)] mb-3 block">
+            CHOOSE A DRAPE COLOR
+          </span>
+          <div className="flex flex-wrap gap-2">
+            {palette.slice(0, 10).map((c) => (
+              <button
+                key={c}
+                onClick={() => setDrape(c)}
+                className={`w-10 h-10 border-2 transition-transform hover:scale-110 ${
+                  drape === c ? "border-[var(--accent-aurum)]" : "border-[var(--border-primary)]"
+                }`}
+                style={{ backgroundColor: c }}
+                aria-label={`Drape ${c}`}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <input
+            type="color"
+            value={drape}
+            onChange={(e) => setDrape(e.target.value)}
+            className="w-14 h-10 border border-[var(--border-primary)] cursor-pointer"
+          />
+          <div className="flex gap-2">
+            {(["multiply", "color", "overlay"] as const).map((m) => (
+              <button
+                key={m}
+                onClick={() => setMode(m)}
+                className={`px-3 py-1.5 border text-xs font-body uppercase tracking-wider transition-colors ${
+                  mode === m
+                    ? "border-[var(--accent-aurum)] text-[var(--accent-aurum)]"
+                    : "border-[var(--border-primary)] text-[var(--text-muted)] hover:border-[var(--accent-aurum)]/40"
+                }`}
+              >
+                {m}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <p className="text-sm text-[var(--text-muted)] font-body leading-relaxed">
+          Simulates holding a fabric swatch under your chin. <strong className="text-[var(--text-primary)]">Color</strong> tint
+          shows the pure hue on your skin; <strong className="text-[var(--text-primary)]">Multiply</strong> shows a deeper shade;
+          <strong className="text-[var(--text-primary)]"> Overlay</strong> mixes both. Pick colors from your best palette and
+          see which ones brighten or drain your face.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function ContrastMatrix({ skinHex, palette }: { skinHex: string; palette: string[] }) {
+  const [reference, setReference] = useState(skinHex);
+  const rows = palette.slice(0, 8);
+  const cols = palette.slice(0, 6);
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center gap-4">
+        <div className="flex items-center gap-3">
+          <span className="type-label text-[var(--text-muted)]">REFERENCE</span>
+          <input
+            type="color"
+            value={reference}
+            onChange={(e) => setReference(e.target.value)}
+            className="w-12 h-9 border border-[var(--border-primary)] cursor-pointer"
+          />
+          <span className="font-mono text-xs text-[var(--text-primary)]">{reference}</span>
+        </div>
+        <p className="text-xs text-[var(--text-muted)] font-body">
+          Contrast ratio against your skin tone. High = the color pops on you; Low = tonal, seamless.
+        </p>
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse min-w-[560px]">
+          <thead>
+            <tr>
+              <th className="p-2 text-left type-mono text-[0.55rem] text-[var(--text-muted)] tracking-widest">COLOR</th>
+              {cols.map((c) => (
+                <th key={c} className="p-2">
+                  <div className="w-8 h-8 mx-auto border border-[var(--border-primary)]" style={{ backgroundColor: c }} />
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => {
+              const ratios = cols.map((col) => contrastRatio(row, col));
+              return (
+                <tr key={row}>
+                  <td className="p-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 border border-[var(--border-primary)]" style={{ backgroundColor: row }} />
+                      <span className="font-mono text-[0.55rem] text-[var(--text-muted)]">{row}</span>
+                    </div>
+                  </td>
+                  {ratios.map((r, i) => {
+                    const tier = r >= 4.5 ? "high" : r >= 2.5 ? "medium" : "low";
+                    const bg =
+                      tier === "high"
+                        ? "bg-[color-mix(in_srgb,var(--accent-aurum)_18%,transparent)] text-[var(--accent-aurum)]"
+                        : tier === "medium"
+                        ? "bg-[color-mix(in_srgb,var(--accent-nexus)_14%,transparent)] text-[var(--accent-nexus)]"
+                        : "bg-[color-mix(in_srgb,var(--text-muted)_8%,transparent)] text-[var(--text-muted)]";
+                    return (
+                      <td key={i} className={`p-2 text-center type-mono text-[0.6rem] ${bg}`}>
+                        {r.toFixed(2)}
+                      </td>
+                    );
+                  })}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="flex flex-wrap gap-4">
+        <span className="type-mono text-[0.55rem] text-[var(--accent-aurum)] tracking-widest">▣ HIGH ≥ 4.5 — pops</span>
+        <span className="type-mono text-[0.55rem] text-[var(--accent-nexus)] tracking-widest">▣ MEDIUM 2.5–4.5 — balanced</span>
+        <span className="type-mono text-[0.55rem] text-[var(--text-muted)] tracking-widest">▣ LOW &lt; 2.5 — tonal</span>
+      </div>
+    </div>
+  );
+}
+
+function WardrobeMatcher({ palette }: { palette: string[] }) {
+  const [items, setItems] = useState<string[]>([]);
+  const [draft, setDraft] = useState("#CCA066");
+
+  const addItem = () => {
+    const c = draft.toLowerCase();
+    if (items.some((i) => i.toLowerCase() === c)) return;
+    setItems((prev) => [...prev, c]);
+  };
+
+  const removeItem = (c: string) => setItems((prev) => prev.filter((i) => i !== c));
+
+  const verdict = (color: string) => {
+    const bestMatch = Math.max(...palette.map((p) => contrastRatio(color, p)));
+    if (palette.some((p) => p.toLowerCase() === color.toLowerCase())) return { tier: "perfect" as const, label: "IN YOUR PALETTE", note: "Exact match to your season's best colors." };
+    if (bestMatch >= 6) return { tier: "keep" as const, label: "KEEP", note: `Strong contrast with your palette — works as an accent (best match ratio ${bestMatch.toFixed(2)}).` };
+    if (bestMatch >= 3.2) return { tier: "optional" as const, label: "OPTIONAL", note: "Neutral for your season. Fine in small doses." };
+    return { tier: "avoid" as const, label: "AVOID", note: `Clashes with your palette — drains your coloring (best match ratio only ${bestMatch.toFixed(2)}).` };
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center gap-3">
+        <input
+          type="color"
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          className="w-14 h-10 border border-[var(--border-primary)] cursor-pointer"
+        />
+        <div className="flex gap-2">
+          {["#CCA066", "#A13B2F", "#4682B4", "#241812", "#FBF7F0", "#7A9E6B", "#C4703F", "#8A5F3D"].map((c) => (
+            <button
+              key={c}
+              onClick={() => setDraft(c)}
+              className="w-8 h-8 border border-[var(--border-primary)] hover:scale-110 transition-transform"
+              style={{ backgroundColor: c }}
+              aria-label={`Add ${c}`}
+            />
+          ))}
+        </div>
+        <button onClick={addItem} className="btn-nexus !py-2 !px-4 text-xs">
+          <Plus className="w-3.5 h-3.5" />
+          ADD TO WARDROBE
+        </button>
+      </div>
+
+      {items.length === 0 ? (
+        <p className="text-sm text-[var(--text-muted)] font-body">
+          Add colors from your actual wardrobe — each piece is scored against your seasonal palette and flagged as
+          KEEP, OPTIONAL, or AVOID.
+        </p>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {items.map((c) => {
+            const v = verdict(c);
+            const border =
+              v.tier === "perfect"
+                ? "border-[var(--accent-aurum)]"
+                : v.tier === "keep"
+                ? "border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)]"
+                : v.tier === "optional"
+                ? "border-[var(--border-primary)]"
+                : "border-red-500/40";
+            return (
+              <div key={c} className={`flex items-start gap-3 bg-[var(--bg-tertiary)] p-4 border ${border}`}>
+                <div className="w-10 h-10 shrink-0 border border-[var(--border-primary)]" style={{ backgroundColor: c }} />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`type-mono text-[0.55rem] tracking-widest ${
+                        v.tier === "avoid" ? "text-red-400" : v.tier === "keep" || v.tier === "perfect" ? "text-[var(--accent-aurum)]" : "text-[var(--text-muted)]"
+                      }`}
+                    >
+                      {v.label}
+                    </span>
+                    <span className="font-mono text-[0.55rem] text-[var(--text-muted)] ml-auto">{c}</span>
+                  </div>
+                  <p className="text-xs text-[var(--text-muted)] font-body leading-relaxed mt-1">{v.note}</p>
+                </div>
+                <button
+                  onClick={() => removeItem(c)}
+                  className="text-[var(--text-muted)] hover:text-red-400 transition-colors p-1"
+                  aria-label={`Remove ${c}`}
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            );
+          })}
+        </div>
       )}
     </div>
   );
@@ -412,6 +698,48 @@ export default function ColorAnalysisPage() {
                 </p>
               </div>
             </div>
+          </motion.div>
+
+          <motion.div variants={fadeUp} className="glass-card p-10">
+            <div className="flex items-center gap-3 mb-3">
+              <Layers className="w-5 h-5 text-[var(--accent-aurum)]" />
+              <h3 className="type-heading text-[var(--text-primary)] tracking-tight">
+                VIRTUAL DRAPE TOOL
+              </h3>
+            </div>
+            <p className="text-[var(--text-muted)] font-body text-sm mb-8">
+              Try fabric colors against your photo in real time — the drape simulates each shade resting against your skin.
+            </p>
+            <DrapeTool photo={uploadedImage} palette={colorAnalysis.bestColors} />
+          </motion.div>
+
+          <motion.div variants={fadeUp} className="glass-card p-10">
+            <div className="flex items-center gap-3 mb-3">
+              <Contrast className="w-5 h-5 text-[var(--accent-aurum)]" />
+              <h3 className="type-heading text-[var(--text-primary)] tracking-tight">
+                CONTRAST MATRIX
+              </h3>
+            </div>
+            <p className="text-[var(--text-muted)] font-body text-sm mb-8">
+              WCAG contrast ratios between your palette colors and a skin-tone reference — find combinations that pop vs. blend.
+            </p>
+            <ContrastMatrix
+              skinHex={bodyResult?.skinToneValue || "#C89D7C"}
+              palette={colorAnalysis.bestColors}
+            />
+          </motion.div>
+
+          <motion.div variants={fadeUp} className="glass-card p-10">
+            <div className="flex items-center gap-3 mb-3">
+              <Archive className="w-5 h-5 text-[var(--accent-aurum)]" />
+              <h3 className="type-heading text-[var(--text-primary)] tracking-tight">
+                WARDROBE MATCHER
+              </h3>
+            </div>
+            <p className="text-[var(--text-muted)] font-body text-sm mb-8">
+              Add the pieces already hanging in your closet — ZERVEY scores each against your season.
+            </p>
+            <WardrobeMatcher palette={colorAnalysis.bestColors} />
           </motion.div>
 
           <motion.div variants={fadeUp} className="glass-card p-10">

@@ -13,7 +13,8 @@ import { useMediaPipe } from "@/hooks/useMediaPipe";
 import { useWebcam } from "@/hooks/useWebcam";
 import { useToast } from "@/components/shared/Toast";
 import { motion, AnimatePresence } from "framer-motion";
-import { ScanFace, Camera, AlertCircle, Eye, Save, CheckCircle, X, ShieldCheck, Copy, Check } from "lucide-react";
+import { ScanFace, Camera, AlertCircle, Eye, Save, CheckCircle, X, ShieldCheck, Copy, Check, Ruler, Gauge, AlertTriangle, GitCompareArrows } from "lucide-react";
+import { SymmetrySplit } from "@/components/analysis/SymmetrySplit";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -22,6 +23,117 @@ const fadeUp = {
 
 const MAX_PHOTOS = 3;
 const MIN_PHOTOS = 2;
+
+function DiagnosticStrip({
+  photoQuality,
+  consistency,
+  confidence,
+  headRoll,
+  headPitch,
+  landmarks,
+}: {
+  photoQuality: number;
+  consistency: number;
+  confidence: number;
+  headRoll?: number;
+  headPitch?: number;
+  landmarks: number[][];
+}) {
+  const irisScale = (() => {
+    if (landmarks.length < 478) return null;
+    const dist = (a: number[], b: number[]) =>
+      Math.sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2);
+    const maxPair = (idxs: number[]) => {
+      let max = 0;
+      for (let i = 0; i < idxs.length; i++) {
+        for (let j = i + 1; j < idxs.length; j++) {
+          max = Math.max(max, dist(landmarks[idxs[i]], landmarks[idxs[j]]));
+        }
+      }
+      return max;
+    };
+    const leftIris = maxPair([468, 469, 470, 471, 472]);
+    const rightIris = maxPair([473, 474, 475, 476, 477]);
+    const leftEyeW = dist(landmarks[33], landmarks[133]);
+    const rightEyeW = dist(landmarks[362], landmarks[263]);
+    const eyeW = (leftEyeW + rightEyeW) / 2;
+    const irisD = (leftIris + rightIris) / 2;
+    if (!eyeW || !irisD) return null;
+    const ratio = irisD / eyeW;
+    const mm = (ratio / 0.33) * 11.7;
+    return { ratio, mm };
+  })();
+
+  const poseOff =
+    (typeof headRoll === "number" && Math.abs(headRoll) > 15) ||
+    (typeof headPitch === "number" && Math.abs(headPitch) > 15);
+
+  const items = [
+    { label: "PHOTO QUALITY", value: `${photoQuality.toFixed(1)}/10`, warn: photoQuality < 5 },
+    { label: "CROSS-PHOTO CONSISTENCY", value: `${consistency.toFixed(1)}/10`, warn: consistency < 5 },
+    { label: "CONFIDENCE", value: `${confidence}%`, warn: confidence < 60 },
+    {
+      label: "HEAD ROLL",
+      value: typeof headRoll === "number" ? `${headRoll > 0 ? "+" : ""}${headRoll.toFixed(1)}°` : "—",
+      warn: typeof headRoll === "number" && Math.abs(headRoll) > 15,
+    },
+    {
+      label: "HEAD PITCH",
+      value: typeof headPitch === "number" ? `${headPitch > 0 ? "+" : ""}${headPitch.toFixed(1)}°` : "—",
+      warn: typeof headPitch === "number" && Math.abs(headPitch) > 15,
+    },
+    {
+      label: "IRIS CALIBRATION",
+      value: irisScale ? `≈ ${irisScale.mm.toFixed(1)} mm` : "—",
+      warn: false,
+    },
+  ];
+
+  return (
+    <div className="space-y-5">
+      {poseOff && (
+        <div className="flex items-start gap-3 bg-amber-500/10 border border-amber-500/30 p-4">
+          <AlertTriangle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-bold text-amber-300 font-body">Pose out of range</p>
+            <p className="text-xs text-amber-200/80 font-body leading-relaxed mt-0.5">
+              A head tilt or camera angle above 15° distorts the 2D geometry and lowers symmetry accuracy.
+              Re-take the photo facing the camera directly at eye level.
+            </p>
+          </div>
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        {items.map((item) => (
+          <div
+            key={item.label}
+            className={`bg-[var(--bg-tertiary)] p-4 border text-center ${
+              item.warn ? "border-amber-500/40" : "border-[var(--border-primary)]"
+            }`}
+          >
+            <div className="flex items-center justify-center gap-1.5 mb-2">
+              {item.label === "IRIS CALIBRATION" ? (
+                <Ruler className="w-3 h-3 text-[var(--accent-aurum)]" />
+              ) : (
+                <Gauge className={`w-3 h-3 ${item.warn ? "text-amber-400" : "text-[var(--accent-aurum)]"}`} />
+              )}
+              <span className="type-mono text-[0.45rem] text-[var(--text-muted)] tracking-widest">{item.label}</span>
+            </div>
+            <span className={`font-display font-bold text-lg ${item.warn ? "text-amber-400" : "text-[var(--text-primary)]"}`}>
+              {item.value}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      <p className="type-mono text-[0.5rem] text-[var(--text-muted)] tracking-widest">
+        IRIS CALIBRATION USES THE MEDIAPIPE IRIS TRACKER (468–477) AGAINST A NOMINAL 11.7 MM AVERAGE HUMAN IRIS TO ESTIMATE
+        PHYSICAL SCALE FROM YOUR PHOTO — AN APPROXIMATION, NOT A MEDICAL MEASUREMENT.
+      </p>
+    </div>
+  );
+}
 
 export default function FaceAnalysisPage() {
   const { uploadedImage, setUploadedImage, faceResult, isAnalyzing, genderProfile, setGenderProfile, setProcessingPreview } =
@@ -457,6 +569,38 @@ export default function FaceAnalysisPage() {
 
           {faceResult.landmarks.length > 0 && uploadedImage && (
             <TryItOnPanel image={uploadedImage} landmarks={faceResult.landmarks} />
+          )}
+
+          {faceResult.landmarks.length > 0 && uploadedImage && (
+            <motion.div variants={fadeUp} initial="hidden" animate="show" className="glass-card p-8">
+              <div className="flex items-center gap-3 mb-6">
+                <GitCompareArrows className="w-5 h-5 text-[var(--accent-aurum)]" />
+                <h3 className="type-heading text-[var(--text-primary)] tracking-tight">SYMMETRY SPLIT</h3>
+              </div>
+              <SymmetrySplit
+                image={uploadedImage}
+                centerX={faceResult.landmarks[1]?.[0] ?? 0.5}
+                symmetryScore={faceResult.symmetry}
+              />
+            </motion.div>
+          )}
+
+          {faceResult && (
+            <motion.div variants={fadeUp} initial="hidden" animate="show" className="glass-card p-8">
+              <div className="flex items-center gap-3 mb-6">
+                <Gauge className="w-5 h-5 text-[var(--accent-aurum)]" />
+                <h3 className="type-heading text-[var(--text-primary)] tracking-tight">DIAGNOSTIC READOUT</h3>
+              </div>
+
+              <DiagnosticStrip
+                photoQuality={faceResult.photoQualityScore}
+                consistency={faceResult.consistencyScore}
+                confidence={faceResult.analysisConfidence}
+                headRoll={faceResult.qualityGate?.headRoll}
+                headPitch={faceResult.qualityGate?.headPitch}
+                landmarks={faceResult.landmarks}
+              />
+            </motion.div>
           )}
 
           <div className="glass-card p-8">

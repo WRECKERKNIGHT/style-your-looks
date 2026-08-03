@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useAnalysisStore } from "@/store/analysis-store";
 import { ScoreGauge } from "@/components/analysis/ScoreGauge";
+import { RadarChart, type RadarAxis } from "@/components/shared/RadarChart";
 import { motion } from "framer-motion";
 import { getScoreTrends, type ScoreTrendPoint } from "@/lib/history";
 import {
@@ -18,6 +19,8 @@ import {
   BarChart3,
   Download,
   Share2,
+  SlidersHorizontal,
+  ArrowUpRight,
 } from "lucide-react";
 
 const stagger = {
@@ -157,10 +160,70 @@ function ScoreBadge({ label, score }: { label: string; score: number }) {
 export default function StyleDnaPage() {
   const { faceResult, bodyResult, colorAnalysis } = useAnalysisStore();
   const [trends, setTrends] = useState<ScoreTrendPoint[]>([]);
+  const [angularity, setAngularity] = useState(50);
+  const [softness, setSoftness] = useState(50);
+  const [boldness, setBoldness] = useState(50);
 
   useEffect(() => {
     setTrends(getScoreTrends());
   }, []);
+
+  const naturalAxes: RadarAxis[] = useMemo(
+    () =>
+      faceResult
+        ? [
+            { label: "SYMMETRY", value: faceResult.symmetry },
+            { label: "JAWLINE", value: faceResult.jawline },
+            { label: "PROPORTIONS", value: faceResult.proportions },
+            { label: "GOLDEN RATIO", value: faceResult.goldenRatio },
+            { label: "SKIN", value: faceResult.skinClarity },
+            { label: "HARMONY", value: faceResult.facialHarmony },
+          ]
+        : [],
+    [faceResult]
+  );
+
+  const styledAxes: RadarAxis[] = useMemo(() => {
+    if (!faceResult) return [];
+    const clamp = (v: number) => Math.max(0, Math.min(10, v));
+    const a = (angularity - 50) / 50;
+    const s = (softness - 50) / 50;
+    const b = (boldness - 50) / 50;
+    return [
+      { label: "SYMMETRY", value: clamp(faceResult.symmetry + s * 0.8 + b * 0.4) },
+      { label: "JAWLINE", value: clamp(faceResult.jawline + a * 1.4) },
+      { label: "PROPORTIONS", value: clamp(faceResult.proportions + b * 1.2 + a * 0.3) },
+      { label: "GOLDEN RATIO", value: clamp(faceResult.goldenRatio + a * 0.8 + b * 0.6) },
+      { label: "SKIN", value: clamp(faceResult.skinClarity + s * 0.7) },
+      { label: "HARMONY", value: clamp(faceResult.facialHarmony + s * 1.2 + b * 0.3) },
+    ];
+  }, [faceResult, angularity, softness, boldness]);
+
+  const aestheticDirection = useMemo(() => {
+    if (angularity > 62 && angularity >= boldness && angularity >= softness)
+      return {
+        label: "SHARP & STRUCTURED",
+        accent: "#CCA066",
+        advice: "Emphasize your angular traits with structured cuts — tailored collars, clean geometric frames, and a well-defined grooming line-up.",
+      };
+    if (boldness > 62 && boldness > angularity && boldness >= softness)
+      return {
+        label: "EDITORIAL & BOLD",
+        accent: "#C07A5A",
+        advice: "Lean into your proportion strengths with high-contrast monochrome, oversized silhouettes, and statement accessories.",
+      };
+    if (softness > 62 && softness > angularity && softness > boldness)
+      return {
+        label: "SOFT & CLASSIC",
+        accent: "#8A5F3D",
+        advice: "Your harmony-led metrics carry soft tailoring — tonal layers, rounded collars, and timeless fabrics will flatter you most.",
+      };
+    return {
+      label: "BALANCED",
+      accent: "#CCA066",
+      advice: "With no dominant emphasis, a balanced wardrobe split between structured and soft pieces gives you maximum flexibility.",
+    };
+  }, [angularity, boldness, softness]);
 
   const hasData = faceResult || bodyResult;
 
@@ -244,6 +307,69 @@ export default function StyleDnaPage() {
                 {bodyResult?.bodyProportionScore && (
                   <ScoreBadge label="Body" score={bodyResult.bodyProportionScore} />
                 )}
+              </div>
+            </motion.div>
+          )}
+
+          {faceResult && (
+            <motion.div variants={fadeUp} className="glass-card p-10">
+              <div className="flex items-center gap-3 mb-3">
+                <SlidersHorizontal className="w-5 h-5 text-[var(--accent-aurum)]" />
+                <h3 className="type-heading text-[var(--text-primary)] tracking-tight">AESTHETIC DIRECTIONS LAB</h3>
+              </div>
+              <p className="text-[var(--text-muted)] font-body text-sm mb-2">
+                Your real 6-metric hexagon is the gold polygon. Drag the sliders to preview how a styling emphasis
+                would reweight your natural strengths (dashed overlay).
+              </p>
+              <p className="type-mono text-[0.55rem] text-[var(--text-muted)] tracking-widest mb-8">
+                EMPHASIS WEIGHTS CHANGE PRESENTATION, NOT YOUR GEOMETRY
+              </p>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+                <div className="flex justify-center">
+                  <RadarChart axes={naturalAxes} overlay={styledAxes} />
+                </div>
+                <div className="space-y-6">
+                  {[
+                    { label: "ANGULARITY & EDGE", value: angularity, set: setAngularity, hint: "Jawline · golden ratio" },
+                    { label: "SOFTNESS & CLASSIC", value: softness, set: setSoftness, hint: "Harmony · symmetry · skin" },
+                    { label: "BOLD & EDITORIAL", value: boldness, set: setBoldness, hint: "Proportions · contrast" },
+                  ].map((slider) => (
+                    <div key={slider.label}>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="type-label text-[var(--text-primary)]">{slider.label}</span>
+                        <span className="type-mono text-[0.6rem] text-[var(--accent-aurum)]">{slider.value}</span>
+                      </div>
+                      <input
+                        type="range"
+                        min={0}
+                        max={100}
+                        value={slider.value}
+                        onChange={(e) => slider.set(Number(e.target.value))}
+                        className="w-full accent-[var(--accent-aurum)]"
+                      />
+                      <span className="type-mono text-[0.5rem] text-[var(--text-muted)] tracking-widest">{slider.hint}</span>
+                    </div>
+                  ))}
+
+                  <div
+                    className="mt-2 p-5 border"
+                    style={{ borderColor: `${aestheticDirection.accent}40`, background: `color-mix(in_srgb, ${aestheticDirection.accent} 7%, transparent)` }}
+                  >
+                    <div className="flex items-center gap-2 mb-2">
+                      <ArrowUpRight className="w-4 h-4" style={{ color: aestheticDirection.accent }} />
+                      <span
+                        className="type-label tracking-widest"
+                        style={{ color: aestheticDirection.accent }}
+                      >
+                        {aestheticDirection.label}
+                      </span>
+                    </div>
+                    <p className="text-sm text-[var(--text-primary)] font-body leading-relaxed">
+                      {aestheticDirection.advice}
+                    </p>
+                  </div>
+                </div>
               </div>
             </motion.div>
           )}
