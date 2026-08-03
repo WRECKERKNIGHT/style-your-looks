@@ -54,7 +54,7 @@ export function Nav() {
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-700 ${
           scrolled
             ? "bg-[color-mix(in_srgb,var(--bg-primary)_85%,transparent)] backdrop-blur-2xl border-b border-[var(--border-primary)] shadow-paper"
-            : "bg-gradient-to-b from-[color-mix(in_srgb,var(--bg-primary)_60%,transparent)] to-transparent"
+            : "bg-[color-mix(in_srgb,var(--bg-primary)_45%,transparent)] backdrop-blur-md border-b border-transparent"
         }`}
       >
         <div className="max-w-[1400px] mx-auto px-8 md:px-16 lg:px-24 h-16 md:h-20 flex items-center justify-between">

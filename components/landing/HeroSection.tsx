@@ -40,9 +40,9 @@ const stats = [
 ];
 
 const floatingTags = [
-  { label: "FACE IQ", sub: "478 landmarks", x: "-6%", y: "12%", delay: 0 },
-  { label: "ITA COLOR", sub: "tone science", x: "-14%", y: "52%", delay: 0.8 },
-  { label: "TRY-ON", sub: "fit preview", x: "-4%", y: "78%", delay: 1.6 },
+  { label: "FACE IQ", sub: "478 landmarks", x: "6%", y: "8%", delay: 0 },
+  { label: "ITA COLOR", sub: "tone science", x: "2%", y: "48%", delay: 0.8 },
+  { label: "TRY-ON", sub: "fit preview", x: "12%", y: "76%", delay: 1.6 },
 ];
 
 export function HeroSection() {
@@ -161,7 +161,7 @@ export function HeroSection() {
                   </Link>
                 </MagneticButton>
                 <MagneticButton strength={0.2}>
-                  <Link href="#features" className="btn-outline border-[var(--accent-mocha)] text-[var(--text-secondary)]">
+                  <Link href="#features" className="btn-outline border-[var(--accent-caramel)] text-[var(--text-primary)]">
                     EXPLORE FEATURES
                   </Link>
                 </MagneticButton>
@@ -291,7 +291,7 @@ export function HeroSection() {
 
       <KineticHeadline
         text="LOOKS ARE DATA"
-        className="absolute bottom-6 right-8 md:right-16 z-[1] hidden lg:block"
+        className="absolute bottom-24 right-8 md:right-16 z-[1] hidden lg:block"
         fillClassName="text-gradient-aurum"
         dimClassName="text-[color-mix(in_srgb,var(--text-primary)_8%,transparent)]"
         as="p"
