@@ -50,6 +50,12 @@ Migrations live in `supabase/migrations/`. Apply in order:
 - `001_initial.sql` / `001_community_tables.sql` — core + community schema
 - `002_hardening.sql` — RLS, triggers, indexes, rating recalculation
 
+## Authentication
+
+Google OAuth setup (Google Cloud Console + Supabase) is documented in
+**[docs/google-oauth.md](./docs/google-oauth.md)**. Login/signup pages show an
+in-app fix-it checklist whenever Google returns an access-blocked error.
+
 ## Deployment
 
 See **[DEPLOYMENT.md](./DEPLOYMENT.md)** for the full Vercel + Supabase guide,
