@@ -30,6 +30,7 @@ import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { PageTransition } from "@/components/shared/PageTransition";
 import { AutoSave } from "@/components/shared/AutoSave";
 import { InstallApp } from "@/components/shared/InstallApp";
+import { UserAvatar } from "@/components/shared/UserAvatar";
 
 const OnboardingTour = dynamic(
   () => import("@/components/shared/OnboardingTour").then((m) => m.OnboardingTour),
@@ -85,6 +86,7 @@ export default function DashboardLayout({
           </div>
           <span className="text-sm font-display font-bold text-[var(--text-primary)] tracking-wider">ZERVEY</span>
         </div>
+        <UserAvatar compact />
       </div>
 
       {/* Sidebar */}
@@ -137,6 +139,7 @@ export default function DashboardLayout({
 
         {/* Bottom */}
         <div className="p-5 border-t border-[var(--border-primary)] space-y-3">
+          <UserAvatar />
           <InstallApp />
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-mono text-[var(--text-muted)] tracking-widest uppercase">Theme</span>

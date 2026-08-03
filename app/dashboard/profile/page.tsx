@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import {
@@ -33,6 +34,7 @@ interface SessionUser {
   email?: string;
   name?: string;
   createdAt?: string;
+  avatarUrl?: string | null;
 }
 
 function rankForXp(xp: number): { level: string; next: number } {
@@ -61,9 +63,11 @@ export default function ProfilePage() {
     const supabase = createClient();
     supabase.auth.getUser().then(({ data }) => {
       if (data.user) {
+        const meta = data.user.user_metadata ?? {};
         setUser({
           email: data.user.email,
-          name: (data.user.user_metadata?.full_name as string) || data.user.email,
+          name: meta.full_name ?? meta.name ?? data.user.email,
+          avatarUrl: meta.avatar_url ?? meta.picture ?? null,
           createdAt: data.user.created_at,
         });
       }
@@ -111,8 +115,19 @@ export default function ProfilePage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <motion.div variants={fadeUp} initial="hidden" animate="show" className="lg:col-span-1 space-y-4">
           <div className="glass-card p-6 text-center">
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[var(--accent-nexus)] to-[var(--accent-aurum)] mx-auto mb-4 flex items-center justify-center">
-              <Camera className="w-6 h-6 text-white" />
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[var(--accent-nexus)] to-[var(--accent-aurum)] mx-auto mb-4 flex items-center justify-center overflow-hidden border border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)] shadow-aurum">
+              {user?.avatarUrl ? (
+                <Image
+                  src={user.avatarUrl}
+                  alt={user.name ?? "Profile"}
+                  width={80}
+                  height={80}
+                  referrerPolicy="no-referrer"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <Camera className="w-6 h-6 text-white" />
+              )}
             </div>
             <h2 className="type-display text-[var(--text-primary)] text-lg mb-1">
               {user?.name || "Loading…"}
