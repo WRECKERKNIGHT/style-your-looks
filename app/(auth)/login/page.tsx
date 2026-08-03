@@ -9,6 +9,7 @@ import { Mail, Lock, Eye, EyeOff, AlertCircle, Loader2, Send } from "lucide-reac
 import { motion } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import { Logo } from "@/components/shared/Logo";
+import { OAuthErrorPanel, isGoogleBlockError } from "@/components/shared/OAuthErrorPanel";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -163,7 +164,17 @@ export default function LoginPage() {
           <h1 className="mt-2 text-2xl font-body font-bold text-nexus-800 dark:text-white tracking-tight">WELCOME BACK.</h1>
           <p className="text-nexus-400 dark:text-cosmic-muted mt-1 font-body text-sm mb-8">Sign in to continue your style journey.</p>
 
-          {error && (
+          {isGoogleBlockError(error) && (
+            <OAuthErrorPanel
+              error={error}
+              onRetry={() => {
+                setError(null);
+                handleGoogleLogin();
+              }}
+              retrying={googleLoading}
+            />
+          )}
+          {error && !isGoogleBlockError(error) && (
             <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 text-xs font-body mb-2 rounded-sm">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span className="flex-1">{error}</span>

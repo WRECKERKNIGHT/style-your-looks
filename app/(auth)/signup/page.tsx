@@ -9,6 +9,7 @@ import { Mail, Lock, User, Eye, EyeOff, AlertCircle, Loader2, CheckCircle2 } fro
 import { motion } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import { Logo } from "@/components/shared/Logo";
+import { OAuthErrorPanel, isGoogleBlockError } from "@/components/shared/OAuthErrorPanel";
 
 export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -164,7 +165,17 @@ export default function SignupPage() {
           <h1 className="mt-2 text-2xl font-body font-bold text-nexus-800 dark:text-white tracking-tight">CREATE ACCOUNT.</h1>
           <p className="text-nexus-400 dark:text-cosmic-muted mt-1 font-body text-sm mb-8">Free forever. No credit card. No BS.</p>
 
-          {error && (
+          {isGoogleBlockError(error) && (
+            <OAuthErrorPanel
+              error={error}
+              onRetry={() => {
+                setError(null);
+                handleGoogleSignup();
+              }}
+              retrying={googleLoading}
+            />
+          )}
+          {error && !isGoogleBlockError(error) && (
             <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 text-xs font-body mb-4 rounded-sm">
               <AlertCircle className="w-4 h-4 shrink-0" />
               {error}
