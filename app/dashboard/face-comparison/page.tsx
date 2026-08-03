@@ -154,7 +154,7 @@ export default function FaceComparisonPage() {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const link = document.createElement("a");
-    link.download = "auraya-face-comparison.png";
+    link.download = "zervey-face-comparison.png";
     link.href = canvas.toDataURL("image/png");
     link.click();
     addToast("Comparison saved", "success");

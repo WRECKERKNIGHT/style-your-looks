@@ -202,7 +202,7 @@ export default function VirtualTryOnPage() {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const link = document.createElement("a");
-    link.download = "auraya-tryon.png";
+    link.download = "zervey-tryon.png";
     link.href = canvas.toDataURL("image/png");
     link.click();
     addToast("Try-on image saved", "success");

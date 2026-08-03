@@ -8,7 +8,7 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
 
-const IOS_KEY = "auraya_ios_install_dismissed";
+const IOS_KEY = "zervey_ios_install_dismissed";
 
 export function InstallApp() {
   const [promptEvent, setPromptEvent] = useState<BeforeInstallPromptEvent | null>(null);

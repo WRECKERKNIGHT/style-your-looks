@@ -118,8 +118,8 @@ export default function LoginPage() {
         <div className="relative z-10 text-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/auraya-logo.svg"
-            alt="AURAYA"
+            src="/zervey-logo.svg"
+            alt="ZERVEY"
             className="h-12 w-auto mx-auto mb-8 drop-shadow-aurum"
           />
           <h2 className="text-4xl font-body font-bold text-nexus-800 dark:text-white mb-3 tracking-tight">
@@ -161,11 +161,11 @@ export default function LoginPage() {
           <Link href="/" className="flex items-center gap-2 mb-10">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/auraya-logo.svg"
-              alt="AURAYA"
+              src="/zervey-logo.svg"
+              alt="ZERVEY"
               className="h-7 w-auto drop-shadow-aurum"
             />
-            <span className="text-sm font-body font-bold text-nexus-800 dark:text-white tracking-wider">AURAYA</span>
+            <span className="text-sm font-body font-bold text-nexus-800 dark:text-white tracking-wider">ZERVEY</span>
           </Link>
 
           <span className="section-number">AUTH // LOGIN</span>

@@ -5,7 +5,7 @@ import { useAnalysisStore } from "@/store/analysis-store";
 import { motion } from "framer-motion";
 import { Scissors, Droplets, Moon, Save, Check, RotateCcw } from "lucide-react";
 
-const STORAGE_KEY = "auraya_action_plan";
+const STORAGE_KEY = "zervey_action_plan";
 
 interface PlanItem {
   id: string;

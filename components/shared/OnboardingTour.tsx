@@ -4,11 +4,11 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Sparkles, ArrowRight, ArrowLeft, ScanFace, Shirt, Palette, Users } from "lucide-react";
 
-const STORAGE_KEY = "auraya_onboarding_done";
+const STORAGE_KEY = "zervey_onboarding_done";
 
 const steps = [
   {
-    title: "Welcome to AURAYA",
+    title: "Welcome to ZERVEY",
     description: "Your personal fashion intelligence platform. Analyse your face, body, and style to get personalised recommendations.",
     icon: Sparkles,
     color: "text-aurum-500",

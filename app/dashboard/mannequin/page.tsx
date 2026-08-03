@@ -209,7 +209,7 @@ export default function MannequinPage() {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const link = document.createElement("a");
-    link.download = "auraya-mannequin.png";
+    link.download = "zervey-mannequin.png";
     link.href = canvas.toDataURL("image/png");
     link.click();
     addToast("Mannequin saved", "success");

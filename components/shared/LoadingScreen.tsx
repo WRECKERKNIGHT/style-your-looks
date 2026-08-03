@@ -58,7 +58,7 @@ export function LoadingScreen() {
                 </svg>
               </motion.div>
               <span className="text-5xl md:text-7xl font-body font-bold text-white tracking-tight text-gradient-aurum">
-                AURAYA
+                ZERVEY
               </span>
             </div>
 

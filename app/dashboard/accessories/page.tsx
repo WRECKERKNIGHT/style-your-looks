@@ -126,7 +126,7 @@ export default function AccessoriesPage() {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const link = document.createElement("a");
-    link.download = "auraya-glasses.png";
+    link.download = "zervey-glasses.png";
     link.href = canvas.toDataURL("image/png");
     link.click();
     addToast("Glasses preview saved", "success");

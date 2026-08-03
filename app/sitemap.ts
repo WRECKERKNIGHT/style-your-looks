@@ -1,7 +1,7 @@
 import { MetadataRoute } from "next";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = "https://auraya.app";
+  const baseUrl = "https://zervey.app";
 
   const staticPages = [
     { url: baseUrl, priority: 1, frequency: "monthly" as const },

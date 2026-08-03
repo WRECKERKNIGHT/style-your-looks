@@ -6,6 +6,6 @@ export default function robots(): MetadataRoute.Robots {
       userAgent: "*",
       allow: "/",
     },
-    sitemap: "https://auraya.app/sitemap.xml",
+    sitemap: "https://zervey.app/sitemap.xml",
   };
 }

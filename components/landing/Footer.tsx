@@ -43,7 +43,7 @@ export function Footer() {
         style={{ y: watermarkY }}
         className="pointer-events-none absolute -bottom-16 left-1/2 -translate-x-1/2 text-[24vw] font-display font-black text-[var(--text-primary)]/[0.02] tracking-tight whitespace-nowrap select-none"
       >
-        AURAYA
+        ZERVEY
       </motion.div>
       <motion.div
         initial={{ opacity: 0, y: 24 }}
@@ -56,8 +56,8 @@ export function Footer() {
           <div className="lg:col-span-2 space-y-5">
             <Link href="/" className="inline-block">
               <img
-                src="/auraya-logo.svg"
-                alt="AURAYA"
+                src="/zervey-logo.svg"
+                alt="ZERVEY"
                 className="h-8 w-auto"
               />
             </Link>            <p className="text-sm text-[var(--text-muted)] font-body max-w-xs leading-relaxed">
@@ -140,7 +140,7 @@ export function Footer() {
 
         <div className="mt-16 pt-8 border-t border-[var(--border-primary)] flex flex-col md:flex-row items-center justify-between gap-4">
           <span className="type-mono text-[0.5rem] text-[var(--text-muted)] tracking-widest">
-            &copy; 2026 AURAYA. ALL RIGHTS RESERVED.
+            &copy; 2026 ZERVEY. ALL RIGHTS RESERVED.
           </span>
           <div className="flex items-center gap-4">
             <span className="type-mono text-[0.45rem] text-[var(--text-muted)] tracking-widest uppercase">

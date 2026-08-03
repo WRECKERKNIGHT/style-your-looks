@@ -59,8 +59,8 @@ export function Nav() {
         <div className="max-w-[1400px] mx-auto px-8 md:px-16 lg:px-24 h-16 md:h-20 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3 group">
             <img
-              src="/auraya-logo.svg"
-              alt="AURAYA"
+              src="/zervey-logo.svg"
+              alt="ZERVEY"
               className="h-7 md:h-8 w-auto drop-shadow-[0_2px_6px_rgba(87,58,39,0.18)]"
             />
           </Link>

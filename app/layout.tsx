@@ -12,13 +12,13 @@ import ClientDecorations from "@/components/shared/ClientDecorations";
 import { CursorGlow } from "@/components/shared/CursorGlow";
 import { ScrollProgressBar } from "@/components/landing/ScrollProgressBar";
 
-const baseUrl = "https://auraya.app";
+const baseUrl = "https://zervey.app";
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
   title: {
-    default: "AURAYA — AI-Powered Style Intelligence",
-    template: "%s | AURAYA",
+    default: "ZERVEY — AI-Powered Style Intelligence",
+    template: "%s | ZERVEY",
   },
   description:
     "AI-powered facial analysis, virtual try-on, and outfit recommendations. All analysis runs in your browser. Your photos never leave your device.",
@@ -34,31 +34,31 @@ export const metadata: Metadata = {
     "color analysis",
     "personal styling",
   ],
-  authors: [{ name: "AURAYA", url: baseUrl }],
-  creator: "AURAYA",
-  publisher: "AURAYA",
+  authors: [{ name: "ZERVEY", url: baseUrl }],
+  creator: "ZERVEY",
+  publisher: "ZERVEY",
   robots: { index: true, follow: true },
   alternates: { canonical: baseUrl },
   openGraph: {
     type: "website",
     locale: "en_US",
-    siteName: "AURAYA",
-    title: "AURAYA — AI-Powered Style Intelligence",
+    siteName: "ZERVEY",
+    title: "ZERVEY — AI-Powered Style Intelligence",
     description:
       "AI-powered facial analysis, virtual try-on, and outfit recommendations. All analysis runs in your browser.",
     url: baseUrl,
-    images: [{ url: `${baseUrl}/icon-512.svg`, width: 512, height: 512, alt: "AURAYA" }],
+    images: [{ url: `${baseUrl}/icon-512.svg`, width: 512, height: 512, alt: "ZERVEY" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "AURAYA — AI-Powered Style Intelligence",
+    title: "ZERVEY — AI-Powered Style Intelligence",
     description:
       "AI-powered facial analysis, virtual try-on, and outfit recommendations. All analysis runs in your browser.",
     images: [`${baseUrl}/icon-512.svg`],
   },
   appleWebApp: {
     capable: true,
-    title: "AURAYA",
+    title: "ZERVEY",
     statusBarStyle: "black-translucent",
   },
   formatDetection: { telephone: false, email: false, address: false },

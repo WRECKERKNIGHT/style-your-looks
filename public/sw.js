@@ -1,11 +1,11 @@
-const CACHE = "auraya-v1";
+const CACHE = "zervey-v1";
 const STATIC_ASSETS = [
   "/",
   "/manifest.json",
   "/icon.svg",
   "/icon-192.svg",
   "/icon-512.svg",
-  "/auraya-logo.svg",
+  "/zervey-logo.svg",
 ];
 
 const CACHE_FIRST = ["style", "script", "font"];

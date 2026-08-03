@@ -1,6 +1,6 @@
-# AURAYA — AI Style Intelligence
+# ZERVEY — AI Style Intelligence
 
-AURAYA (formerly AuraStyle) is a privacy-first style analysis platform. It performs
+ZERVEY (formerly AuraStyle) is a privacy-first style analysis platform. It performs
 47-point facial analysis, body typing, color-season detection, and outfit
 recommendations — entirely **on-device** via MediaPipe. Photos never leave the
 browser.

@@ -12,7 +12,7 @@ export interface AnalysisEntry {
   label: string;
 }
 
-const STORAGE_KEY = "auraya_history";
+const STORAGE_KEY = "zervey_history";
 const MAX_ENTRIES = 50;
 
 export function getHistory(): AnalysisEntry[] {

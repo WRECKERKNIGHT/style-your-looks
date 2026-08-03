@@ -1,4 +1,4 @@
-# AURAYA — Deployment Guide
+# ZERVEY — Deployment Guide
 
 Target platform is **Vercel** (edge-adjacent Next.js hosting, free tier, built-in
 CDN, service worker support) with **Supabase** for auth + community data.
@@ -7,8 +7,8 @@ CDN, service worker support) with **Supabase** for auth + community data.
 
 | | |
 | --- | --- |
-| Production URL | https://auraya-ten.vercel.app |
-| Vercel project | `auraya` (team `harshithardik312-9603s-projects`) |
+| Production URL | https://zervey-ten.vercel.app |
+| Vercel project | `zervey` (team `harshithardik312-9603s-projects`) |
 | Supabase project | `aurastyler` (`ujgrjatrthhqrzasssuh`) |
 | Deploy method | GitHub connection — pushes to `main` auto-deploy |
 | CI | `.github/workflows/ci.yml` — lint + build on every push/PR |
@@ -69,16 +69,16 @@ The repo ships `.github/workflows/ci.yml` (lint + build on PR) and a
 `output: "standalone"` is enabled, so you can run anywhere:
 
 ```bash
-docker build -t auraya .
+docker build -t zervey .
 docker run -p 3000:3000 \
   -e NEXT_PUBLIC_SUPABASE_URL=... \
   -e NEXT_PUBLIC_SUPABASE_ANON_KEY=... \
-  auraya
+  zervey
 ```
 
 ## 4. Post-deploy checks
 
-- [ ] `curl -I https://auraya.app` returns `strict-transport-security`,
+- [ ] `curl -I https://zervey.app` returns `strict-transport-security`,
       `content-security-policy`, `cross-origin-opener-policy`.
 - [ ] `/manifest.json` serves `Cache-Control: public, max-age=0, must-revalidate`.
 - [ ] `/sw.js` serves `Cache-Control: no-cache` and `Service-Worker-Allowed: /`.
