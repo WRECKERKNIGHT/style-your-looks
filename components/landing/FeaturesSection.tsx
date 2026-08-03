@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
+import type { ElementType } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import {
   ScanFace,
@@ -14,54 +15,89 @@ import {
 import { SpotlightCard } from "@/components/shared/SpotlightCard";
 import { KineticHeadline } from "./KineticHeadline";
 import { Reveal } from "@/components/shared/Reveal";
+import {
+  FeaturePreviewModal,
+  type FeaturePreviewData,
+} from "@/components/shared/FeaturePreviewModal";
 
-const features = [
+const features: (FeaturePreviewData & {
+  icon: ElementType;
+})[] = [
   {
     icon: ScanFace,
     title: "Face Analysis",
     description:
       "478-point facial landmark detection. Symmetry, proportions, jawline, skin clarity — scored objectively with golden ratio adherence.",
+    image: "/images/features/face.jpg",
+    route: "/dashboard/face-analysis",
+    tags: ["478 Landmarks", "Symmetry Score", "On-Device"],
+    cta: "Analyze My Face",
   },
   {
     icon: Droplets,
     title: "Skin Tone",
     description:
       "ITA color science with CIELAB conversion. Monk Scale, Fitzpatrick, undertone mapping. Seasonal color classification.",
+    image: "/images/features/skin.jpg",
+    route: "/dashboard/color-analysis",
+    tags: ["ITA Science", "Undertone", "Seasonal Palette"],
+    cta: "Find My Tone",
   },
   {
     icon: Layers,
     title: "Body Type",
     description:
       "Pose landmark detection. Shoulder, waist, hip measurements. 8 body type classifications with proportion scoring.",
+    image: "/images/features/body.jpg",
+    route: "/dashboard/body-analysis",
+    tags: ["Pose Detection", "8 Types", "Proportions"],
+    cta: "Measure Myself",
   },
   {
     icon: Shirt,
     title: "Virtual Try-On",
     description:
       "AI body detection overlays clothing on your photo. Preview before you commit to a look.",
+    image: "/images/features/tryon.jpg",
+    route: "/dashboard/virtual-tryon",
+    tags: ["Try-On", "Overlay", "AI Styling"],
+    cta: "Try It On",
   },
   {
     icon: Scissors,
     title: "Grooming Studio",
     description:
       "15 beard styles, 9 mustache types. Canvas overlays using facial landmarks. See what works before you commit.",
+    image: "/images/features/grooming.jpg",
+    route: "/dashboard/grooming",
+    tags: ["15 Beard Styles", "9 Mustaches", "Canvas Overlay"],
+    cta: "Style My Grooming",
   },
   {
     icon: Sparkles,
     title: "Outfit Picks",
     description:
       "AI-curated recommendations. 40+ outfits, 8 occasions, filtered by your unique profile and seasonal palette.",
+    image: "/images/features/outfit.jpg",
+    route: "/dashboard/recommendations",
+    tags: ["40+ Outfits", "8 Occasions", "Seasonal"],
+    cta: "Get My Picks",
   },
   {
     icon: Users,
     title: "Community",
     description:
       "Share looks, get honest feedback, rate others. Build your style reputation with real people.",
+    image: "/images/features/community.jpg",
+    route: "/dashboard/community",
+    tags: ["Share Looks", "Feedback", "Ratings"],
+    cta: "Join the Community",
   },
 ];
 
 export function FeaturesSection() {
   const ref = useRef<HTMLDivElement>(null);
+  const [preview, setPreview] = useState<FeaturePreviewData | null>(null);
 
   const { scrollYProgress } = useScroll({
     target: ref,
@@ -135,16 +171,33 @@ export function FeaturesSection() {
                       {feature.description}
                     </p>
                     <div className="mt-6 pt-4 border-t border-[var(--border-primary)] flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-aurum-400/60" />
-                      <span className="type-mono text-[0.55rem] text-[var(--text-muted)] tracking-widest group-hover:text-[var(--accent-mocha)] transition-colors">
-                        EXPLORE &rarr;
-                      </span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setPreview({
+                            title: feature.title,
+                            description: feature.description,
+                            image: feature.image,
+                            route: feature.route,
+                            tags: feature.tags,
+                            cta: feature.cta,
+                          })
+                        }
+                        className="flex items-center gap-2 text-left w-full cursor-pointer group"
+                      >
+                        <div className="w-1.5 h-1.5 rounded-full bg-aurum-400/60 transition-all duration-300 group-hover:scale-150" />
+                        <span className="type-mono text-[0.55rem] text-[var(--text-muted)] tracking-widest group-hover:text-[var(--accent-mocha)] transition-colors">
+                          EXPLORE &rarr;
+                        </span>
+                      </button>
                     </div>
                   </div>
                 </SpotlightCard>
               </div>
             </Reveal>
           ))}
+
+          <FeaturePreviewModal data={preview} onClose={() => setPreview(null)} />
         </motion.div>
       </div>
     </section>
