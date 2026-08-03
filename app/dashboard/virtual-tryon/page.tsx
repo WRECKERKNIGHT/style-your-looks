@@ -3,11 +3,20 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { ImageUploader } from "@/components/shared/ImageUploader";
 import { useAnalysisStore } from "@/store/analysis-store";
-import { SAMPLE_CLOTHING, type ClothingItem } from "@/lib/ml/virtual-tryon";
+import { SAMPLE_CLOTHING, drawFabric, type ClothingItem, type FabricType } from "@/lib/ml/virtual-tryon";
 import { clothingPositions, type Point } from "@/lib/ml/face-landmarks";
 import { motion } from "framer-motion";
-import { Shirt, Trash2, RotateCcw, Download, ZoomIn, ZoomOut, Move } from "lucide-react";
+import { Shirt, Trash2, RotateCcw, Download, ZoomIn, ZoomOut, Move, ArrowUp, ArrowDown } from "lucide-react";
 import { useToast } from "@/components/shared/Toast";
+
+const FABRICS: { id: FabricType; label: string; pattern: string }[] = [
+  { id: "solid", label: "SOLID", pattern: "" },
+  { id: "denim", label: "DENIM", pattern: "repeating-linear-gradient(45deg, rgba(0,0,0,0.14) 0 2px, transparent 2px 6px), repeating-linear-gradient(-45deg, rgba(255,255,255,0.14) 0 2px, transparent 2px 6px)" },
+  { id: "knit", label: "KNIT", pattern: "repeating-linear-gradient(90deg, rgba(0,0,0,0.16) 0 3px, transparent 3px 8px)" },
+  { id: "linen", label: "LINEN", pattern: "repeating-linear-gradient(0deg, rgba(0,0,0,0.1) 0 1px, transparent 1px 9px), repeating-linear-gradient(90deg, rgba(255,255,255,0.15) 0 1px, transparent 1px 9px)" },
+  { id: "silk", label: "SILK", pattern: "linear-gradient(180deg, rgba(255,255,255,0.55), rgba(255,255,255,0.05) 45%, rgba(255,255,255,0.1) 62%, rgba(255,255,255,0.28))" },
+  { id: "leather", label: "LEATHER", pattern: "radial-gradient(circle at 20% 30%, rgba(0,0,0,0.3) 0 4px, transparent 5px), radial-gradient(circle at 70% 60%, rgba(255,255,255,0.25) 0 6px, transparent 7px), radial-gradient(circle at 45% 85%, rgba(0,0,0,0.25) 0 3px, transparent 4px)" },
+];
 
 interface PlacedItem extends ClothingItem {
   x: number;
@@ -29,6 +38,7 @@ export default function VirtualTryOnPage() {
   const containerRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement | null>(null);
   const [selectedItems, setSelectedItems] = useState<PlacedItem[]>([]);
+  const [activeItemId, setActiveItemId] = useState<string | null>(null);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [scale, setScale] = useState(1);
@@ -78,15 +88,7 @@ export default function VirtualTryOnPage() {
     selectedItems.forEach((item) => {
       ctx.save();
       ctx.globalAlpha = item.opacity ?? 0.65;
-      const radius = 8;
-      ctx.beginPath();
-      ctx.roundRect(item.x, item.y, item.width, item.height, radius);
-      ctx.fillStyle = item.color;
-      ctx.fill();
-      ctx.globalAlpha = 0.9;
-      ctx.strokeStyle = "rgba(255,255,255,0.4)";
-      ctx.lineWidth = 1;
-      ctx.stroke();
+      drawFabric(ctx, item.x, item.y, item.width, item.height, item.fabric, item.color, 8);
       ctx.globalAlpha = 1;
       ctx.fillStyle = "#fff";
       ctx.font = `bold ${Math.max(10, item.width * 0.08)}px "Inter", sans-serif`;
@@ -148,10 +150,28 @@ export default function VirtualTryOnPage() {
       ...prev,
       { ...item, x: pos.x, y: pos.y, width: pos.width, height: pos.height, opacity: 0.65 },
     ]);
+    setActiveItemId(item.id);
   };
 
   const removeClothingItem = (id: string) => {
     setSelectedItems((prev) => prev.filter((i) => i.id !== id));
+    if (activeItemId === id) setActiveItemId(null);
+  };
+
+  const handleFabricChange = (id: string, fabric: FabricType) => {
+    setSelectedItems((prev) => prev.map((item) => (item.id === id ? { ...item, fabric } : item)));
+  };
+
+  const moveLayer = (id: string, dir: 1 | -1) => {
+    setSelectedItems((prev) => {
+      const idx = prev.findIndex((i) => i.id === id);
+      const target = idx + dir;
+      if (idx < 0 || target < 0 || target >= prev.length) return prev;
+      const next = [...prev];
+      const [it] = next.splice(idx, 1);
+      next.splice(target, 0, it);
+      return next;
+    });
   };
 
   const handleCanvasMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -247,13 +267,21 @@ export default function VirtualTryOnPage() {
             />
 
             {selectedItems.length > 0 && (
-              <div className="absolute top-3 right-3 glass-card p-3 space-y-2 max-w-[200px]">
+              <div className="absolute top-3 right-3 glass-card p-3 space-y-2 max-w-[220px]">
                 <p className="type-label text-[var(--text-muted)]">LAYERS</p>
                 {selectedItems.map((item) => (
-                  <div key={item.id} className="space-y-1">
+                  <div key={item.id} className={`space-y-1 p-2 border transition-all ${activeItemId === item.id ? "border-[var(--accent-aurum)]" : "border-[var(--border-primary)]"}`}>
                     <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 border border-[var(--border-primary)] shrink-0" style={{ backgroundColor: item.color }} />
-                      <span className="text-xs font-body text-[var(--text-primary)] truncate flex-1">{item.name}</span>
+                      <button onClick={() => setActiveItemId(item.id)} className="flex items-center gap-2 flex-1 min-w-0 text-left">
+                        <div className="w-3 h-3 border border-[var(--border-primary)] shrink-0" style={{ backgroundColor: item.color, backgroundImage: FABRICS.find((f) => f.id === item.fabric)?.pattern || undefined }} />
+                        <span className="text-xs font-body text-[var(--text-primary)] truncate">{item.name}</span>
+                      </button>
+                      <button onClick={() => moveLayer(item.id, 1)} className="text-[var(--text-muted)] hover:text-[var(--accent-aurum)] transition-colors shrink-0" title="Bring forward">
+                        <ArrowUp className="w-3 h-3" />
+                      </button>
+                      <button onClick={() => moveLayer(item.id, -1)} className="text-[var(--text-muted)] hover:text-[var(--accent-aurum)] transition-colors shrink-0" title="Send back">
+                        <ArrowDown className="w-3 h-3" />
+                      </button>
                       <button onClick={() => removeClothingItem(item.id)} className="text-[var(--text-muted)] hover:text-red-400 transition-colors shrink-0">
                         <Trash2 className="w-3 h-3" />
                       </button>
@@ -287,6 +315,7 @@ export default function VirtualTryOnPage() {
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                     {SAMPLE_CLOTHING.filter((i) => i.category === cat.key).map((item) => {
                       const isSelected = selectedItems.some((s) => s.id === item.id);
+                      const fabricMeta = FABRICS.find((f) => f.id === item.fabric);
                       return (
                         <button
                           key={item.id}
@@ -297,8 +326,9 @@ export default function VirtualTryOnPage() {
                               : "border-[var(--border-primary)] hover:border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)] bg-[var(--bg-tertiary)] card-nexus"
                           }`}
                         >
-                          <div className="w-full h-14 mb-3 border border-[var(--border-primary)]" style={{ backgroundColor: item.color }} />
+                          <div className="w-full h-14 mb-3 border border-[var(--border-primary)]" style={{ backgroundColor: item.color, backgroundImage: fabricMeta?.pattern || undefined }} />
                           <p className="text-sm font-body text-[var(--text-primary)] truncate">{item.name}</p>
+                          <p className="type-mono text-[0.5rem] text-[var(--text-muted)] tracking-widest mt-1">{fabricMeta?.label}</p>
                         </button>
                       );
                     })}
@@ -307,6 +337,37 @@ export default function VirtualTryOnPage() {
               ))}
             </div>
           </div>
+
+          {selectedItems.length > 0 && (
+            <div className="glass-card p-8">
+              <h3 className="type-heading text-[var(--text-primary)] tracking-tight mb-2">FABRIC SWAP</h3>
+              <p className="text-sm text-[var(--text-muted)] font-body mb-6">
+                {activeItemId
+                  ? `Applying to: ${selectedItems.find((i) => i.id === activeItemId)?.name ?? "item"}`
+                  : "Select a layer (click its name in the LAYERS panel) to change its fabric."}
+              </p>
+              <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+                {FABRICS.map((f) => {
+                  const isActive = selectedItems.find((i) => i.id === activeItemId)?.fabric === f.id;
+                  return (
+                    <button
+                      key={f.id}
+                      disabled={!activeItemId}
+                      onClick={() => activeItemId && handleFabricChange(activeItemId, f.id)}
+                      className={`p-3 border text-left transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed ${
+                        isActive
+                          ? "border-[var(--accent-aurum)] bg-[color-mix(in_srgb,var(--accent-aurum)_10%,transparent)]"
+                          : "border-[var(--border-primary)] hover:border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)] bg-[var(--bg-tertiary)] card-nexus"
+                      }`}
+                    >
+                      <div className="w-full h-12 mb-2 border border-[var(--border-primary)]" style={{ backgroundColor: "#8A6B4F", backgroundImage: f.pattern || undefined }} />
+                      <p className="type-mono text-[0.5rem] text-[var(--text-muted)] tracking-widest">{f.label}</p>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           <div className="flex gap-4">
             <button onClick={() => setSelectedItems([])} className="btn-outline flex-1 justify-center">
