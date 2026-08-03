@@ -96,13 +96,18 @@ function getAverageColor(
   x: number,
   y: number,
   radius: number
-): RGB {
-  const imageData = ctx.getImageData(
-    Math.max(0, x - radius),
-    Math.max(0, y - radius),
-    radius * 2,
-    radius * 2
-  );
+): RGB | null {
+  let imageData: ImageData;
+  try {
+    imageData = ctx.getImageData(
+      Math.max(0, x - radius),
+      Math.max(0, y - radius),
+      radius * 2,
+      radius * 2
+    );
+  } catch {
+    return null;
+  }
   const pixels = imageData.data;
 
   let r = 0, g = 0, b = 0, count = 0;
@@ -153,11 +158,14 @@ export function analyzeSkinTone(
     const px = Math.floor(point.x * imgWidth);
     const py = Math.floor(point.y * imgHeight);
     const color = getAverageColor(ctx, px, py, 5);
+    if (!color) continue;
     totalR += color.r;
     totalG += color.g;
     totalB += color.b;
     count++;
   }
+
+  if (count === 0) return null;
 
   const avgColor: RGB = {
     r: Math.round(totalR / count),

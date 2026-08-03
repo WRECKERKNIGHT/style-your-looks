@@ -158,11 +158,19 @@ export function useMediaPipe() {
   } = useAnalysisStore();
 
   const analyzeFaceFromImage = useCallback(
-    async (imageElement: HTMLImageElement, genderProfile: AnalysisProfile = "neutral") => {
+    async (
+      imageElement: HTMLImageElement,
+      genderProfile: AnalysisProfile = "neutral",
+      onPreview?: (landmarks: number[][]) => void
+    ) => {
       setIsAnalyzing(true);
       setAnalysisProgress(0);
 
       try {
+        if (!imageElement.naturalWidth || !imageElement.naturalHeight) {
+          throw new Error("Could not load the photo. Try re-uploading it.");
+        }
+
         const canvas = document.createElement("canvas");
         canvas.width = imageElement.naturalWidth;
         canvas.height = imageElement.naturalHeight;
@@ -171,6 +179,9 @@ export function useMediaPipe() {
 
         setAnalysisProgress(10);
         const faceResult = await analyzeFace(imageElement, setAnalysisProgress);
+        onPreview?.(
+          faceResult.faceLandmarks?.[0]?.map((l) => [l.x, l.y, l.z]) || []
+        );
         setAnalysisProgress(60);
 
         const skinTone = analyzeSkinTone(canvas, faceResult);
@@ -206,7 +217,11 @@ export function useMediaPipe() {
   );
 
   const analyzeFacePhotos = useCallback(
-    async (imageElements: HTMLImageElement[], genderProfile: AnalysisProfile = "neutral") => {
+    async (
+      imageElements: HTMLImageElement[],
+      genderProfile: AnalysisProfile = "neutral",
+      onPreview?: (index: number, landmarks: number[][]) => void
+    ) => {
       setIsAnalyzing(true);
       setAnalysisProgress(0);
 
@@ -222,6 +237,11 @@ export function useMediaPipe() {
           setAnalysisProgress(Math.round((i / imageElements.length) * 75));
           const image = imageElements[i];
 
+          if (!image.naturalWidth || !image.naturalHeight) {
+            rejected.push({ index: i, issues: ["Could not load the photo"] });
+            continue;
+          }
+
           const canvas = document.createElement("canvas");
           canvas.width = image.naturalWidth;
           canvas.height = image.naturalHeight;
@@ -229,6 +249,10 @@ export function useMediaPipe() {
           ctx.drawImage(image, 0, 0);
 
           const faceResult = await analyzeFace(image);
+          onPreview?.(
+            i,
+            faceResult.faceLandmarks?.[0]?.map((l) => [l.x, l.y, l.z]) || []
+          );
           const numFaces = faceResult.faceLandmarks?.length || 0;
           const quality = assessPhotoQuality(canvas, faceResult, numFaces);
 

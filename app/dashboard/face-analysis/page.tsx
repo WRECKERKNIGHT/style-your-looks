@@ -24,7 +24,7 @@ const MAX_PHOTOS = 3;
 const MIN_PHOTOS = 2;
 
 export default function FaceAnalysisPage() {
-  const { uploadedImage, setUploadedImage, faceResult, isAnalyzing, genderProfile, setGenderProfile } =
+  const { uploadedImage, setUploadedImage, faceResult, isAnalyzing, genderProfile, setGenderProfile, setProcessingPreview } =
     useAnalysisStore();
   const { analyzeFacePhotos } = useMediaPipe();
   const { videoRef, isStreaming, startWebcam, stopWebcam, captureFrame } = useWebcam();
@@ -119,6 +119,7 @@ export default function FaceAnalysisPage() {
 
     setError(null);
     setUploadedImage(photos[0]);
+    setProcessingPreview({ image: photos[0], landmarks: [] });
 
     try {
       const images = await Promise.all(
@@ -133,7 +134,12 @@ export default function FaceAnalysisPage() {
         )
       );
 
-      const { photoCount, rejected } = await analyzeFacePhotos(images, genderProfile);
+      const { photoCount, rejected } = await analyzeFacePhotos(
+        images,
+        genderProfile,
+        (index, landmarks) =>
+          setProcessingPreview({ image: photos[index], landmarks })
+      );
       setRejectedPhotos(rejected);
       if (rejected.length > 0) {
         addToast(
@@ -148,8 +154,10 @@ export default function FaceAnalysisPage() {
       setError(
         err instanceof Error ? err.message : "Failed to analyse face. Please try clearer photos."
       );
+    } finally {
+      setProcessingPreview(null);
     }
-  }, [photos, setUploadedImage, analyzeFacePhotos, addToast, genderProfile]);
+  }, [photos, setUploadedImage, setProcessingPreview, analyzeFacePhotos, addToast, genderProfile]);
 
   return (
     <div className="space-y-8">

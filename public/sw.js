@@ -1,4 +1,4 @@
-const CACHE = "zervey-v1";
+const CACHE = "zervey-v2";
 const STATIC_ASSETS = [
   "/",
   "/manifest.json",
@@ -8,7 +8,9 @@ const STATIC_ASSETS = [
   "/zervey-logo.svg",
 ];
 
-const CACHE_FIRST = ["style", "script", "font"];
+// Scripts and styles are served network-first (see below) so a new
+// deployment always takes effect instead of serving stale cached bundles.
+const CACHE_FIRST = ["font"];
 const CACHE_ONLY_IMAGES = /\.(png|jpg|jpeg|webp|gif|svg|ico|avif)$/i;
 
 self.addEventListener("install", (event) => {

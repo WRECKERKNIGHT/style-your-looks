@@ -25,16 +25,20 @@ function getLuminance(
   const sctx = small.getContext("2d");
   if (!sctx) return { data: new Uint8Array(0), w: 0, h: 0 };
 
-  sctx.drawImage(canvas, 0, 0, size, size);
-  const img = sctx.getImageData(0, 0, size, size);
-  const data = new Uint8Array(size * size);
-  for (let i = 0; i < size * size; i++) {
-    const r = img.data[i * 4];
-    const g = img.data[i * 4 + 1];
-    const b = img.data[i * 4 + 2];
-    data[i] = 0.299 * r + 0.587 * g + 0.114 * b;
+  try {
+    sctx.drawImage(canvas, 0, 0, size, size);
+    const img = sctx.getImageData(0, 0, size, size);
+    const data = new Uint8Array(size * size);
+    for (let i = 0; i < size * size; i++) {
+      const r = img.data[i * 4];
+      const g = img.data[i * 4 + 1];
+      const b = img.data[i * 4 + 2];
+      data[i] = 0.299 * r + 0.587 * g + 0.114 * b;
+    }
+    return { data, w: size, h: size };
+  } catch {
+    return { data: new Uint8Array(0), w: 0, h: 0 };
   }
-  return { data, w: size, h: size };
 }
 
 function assessBrightness(mean: number): { score: number; issue?: string; warning?: string } {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useRef, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Scan,
@@ -12,6 +12,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { useAnalysisStore } from "@/store/analysis-store";
+import { FaceSkeletonOverlay } from "@/components/analysis/FaceSkeletonOverlay";
 
 const phases = [
   { id: "detect", icon: Scan, label: "DETECTING", detail: "Initialising MediaPipe and locating your face", threshold: 15, color: "#A0764E" },
@@ -28,6 +29,18 @@ export function ProcessingOverlay({
 }) {
   const isAnalyzing = useAnalysisStore((s) => s.isAnalyzing);
   const progress = useAnalysisStore((s) => s.analysisProgress);
+  const preview = useAnalysisStore((s) => s.processingPreview);
+  const previewRef = useRef<HTMLImageElement>(null);
+  const [previewDims, setPreviewDims] = useState<{ w: number; h: number } | null>(null);
+
+  const handlePreviewLoad = useCallback(() => {
+    if (previewRef.current) {
+      setPreviewDims({
+        w: previewRef.current.clientWidth,
+        h: previewRef.current.clientHeight,
+      });
+    }
+  }, []);
 
   const currentPhase = useMemo(
     () => phases.find((p) => progress < p.threshold) ?? phases[phases.length - 1],
@@ -38,6 +51,8 @@ export function ProcessingOverlay({
     () => phases.filter((p) => progress >= p.threshold),
     [progress]
   );
+
+  const showPhoto = Boolean(preview);
 
   return (
     <AnimatePresence mode="wait">
@@ -70,8 +85,42 @@ export function ProcessingOverlay({
               </span>
             </div>
 
-            <div className="flex flex-col md:flex-row items-center gap-10">
-              <Radar visualProgress={progress} phaseColor={currentPhase.color} />
+            {showPhoto && (
+              <div className="relative overflow-hidden border border-[var(--border-primary)] bg-black/40 mb-8">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  ref={previewRef}
+                  src={preview!.image}
+                  alt="Live analysis preview"
+                  onLoad={handlePreviewLoad}
+                  className="w-full max-h-[440px] object-cover"
+                />
+                {previewDims && preview!.landmarks.length > 0 && (
+                  <FaceSkeletonOverlay
+                    landmarks={preview!.landmarks}
+                    width={previewDims.w}
+                    height={previewDims.h}
+                    animate
+                  />
+                )}
+                <div
+                  className="absolute bottom-3 left-3 flex items-center gap-2 px-3 py-1.5 rounded-sm border bg-black/50 backdrop-blur-sm"
+                  style={{ borderColor: "rgba(200,150,62,0.5)" }}
+                >
+                  <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: "#E8C88A" }} />
+                  <span className="text-[0.6rem] font-mono tracking-[0.25em] text-[#E8C88A]">
+                    {preview!.landmarks.length > 0 ? "FACE LOCKED — 478 POINTS MAPPED" : "SCANNING FOR FACE..."}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            <div
+              className={`flex flex-col md:flex-row ${
+                showPhoto ? "items-start" : "items-center"
+              } gap-10`}
+            >
+              {!showPhoto && <Radar visualProgress={progress} phaseColor={currentPhase.color} />}
 
               <div className="flex-1 w-full space-y-4">
                 <div className="flex items-center gap-4 min-h-[3.5rem]">

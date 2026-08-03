@@ -381,11 +381,29 @@ export async function analyzeFace(
   onProgress?: (progress: number) => void
 ): Promise<FaceLandmarkerResult> {
   onProgress?.(10);
-  const landmarker = await initializeFaceLandmarker();
+
+  let landmarker: FaceLandmarker;
+  try {
+    landmarker = await initializeFaceLandmarker();
+  } catch (err) {
+    console.error("MediaPipe init error:", err);
+    throw new Error(
+      "Could not load the face-detection engine. Check your connection and try again."
+    );
+  }
   onProgress?.(30);
 
-  const result = landmarker.detect(imageSource);
-  onProgress?.(100);
-
-  return result;
+  try {
+    const result = landmarker.detect(imageSource);
+    onProgress?.(100);
+    return result;
+  } catch (err) {
+    console.error("MediaPipe detect error:", err);
+    if (err instanceof DOMException && err.name === "SecurityError") {
+      throw new Error(
+        "Your browser blocked reading the photo pixels for security reasons. Try a different photo, or re-upload it."
+      );
+    }
+    throw err;
+  }
 }
