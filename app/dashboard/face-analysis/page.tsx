@@ -9,12 +9,13 @@ import { PhotoGuidelines } from "@/components/analysis/PhotoGuidelines";
 import { PhotoReviewPanel, type RejectedPhoto } from "@/components/analysis/PhotoReviewPanel";
 import { TryItOnPanel } from "@/components/analysis/TryItOnPanel";
 import { FaceCalibration } from "@/components/analysis/FaceCalibration";
+import { FaceView3D } from "@/components/analysis/FaceView3D";
 import { useAnalysisStore } from "@/store/analysis-store";
 import { useMediaPipe } from "@/hooks/useMediaPipe";
 import { useWebcam } from "@/hooks/useWebcam";
 import { useToast } from "@/components/shared/Toast";
 import { motion, AnimatePresence } from "framer-motion";
-import { ScanFace, Camera, AlertCircle, Eye, Save, CheckCircle, X, ShieldCheck, Copy, Check, Ruler, Gauge, AlertTriangle, GitCompareArrows } from "lucide-react";
+import { ScanFace, Camera, AlertCircle, Eye, Save, CheckCircle, X, ShieldCheck, Copy, Check, Ruler, Gauge, AlertTriangle, GitCompareArrows, Box } from "lucide-react";
 import { SymmetrySplit } from "@/components/analysis/SymmetrySplit";
 
 const fadeUp = {
@@ -682,6 +683,16 @@ export default function FaceAnalysisPage() {
                 centerX={faceResult.landmarks[1]?.[0] ?? 0.5}
                 symmetryScore={faceResult.symmetry}
               />
+            </motion.div>
+          )}
+
+          {faceResult.landmarks.length > 0 && (
+            <motion.div variants={fadeUp} initial="hidden" animate="show" className="glass-card p-8">
+              <div className="flex items-center gap-3 mb-6">
+                <Box className="w-5 h-5 text-[var(--accent-aurum)]" />
+                <h3 className="type-heading text-[var(--text-primary)] tracking-tight">3D FACE VIEW</h3>
+              </div>
+              <FaceView3D landmarks={faceResult.landmarks} />
             </motion.div>
           )}
 
