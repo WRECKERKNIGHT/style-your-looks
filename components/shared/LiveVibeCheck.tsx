@@ -6,13 +6,23 @@ import { Music, Activity } from "lucide-react";
 
 const moods = ["CONFIDENT", "RADIANT", "BOLD", "ELEGANT", "POWERFUL"];
 
-function generateBarHeights(): number[] {
-  return Array.from({ length: 24 }, () => Math.random());
+function buildBars(metrics: number[] | undefined, tick: number): number[] {
+  const base = metrics && metrics.length > 0 ? metrics : [0.5];
+  return Array.from({ length: 24 }, (_, i) => {
+    const pos = (i / 23) * (base.length - 1);
+    const lo = Math.floor(pos);
+    const hi = Math.min(lo + 1, base.length - 1);
+    const t = pos - lo;
+    const interpolated = base[lo] * (1 - t) + base[hi] * t;
+    const shimmer = Math.sin(tick * 0.35 + i * 0.45) * 0.05;
+    return Math.max(0.08, Math.min(1, interpolated + shimmer));
+  });
 }
 
-export function LiveVibeCheck({ score }: { score?: number }) {
+export function LiveVibeCheck({ score, metrics }: { score?: number; metrics?: number[] }) {
   const [currentMoodIndex, setCurrentMoodIndex] = useState(0);
-  const [bars, setBars] = useState(generateBarHeights);
+  const [bars, setBars] = useState<number[]>([]);
+  const tickRef = useRef(0);
   const intervalRef = useRef<ReturnType<typeof setInterval>>();
 
   const hasScore = typeof score === "number" && score > 0;
@@ -23,11 +33,12 @@ export function LiveVibeCheck({ score }: { score?: number }) {
 
   useEffect(() => {
     intervalRef.current = setInterval(() => {
-      setBars(generateBarHeights);
+      tickRef.current += 1;
+      setBars(buildBars(metrics, tickRef.current));
     }, 400);
 
     return () => clearInterval(intervalRef.current);
-  }, []);
+  }, [metrics]);
 
   useEffect(() => {
     const moodInterval = setInterval(() => {

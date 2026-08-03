@@ -27,33 +27,12 @@ import {
 } from "lucide-react";
 import { useAnalysisStore } from "@/store/analysis-store";
 import { getHistory } from "@/lib/history";
+import { getPersonalizedTips, onboardingTips } from "@/lib/tips";
 import { AnimatedCounter } from "@/components/shared/AnimatedCounter";
 import { AIInsights } from "@/components/shared/AIInsights";
 import { LiveVibeCheck } from "@/components/shared/LiveVibeCheck";
 import { StyleTimeline } from "@/components/shared/StyleTimeline";
 import { StyleStreak } from "@/components/shared/StyleStreak";
-
-const aiTips = [
-  "Your jawline benefits from structured collars. Avoid crew necks — they shorten the neck visually.",
-  "Cool undertones pop against ivory. Skip yellow-based whites — they wash you out.",
-  "High-contrast faces dominate in monochrome. Try a black suit with a white shirt — no tie.",
-  "Your face shape suits asymmetrical cuts. Ask your barber for a textured fringe.",
-  "Deep autumns own burgundy. Swap your navy blazer for oxblood this season.",
-  "Vertical lines elongate your frame. Pinstripes are your secret weapon.",
-  "Your skin clarity window peaks at 9 AM. Morning light is your best filter.",
-  "Matte finishes beat glossy on your skin texture. Go for velvet-matte formulations.",
-  "Your eye spacing favors wider lapels. Double-breasted jackets will balance your proportions.",
-  "Earth tones amplify your natural contrast. Olive and rust outperform gray and charcoal.",
-];
-
-const onboardingTips = [
-  "Upload 2–3 front-facing photos of your face in good, even lighting for the most accurate Face IQ scan.",
-  "All analysis runs entirely on your device via MediaPipe — no photo ever leaves your browser.",
-  "Face the camera directly at eye level. Slight tilts reduce symmetry accuracy.",
-  "After your first scan, every module (Style DNA, Color, Grooming, Try-On) unlocks with real data.",
-  "Save analyses to history to build your Style Evolution Timeline over time.",
-  "Your Style Score is generated only from your real measurements — no default placeholders.",
-];
 
 const quickActions = [
   {
@@ -236,7 +215,7 @@ export default function DashboardHome() {
 
   const hasAnalysis = !!faceResult;
   const overallScore = faceResult ? faceResult.overallScore : null;
-  const tips = hasAnalysis ? aiTips : onboardingTips;
+  const tips = hasAnalysis ? getPersonalizedTips(faceResult, bodyResult) : onboardingTips;
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -385,7 +364,10 @@ export default function DashboardHome() {
           </motion.div>
         </ScrollReveal>
 
-        <LiveVibeCheck score={overallScore ?? undefined} />
+        <LiveVibeCheck
+          score={overallScore ?? undefined}
+          metrics={faceResult?.breakdown?.map((m) => m.score / 100)}
+        />
 
         <ScrollReveal>
           <StyleStreak />

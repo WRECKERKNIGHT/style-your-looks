@@ -1,37 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Clock, ChevronRight, Trash2, BarChart3, Eye, RotateCcw, ArrowRight } from "lucide-react";
+import { Clock, Trash2, Eye, ArrowRight } from "lucide-react";
 import { useToast } from "@/components/shared/Toast";
+import {
+  getHistory,
+  deleteFromHistory,
+  clearHistory,
+  type AnalysisEntry,
+} from "@/lib/history";
 
-interface HistoryEntry {
+interface HistoryRow {
   id: string;
-  type: "face" | "body" | "color" | "pillar" | "skin" | "style-dna" | "virtual-tryon" | "grooming" | "accessories" | "hair";
+  type: "face" | "body" | "color" | "analysis";
+  route: string;
   label: string;
   date: string;
   score?: number;
   result?: string;
 }
 
-const MOCK_HISTORY: HistoryEntry[] = [
-  { id: "h1", type: "pillar", label: "Pillar Analysis", date: "2026-07-30 14:32", score: 87, result: "Harmonious Classic" },
-  { id: "h2", type: "face", label: "Face Shape Analysis", date: "2026-07-30 14:25", score: 92, result: "Oval" },
-  { id: "h3", type: "body", label: "Body Type Analysis", date: "2026-07-30 14:18", score: 88, result: "Hourglass" },
-  { id: "h4", type: "color", label: "Color Analysis", date: "2026-07-30 14:10", score: 85, result: "Deep Autumn" },
-  { id: "h5", type: "skin", label: "Skin Health", date: "2026-07-29 11:00", score: 76, result: "Needs Improvement" },
-  { id: "h6", type: "style-dna", label: "Style DNA", date: "2026-07-29 10:45", result: "Classic Minimalist" },
-  { id: "h7", type: "virtual-tryon", label: "Virtual Try-On", date: "2026-07-28 16:20" },
-  { id: "h8", type: "grooming", label: "Grooming Guide", date: "2026-07-28 15:00", score: 81 },
-  { id: "h9", type: "accessories", label: "Glasses Try-On", date: "2026-07-27 13:30" },
-  { id: "h10", type: "hair", label: "Hair Preview", date: "2026-07-27 13:15" },
-  { id: "h11", type: "pillar", label: "Pillar Analysis", date: "2026-07-20 09:00", score: 72, result: "Evolving" },
-  { id: "h12", type: "face", label: "Face Shape Analysis", date: "2026-07-20 08:55", score: 90, result: "Oval" },
-];
-
 const TYPE_ICONS: Record<string, string> = {
-  face: "👤", body: "🧍", color: "🎨", pillar: "🏛️", skin: "✨", "style-dna": "🧬", "virtual-tryon": "👗", grooming: "💇", accessories: "👓", hair: "💁",
+  face: "👤", body: "🧍", color: "🎨", analysis: "📄",
 };
 
 const fadeUp = {
@@ -39,24 +31,75 @@ const fadeUp = {
   show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
 };
 
+function toRow(entry: AnalysisEntry): HistoryRow {
+  if (entry.faceResult) {
+    return {
+      id: entry.id,
+      type: "face",
+      route: "/dashboard/face-analysis",
+      label: entry.label,
+      date: entry.date,
+      score: entry.faceResult.overallScore,
+      result: entry.faceResult.facialShape,
+    };
+  }
+  if (entry.bodyResult) {
+    return {
+      id: entry.id,
+      type: "body",
+      route: "/dashboard/body-analysis",
+      label: entry.label,
+      date: entry.date,
+      score: entry.bodyResult.bodyProportionScore ?? undefined,
+      result: entry.bodyResult.bodyType,
+    };
+  }
+  if (entry.colorAnalysis) {
+    return {
+      id: entry.id,
+      type: "color",
+      route: "/dashboard/color-analysis",
+      label: entry.label,
+      date: entry.date,
+      result: entry.colorAnalysis.seasonalType,
+    };
+  }
+  return {
+    id: entry.id,
+    type: "analysis",
+    route: "/dashboard/face-analysis",
+    label: entry.label,
+    date: entry.date,
+  };
+}
+
 export default function HistoryPage() {
   const { addToast } = useToast();
-  const [history, setHistory] = useState(MOCK_HISTORY);
+  const [rows, setRows] = useState<HistoryRow[]>([]);
   const [filter, setFilter] = useState<string>("all");
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
 
-  const filtered = history
-    .filter(h => filter === "all" || h.type === filter)
+  const reload = useCallback(() => {
+    setRows(getHistory().map(toRow));
+  }, []);
+
+  useEffect(() => {
+    reload();
+  }, [reload]);
+
+  const filtered = rows
+    .filter((h) => filter === "all" || h.type === filter)
     .sort((a, b) => sortOrder === "newest"
       ? new Date(b.date).getTime() - new Date(a.date).getTime()
       : new Date(a.date).getTime() - new Date(b.date).getTime());
 
-  const clearHistory = () => {
-    setHistory([]);
+  const clearHistoryAll = () => {
+    clearHistory();
+    setRows([]);
     addToast("History cleared", "success");
   };
 
-  const types = Array.from(new Set(history.map(h => h.type)));
+  const types = Array.from(new Set(rows.map((h) => h.type)));
 
   return (
     <div className="space-y-8">
@@ -85,7 +128,7 @@ export default function HistoryPage() {
           {sortOrder === "newest" ? "NEWEST" : "OLDEST"}
         </button>
 
-        <button onClick={clearHistory} disabled={history.length === 0}
+        <button onClick={clearHistoryAll} disabled={rows.length === 0}
           className="px-3 py-2 border border-[var(--border-primary)] text-red-400 text-xs type-mono hover:border-red-400/40 ml-auto flex items-center gap-1 disabled:opacity-30">
           <Trash2 className="w-3 h-3" /> CLEAR
         </button>
@@ -94,7 +137,11 @@ export default function HistoryPage() {
       {filtered.length === 0 ? (
         <motion.div variants={fadeUp} initial="hidden" animate="show" className="glass-card p-8 text-center space-y-4">
           <Clock className="w-8 h-8 text-[var(--text-muted)] mx-auto" />
-          <p className="text-[var(--text-muted)] type-body">No history entries yet.</p>
+          <p className="text-[var(--text-muted)] type-body">
+            {rows.length === 0
+              ? "No history yet. Run your first analysis to start your style timeline."
+              : "Nothing matches this filter yet."}
+          </p>
           <Link href="/dashboard/face-analysis" className="btn-nexus inline-flex items-center gap-2">
             START ANALYSIS <ArrowRight className="w-4 h-4" />
           </Link>
@@ -110,7 +157,7 @@ export default function HistoryPage() {
                   <p className="type-body text-[var(--text-primary)] truncate">{entry.label}</p>
                   <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
                     <span>{entry.date}</span>
-                    {entry.score && (
+                    {entry.score !== undefined && (
                       <>
                         <span>·</span>
                         <span className="text-[var(--accent-aurum)]">{entry.score}</span>
@@ -126,12 +173,13 @@ export default function HistoryPage() {
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <Link href={`/dashboard/${entry.type}`}
+                <Link href={entry.route}
                   className="p-2 border border-[var(--border-primary)] hover:border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)]">
                   <Eye className="w-3.5 h-3.5 text-[var(--text-muted)]" />
                 </Link>
                 <button onClick={() => {
-                  setHistory(prev => prev.filter(e => e.id !== entry.id));
+                  deleteFromHistory(entry.id);
+                  reload();
                   addToast("Entry removed", "success");
                 }}
                   className="p-2 border border-[var(--border-primary)] hover:border-red-400/40">
@@ -143,13 +191,13 @@ export default function HistoryPage() {
         </motion.div>
       )}
 
-      {history.length > 0 && (
+      {rows.length > 0 && (
         <motion.div variants={fadeUp} initial="hidden" animate="show" className="glass-card p-6">
           <h3 className="type-label text-[var(--text-primary)] mb-4">PROGRESS</h3>
           <div className="space-y-3">
             {Object.entries(
-              history.reduce((acc, h) => {
-                if (h.score) {
+              rows.reduce((acc, h) => {
+                if (h.score !== undefined) {
                   acc[h.type] = acc[h.type] || [];
                   acc[h.type].push(h.score);
                 }
@@ -161,7 +209,7 @@ export default function HistoryPage() {
               const trend = scores.length > 1 ? scores[0] - scores[scores.length - 1] : 0;
               return (
                 <div key={type} className="flex items-center justify-between text-xs">
-                  <span className="type-mono text-[var(--text-muted)] capitalize">{type.replace("-", " ")}</span>
+                  <span className="type-mono text-[var(--text-muted)] capitalize">{type}</span>
                   <div className="flex items-center gap-3">
                     <span className="text-[var(--text-primary)]">Latest: {latest}</span>
                     <span className="text-[var(--text-muted)]">Avg: {avg}</span>
