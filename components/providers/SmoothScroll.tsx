@@ -11,10 +11,18 @@ export function SmoothScroll({ children }: { children: React.ReactNode }) {
   const lenisRef = useRef<Lenis | null>(null);
 
   useEffect(() => {
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const coarse = window.matchMedia("(pointer: coarse)").matches;
+
+    if (reduced) return;
+
     const lenis = new Lenis({
-      lerp: 0.1,
-      duration: 1.2,
-      smoothWheel: true,
+      lerp: 0.08,
+      duration: 1.15,
+      smoothWheel: !coarse,
+      wheelMultiplier: 0.95,
+      touchMultiplier: 1.4,
+      syncTouch: true,
     });
 
     lenisRef.current = lenis;
@@ -38,6 +46,7 @@ export function SmoothScroll({ children }: { children: React.ReactNode }) {
 
     return () => {
       lenis.destroy();
+      lenisRef.current = null;
       gsap.ticker.remove(tickerCallback);
       window.removeEventListener("load", refresh);
       window.clearTimeout(t1);

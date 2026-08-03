@@ -82,7 +82,7 @@ export function CommandPalette() {
               </kbd>
             </div>
 
-            <div className="max-h-[320px] overflow-y-auto p-2">
+            <div data-lenis-prevent className="max-h-[320px] overflow-y-auto p-2">
               {categories.map((cat) => (
                 <div key={cat}>
                   <div className="px-3 py-2 text-[0.55rem] font-mono text-nexus-400 dark:text-cosmic-muted tracking-widest uppercase">

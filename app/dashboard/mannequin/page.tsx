@@ -266,7 +266,7 @@ export default function MannequinPage() {
                   className="p-1.5 border border-[var(--border-primary)] disabled:opacity-30"><RotateCcw className="w-3.5 h-3.5" /></button>
               </div>
             </div>
-            <div className="space-y-1 max-h-32 overflow-y-auto">
+            <div data-lenis-prevent className="space-y-1 max-h-32 overflow-y-auto">
               {garments.length === 0 ? (
                 <p className="text-xs text-[var(--text-muted)]">No garments added</p>
               ) : (

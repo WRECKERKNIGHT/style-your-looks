@@ -655,7 +655,7 @@ export default function FaceAnalysisPage() {
                   <X className="w-4 h-4" />
                 </button>
               </div>
-              <div className="flex-1 overflow-y-auto p-6">
+              <div data-lenis-prevent className="flex-1 overflow-y-auto p-6">
                 <pre className="whitespace-pre-wrap font-mono text-xs text-[var(--text-primary)] leading-relaxed">
                   {buildReport()}
                 </pre>
