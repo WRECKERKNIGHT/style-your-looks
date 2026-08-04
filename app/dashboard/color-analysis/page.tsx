@@ -469,7 +469,7 @@ export default function ColorAnalysisPage() {
     svg.innerHTML = `
       <rect width="${w}" height="${h}" fill="#241812" rx="12"/>
       <rect width="${w}" height="6" fill="#8A5F3D" rx="3"/>
-      <text x="${w/2}" y="40" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#C9B18C" letter-spacing="3">N E X A R I</text>
+      <text x="${w/2}" y="40" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#C9B18C" letter-spacing="3">Z E R V E Y</text>
       <text x="${w/2}" y="68" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" fill="#F3EAD9" font-weight="bold">${colorAnalysis.subType}</text>
       <text x="${w/2}" y="88" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#C9B18C">${colorAnalysis.metalPreference} Metals · ${colorAnalysis.patternRecommendation.split(",")[0]}</text>
       <text x="${w/2}" y="118" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#C8963E" letter-spacing="2">BEST COLORS</text>

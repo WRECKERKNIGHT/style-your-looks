@@ -146,7 +146,7 @@ export default function FaceAnalysisPage() {
   const { uploadedImage, setUploadedImage, faceResult, isAnalyzing, genderProfile, setGenderProfile, setProcessingPreview, setFaceResult } =
     useAnalysisStore();
   const { analyzeFacePhotos, cancelAnalysis } = useMediaPipe();
-  const { videoRef, isStreaming, startWebcam, stopWebcam, captureFrame } = useWebcam();
+  const { videoRef, isStreaming, startWebcam, stopWebcam, captureFrame, error: webcamError } = useWebcam();
   const { addToast } = useToast();
   const [error, setError] = useState<string | null>(null);
   const [showLandmarks, setShowLandmarks] = useState(true);
@@ -230,8 +230,12 @@ export default function FaceAnalysisPage() {
 
   const removePhoto = useCallback((index: number) => {
     setPhotos((prev) => prev.filter((_, i) => i !== index));
+    setRejectedPhotos((prev) =>
+      prev
+        .filter((r) => r.index !== index)
+        .map((r) => ({ ...r, index: r.index > index ? r.index - 1 : r.index }))
+    );
     setError(null);
-    setRejectedPhotos([]);
   }, []);
 
   const runDemo = useCallback(async () => {
@@ -587,13 +591,32 @@ export default function FaceAnalysisPage() {
           />
 
           {isStreaming && (
-            <button
-              onClick={handleWebcamCapture}
-              className="btn-nexus w-full justify-center"
-            >
-              <Camera className="w-5 h-5" />
-              CAPTURE PHOTO
-            </button>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={handleWebcamCapture}
+                className="btn-nexus flex-1 justify-center"
+              >
+                <Camera className="w-5 h-5" />
+                CAPTURE PHOTO
+              </button>
+              <button
+                onClick={stopWebcam}
+                className="btn-outline justify-center"
+              >
+                <X className="w-4 h-4" />
+                CLOSE CAMERA
+              </button>
+            </div>
+          )}
+
+          {webcamError && !isStreaming && (
+            <div className="flex items-center gap-3 bg-red-500/10 border border-red-500/30 p-4">
+              <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0" />
+              <p className="text-sm text-red-400 font-body">
+                Could not start the camera: {webcamError}. Try allowing camera permission, or upload a
+                photo instead.
+              </p>
+            </div>
           )}
 
           <ProcessingOverlay title="ANALYSING YOUR FACE..." />
