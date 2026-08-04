@@ -10,6 +10,9 @@ export interface FacialHairOverlay {
 interface BeardPath {
   points: { x: number; y: number }[];
   controlPoints: { x: number; y: number }[];
+  paths?: BeardPath[];
+  stipple?: boolean;
+  stippleCount?: number;
 }
 
 function getBeardPath(
@@ -141,6 +144,74 @@ function getBeardPath(
           { x: cheekRight.x, y: cheekRight.y },
           { x: jawRight.x - 0.02, y: jawRight.y - 0.04 },
           jawRight,
+        ],
+        controlPoints: [],
+      };
+    }
+    case "stubble-short":
+    case "stubble-medium":
+    case "stubble-long": {
+      const density = style === "stubble-short" ? 2200 : style === "stubble-medium" ? 3600 : 5200;
+      const lengthMult = style === "stubble-long" ? 1.15 : style === "stubble-medium" ? 1.05 : 1.0;
+      const chinDip = 0.012 * lengthMult;
+      return {
+        points: [
+          cheekLeft,
+          { x: lipLeft.x - 0.02, y: lip.y - 0.005 },
+          { x: lip.x, y: lip.y - 0.01 },
+          { x: lipRight.x + 0.02, y: lip.y - 0.005 },
+          cheekRight,
+          jawRight,
+          { x: chinRight.x, y: chin.y + 0.004 },
+          { x: chin.x, y: chin.y + chinDip },
+          { x: chinLeft.x, y: chin.y + 0.004 },
+          jaw,
+        ],
+        controlPoints: [],
+        stipple: true,
+        stippleCount: density,
+      };
+    }
+    case "friendly-mutton-chops": {
+      return {
+        points: [],
+        controlPoints: [],
+        paths: [
+          {
+            points: [
+              cheekLeft,
+              { x: cheekLeft.x - 0.015, y: (cheekLeft.y + lip.y) / 2 + 0.008 },
+              { x: jaw.x + 0.004, y: jaw.y - 0.012 },
+              jaw,
+            ],
+            controlPoints: [],
+          },
+          {
+            points: [
+              cheekRight,
+              { x: cheekRight.x + 0.015, y: (cheekRight.y + lip.y) / 2 + 0.008 },
+              { x: jawRight.x - 0.004, y: jawRight.y - 0.012 },
+              jawRight,
+            ],
+            controlPoints: [],
+          },
+        ],
+      };
+    }
+    case "hulihee": {
+      return {
+        points: [
+          jaw,
+          cheekLeft,
+          { x: lipLeft.x - 0.035, y: lip.y + 0.002 },
+          { x: lipLeft.x - 0.01, y: (lip.y + chin.y) / 2 + 0.004 },
+          { x: lipRight.x + 0.01, y: (lip.y + chin.y) / 2 + 0.004 },
+          { x: lipRight.x + 0.035, y: lip.y + 0.002 },
+          cheekRight,
+          jawRight,
+          { x: chinRight.x, y: chin.y + 0.01 },
+          { x: chin.x, y: chin.y + 0.02 },
+          { x: chinLeft.x, y: chin.y + 0.01 },
         ],
         controlPoints: [],
       };
@@ -308,41 +379,76 @@ export function drawFacialHair(
   ctx.lineJoin = "round";
   ctx.lineCap = "round";
 
+  const subs = path.paths && path.paths.length > 0 ? path.paths : [path];
+
+  const tracePath = (p: BeardPath) => {
+    const points = p.points;
+    if (points.length === 0) return;
+    ctx.moveTo(points[0].x * canvasWidth, points[0].y * canvasHeight);
+    if (points.length > 2) {
+      for (let i = 0; i < points.length; i++) {
+        const curr = points[i];
+        const next = points[(i + 1) % points.length];
+        const cpx = curr.x * canvasWidth;
+        const cpy = curr.y * canvasHeight;
+        const nx = next.x * canvasWidth;
+        const ny = next.y * canvasHeight;
+        ctx.quadraticCurveTo(cpx, cpy, (cpx + nx) / 2, (cpy + ny) / 2);
+      }
+    } else {
+      for (let i = 1; i < points.length; i++) {
+        ctx.lineTo(points[i].x * canvasWidth, points[i].y * canvasHeight);
+      }
+    }
+    ctx.closePath();
+  };
+
   ctx.beginPath();
-
-  const points = path.points;
-  if (points.length === 0) {
-    ctx.restore();
-    return;
-  }
-
-  const firstX = points[0].x * canvasWidth;
-  const firstY = points[0].y * canvasHeight;
-  ctx.moveTo(firstX, firstY);
-
-  if (points.length > 2) {
-    for (let i = 0; i < points.length; i++) {
-      const curr = points[i];
-      const next = points[(i + 1) % points.length];
-
-      const cpx = curr.x * canvasWidth;
-      const cpy = curr.y * canvasHeight;
-      const nx = next.x * canvasWidth;
-      const ny = next.y * canvasHeight;
-
-      const midX = (cpx + nx) / 2;
-      const midY = (cpy + ny) / 2;
-
-      ctx.quadraticCurveTo(cpx, cpy, midX, midY);
-    }
-  } else {
-    for (let i = 1; i < points.length; i++) {
-      ctx.lineTo(points[i].x * canvasWidth, points[i].y * canvasHeight);
-    }
-  }
-
-  ctx.closePath();
+  for (const p of subs) tracePath(p);
+  if (path.stipple) ctx.globalAlpha = opacity * 0.3;
   ctx.fill();
+
+  if (path.stipple) {
+    const count = path.stippleCount ?? 3200;
+    let minX = 1;
+    let maxX = 0;
+    let minY = 1;
+    let maxY = 0;
+    for (const p of subs) {
+      for (const pt of p.points) {
+        minX = Math.min(minX, pt.x);
+        maxX = Math.max(maxX, pt.x);
+        minY = Math.min(minY, pt.y);
+        maxY = Math.max(maxY, pt.y);
+      }
+    }
+    const w = Math.max(0.001, maxX - minX) * canvasWidth;
+    const h = Math.max(0.001, maxY - minY) * canvasHeight;
+
+    let seed = 0;
+    for (const c of style) seed = (seed * 31 + c.charCodeAt(0)) >>> 0;
+    let s = seed || 1;
+    const rnd = () => {
+      s = Math.imul(s ^ (s >>> 15), s | 1) >>> 0;
+      s = (s + 0x6d2b79f5) >>> 0;
+      return ((s ^ (s >>> 14)) >>> 0) / 4294967296;
+    };
+
+    const dotRadius = Math.max(0.0011 * canvasWidth, 1.2);
+    ctx.beginPath();
+    for (const p of subs) tracePath(p);
+    ctx.clip();
+    ctx.fillStyle = color;
+    ctx.globalAlpha = opacity * 0.95;
+    for (let i = 0; i < count; i++) {
+      const dx = minX * canvasWidth + rnd() * w;
+      const dy = minY * canvasHeight + rnd() * h;
+      const r = dotRadius * (0.6 + rnd() * 0.9);
+      ctx.beginPath();
+      ctx.arc(dx, dy, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
 
   ctx.restore();
 }

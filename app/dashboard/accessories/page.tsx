@@ -5,64 +5,10 @@ import Link from "next/link";
 import { ImageUploader } from "@/components/shared/ImageUploader";
 import { useAnalysisStore } from "@/store/analysis-store";
 import { glassesPosition } from "@/lib/ml/face-landmarks";
+import { GLASSES_PRODUCTS, loadProductImage, loadRemoteProductImage, type ProductItem } from "@/lib/ml/product-catalog";
 import { motion } from "framer-motion";
-import { Glasses, ArrowRight, Download, Trash2 } from "lucide-react";
+import { Glasses, ArrowRight, Download, Trash2, Link2, Loader2 } from "lucide-react";
 import { useToast } from "@/components/shared/Toast";
-
-interface GlassesStyle {
-  id: string;
-  name: string;
-  shape: "aviator" | "wayfarer" | "round" | "rectangle" | "cat-eye" | "browline";
-  color: string;
-  lensColor: string;
-}
-
-const GLASSES_STYLES: GlassesStyle[] = [
-  { id: "av-1", name: "Classic Aviator", shape: "aviator", color: "#C0C0C0", lensColor: "rgba(0,0,0,0.3)" },
-  { id: "av-2", name: "Gold Aviator", shape: "aviator", color: "#DAA520", lensColor: "rgba(139,69,19,0.2)" },
-  { id: "wf-1", name: "Black Wayfarer", shape: "wayfarer", color: "#1A1A1A", lensColor: "rgba(0,0,0,0.25)" },
-  { id: "wf-2", name: "Tortoise Wayfarer", shape: "wayfarer", color: "#8B4513", lensColor: "rgba(139,69,19,0.15)" },
-  { id: "rn-1", name: "Round Wire", shape: "round", color: "#C0C0C0", lensColor: "rgba(0,0,0,0.1)" },
-  { id: "rn-2", name: "Round Black", shape: "round", color: "#2D2D2D", lensColor: "rgba(0,0,0,0.2)" },
-  { id: "rc-1", name: "Slim Rectangle", shape: "rectangle", color: "#4A4A4A", lensColor: "rgba(0,0,0,0.2)" },
-  { id: "ce-1", name: "Cat Eye Gold", shape: "cat-eye", color: "#DAA520", lensColor: "rgba(139,69,19,0.15)" },
-  { id: "br-1", name: "Browline Classic", shape: "browline", color: "#1A1A1A", lensColor: "rgba(0,0,0,0.25)" },
-  { id: "br-2", name: "Browline Navy", shape: "browline", color: "#1B2838", lensColor: "rgba(27,40,56,0.2)" },
-];
-
-function drawGlasses(ctx: CanvasRenderingContext2D, style: GlassesStyle, centerX: number, eyeY: number, eyeWidth: number) {
-  const lensW = eyeWidth * 0.65;
-  const lensH = lensW * 0.55;
-  const bridge = lensW * 0.15;
-  ctx.save();
-  ctx.strokeStyle = style.color;
-  ctx.lineWidth = 2.5;
-  ctx.fillStyle = style.lensColor;
-  const leftX = centerX - bridge / 2 - lensW;
-  const rightX = centerX + bridge / 2;
-
-  if (style.shape === "aviator") {
-    [leftX, rightX].forEach((x) => { ctx.beginPath(); ctx.ellipse(x + lensW / 2, eyeY, lensW / 2, lensH / 1.8, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); });
-  } else if (style.shape === "wayfarer") {
-    [leftX, rightX].forEach((x) => { ctx.beginPath(); ctx.roundRect(x, eyeY - lensH / 2, lensW, lensH, 4); ctx.fill(); ctx.stroke(); });
-  } else if (style.shape === "round") {
-    [leftX, rightX].forEach((x) => { ctx.beginPath(); ctx.arc(x + lensW / 2, eyeY, lensW / 2.2, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); });
-  } else if (style.shape === "rectangle") {
-    [leftX, rightX].forEach((x) => { ctx.beginPath(); ctx.roundRect(x, eyeY - lensH / 2.5, lensW, lensH / 1.3, 3); ctx.fill(); ctx.stroke(); });
-  } else if (style.shape === "cat-eye") {
-    [leftX, rightX].forEach((x) => { ctx.beginPath(); ctx.moveTo(x, eyeY + lensH / 3); ctx.quadraticCurveTo(x + lensW / 2, eyeY - lensH / 1.5, x + lensW, eyeY - lensH / 3); ctx.quadraticCurveTo(x + lensW, eyeY + lensH / 2, x, eyeY + lensH / 3); ctx.fill(); ctx.stroke(); });
-  } else if (style.shape === "browline") {
-    [leftX, rightX].forEach((x) => { ctx.fillStyle = style.color; ctx.beginPath(); ctx.roundRect(x, eyeY - lensH / 2, lensW, lensH * 0.3, [3, 3, 0, 0]); ctx.fill(); ctx.fillStyle = style.lensColor; ctx.beginPath(); ctx.roundRect(x + 1, eyeY - lensH / 2 + lensH * 0.3, lensW - 2, lensH * 0.7, [0, 0, 4, 4]); ctx.fill(); ctx.strokeStyle = style.color; ctx.lineWidth = 1.5; ctx.stroke(); });
-  }
-
-  ctx.strokeStyle = style.color;
-  ctx.lineWidth = 2.5;
-  ctx.beginPath(); ctx.moveTo(leftX + lensW, eyeY); ctx.lineTo(rightX, eyeY); ctx.stroke();
-  const templeLen = eyeWidth * 0.8;
-  ctx.beginPath(); ctx.moveTo(leftX, eyeY); ctx.lineTo(leftX - templeLen, eyeY - 8); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(rightX + lensW, eyeY); ctx.lineTo(rightX + lensW + templeLen, eyeY - 8); ctx.stroke();
-  ctx.restore();
-}
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -75,21 +21,70 @@ export default function AccessoriesPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement | null>(null);
-  const [selectedGlasses, setSelectedGlasses] = useState<GlassesStyle | null>(null);
+  const productRef = useRef<HTMLCanvasElement | null>(null);
+
+  const [selectedProduct, setSelectedProduct] = useState<ProductItem | null>(null);
+  const [productCredit, setProductCredit] = useState<string>("");
+  const [customName, setCustomName] = useState<string | null>(null);
+  const [productUrl, setProductUrl] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const [glassesY, setGlassesY] = useState(0);
   const [glassesScale, setGlassesScale] = useState(1);
 
   const handleImageUpload = useCallback((imageData: string) => {
     setUploadedImage(imageData);
-    setSelectedGlasses(null);
+    setSelectedProduct(null);
+    productRef.current = null;
     const img = new Image();
     img.onload = () => { imgRef.current = img; };
     img.src = imageData;
   }, [setUploadedImage]);
 
   useEffect(() => {
-    if (uploadedImage) { const img = new Image(); img.onload = () => { imgRef.current = img; }; img.src = uploadedImage; }
+    if (uploadedImage) {
+      const img = new Image();
+      img.onload = () => { imgRef.current = img; };
+      img.src = uploadedImage;
+    }
   }, [uploadedImage]);
+
+  const selectProduct = async (item: ProductItem) => {
+    setIsLoading(true);
+    try {
+      const canvas = await loadProductImage(item);
+      productRef.current = canvas;
+      setSelectedProduct(item);
+      setProductCredit(item.credit);
+      setCustomName(null);
+      addToast(`Loaded: ${item.name}`, "success");
+    } catch {
+      addToast(`Failed to load ${item.name}`, "error");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loadFromUrl = async () => {
+    const url = productUrl.trim();
+    if (!url) return;
+    if (!/^https?:\/\//i.test(url)) {
+      addToast("Enter a full http(s) image URL", "error");
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const canvas = await loadRemoteProductImage(url);
+      productRef.current = canvas;
+      setSelectedProduct({ id: "custom", name: "Custom link", brand: "custom", category: "glasses", image: url, source: new URL(url).hostname, background: "transparent", credit: "loaded from link" });
+      setProductCredit(new URL(url).hostname);
+      setCustomName("Custom glasses");
+      addToast("Product loaded", "success");
+    } catch {
+      addToast("Could not load that image — the host may block cross-origin access", "error");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const renderCanvas = useCallback(() => {
     const canvas = canvasRef.current;
@@ -108,17 +103,36 @@ export default function AccessoriesPage() {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, displayWidth, displayHeight);
     ctx.drawImage(img, 0, 0, displayWidth, displayHeight);
-    if (selectedGlasses) {
-      let centerX: number, eyeY: number, eyeWidth: number;
-      if (faceResult && faceResult.landmarks.length > 362) {
-        const pos = glassesPosition(faceResult.landmarks, displayWidth, displayHeight);
-        centerX = pos.centerX; eyeY = pos.eyeY + glassesY; eyeWidth = pos.totalWidth * glassesScale;
-      } else {
-        centerX = displayWidth * 0.5; eyeY = displayHeight * 0.36 + glassesY; eyeWidth = displayWidth * 0.35 * glassesScale;
-      }
-      drawGlasses(ctx, selectedGlasses, centerX, eyeY, eyeWidth);
+
+    const product = productRef.current;
+    if (!product || !selectedProduct) return;
+
+    let centerX: number;
+    let eyeY: number;
+    let totalWidth: number;
+    let rotation = 0;
+    if (faceResult && faceResult.landmarks.length > 362) {
+      const pos = glassesPosition(faceResult.landmarks, displayWidth, displayHeight);
+      centerX = pos.centerX;
+      eyeY = pos.eyeY;
+      totalWidth = pos.totalWidth;
+      const dx = pos.rightEye.x - pos.leftEye.x;
+      const dy = pos.rightEye.y - pos.leftEye.y;
+      rotation = Math.atan2(dy, dx);
+    } else {
+      centerX = displayWidth * 0.5;
+      eyeY = displayHeight * 0.36;
+      totalWidth = displayWidth * 0.35;
     }
-  }, [selectedGlasses, glassesY, glassesScale, faceResult]);
+
+    const drawW = totalWidth * glassesScale * 1.12;
+    const drawH = drawW * (product.height / product.width);
+    ctx.save();
+    ctx.translate(centerX, eyeY + glassesY);
+    ctx.rotate(rotation);
+    ctx.drawImage(product, -drawW / 2, -drawH / 2, drawW, drawH);
+    ctx.restore();
+  }, [selectedProduct, glassesY, glassesScale, faceResult]);
 
   useEffect(() => { renderCanvas(); }, [renderCanvas]);
 
@@ -132,6 +146,12 @@ export default function AccessoriesPage() {
     addToast("Glasses preview saved", "success");
   };
 
+  const clearSelection = () => {
+    setSelectedProduct(null);
+    productRef.current = null;
+    setCustomName(null);
+  };
+
   return (
     <div className="space-y-8">
       <motion.div variants={fadeUp} initial="hidden" animate="show">
@@ -143,21 +163,27 @@ export default function AccessoriesPage() {
           </h1>
         </div>
         <p className="text-[var(--text-muted)] font-body type-subhead max-w-xl">
-          Try on different glasses frames to find your perfect match.
+          Real product photos loaded from public links, anchored to your face landmarks.
         </p>
       </motion.div>
 
       {!uploadedImage ? (
         <div className="glass-card p-8">
-          <ImageUploader onImageUpload={handleImageUpload} label="Upload a photo for glasses try-on" accept="any" />
+          <ImageUploader onImageUpload={handleImageUpload} label="Upload a photo for glasses try-on" accept="face" />
         </div>
       ) : (
         <motion.div variants={fadeUp} initial="hidden" animate="show" className="space-y-8">
           <div ref={containerRef} className="glass-card overflow-hidden relative">
             <canvas ref={canvasRef} className="w-full" />
 
-            {selectedGlasses && (
-              <div className="absolute top-3 right-3 glass-card p-3 space-y-2">
+            {isLoading && (
+              <div className="absolute inset-0 glass-card backdrop-blur-sm flex items-center justify-center z-10">
+                <Loader2 className="w-6 h-6 animate-spin text-[var(--accent-aurum)]" />
+              </div>
+            )}
+
+            {selectedProduct && (
+              <div className="absolute top-3 right-3 glass-card p-3 space-y-2 max-w-[240px]">
                 <p className="type-label text-[var(--text-muted)]">ADJUST</p>
                 <div>
                   <label className="type-mono text-[var(--text-muted)]">VERTICAL</label>
@@ -171,36 +197,67 @@ export default function AccessoriesPage() {
                     onChange={(e) => setGlassesScale(parseFloat(e.target.value))}
                     className="w-full h-1 accent-[var(--accent-aurum)]" />
                 </div>
+                <p className="type-mono text-[0.45rem] text-[var(--text-muted)] tracking-widest pt-1 border-t border-[var(--border-primary)]">
+                  {customName ?? selectedProduct.name}
+                  <br />{productCredit}
+                </p>
               </div>
             )}
           </div>
 
-          <div className="glass-card p-6">
-            <h3 className="type-label text-[var(--text-primary)] mb-4">SELECT FRAMES</h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-              {GLASSES_STYLES.map((style) => (
+          <div className="glass-card p-8">
+            <h3 className="type-heading text-[var(--text-primary)] tracking-tight mb-2">SELECT FRAMES — REAL PRODUCTS</h3>
+            <p className="text-sm text-[var(--text-muted)] font-body mb-6">
+              Images are pulled live from public product links; studio backgrounds are removed before rendering.
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {GLASSES_PRODUCTS.map((item) => (
                 <button
-                  key={style.id}
-                  onClick={() => setSelectedGlasses(selectedGlasses?.id === style.id ? null : style)}
-                  className={`p-3 border text-left transition-all duration-300 ${
-                    selectedGlasses?.id === style.id
+                  key={item.id}
+                  onClick={() => selectProduct(item)}
+                  disabled={isLoading}
+                  className={`p-3 border text-left transition-all duration-300 disabled:opacity-50 ${
+                    selectedProduct?.id === item.id
                       ? "border-[var(--accent-aurum)] bg-[color-mix(in_srgb,var(--accent-aurum)_10%,transparent)]"
                       : "border-[var(--border-primary)] hover:border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)] bg-[var(--bg-tertiary)] card-nexus"
                   }`}
                 >
-                  <div className="w-full h-8 mb-2" style={{ background: `linear-gradient(135deg, ${style.color} 0%, ${style.lensColor.replace(/[\d.]+\)/, "0.6)")}) 100%)`, border: `2px solid ${style.color}` }} />
-                  <p className="text-xs font-body text-[var(--text-primary)] truncate">{style.name}</p>
+                  <div className="w-full h-16 mb-2 border border-[var(--border-primary)] bg-[var(--bg-primary)] overflow-hidden flex items-center justify-center">
+                    <img src={item.image} alt={item.name} className="max-h-full max-w-full object-contain" loading="lazy" />
+                  </div>
+                  <p className="text-xs font-body text-[var(--text-primary)] truncate">{item.name}</p>
+                  <p className="type-mono text-[0.5rem] text-[var(--text-muted)] tracking-widest mt-1">{item.source}</p>
                 </button>
               ))}
+            </div>
+
+            <div className="mt-6 pt-6 border-t border-[var(--border-primary)]">
+              <h4 className="type-label text-[var(--text-muted)] mb-3">OR LOAD YOUR OWN PRODUCT LINK</h4>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="flex items-center gap-2 flex-1 bg-[var(--bg-tertiary)] border border-[var(--border-primary)] px-3">
+                  <Link2 className="w-4 h-4 text-[var(--text-muted)] shrink-0" />
+                  <input
+                    value={productUrl}
+                    onChange={(e) => setProductUrl(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && loadFromUrl()}
+                    placeholder="https://.../glasses.png"
+                    className="flex-1 bg-transparent py-3 text-sm text-[var(--text-primary)] outline-none font-body placeholder:text-[var(--text-muted)]/50"
+                  />
+                </div>
+                <button onClick={loadFromUrl} disabled={isLoading} className="btn-outline justify-center disabled:opacity-40">
+                  {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Link2 className="w-4 h-4" />}
+                  LOAD FROM LINK
+                </button>
+              </div>
             </div>
           </div>
 
           <div className="flex gap-4">
-            <button onClick={() => setSelectedGlasses(null)} className="btn-outline flex-1 justify-center">
+            <button onClick={clearSelection} className="btn-outline flex-1 justify-center">
               <Trash2 className="w-4 h-4" />
               REMOVE
             </button>
-            <button onClick={downloadResult} disabled={!selectedGlasses}
+            <button onClick={downloadResult} disabled={!selectedProduct}
               className="btn-nexus flex-1 justify-center disabled:opacity-40">
               <Download className="w-4 h-4" />
               SAVE IMAGE

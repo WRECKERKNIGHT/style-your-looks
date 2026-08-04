@@ -3,50 +3,49 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { ImageUploader } from "@/components/shared/ImageUploader";
 import { useAnalysisStore } from "@/store/analysis-store";
-import { SAMPLE_CLOTHING, drawFabric, type ClothingItem, type FabricType } from "@/lib/ml/virtual-tryon";
-import { clothingPositions, type Point } from "@/lib/ml/face-landmarks";
+import { runVton, type GarmentType, type VtonLayer, type VtonResult } from "@/lib/ml/vton-engine";
+import { loadRemoteProductImage, loadProductImage, type ProductItem, PRODUCT_CATALOG } from "@/lib/ml/product-catalog";
 import { motion } from "framer-motion";
-import { Shirt, Trash2, RotateCcw, Download, ZoomIn, ZoomOut, Move, ArrowUp, ArrowDown } from "lucide-react";
+import { Shirt, Link2, Loader2, Download, RotateCcw, Layers, Ruler } from "lucide-react";
 import { useToast } from "@/components/shared/Toast";
-
-const FABRICS: { id: FabricType; label: string; pattern: string }[] = [
-  { id: "solid", label: "SOLID", pattern: "" },
-  { id: "denim", label: "DENIM", pattern: "repeating-linear-gradient(45deg, rgba(0,0,0,0.14) 0 2px, transparent 2px 6px), repeating-linear-gradient(-45deg, rgba(255,255,255,0.14) 0 2px, transparent 2px 6px)" },
-  { id: "knit", label: "KNIT", pattern: "repeating-linear-gradient(90deg, rgba(0,0,0,0.16) 0 3px, transparent 3px 8px)" },
-  { id: "linen", label: "LINEN", pattern: "repeating-linear-gradient(0deg, rgba(0,0,0,0.1) 0 1px, transparent 1px 9px), repeating-linear-gradient(90deg, rgba(255,255,255,0.15) 0 1px, transparent 1px 9px)" },
-  { id: "silk", label: "SILK", pattern: "linear-gradient(180deg, rgba(255,255,255,0.55), rgba(255,255,255,0.05) 45%, rgba(255,255,255,0.1) 62%, rgba(255,255,255,0.28))" },
-  { id: "leather", label: "LEATHER", pattern: "radial-gradient(circle at 20% 30%, rgba(0,0,0,0.3) 0 4px, transparent 5px), radial-gradient(circle at 70% 60%, rgba(255,255,255,0.25) 0 6px, transparent 7px), radial-gradient(circle at 45% 85%, rgba(0,0,0,0.25) 0 3px, transparent 4px)" },
-];
-
-interface PlacedItem extends ClothingItem {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  opacity: number;
-}
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
   show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
 };
 
+const GARMENT_TYPES: { id: GarmentType; label: string }[] = [
+  { id: "top", label: "TOP" },
+  { id: "jacket", label: "JACKET" },
+  { id: "pants", label: "PANTS" },
+];
+
+const LAYER_TABS: { id: VtonLayer; label: string }[] = [
+  { id: "original", label: "ORIGINAL" },
+  { id: "warp", label: "WARP" },
+  { id: "final", label: "FINAL" },
+];
+
 export default function VirtualTryOnPage() {
-  const { uploadedImage, setUploadedImage, faceResult } = useAnalysisStore();
+  const { uploadedImage, setUploadedImage } = useAnalysisStore();
   const { addToast } = useToast();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement | null>(null);
-  const [selectedItems, setSelectedItems] = useState<PlacedItem[]>([]);
-  const [activeItemId, setActiveItemId] = useState<string | null>(null);
-  const [dragIndex, setDragIndex] = useState<number | null>(null);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-  const [scale, setScale] = useState(1);
+
+  const [garmentType, setGarmentType] = useState<GarmentType>("top");
+  const [productUrl, setProductUrl] = useState("");
+  const [garmentCanvas, setGarmentCanvas] = useState<HTMLCanvasElement | null>(null);
+  const [garmentMeta, setGarmentMeta] = useState<{ name: string; credit: string } | null>(null);
+  const [isLoadingProduct, setIsLoadingProduct] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [result, setResult] = useState<VtonResult | null>(null);
+  const [layer, setLayer] = useState<VtonLayer>("final");
 
   const handleImageUpload = useCallback(
     (imageData: string) => {
       setUploadedImage(imageData);
-      setSelectedItems([]);
+      setResult(null);
       const img = new Image();
       img.onload = () => { imgRef.current = img; };
       img.src = imageData;
@@ -62,17 +61,69 @@ export default function VirtualTryOnPage() {
     }
   }, [uploadedImage]);
 
+  const applyGarment = useCallback((canvas: HTMLCanvasElement, meta: { name: string; credit: string }) => {
+    setGarmentCanvas(canvas);
+    setGarmentMeta(meta);
+    setResult(null);
+    addToast(`Product loaded: ${meta.name}`, "success");
+  }, [addToast]);
+
+  const loadFromUrl = async () => {
+    const url = productUrl.trim();
+    if (!url) return;
+    if (!/^https?:\/\//i.test(url)) {
+      addToast("Enter a full http(s) product image URL", "error");
+      return;
+    }
+    setIsLoadingProduct(true);
+    try {
+      const canvas = await loadRemoteProductImage(url);
+      if (canvas.width < 32 || canvas.height < 32) throw new Error("Image too small");
+      applyGarment(canvas, { name: "Custom product", credit: new URL(url).hostname });
+    } catch {
+      addToast("Could not load that image — the host may block cross-origin access", "error");
+    } finally {
+      setIsLoadingProduct(false);
+    }
+  };
+
+  const loadCatalogProduct = async (item: ProductItem) => {
+    setIsLoadingProduct(true);
+    try {
+      const canvas = await loadProductImage(item);
+      applyGarment(canvas, { name: item.name, credit: item.credit });
+    } catch {
+      addToast(`Failed to load ${item.name}`, "error");
+    } finally {
+      setIsLoadingProduct(false);
+    }
+  };
+
+  const runTryOn = async () => {
+    const img = imgRef.current;
+    if (!img || !garmentCanvas) return;
+    setIsProcessing(true);
+    try {
+      const res = await runVton({ photo: img, garment: garmentCanvas, type: garmentType });
+      setResult(res);
+      setLayer("final");
+      addToast("Try-on complete — first run may take a few seconds", "success");
+    } catch {
+      addToast("Try-on failed — check the photo has a visible person", "error");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const renderCanvas = useCallback(() => {
     const canvas = canvasRef.current;
-    const img = imgRef.current;
-    if (!canvas || !img) return;
     const container = containerRef.current;
-    if (!container) return;
+    const img = imgRef.current;
+    if (!canvas || !container || !img) return;
 
     const displayWidth = container.clientWidth;
     const displayHeight = Math.min(displayWidth * (img.height / img.width), 560);
     const dpr = window.devicePixelRatio || 1;
-
     canvas.width = displayWidth * dpr;
     canvas.height = displayHeight * dpr;
     canvas.style.width = `${displayWidth}px`;
@@ -80,160 +131,31 @@ export default function VirtualTryOnPage() {
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, displayWidth, displayHeight);
-    ctx.drawImage(img, 0, 0, displayWidth, displayHeight);
 
-    selectedItems.forEach((item) => {
-      ctx.save();
-      ctx.globalAlpha = item.opacity ?? 0.65;
-      drawFabric(ctx, item.x, item.y, item.width, item.height, item.fabric, item.color, 8);
-      ctx.globalAlpha = 1;
-      ctx.fillStyle = "#fff";
-      ctx.font = `bold ${Math.max(10, item.width * 0.08)}px "Inter", sans-serif`;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(item.name, item.x + item.width / 2, item.y + item.height / 2);
-      ctx.restore();
-    });
-  }, [selectedItems]);
+    if (result) {
+      const src = layer === "original" ? result.original : layer === "warp" ? result.warp : result.final;
+      ctx.drawImage(src, 0, 0, displayWidth, displayHeight);
+    } else {
+      ctx.drawImage(img, 0, 0, displayWidth, displayHeight);
+    }
+  }, [result, layer]);
 
   useEffect(() => {
     renderCanvas();
   }, [renderCanvas]);
 
-  const addClothingItem = (item: ClothingItem) => {
-    if (selectedItems.find((i) => i.id === item.id)) return;
-    const canvas = canvasRef.current;
-    const container = containerRef.current;
-    if (!canvas || !container) return;
-
-    const displayWidth = container.clientWidth;
-    const img = imgRef.current;
-    if (!img) return;
-    const displayHeight = Math.min(displayWidth * (img.height / img.width), 560);
-
-    let pos: { x: number; y: number; width: number; height: number };
-
-    if (faceResult && faceResult.landmarks.length > 0) {
-      const positions = clothingPositions(faceResult.landmarks, displayWidth, displayHeight);
-      const categoryBoxes: Record<ClothingItem["category"], { x: number; y: number; width: number; height: number }> = {
-        top: positions.top,
-        bottom: positions.bottom,
-        outerwear: positions.outerwear,
-        accessory: positions.accessory,
-      };
-      pos = categoryBoxes[item.category];
-    } else {
-      const isPortrait = displayHeight > displayWidth;
-      if (isPortrait) {
-        pos = item.category === "top"
-          ? { x: displayWidth * 0.15, y: displayHeight * 0.18, width: displayWidth * 0.7, height: displayHeight * 0.28 }
-          : item.category === "bottom"
-          ? { x: displayWidth * 0.18, y: displayHeight * 0.46, width: displayWidth * 0.64, height: displayHeight * 0.38 }
-          : item.category === "outerwear"
-          ? { x: displayWidth * 0.08, y: displayHeight * 0.15, width: displayWidth * 0.84, height: displayHeight * 0.35 }
-          : { x: displayWidth * 0.35, y: displayHeight * 0.06, width: displayWidth * 0.3, height: displayHeight * 0.1 };
-      } else {
-        pos = item.category === "top"
-          ? { x: displayWidth * 0.2, y: displayHeight * 0.1, width: displayWidth * 0.6, height: displayHeight * 0.4 }
-          : item.category === "bottom"
-          ? { x: displayWidth * 0.22, y: displayHeight * 0.5, width: displayWidth * 0.56, height: displayHeight * 0.45 }
-          : item.category === "outerwear"
-          ? { x: displayWidth * 0.1, y: displayHeight * 0.08, width: displayWidth * 0.8, height: displayHeight * 0.45 }
-          : { x: displayWidth * 0.35, y: displayHeight * 0.02, width: displayWidth * 0.3, height: displayHeight * 0.15 };
-      }
-    }
-
-    setSelectedItems((prev) => [
-      ...prev,
-      { ...item, x: pos.x, y: pos.y, width: pos.width, height: pos.height, opacity: 0.65 },
-    ]);
-    setActiveItemId(item.id);
-  };
-
-  const removeClothingItem = (id: string) => {
-    setSelectedItems((prev) => prev.filter((i) => i.id !== id));
-    if (activeItemId === id) setActiveItemId(null);
-  };
-
-  const handleFabricChange = (id: string, fabric: FabricType) => {
-    setSelectedItems((prev) => prev.map((item) => (item.id === id ? { ...item, fabric } : item)));
-  };
-
-  const moveLayer = (id: string, dir: 1 | -1) => {
-    setSelectedItems((prev) => {
-      const idx = prev.findIndex((i) => i.id === id);
-      const target = idx + dir;
-      if (idx < 0 || target < 0 || target >= prev.length) return prev;
-      const next = [...prev];
-      const [it] = next.splice(idx, 1);
-      next.splice(target, 0, it);
-      return next;
-    });
-  };
-
-  const handleCanvasMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const rect = canvas.getBoundingClientRect();
-    const mx = e.clientX - rect.left;
-    const my = e.clientY - rect.top;
-    for (let i = selectedItems.length - 1; i >= 0; i--) {
-      const item = selectedItems[i];
-      if (mx >= item.x && mx <= item.x + item.width && my >= item.y && my <= item.y + item.height) {
-        setDragIndex(i);
-        setDragOffset({ x: mx - item.x, y: my - item.y });
-        return;
-      }
-    }
-  };
-
-  const handleCanvasMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (dragIndex === null) return;
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const rect = canvas.getBoundingClientRect();
-    const mx = e.clientX - rect.left;
-    const my = e.clientY - rect.top;
-    setSelectedItems((prev) =>
-      prev.map((item, i) => i === dragIndex ? { ...item, x: mx - dragOffset.x, y: my - dragOffset.y } : item)
-    );
-  };
-
-  const handleCanvasMouseUp = () => setDragIndex(null);
-
-  const handleOpacityChange = (id: string, opacity: number) => {
-    setSelectedItems((prev) => prev.map((item) => (item.id === id ? { ...item, opacity } : item)));
-  };
-
-  const handleScaleItem = (id: string, factor: number) => {
-    setSelectedItems((prev) =>
-      prev.map((item) =>
-        item.id === id
-          ? { ...item, width: item.width * factor, height: item.height * factor, x: item.x - (item.width * factor - item.width) / 2, y: item.y - (item.height * factor - item.height) / 2 }
-          : item
-      )
-    );
-  };
-
   const downloadResult = () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!result) return;
     const link = document.createElement("a");
     link.download = "zervey-tryon.png";
-    link.href = canvas.toDataURL("image/png");
+    link.href = result.final.toDataURL("image/png");
     link.click();
     addToast("Try-on image saved", "success");
   };
 
-  const categories = [
-    { key: "top", label: "TOPS" },
-    { key: "bottom", label: "BOTTOMS" },
-    { key: "outerwear", label: "OUTERWEAR" },
-    { key: "accessory", label: "ACCESSORIES" },
-  ] as const;
+  const activeProduct = garmentMeta?.name === "Custom product";
 
   return (
     <div className="space-y-8">
@@ -246,143 +168,181 @@ export default function VirtualTryOnPage() {
           </h1>
         </div>
         <p className="text-[var(--text-muted)] font-body type-subhead max-w-xl">
-          Upload your photo and overlay clothing items to preview your look.
+          Real engine: pose + person segmentation + perspective warp. Load any public product image and try it on your photo.
         </p>
       </motion.div>
 
       {!uploadedImage ? (
         <div className="glass-card p-8">
-          <ImageUploader onImageUpload={handleImageUpload} label="Upload a photo for try-on" accept="any" />
+          <ImageUploader onImageUpload={handleImageUpload} label="Upload a full-body photo for try-on" accept="any" />
         </div>
       ) : (
         <motion.div variants={fadeUp} initial="hidden" animate="show" className="space-y-8">
           <div ref={containerRef} className="glass-card overflow-hidden relative">
-            <canvas
-              ref={canvasRef}
-              className="w-full cursor-move"
-              onMouseDown={handleCanvasMouseDown}
-              onMouseMove={handleCanvasMouseMove}
-              onMouseUp={handleCanvasMouseUp}
-              onMouseLeave={handleCanvasMouseUp}
-            />
+            <canvas ref={canvasRef} className="w-full" />
 
-            {selectedItems.length > 0 && (
-              <div className="absolute top-3 right-3 glass-card p-3 space-y-2 max-w-[220px]">
-                <p className="type-label text-[var(--text-muted)]">LAYERS</p>
-                {selectedItems.map((item) => (
-                  <div key={item.id} className={`space-y-1 p-2 border transition-all ${activeItemId === item.id ? "border-[var(--accent-aurum)]" : "border-[var(--border-primary)]"}`}>
-                    <div className="flex items-center gap-2">
-                      <button onClick={() => setActiveItemId(item.id)} className="flex items-center gap-2 flex-1 min-w-0 text-left">
-                        <div className="w-3 h-3 border border-[var(--border-primary)] shrink-0" style={{ backgroundColor: item.color, backgroundImage: FABRICS.find((f) => f.id === item.fabric)?.pattern || undefined }} />
-                        <span className="text-xs font-body text-[var(--text-primary)] truncate">{item.name}</span>
-                      </button>
-                      <button onClick={() => moveLayer(item.id, 1)} className="text-[var(--text-muted)] hover:text-[var(--accent-aurum)] transition-colors shrink-0" title="Bring forward">
-                        <ArrowUp className="w-3 h-3" />
-                      </button>
-                      <button onClick={() => moveLayer(item.id, -1)} className="text-[var(--text-muted)] hover:text-[var(--accent-aurum)] transition-colors shrink-0" title="Send back">
-                        <ArrowDown className="w-3 h-3" />
-                      </button>
-                      <button onClick={() => removeClothingItem(item.id)} className="text-[var(--text-muted)] hover:text-red-400 transition-colors shrink-0">
-                        <Trash2 className="w-3 h-3" />
-                      </button>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <input type="range" min={0.1} max={1} step={0.05} value={item.opacity ?? 0.65}
-                        onChange={(e) => handleOpacityChange(item.id, parseFloat(e.target.value))}
-                        className="flex-1 h-1 accent-[var(--accent-aurum)]" />
-                      <button onClick={() => handleScaleItem(item.id, 0.9)} className="text-[var(--text-muted)] hover:text-[var(--accent-aurum)] transition-colors"><ZoomOut className="w-3 h-3" /></button>
-                      <button onClick={() => handleScaleItem(item.id, 1.1)} className="text-[var(--text-muted)] hover:text-[var(--accent-aurum)] transition-colors"><ZoomIn className="w-3 h-3" /></button>
-                    </div>
-                  </div>
-                ))}
+            {isProcessing && (
+              <div className="absolute inset-0 glass-card backdrop-blur-sm flex items-center justify-center z-10">
+                <div className="text-center">
+                  <Loader2 className="w-7 h-7 animate-spin text-[var(--accent-aurum)] mx-auto mb-3" />
+                  <p className="text-sm text-[var(--text-muted)] font-body">WARPING GARMENT & MATCHING LIGHTING...</p>
+                  <p className="type-mono text-[0.5rem] text-[var(--text-muted)] tracking-widest mt-2">FIRST RUN DOWNLOADS THE SEGMENTATION MODEL</p>
+                </div>
               </div>
             )}
 
-            {selectedItems.length > 0 && (
-              <div className="absolute bottom-3 left-3 flex items-center gap-1 type-mono text-[color-mix(in_srgb,var(--text-muted)_60%,transparent)]">
-                <Move className="w-3 h-3" />
-                DRAG TO REPOSITION
+            {result && !isProcessing && (
+              <div className="absolute top-3 right-3 glass-card p-2 flex gap-1">
+                {LAYER_TABS.map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => setLayer(t.id)}
+                    className={`px-3 py-2 type-mono text-[0.55rem] tracking-widest transition-colors ${
+                      layer === t.id
+                        ? "bg-[var(--accent-aurum)] text-black"
+                        : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+                    }`}
+                  >
+                    {t.label}
+                  </button>
+                ))}
               </div>
             )}
           </div>
 
-          <div className="glass-card p-8">
-            <h3 className="type-heading text-[var(--text-primary)] tracking-tight mb-6">SELECT ITEMS TO TRY</h3>
-            <div className="space-y-8">
-              {categories.map((cat) => (
-                <div key={cat.key}>
-                  <h4 className="type-label text-[var(--text-muted)] mb-4">{cat.label}</h4>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                    {SAMPLE_CLOTHING.filter((i) => i.category === cat.key).map((item) => {
-                      const isSelected = selectedItems.some((s) => s.id === item.id);
-                      const fabricMeta = FABRICS.find((f) => f.id === item.fabric);
-                      return (
-                        <button
-                          key={item.id}
-                          onClick={() => isSelected ? removeClothingItem(item.id) : addClothingItem(item)}
-                          className={`p-4 border text-left transition-all duration-300 ${
-                            isSelected
-                              ? "border-[var(--accent-aurum)] bg-[color-mix(in_srgb,var(--accent-aurum)_10%,transparent)]"
-                              : "border-[var(--border-primary)] hover:border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)] bg-[var(--bg-tertiary)] card-nexus"
-                          }`}
-                        >
-                          <div className="w-full h-14 mb-3 border border-[var(--border-primary)]" style={{ backgroundColor: item.color, backgroundImage: fabricMeta?.pattern || undefined }} />
-                          <p className="text-sm font-body text-[var(--text-primary)] truncate">{item.name}</p>
-                          <p className="type-mono text-[0.5rem] text-[var(--text-muted)] tracking-widest mt-1">{fabricMeta?.label}</p>
-                        </button>
-                      );
-                    })}
-                  </div>
+          {result && !isProcessing && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="glass-card p-6 lg:col-span-1">
+                <div className="flex items-center gap-2 mb-4">
+                  <Ruler className="w-4 h-4 text-[var(--accent-aurum)]" />
+                  <h3 className="type-heading text-[var(--text-primary)] tracking-tight">FIT ANALYSIS</h3>
                 </div>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-4 bg-[var(--bg-tertiary)] border border-[var(--border-primary)]">
+                    <span className="text-sm text-[var(--text-muted)] font-body">Suggested size</span>
+                    <span className="type-mono text-xl text-[var(--accent-aurum)] font-bold">{result.fitSuggestion}</span>
+                  </div>
+                  <div className="flex items-center justify-between p-4 bg-[var(--bg-tertiary)] border border-[var(--border-primary)]">
+                    <span className="text-sm text-[var(--text-muted)] font-body">Shoulder estimate</span>
+                    <span className="type-mono text-sm text-[var(--text-primary)]">{result.shoulderCm} CM</span>
+                  </div>
+                  <p className="text-sm text-[var(--text-muted)] font-body leading-relaxed pt-2">{result.fitReason}</p>
+                </div>
+              </div>
+              <div className="glass-card p-6 lg:col-span-2">
+                <div className="flex items-center gap-2 mb-4">
+                  <Layers className="w-4 h-4 text-[var(--accent-aurum)]" />
+                  <h3 className="type-heading text-[var(--text-primary)] tracking-tight">LAYER PREVIEW</h3>
+                </div>
+                <p className="text-sm text-[var(--text-muted)] font-body mb-4">
+                  ORIGINAL shows your photo, WARP shows the raw perspective-mapped garment, FINAL is the result clipped to your body with brightness matched.
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  <button onClick={downloadResult} className="btn-nexus">
+                    <Download className="w-4 h-4" />
+                    SAVE FINAL IMAGE
+                  </button>
+                  <button onClick={() => { setResult(null); setGarmentCanvas(null); setGarmentMeta(null); }}
+                    className="btn-outline">
+                    <RotateCcw className="w-4 h-4" />
+                    TRY ANOTHER
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="glass-card p-8">
+            <h3 className="type-heading text-[var(--text-primary)] tracking-tight mb-6">SELECT GARMENT TYPE</h3>
+            <div className="grid grid-cols-3 gap-3 max-w-md">
+              {GARMENT_TYPES.map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => setGarmentType(t.id)}
+                  className={`p-4 border text-center transition-all duration-300 ${
+                    garmentType === t.id
+                      ? "border-[var(--accent-aurum)] bg-[color-mix(in_srgb,var(--accent-aurum)_10%,transparent)]"
+                      : "border-[var(--border-primary)] hover:border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)] bg-[var(--bg-tertiary)] card-nexus"
+                  }`}
+                >
+                  <span className="type-mono text-sm text-[var(--text-primary)] tracking-widest">{t.label}</span>
+                </button>
               ))}
             </div>
           </div>
 
-          {selectedItems.length > 0 && (
-            <div className="glass-card p-8">
-              <h3 className="type-heading text-[var(--text-primary)] tracking-tight mb-2">FABRIC SWAP</h3>
-              <p className="text-sm text-[var(--text-muted)] font-body mb-6">
-                {activeItemId
-                  ? `Applying to: ${selectedItems.find((i) => i.id === activeItemId)?.name ?? "item"}`
-                  : "Select a layer (click its name in the LAYERS panel) to change its fabric."}
-              </p>
-              <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
-                {FABRICS.map((f) => {
-                  const isActive = selectedItems.find((i) => i.id === activeItemId)?.fabric === f.id;
+          <div className="glass-card p-8">
+            <h3 className="type-heading text-[var(--text-primary)] tracking-tight mb-2">LOAD PRODUCT</h3>
+            <p className="text-sm text-[var(--text-muted)] font-body mb-6 max-w-2xl">
+              Paste a public product image URL (flat-lay or isolated shots work best). Studio backgrounds are stripped automatically before warping.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex items-center gap-2 flex-1 bg-[var(--bg-tertiary)] border border-[var(--border-primary)] px-3">
+                <Link2 className="w-4 h-4 text-[var(--text-muted)] shrink-0" />
+                <input
+                  value={productUrl}
+                  onChange={(e) => setProductUrl(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && loadFromUrl()}
+                  placeholder="https://.../product.png"
+                  className="flex-1 bg-transparent py-3 text-sm text-[var(--text-primary)] outline-none font-body placeholder:text-[var(--text-muted)]/50"
+                />
+              </div>
+              <button onClick={loadFromUrl} disabled={isLoadingProduct} className="btn-nexus justify-center disabled:opacity-40">
+                {isLoadingProduct ? <Loader2 className="w-4 h-4 animate-spin" /> : <Link2 className="w-4 h-4" />}
+                LOAD FROM LINK
+              </button>
+            </div>
+
+            <div className="mt-8">
+              <h4 className="type-label text-[var(--text-muted)] mb-4">CURATED REAL PRODUCTS — PUBLIC LINKS</h4>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                {PRODUCT_CATALOG.map((item) => {
+                  const isSelected = garmentMeta?.name === item.name;
                   return (
                     <button
-                      key={f.id}
-                      disabled={!activeItemId}
-                      onClick={() => activeItemId && handleFabricChange(activeItemId, f.id)}
-                      className={`p-3 border text-left transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed ${
-                        isActive
+                      key={item.id}
+                      onClick={() => loadCatalogProduct(item)}
+                      disabled={isLoadingProduct}
+                      className={`p-4 border text-left transition-all duration-300 disabled:opacity-50 ${
+                        isSelected
                           ? "border-[var(--accent-aurum)] bg-[color-mix(in_srgb,var(--accent-aurum)_10%,transparent)]"
                           : "border-[var(--border-primary)] hover:border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)] bg-[var(--bg-tertiary)] card-nexus"
                       }`}
                     >
-                      <div className="w-full h-12 mb-2 border border-[var(--border-primary)]" style={{ backgroundColor: "#8A6B4F", backgroundImage: f.pattern || undefined }} />
-                      <p className="type-mono text-[0.5rem] text-[var(--text-muted)] tracking-widest">{f.label}</p>
+                      <div className="w-full h-16 mb-3 border border-[var(--border-primary)] bg-[var(--bg-primary)] overflow-hidden flex items-center justify-center">
+                        <img src={item.image} alt={item.name} className="max-h-full max-w-full object-contain" loading="lazy" />
+                      </div>
+                      <p className="text-sm font-body text-[var(--text-primary)] truncate">{item.name}</p>
+                      <p className="type-mono text-[0.5rem] text-[var(--text-muted)] tracking-widest mt-1">{item.source}</p>
                     </button>
                   );
                 })}
               </div>
             </div>
-          )}
+          </div>
 
-          <div className="flex gap-4">
-            <button onClick={() => setSelectedItems([])} className="btn-outline flex-1 justify-center">
-              <RotateCcw className="w-4 h-4" />
-              CLEAR SELECTION
-            </button>
-            <button onClick={downloadResult} disabled={selectedItems.length === 0}
-              className="btn-nexus flex-1 justify-center disabled:opacity-40">
-              <Download className="w-4 h-4" />
-              SAVE LOOK
-            </button>
-            <button onClick={() => { useAnalysisStore.getState().setUploadedImage(null); setSelectedItems([]); }}
-              className="btn-nexus flex-1 justify-center">
-              NEW PHOTO
-            </button>
+          <div className="glass-card p-6">
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              <div className="min-w-0">
+                <p className="type-label text-[var(--text-muted)]">CURRENT PRODUCT</p>
+                {garmentMeta ? (
+                  <p className="text-sm text-[var(--text-primary)] font-body mt-1 truncate">
+                    {garmentMeta.name} — <span className="text-[var(--text-muted)]">{activeProduct ? "loaded from link" : garmentMeta.credit}</span>
+                  </p>
+                ) : (
+                  <p className="text-sm text-[var(--text-muted)] font-body mt-1">None loaded yet</p>
+                )}
+              </div>
+              <button onClick={runTryOn} disabled={!garmentCanvas || isProcessing}
+                className="btn-nexus justify-center disabled:opacity-40">
+                {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Shirt className="w-4 h-4" />}
+                RUN TRY-ON
+              </button>
+              <button onClick={() => { useAnalysisStore.getState().setUploadedImage(null); setResult(null); setGarmentCanvas(null); }}
+                className="btn-outline">
+                NEW PHOTO
+              </button>
+            </div>
           </div>
         </motion.div>
       )}
