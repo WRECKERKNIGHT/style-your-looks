@@ -7,6 +7,9 @@ import { useMediaPipe, AnalysisCancelledError } from "@/hooks/useMediaPipe";
 import { ProcessingOverlay } from "@/components/analysis/ProcessingOverlay";
 import { motion } from "framer-motion";
 import { Layers, AlertCircle, Shirt, Droplets, Ruler, TrendingUp, Activity } from "lucide-react";
+import { DemoAction } from "@/components/demo/DemoAction";
+import { DemoBadge } from "@/components/demo/DemoBadge";
+import { DEMO_BODY_PHOTO, buildDemoBodyResult } from "@/lib/demo/demo-analysis";
 
 const stagger = {
   hidden: { opacity: 0 },
@@ -102,6 +105,8 @@ export default function BodyAnalysisPage() {
     setFullBodyImage,
     bodyResult,
     outfitRecommendations,
+    setBodyResult,
+    setOutfitRecommendations,
   } = useAnalysisStore();
   const { analyzeBodyFromImage, cancelAnalysis } = useMediaPipe();
   const [error, setError] = useState<string | null>(null);
@@ -128,6 +133,16 @@ export default function BodyAnalysisPage() {
     [setFullBodyImage, analyzeBodyFromImage]
   );
 
+  const runDemo = useCallback(async () => {
+    useAnalysisStore.getState().reset();
+    setFullBodyImage(DEMO_BODY_PHOTO);
+    setError(null);
+    await new Promise((r) => setTimeout(r, 1500));
+    const { result, recommendations } = buildDemoBodyResult();
+    setBodyResult(result);
+    setOutfitRecommendations(recommendations);
+  }, [setFullBodyImage, setBodyResult, setOutfitRecommendations]);
+
   return (
     <div className="space-y-8">
       <div>
@@ -151,6 +166,13 @@ export default function BodyAnalysisPage() {
               label="Upload a full-body photo"
               accept="full-body"
             />
+
+            <DemoAction
+              photo={DEMO_BODY_PHOTO}
+              label="Run a full body-type, proportion and undertone scan on a sample."
+              detail="See silhouette detection, shoulder–waist–hip ratios and curated outfit recommendations instantly."
+              onUse={runDemo}
+            />
           </div>
 
           <ProcessingOverlay title="ANALYSING YOUR BODY..." />
@@ -171,6 +193,11 @@ export default function BodyAnalysisPage() {
           animate="show"
           className="space-y-8"
         >
+          {fullBodyImage === DEMO_BODY_PHOTO && (
+            <motion.div variants={fadeUp}>
+              <DemoBadge />
+            </motion.div>
+          )}
           {fullBodyImage && (
             <motion.div variants={fadeUp} className="glass-card overflow-hidden">
               {/* eslint-disable-next-line @next/next/no-img-element */}

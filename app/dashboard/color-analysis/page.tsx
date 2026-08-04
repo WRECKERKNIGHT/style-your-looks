@@ -7,6 +7,9 @@ import { useMediaPipe, AnalysisCancelledError } from "@/hooks/useMediaPipe";
 import { analyzeColorSeason, getSeasonEmoji, getColorHarmonyScore } from "@/lib/ml/color-analysis";
 import { ProcessingOverlay } from "@/components/analysis/ProcessingOverlay";
 import { motion } from "framer-motion";
+import { DemoAction } from "@/components/demo/DemoAction";
+import { DemoBadge } from "@/components/demo/DemoBadge";
+import { DEMO_SKIN_PHOTO, buildDemoColorResult } from "@/lib/demo/demo-analysis";
 import {
   Palette,
   AlertCircle,
@@ -411,6 +414,14 @@ export default function ColorAnalysisPage() {
     [setUploadedImage, analyzeFaceFromImage, setColorAnalysis]
   );
 
+  const runDemo = useCallback(async () => {
+    useAnalysisStore.getState().reset();
+    setUploadedImage(DEMO_SKIN_PHOTO);
+    setError(null);
+    await new Promise((r) => setTimeout(r, 1400));
+    setColorAnalysis(buildDemoColorResult());
+  }, [setUploadedImage, setColorAnalysis]);
+
   const cardRef = useRef<HTMLDivElement>(null);
 
   const exportPaletteCard = useCallback(async () => {
@@ -502,6 +513,13 @@ export default function ColorAnalysisPage() {
               label="Upload a photo for tone analysis"
               accept="face"
             />
+
+            <DemoAction
+              photo={DEMO_SKIN_PHOTO}
+              label="Discover a full seasonal palette on a sample photo."
+              detail="See your seasonal type, best colors, metals, drapes and wardrobe matches in seconds."
+              onUse={runDemo}
+            />
           </div>
 
           <ProcessingOverlay title="ANALYSING YOUR COLOR SEASON..." />
@@ -522,6 +540,11 @@ export default function ColorAnalysisPage() {
           animate="show"
           className="space-y-8"
         >
+          {uploadedImage === DEMO_SKIN_PHOTO && (
+            <motion.div variants={fadeUp}>
+              <DemoBadge />
+            </motion.div>
+          )}
           <motion.div variants={fadeUp} className="glass-card p-10 relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[var(--accent-nexus)] via-[var(--accent-aurum)] to-[var(--accent-nexus)]" />
             <div className="flex flex-col md:flex-row items-center gap-8">

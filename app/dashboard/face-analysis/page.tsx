@@ -11,6 +11,9 @@ import { TryItOnPanel } from "@/components/analysis/TryItOnPanel";
 import { FaceCalibration } from "@/components/analysis/FaceCalibration";
 import { CalibrationModal } from "@/components/analysis/CalibrationModal";
 import { FaceView3D } from "@/components/analysis/FaceView3D";
+import { DemoAction } from "@/components/demo/DemoAction";
+import { DemoBadge } from "@/components/demo/DemoBadge";
+import { DEMO_FACE_PHOTO, buildDemoFaceResult, generateDemoLandmarks } from "@/lib/demo/demo-analysis";
 import { useAnalysisStore } from "@/store/analysis-store";
 import { useMediaPipe, AnalysisCancelledError } from "@/hooks/useMediaPipe";
 import { useWebcam } from "@/hooks/useWebcam";
@@ -139,7 +142,7 @@ function DiagnosticStrip({
 }
 
 export default function FaceAnalysisPage() {
-  const { uploadedImage, setUploadedImage, faceResult, isAnalyzing, genderProfile, setGenderProfile, setProcessingPreview } =
+  const { uploadedImage, setUploadedImage, faceResult, isAnalyzing, genderProfile, setGenderProfile, setProcessingPreview, setFaceResult } =
     useAnalysisStore();
   const { analyzeFacePhotos, cancelAnalysis } = useMediaPipe();
   const { videoRef, isStreaming, startWebcam, stopWebcam, captureFrame } = useWebcam();
@@ -228,6 +231,21 @@ export default function FaceAnalysisPage() {
     setError(null);
     setRejectedPhotos([]);
   }, []);
+
+  const runDemo = useCallback(async () => {
+    useAnalysisStore.getState().reset();
+    setPhotos([DEMO_FACE_PHOTO]);
+    setUploadedImage(DEMO_FACE_PHOTO);
+    setError(null);
+    setRejectedPhotos([]);
+    setProcessingPreview({ image: DEMO_FACE_PHOTO, landmarks: [] });
+    await new Promise((r) => setTimeout(r, 1100));
+    const landmarks = generateDemoLandmarks();
+    setProcessingPreview({ image: DEMO_FACE_PHOTO, landmarks });
+    await new Promise((r) => setTimeout(r, 1100));
+    setProcessingPreview(null);
+    setFaceResult(buildDemoFaceResult());
+  }, [setUploadedImage, setProcessingPreview, setFaceResult]);
 
   const handleAnalyze = useCallback(async () => {
     if (photos.length < MIN_PHOTOS) {
@@ -435,6 +453,13 @@ export default function FaceAnalysisPage() {
               />
             )}
 
+            <DemoAction
+              photo={DEMO_FACE_PHOTO}
+              label="Run the full FaceIQ scan on a sample photo."
+              detail="See real landmark mapping, golden-ratio scoring and a shareable result card in seconds — no camera or upload required."
+              onUse={runDemo}
+            />
+
             {photos.length > 0 && (
               <div className="grid grid-cols-3 gap-3 mt-5">
                 {photos.map((photo, i) => {
@@ -572,6 +597,7 @@ export default function FaceAnalysisPage() {
             <span className="type-mono text-[0.6rem] tracking-[0.25em] uppercase px-3 py-1.5 border border-aurum-500/40 text-[var(--accent-aurum)] bg-aurum-500/[0.06]">
               {faceResult.genderProfile.toUpperCase()} PROFILE
             </span>
+            {uploadedImage === DEMO_FACE_PHOTO && <DemoBadge />}
             <button
               onClick={() => {
                 const entry = useAnalysisStore.getState().saveCurrentAnalysis();
