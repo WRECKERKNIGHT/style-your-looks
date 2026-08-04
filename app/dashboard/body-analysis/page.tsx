@@ -137,6 +137,7 @@ export default function BodyAnalysisPage() {
 
   const runDemo = useCallback(async () => {
     useAnalysisStore.getState().reset();
+    useAnalysisStore.getState().setSource("demo");
     setFullBodyImage(DEMO_BODY_PHOTO);
     setError(null);
     await new Promise((r) => setTimeout(r, 1500));

@@ -26,7 +26,7 @@ import {
   Activity,
 } from "lucide-react";
 import { useAnalysisStore } from "@/store/analysis-store";
-import { getHistory } from "@/lib/history";
+import { getHistory, isDemoEntry } from "@/lib/history";
 import { getPersonalizedTips, onboardingTips } from "@/lib/tips";
 import { AnimatedCounter } from "@/components/shared/AnimatedCounter";
 import { AIInsights } from "@/components/shared/AIInsights";
@@ -225,7 +225,7 @@ export default function DashboardHome() {
   }, [tips.length]);
 
   useEffect(() => {
-    setAnalysesDone(getHistory().length);
+    setAnalysesDone(getHistory().filter((e) => !isDemoEntry(e)).length);
   }, [faceResult, bodyResult]);
 
   return (

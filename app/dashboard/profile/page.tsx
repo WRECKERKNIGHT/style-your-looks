@@ -18,7 +18,7 @@ import {
   Dna,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { getHistory } from "@/lib/history";
+import { getHistory, isDemoEntry } from "@/lib/history";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -73,7 +73,7 @@ export default function ProfilePage() {
       }
     });
 
-    const history = getHistory();
+    const history = getHistory().filter((e) => !isDemoEntry(e));
     setAnalysisCount(history.length);
     const scores = history
       .map((e) => e.faceResult?.overallScore)

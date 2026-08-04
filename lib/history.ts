@@ -1,9 +1,11 @@
 import type { FaceAnalysisResult, BodyAnalysisResult, ColorAnalysisResult, OutfitRecommendation } from "@/store/analysis-store";
+import type { AnalysisSource } from "@/store/analysis-store";
 
 export interface AnalysisEntry {
   id: string;
   timestamp: number;
   date: string;
+  source?: AnalysisSource;
   faceResult: FaceAnalysisResult | null;
   bodyResult: BodyAnalysisResult | null;
   colorAnalysis: ColorAnalysisResult | null;
@@ -88,9 +90,22 @@ export interface ScoreTrendPoint {
   harmony: number;
 }
 
+const DEMO_THUMBNAILS = new Set([
+  "/images/demo/face-sample.jpg",
+  "/images/demo/body-sample.jpg",
+  "/images/demo/skin-sample.jpg",
+]);
+
+export function isDemoEntry(entry: AnalysisEntry): boolean {
+  return (
+    entry.source === "demo" ||
+    (entry.thumbnailUrl != null && DEMO_THUMBNAILS.has(entry.thumbnailUrl))
+  );
+}
+
 export function getScoreTrends(): ScoreTrendPoint[] {
   return getHistory()
-    .filter((e) => e.faceResult)
+    .filter((e) => e.faceResult && !isDemoEntry(e))
     .sort((a, b) => a.timestamp - b.timestamp)
     .map((e) => ({
       date: e.date,
@@ -115,7 +130,7 @@ export interface BodyTrendPoint {
 
 export function getBodyTrends(): BodyTrendPoint[] {
   return getHistory()
-    .filter((e) => e.bodyResult)
+    .filter((e) => e.bodyResult && !isDemoEntry(e))
     .sort((a, b) => a.timestamp - b.timestamp)
     .map((e) => ({
       date: e.date,

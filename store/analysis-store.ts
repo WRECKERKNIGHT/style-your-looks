@@ -132,7 +132,10 @@ export interface ColorAnalysisResult {
   description: string;
 }
 
+export type AnalysisSource = "real" | "demo";
+
 interface AnalysisState {
+  source: AnalysisSource;
   faceResult: FaceAnalysisResult | null;
   bodyResult: BodyAnalysisResult | null;
   outfitRecommendations: OutfitRecommendation[];
@@ -159,11 +162,13 @@ interface AnalysisState {
   setGenderProfile: (profile: AnalysisProfile) => void;
   setSelectedBeardStyle: (style: string) => void;
   setSelectedMustacheStyle: (style: string) => void;
+  setSource: (source: AnalysisSource) => void;
   saveCurrentAnalysis: (label?: string) => AnalysisEntry | null;
   reset: () => void;
 }
 
 export const useAnalysisStore = create<AnalysisState>((set, get) => ({
+  source: "real",
   faceResult: null,
   bodyResult: null,
   outfitRecommendations: [],
@@ -190,9 +195,13 @@ export const useAnalysisStore = create<AnalysisState>((set, get) => ({
   setGenderProfile: (genderProfile) => set({ genderProfile }),
   setSelectedBeardStyle: (style) => set({ selectedBeardStyle: style }),
   setSelectedMustacheStyle: (style) => set({ selectedMustacheStyle: style }),
+  setSource: (source) => set({ source }),
 
   saveCurrentAnalysis: (label?: string) => {
     const state = get();
+    if (state.source === "demo") {
+      return null;
+    }
     const thumbnailUrl = state.bodyResult
       ? state.fullBodyImage
       : state.uploadedImage;
@@ -222,6 +231,7 @@ export const useAnalysisStore = create<AnalysisState>((set, get) => ({
 
   reset: () =>
     set({
+      source: "real",
       faceResult: null,
       bodyResult: null,
       outfitRecommendations: [],

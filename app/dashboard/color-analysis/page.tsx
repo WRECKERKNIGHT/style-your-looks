@@ -418,6 +418,7 @@ export default function ColorAnalysisPage() {
 
   const runDemo = useCallback(async () => {
     useAnalysisStore.getState().reset();
+    useAnalysisStore.getState().setSource("demo");
     setUploadedImage(DEMO_SKIN_PHOTO);
     setError(null);
     await new Promise((r) => setTimeout(r, 1400));

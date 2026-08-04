@@ -9,6 +9,7 @@ import {
   getHistory,
   deleteFromHistory,
   clearHistory,
+  isDemoEntry,
   type AnalysisEntry,
 } from "@/lib/history";
 
@@ -21,6 +22,7 @@ interface HistoryRow {
   score?: number;
   result?: string;
   thumbnail?: string | null;
+  demo?: boolean;
 }
 
 const TYPE_ICONS: Record<string, string> = {
@@ -105,7 +107,7 @@ export default function HistoryPage() {
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
 
   const reload = useCallback(() => {
-    setRows(getHistory().map(toRow));
+    setRows(getHistory().map((e) => ({ ...toRow(e), demo: isDemoEntry(e) })));
   }, []);
 
   useEffect(() => {
@@ -113,6 +115,7 @@ export default function HistoryPage() {
   }, [reload]);
 
   const filtered = rows
+    .filter((h) => !h.demo)
     .filter((h) => filter === "all" || h.type === filter)
     .sort((a, b) => sortOrder === "newest"
       ? new Date(b.date).getTime() - new Date(a.date).getTime()

@@ -241,6 +241,7 @@ export default function FaceAnalysisPage() {
 
   const runDemo = useCallback(async () => {
     useAnalysisStore.getState().reset();
+    useAnalysisStore.getState().setSource("demo");
     setPhotos([DEMO_FACE_PHOTO]);
     setUploadedImage(DEMO_FACE_PHOTO);
     setError(null);
@@ -679,6 +680,13 @@ export default function FaceAnalysisPage() {
             {uploadedImage === DEMO_FACE_PHOTO && <DemoBadge />}
             <button
               onClick={() => {
+                if (useAnalysisStore.getState().source === "demo") {
+                  addToast(
+                    "Demo results are previews only — upload a real photo to save to history.",
+                    "error"
+                  );
+                  return;
+                }
                 const entry = useAnalysisStore.getState().saveCurrentAnalysis();
                 if (entry) {
                   setSaved(true);

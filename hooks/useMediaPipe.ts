@@ -261,6 +261,7 @@ export function useMediaPipe() {
       onPreview?: (index: number, landmarks: number[][]) => void
     ) => {
       cancelledRef.current = false;
+      useAnalysisStore.getState().setSource("real");
       setIsAnalyzing(true);
       setAnalysisProgress(0);
 
@@ -355,6 +356,7 @@ export function useMediaPipe() {
   const analyzeBodyFromImage = useCallback(
     async (imageElement: HTMLImageElement) => {
       cancelledRef.current = false;
+      useAnalysisStore.getState().setSource("real");
       setIsAnalyzing(true);
       setAnalysisProgress(0);
 
