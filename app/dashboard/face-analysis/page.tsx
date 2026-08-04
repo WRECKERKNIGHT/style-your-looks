@@ -9,7 +9,7 @@ import { PhotoGuidelines } from "@/components/analysis/PhotoGuidelines";
 import { PhotoReviewPanel, type RejectedPhoto } from "@/components/analysis/PhotoReviewPanel";
 import { TryItOnPanel } from "@/components/analysis/TryItOnPanel";
 import { FaceCalibration } from "@/components/analysis/FaceCalibration";
-import { CalibrationModal } from "@/components/analysis/CalibrationModal";
+import { CalibrationModal, type CalibrationProfile } from "@/components/analysis/CalibrationModal";
 import { FaceView3D } from "@/components/analysis/FaceView3D";
 import { DemoAction } from "@/components/demo/DemoAction";
 import { DemoBadge } from "@/components/demo/DemoBadge";
@@ -157,6 +157,7 @@ export default function FaceAnalysisPage() {
   const [rejectedPhotos, setRejectedPhotos] = useState<RejectedPhoto[]>([]);
   const [step, setStep] = useState<"calibrate" | "capture">("calibrate");
   const [calibOpen, setCalibOpen] = useState(false);
+  const [calibration, setCalibration] = useState<CalibrationProfile | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
   const imageRef = useRef<HTMLImageElement>(null);
   const [imageDims, setImageDims] = useState<{ w: number; h: number; aspect?: number } | null>(null);
@@ -418,7 +419,7 @@ export default function FaceAnalysisPage() {
               >
                 <div className="flex items-center justify-between">
                   <button
-                    onClick={() => setStep("calibrate")}
+                    onClick={() => setCalibOpen(true)}
                     className="flex items-center gap-1.5 text-xs type-mono tracking-widest text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
                   >
                     &larr; RECALIBRATE
@@ -427,6 +428,32 @@ export default function FaceAnalysisPage() {
                     STEP 2/3 &middot; CAPTURE
                   </span>
                 </div>
+
+                {calibration && (
+                  <div className="glass-card p-4 flex flex-wrap items-center gap-2 mt-5">
+                    <span className="type-mono text-[0.5rem] text-[var(--accent-aurum)] tracking-[0.25em] uppercase mr-1">
+                      CALIBRATED
+                    </span>
+                    <span className="type-mono text-[0.55rem] text-[var(--text-primary)] tracking-widest border border-[var(--border-primary)] px-2.5 py-1.5 bg-[var(--bg-tertiary)]">
+                      ~{calibration.lensDistanceCm}CM &middot; LENS
+                    </span>
+                    <span className="type-mono text-[0.55rem] text-[var(--text-primary)] tracking-widest border border-[var(--border-primary)] px-2.5 py-1.5 bg-[var(--bg-tertiary)]">
+                      {calibration.gender.toUpperCase()}
+                    </span>
+                    <span className="type-mono text-[0.55rem] text-[var(--text-primary)] tracking-widest border border-[var(--border-primary)] px-2.5 py-1.5 bg-[var(--bg-tertiary)]">
+                      AGE {calibration.ageRange}
+                    </span>
+                    <span className="type-mono text-[0.55rem] text-[var(--text-primary)] tracking-widest border border-[var(--border-primary)] px-2.5 py-1.5 bg-[var(--bg-tertiary)]">
+                      {calibration.symmetryExpected ? "SYMMETRIC FACE" : "ASYMMETRIC OK"}
+                    </span>
+                    <button
+                      onClick={() => setCalibOpen(true)}
+                      className="ml-auto type-mono text-[0.55rem] text-[var(--accent-aurum)] tracking-widest hover:underline uppercase"
+                    >
+                      Edit
+                    </button>
+                  </div>
+                )}
 
                 <div className="glass-card p-8">
             <div className="flex items-center justify-between mb-5">
@@ -700,6 +727,7 @@ export default function FaceAnalysisPage() {
                 setPhotos([]);
                 setRejectedPhotos([]);
                 setError(null);
+                setCalibration(null);
                 setStep("calibrate");
                 cancelAnalysis();
               }}
@@ -893,6 +921,7 @@ export default function FaceAnalysisPage() {
         open={calibOpen}
         onClose={() => setCalibOpen(false)}
         onComplete={(profile) => {
+          setCalibration(profile);
           setGenderProfile(profile.gender);
           setStep("capture");
         }}
