@@ -9,6 +9,7 @@ import { PhotoGuidelines } from "@/components/analysis/PhotoGuidelines";
 import { PhotoReviewPanel, type RejectedPhoto } from "@/components/analysis/PhotoReviewPanel";
 import { TryItOnPanel } from "@/components/analysis/TryItOnPanel";
 import { FaceCalibration } from "@/components/analysis/FaceCalibration";
+import { CalibrationModal } from "@/components/analysis/CalibrationModal";
 import { FaceView3D } from "@/components/analysis/FaceView3D";
 import { useAnalysisStore } from "@/store/analysis-store";
 import { useMediaPipe, AnalysisCancelledError } from "@/hooks/useMediaPipe";
@@ -151,6 +152,7 @@ export default function FaceAnalysisPage() {
   const [photos, setPhotos] = useState<string[]>([]);
   const [rejectedPhotos, setRejectedPhotos] = useState<RejectedPhoto[]>([]);
   const [step, setStep] = useState<"calibrate" | "capture">("calibrate");
+  const [calibOpen, setCalibOpen] = useState(false);
   const imageRef = useRef<HTMLImageElement>(null);
   const [imageDims, setImageDims] = useState<{ w: number; h: number; aspect?: number } | null>(null);
 
@@ -353,7 +355,7 @@ export default function FaceAnalysisPage() {
                 exit={{ opacity: 0, y: -12 }}
                 transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
               >
-                <FaceCalibration onBegin={() => setStep("capture")} />
+                <FaceCalibration onBegin={() => setCalibOpen(true)} />
               </motion.div>
             ) : (
               <motion.div
@@ -802,6 +804,15 @@ export default function FaceAnalysisPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <CalibrationModal
+        open={calibOpen}
+        onClose={() => setCalibOpen(false)}
+        onComplete={(profile) => {
+          setGenderProfile(profile.gender);
+          setStep("capture");
+        }}
+      />
     </div>
   );
 }
