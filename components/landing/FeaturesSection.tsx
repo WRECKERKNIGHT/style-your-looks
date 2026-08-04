@@ -107,7 +107,7 @@ export function FeaturesSection() {
   const glowOpacity = useTransform(scrollYProgress, [0, 0.5, 1], [0.35, 0.7, 0.35]);
 
   return (
-    <section ref={ref} className="relative py-32 md:py-44 overflow-hidden bg-cosmic-surface" id="features">
+    <section ref={ref} className="relative py-32 md:py-44 overflow-hidden bg-cosmic-surface scroll-mt-20" id="features">
       <div className="absolute inset-0 grid-bg opacity-40" />
       <div className="pointer-events-none absolute -top-28 left-1/2 -translate-x-1/2 w-[1400px] h-64 rounded-full bg-aurum-400/10 blur-[120px]" aria-hidden />
       <motion.div

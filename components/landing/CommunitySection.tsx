@@ -53,7 +53,7 @@ export function CommunitySection() {
   const marqueeInView = useInView(marqueeRef, { amount: 0.3 });
 
   return (
-    <section className="relative py-32 md:py-44 overflow-hidden bg-cosmic-surface" id="community">
+    <section className="relative py-32 md:py-44 overflow-hidden bg-cosmic-surface scroll-mt-20" id="community">
       <div className="absolute inset-0 grid-bg opacity-40" />
 
       <div className="pointer-events-none absolute inset-0" aria-hidden>

@@ -115,7 +115,7 @@ export function HowItWorksSection() {
   const lineScaleY = useSpring(scrollYProgress, { stiffness: 80, damping: 26 });
 
   return (
-    <section ref={sectionRef} className="relative py-32 md:py-44 overflow-hidden bg-cosmic-base paper-texture" id="how-it-works">
+    <section ref={sectionRef} className="relative py-32 md:py-44 overflow-hidden bg-cosmic-base paper-texture scroll-mt-20" id="how-it-works">
       <div className="absolute inset-0 grid-bg opacity-40" />
 
       <div className="pointer-events-none absolute inset-0" aria-hidden>

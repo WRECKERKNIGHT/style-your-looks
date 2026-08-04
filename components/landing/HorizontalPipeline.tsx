@@ -108,6 +108,36 @@ function StepCard({
   );
 }
 
+function StepMarker({
+  index,
+  scrollYProgress,
+}: {
+  index: number;
+  scrollYProgress: MotionValue<number>;
+}) {
+  const active = useTransform(
+    scrollYProgress,
+    [0.08 + index * 0.2, 0.2 + index * 0.2],
+    [0, 1]
+  );
+  const activeScale = useTransform(
+    scrollYProgress,
+    [0.08 + index * 0.2, 0.2 + index * 0.2],
+    [0.6, 1]
+  );
+  return (
+    <motion.div
+      style={{ opacity: active, scale: activeScale }}
+      className="flex items-center gap-2"
+    >
+      <span className="w-2 h-2 rotate-45 bg-gradient-to-br from-aurum-400 to-aurum-500" />
+      <span className="type-mono text-[0.55rem] tracking-[0.25em] text-[var(--accent-mocha)]">
+        {pipelineSteps[index].title}
+      </span>
+    </motion.div>
+  );
+}
+
 export function HorizontalPipeline() {
   const sectionRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
@@ -158,7 +188,7 @@ export function HorizontalPipeline() {
     <section
       ref={sectionRef}
       id="pipeline"
-      className="relative h-[260vh] bg-cosmic-surface"
+      className="relative h-[260vh] bg-cosmic-surface scroll-mt-24"
     >
       <div className="sticky top-0 h-screen overflow-hidden flex items-center will-change-transform">
         <div className="absolute inset-0 grid-bg opacity-40" />
@@ -255,6 +285,21 @@ export function HorizontalPipeline() {
             className="h-full origin-left bg-gradient-to-r from-nexus-500 via-aurum-400 to-aurum-300"
             style={{ scaleX: scrollYProgress }}
           />
+        </div>
+
+        {/* step markers — fill the lower viewport instead of dead space */}
+        <div className="pointer-events-none absolute bottom-8 left-8 right-8 z-20 flex items-end justify-between">
+          <div className="flex items-center gap-4">
+            {pipelineSteps.map((step, i) => (
+              <StepMarker key={step.number} index={i} scrollYProgress={scrollYProgress} />
+            ))}
+          </div>
+          <motion.span
+            style={{ opacity: useTransform(scrollYProgress, [0.85, 0.95], [0, 1]) }}
+            className="type-mono text-[0.55rem] text-[var(--text-muted)] tracking-[0.3em] uppercase"
+          >
+            Photo &rarr; Identity
+          </motion.span>
         </div>
       </div>
     </section>

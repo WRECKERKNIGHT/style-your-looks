@@ -41,7 +41,7 @@ export function Footer() {
       <motion.div
         aria-hidden
         style={{ y: watermarkY, opacity: watermarkOpacity }}
-        className="pointer-events-none absolute -bottom-16 left-1/2 -translate-x-1/2 text-[24vw] font-display font-black text-[var(--text-primary)]/[0.02] tracking-tight whitespace-nowrap select-none"
+        className="pointer-events-none absolute z-0 -bottom-20 left-1/2 -translate-x-1/2 text-[20vw] font-display font-black text-[var(--text-primary)]/[0.03] dark:text-[var(--cosmic-muted)]/[0.03] tracking-tight whitespace-nowrap select-none"
       >
         ZERVEY
       </motion.div>
