@@ -1,28 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="64" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#2A1C14"/>
-      <stop offset="100%" stop-color="#1A0F0A"/>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#2D1E18"/>
+      <stop offset="100%" stop-color="#1F1410"/>
     </linearGradient>
-    <linearGradient id="ring" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#CCA066"/>
-      <stop offset="50%" stop-color="#8A5F3D"/>
-      <stop offset="100%" stop-color="#C8963E"/>
-    </linearGradient>
-    <linearGradient id="mark" x1="12" y1="16" x2="52" y2="48" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#DCB987"/>
-      <stop offset="55%" stop-color="#B98B56"/>
-      <stop offset="100%" stop-color="#C8963E"/>
+    <linearGradient id="mark" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#D4A373"/>
+      <stop offset="50%" stop-color="#FAEDCD"/>
+      <stop offset="100%" stop-color="#C38E5B"/>
     </linearGradient>
   </defs>
   <rect width="64" height="64" rx="14" fill="url(#bg)"/>
-  <rect x="1.75" y="1.75" width="60.5" height="60.5" rx="12.25" fill="none" stroke="url(#ring)" stroke-width="0.9" opacity="0.55"/>
-  <g transform="translate(32, 33.5) scale(0.8)" fill="url(#mark)">
-    <polygon points="-10,0 -4,0 -14,14 -20,14"/>
-    <polygon points="4,0 10,0 20,14 14,14"/>
-    <polygon points="-7,9 7,9 7,10.5 -7,10.5"/>
-    <polygon points="-4,0 4,0 4,3.5 -4,3.5"/>
+  <g fill="none" stroke="url(#mark)" stroke-linecap="round" stroke-linejoin="round" transform="translate(32, 32) scale(0.22) translate(-400, -240)">
+    <path d="M 350 200 C 320 160, 370 140, 400 140 C 430 140, 480 160, 450 200 C 420 240, 340 280, 340 310 C 340 330, 360 340, 390 340" stroke-width="12"/>
+    <path d="M 450 280 C 480 320, 430 340, 400 340 C 370 340, 320 320, 350 280 C 380 240, 460 200, 460 170 C 460 150, 440 140, 410 140" stroke-width="12"/>
+    <path d="M 400 205 C 385 205, 380 185, 400 175 C 410 170, 412 160, 400 155" stroke-width="8"/>
   </g>
-  <polygon points="49,11 51,15 55,16 51,17 49,21 47,17 43,16 47,15" fill="#DCB987" opacity="0.9"/>
-  <polygon points="15,49 16,51 18,52 16,53 15,55 14,53 12,52 14,51" fill="#B98B56" opacity="0.6"/>
 </svg>

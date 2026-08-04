@@ -38,6 +38,10 @@ export function FaqSection() {
 
   return (
     <section className="relative py-32 md:py-44 overflow-hidden bg-cosmic-surface" id="faq">
+      <div className="pointer-events-none absolute inset-0" aria-hidden>
+        <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[1100px] h-80 rounded-full bg-aurum-400/8 blur-[160px]" />
+        <div className="absolute top-[20%] right-[4%] w-[400px] h-[400px] rounded-full bg-nexus-500/8 blur-[140px] animate-drift" />
+      </div>
       <div className="absolute inset-0 grid-bg opacity-40" />
 
       <div className="relative z-10 max-w-[1400px] mx-auto px-8 md:px-16 lg:px-24">

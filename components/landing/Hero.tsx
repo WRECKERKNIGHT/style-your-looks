@@ -19,10 +19,16 @@ const ParticleField = dynamic(
   { ssr: false }
 );
 
+const ScrollParticles = dynamic(
+  () => import("./ScrollParticles").then((m) => m.ScrollParticles),
+  { ssr: false }
+);
+
 export function Hero() {
   return (
     <div className="min-h-screen bg-cosmic-base">
       <ParticleField />
+      <ScrollParticles />
       <Nav />
       <HeroSection />
       <FeaturesSection />

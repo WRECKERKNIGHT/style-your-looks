@@ -63,7 +63,7 @@ function StepCard({
         style={{ y, willChange: "transform" }}
         className="h-full"
       >
-        <div className="glass-card rounded-xl p-8 md:p-10 h-full relative overflow-hidden group">
+        <div className="glass-card rounded-2xl p-8 md:p-10 h-full relative overflow-hidden group">
           <div className="absolute -top-10 -right-10 w-24 h-24 rounded-full bg-gradient-aurum opacity-[0.06] group-hover:opacity-[0.12] transition-opacity duration-700" />
           <div className="absolute -bottom-16 -left-16 w-40 h-40 rounded-full bg-aurum-400/0 blur-[60px] group-hover:bg-aurum-400/10 transition-colors duration-700" />
 
@@ -117,6 +117,12 @@ export function HowItWorksSection() {
   return (
     <section ref={sectionRef} className="relative py-32 md:py-44 overflow-hidden bg-cosmic-base paper-texture" id="how-it-works">
       <div className="absolute inset-0 grid-bg opacity-40" />
+
+      <div className="pointer-events-none absolute inset-0" aria-hidden>
+        <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[1100px] h-72 rounded-full bg-aurum-400/10 blur-[150px]" />
+        <div className="absolute top-1/4 right-[2%] w-[420px] h-[420px] rounded-full bg-nexus-500/8 blur-[140px] animate-drift" />
+        <div className="absolute bottom-[10%] left-[4%] w-[360px] h-[360px] rounded-full bg-aurum-400/8 blur-[120px] animate-drift" style={{ animationDelay: "-8s" }} />
+      </div>
 
       <div className="relative z-10 max-w-[1400px] mx-auto px-8 md:px-16 lg:px-24">
         <Reveal x={-30} className="mb-24">

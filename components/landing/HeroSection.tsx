@@ -79,6 +79,7 @@ export function HeroSection() {
     <section
       ref={ref}
       onMouseMove={handleMouseMove}
+      id="hero-landing"
       className="relative min-h-screen overflow-hidden bg-cosmic-base paper-texture"
     >
       <div className="absolute inset-0 grid-bg opacity-60" />

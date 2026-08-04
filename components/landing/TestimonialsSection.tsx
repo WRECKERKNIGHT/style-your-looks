@@ -78,7 +78,7 @@ export function TestimonialsSection() {
               key={t.name}
               y={40}
               delay={(index % 3) * 0.1}
-              className="glass-card rounded-xl p-8 relative overflow-hidden group"
+              className="glass-card rounded-2xl p-8 relative overflow-hidden group"
             >
               <Quote className="absolute top-6 right-6 w-8 h-8 text-aurum-400/10" />
               <Stars count={5} />

@@ -56,6 +56,12 @@ export function CommunitySection() {
     <section className="relative py-32 md:py-44 overflow-hidden bg-cosmic-surface" id="community">
       <div className="absolute inset-0 grid-bg opacity-40" />
 
+      <div className="pointer-events-none absolute inset-0" aria-hidden>
+        <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[1200px] h-80 rounded-full bg-aurum-400/8 blur-[160px]" />
+        <div className="absolute bottom-[12%] right-[3%] w-[460px] h-[460px] rounded-full bg-nexus-500/8 blur-[150px] animate-drift" />
+        <div className="absolute top-[30%] left-[2%] w-[380px] h-[380px] rounded-full bg-aurum-300/8 blur-[130px] animate-drift" style={{ animationDelay: "-12s" }} />
+      </div>
+
       <div className="relative z-10 max-w-[1400px] mx-auto px-8 md:px-16 lg:px-24">
         <Reveal x={-30} className="mb-20">
           <div className="flex items-center gap-4 mb-4">
@@ -100,9 +106,9 @@ export function CommunitySection() {
               y={50}
               rotate={index % 2 === 0 ? -1.5 : 1.5}
               delay={index * 0.1}
-              className="glass-card rounded-xl p-6 group cursor-default"
+              className="glass-card rounded-2xl p-6 group cursor-default"
             >
-              <SpotlightCard spotlightColor="rgba(185, 139, 86, 0.15)" className="h-full rounded-xl">
+              <SpotlightCard spotlightColor="rgba(185, 139, 86, 0.15)" className="h-full rounded-2xl">
               <div className="flex items-center justify-between mb-5">
                 <span className="type-mono text-[0.55rem] text-[var(--accent-mocha)] tracking-widest bg-aurum-400/15 px-2.5 py-1 rounded">
                   {post.tag}

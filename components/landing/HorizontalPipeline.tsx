@@ -75,7 +75,7 @@ function StepCard({
 
       <motion.div
         style={{ opacity, scale, y }}
-        className="glass-card rounded-xl p-8 md:p-12 h-[420px] md:h-[480px] flex flex-col justify-between relative overflow-hidden"
+        className="glass-card rounded-2xl p-8 md:p-12 h-[420px] md:h-[480px] flex flex-col justify-between relative overflow-hidden"
       >
         <div
           className={`absolute -top-20 -right-20 w-56 h-56 rounded-full bg-gradient-to-br ${step.accent} opacity-10 blur-[70px]`}

@@ -109,6 +109,7 @@ export function FeaturesSection() {
   return (
     <section ref={ref} className="relative py-32 md:py-44 overflow-hidden bg-cosmic-surface" id="features">
       <div className="absolute inset-0 grid-bg opacity-40" />
+      <div className="pointer-events-none absolute -top-28 left-1/2 -translate-x-1/2 w-[1400px] h-64 rounded-full bg-aurum-400/10 blur-[120px]" aria-hidden />
       <motion.div
         aria-hidden
         style={{ opacity: glowOpacity }}
@@ -148,8 +149,9 @@ export function FeaturesSection() {
                 <SpotlightCard
                   spotlightColor="rgba(185, 139, 86, 0.18)"
                   tilt={5}
-                  className="h-full card-nexus relative overflow-hidden rounded-xl"
+                  className="h-full card-nexus relative overflow-hidden rounded-2xl"
                 >
+                  <div className="absolute inset-0 bg-gradient-to-br from-[var(--bg-elevated)] via-transparent to-[color-mix(in_srgb,var(--accent-caramel)_6%,transparent)]" />
                   <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-aurum opacity-[0.05] rounded-bl-full" />
                   <div className="relative z-10 p-8">
                     <div className="flex items-start justify-between mb-5">
