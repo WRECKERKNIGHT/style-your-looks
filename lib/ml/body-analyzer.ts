@@ -153,3 +153,11 @@ export async function analyzeBody(
 
   return result;
 }
+
+export async function detectPoseOnly(
+  imageSource: HTMLImageElement | HTMLCanvasElement
+): Promise<number[][]> {
+  const landmarker = await initializePoseLandmarker();
+  const result = landmarker.detect(imageSource);
+  return result.landmarks?.[0]?.map((l) => [l.x, l.y, l.z]) || [];
+}

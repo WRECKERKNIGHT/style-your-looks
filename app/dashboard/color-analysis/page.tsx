@@ -7,7 +7,7 @@ import { useMediaPipe, AnalysisCancelledError } from "@/hooks/useMediaPipe";
 import { analyzeColorSeason, getSeasonEmoji, getColorHarmonyScore } from "@/lib/ml/color-analysis";
 import { ProcessingOverlay } from "@/components/analysis/ProcessingOverlay";
 import { motion } from "framer-motion";
-import { DemoAction } from "@/components/demo/DemoAction";
+import { DemoCarousel } from "@/components/demo/DemoCarousel";
 import { DemoBadge } from "@/components/demo/DemoBadge";
 import { DEMO_SKIN_PHOTO, buildDemoColorResult } from "@/lib/demo/demo-analysis";
 import { ShareCardModal, type ShareCardData } from "@/components/shared/ShareCardModal";
@@ -541,11 +541,17 @@ export default function ColorAnalysisPage() {
               accept="face"
             />
 
-            <DemoAction
-              photo={DEMO_SKIN_PHOTO}
-              label="Discover a full seasonal palette on a sample photo."
-              detail="See your seasonal type, best colors, metals, drapes and wardrobe matches in seconds."
-              onUse={runDemo}
+            <DemoCarousel
+              slides={[
+                {
+                  photo: DEMO_SKIN_PHOTO,
+                  title: "Discover a full seasonal palette on a sample photo.",
+                  detail:
+                    "Watch the live pixel sampler pull your skin tone while the sweep moves — then see seasonal type, best metals and drapes.",
+                  onRun: runDemo,
+                  scanMode: "swatch",
+                },
+              ]}
             />
           </div>
 

@@ -436,3 +436,12 @@ export async function analyzeFace(
     );
   }
 }
+
+export async function detectFaceLandmarksOnly(
+  imageSource: HTMLImageElement | HTMLCanvasElement
+): Promise<number[][]> {
+  const landmarker = await initializeFaceLandmarker();
+  const source = prepareCanvas(imageSource);
+  const result = landmarker.detect(source);
+  return result.faceLandmarks?.[0]?.map((l) => [l.x, l.y, l.z]) || [];
+}

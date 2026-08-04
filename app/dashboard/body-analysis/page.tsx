@@ -7,9 +7,10 @@ import { useMediaPipe, AnalysisCancelledError } from "@/hooks/useMediaPipe";
 import { ProcessingOverlay } from "@/components/analysis/ProcessingOverlay";
 import { motion } from "framer-motion";
 import { Layers, AlertCircle, Shirt, Droplets, Ruler, TrendingUp, Activity, Share2 } from "lucide-react";
-import { DemoAction } from "@/components/demo/DemoAction";
+import { DemoCarousel } from "@/components/demo/DemoCarousel";
 import { DemoBadge } from "@/components/demo/DemoBadge";
 import { DEMO_BODY_PHOTO, buildDemoBodyResult } from "@/lib/demo/demo-analysis";
+import { detectPoseOnly } from "@/lib/ml/body-analyzer";
 import { ShareCardModal, type ShareCardData } from "@/components/shared/ShareCardModal";
 
 const stagger = {
@@ -196,11 +197,17 @@ export default function BodyAnalysisPage() {
               accept="full-body"
             />
 
-            <DemoAction
-              photo={DEMO_BODY_PHOTO}
-              label="Run a full body-type, proportion and undertone scan on a sample."
-              detail="See silhouette detection, shoulder–waist–hip ratios and curated outfit recommendations instantly."
-              onUse={runDemo}
+            <DemoCarousel
+              slides={[
+                {
+                  photo: DEMO_BODY_PHOTO,
+                  title: "Run a full body-type, proportion and undertone scan on a sample.",
+                  detail:
+                    "Watch the pose skeleton lock onto the silhouette — then see shoulder–waist–hip ratios and curated outfit recommendations.",
+                  onRun: runDemo,
+                  detect: detectPoseOnly,
+                },
+              ]}
             />
           </div>
 

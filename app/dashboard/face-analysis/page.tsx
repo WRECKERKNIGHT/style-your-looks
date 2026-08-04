@@ -11,9 +11,10 @@ import { TryItOnPanel } from "@/components/analysis/TryItOnPanel";
 import { FaceCalibration } from "@/components/analysis/FaceCalibration";
 import { CalibrationModal, type CalibrationProfile } from "@/components/analysis/CalibrationModal";
 import { FaceView3D } from "@/components/analysis/FaceView3D";
-import { DemoAction } from "@/components/demo/DemoAction";
+import { DemoCarousel } from "@/components/demo/DemoCarousel";
 import { DemoBadge } from "@/components/demo/DemoBadge";
 import { DEMO_FACE_PHOTO, buildDemoFaceResult, generateDemoLandmarks } from "@/lib/demo/demo-analysis";
+import { detectFaceLandmarksOnly } from "@/lib/ml/face-analyzer";
 import { useAnalysisStore } from "@/store/analysis-store";
 import { useMediaPipe, AnalysisCancelledError } from "@/hooks/useMediaPipe";
 import { useWebcam } from "@/hooks/useWebcam";
@@ -513,11 +514,17 @@ export default function FaceAnalysisPage() {
               />
             )}
 
-            <DemoAction
-              photo={DEMO_FACE_PHOTO}
-              label="Run the full FaceIQ scan on a sample photo."
-              detail="See real landmark mapping, golden-ratio scoring and a shareable result card in seconds — no camera or upload required."
-              onUse={runDemo}
+            <DemoCarousel
+              slides={[
+                {
+                  photo: DEMO_FACE_PHOTO,
+                  title: "Run the full FaceIQ scan on a sample photo.",
+                  detail:
+                    "Watch the live 478-point mesh track the face — then see golden-ratio scoring and a shareable result card. No camera or upload required.",
+                  onRun: runDemo,
+                  detect: detectFaceLandmarksOnly,
+                },
+              ]}
             />
 
             {photos.length > 0 && (
