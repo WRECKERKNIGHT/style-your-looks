@@ -624,6 +624,7 @@ export default function ColorAnalysisPage() {
                 </button>
                 <button
                   onClick={() => setShareOpen(true)}
+                  aria-label="Share result card"
                   className="btn-outline"
                 >
                   <Share2 className="w-4 h-4" />

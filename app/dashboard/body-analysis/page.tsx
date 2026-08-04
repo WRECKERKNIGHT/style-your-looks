@@ -390,7 +390,11 @@ export default function BodyAnalysisPage() {
           </button>
 
           <div className="flex justify-center">
-            <button onClick={() => setShareOpen(true)} className="btn-outline !py-3 !px-8">
+            <button
+              onClick={() => setShareOpen(true)}
+              aria-label="Share result card"
+              className="btn-outline !py-3 !px-8"
+            >
               <Share2 className="w-4 h-4" />
               SHARE RESULT CARD
             </button>

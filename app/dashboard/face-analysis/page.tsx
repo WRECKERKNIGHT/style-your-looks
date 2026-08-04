@@ -628,6 +628,7 @@ export default function FaceAnalysisPage() {
               </button>
               <button
                 onClick={stopWebcam}
+                aria-label="Close camera"
                 className="btn-outline justify-center"
               >
                 <X className="w-4 h-4" />
@@ -716,6 +717,7 @@ export default function FaceAnalysisPage() {
             </button>
             <button
               onClick={() => setShareOpen(true)}
+              aria-label="Share result card"
               className="flex items-center gap-2 px-6 py-3 font-body text-sm tracking-wider uppercase transition-all btn-outline"
             >
               <Share2 className="w-5 h-5" />

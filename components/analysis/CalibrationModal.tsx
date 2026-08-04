@@ -101,6 +101,9 @@ export function CalibrationModal({ open, onClose, onComplete }: CalibrationModal
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.97 }}
             transition={{ duration: 0.4, ease: EASE }}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="calibration-title"
             className="relative w-full max-w-2xl glass-card overflow-hidden shadow-2xl"
           >
             <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-aurum-400/60 to-transparent" />
@@ -111,7 +114,7 @@ export function CalibrationModal({ open, onClose, onComplete }: CalibrationModal
               <div className="flex items-start justify-between px-8 pt-7 pb-5 border-b border-[var(--border-primary)]/60">
                 <div>
                   <span className="section-number">PRE-SCAN CALIBRATION</span>
-                  <h2 className="type-heading text-[var(--text-primary)] mt-1.5">
+                  <h2 id="calibration-title" className="type-heading text-[var(--text-primary)] mt-1.5">
                     {STEP_TITLES[step]}
                   </h2>
                 </div>
@@ -310,6 +313,7 @@ export function CalibrationModal({ open, onClose, onComplete }: CalibrationModal
                             ? "border-aurum-500/70 bg-aurum-500/[0.07]"
                             : "border-[var(--border-primary)] hover:border-aurum-500/40"
                         }`}
+                        aria-pressed={symmetryExpected}
                       >
                         <span className="text-left">
                           <span className="block text-xs font-bold font-body uppercase tracking-wider text-[var(--text-primary)]">
@@ -403,6 +407,7 @@ export function CalibrationModal({ open, onClose, onComplete }: CalibrationModal
                               onClick={() =>
                                 setChecked((c) => ({ ...c, [item.id]: !c[item.id] }))
                               }
+                              aria-pressed={isChecked}
                               className={`flex items-center justify-between w-full border px-4 py-3.5 text-left transition-all ${
                                 isChecked
                                   ? "border-aurum-500/70 bg-aurum-500/[0.07]"
