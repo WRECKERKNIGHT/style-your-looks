@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-
-const LETTERS = Array.from("ZERVEY");
+import { Logo } from "@/components/shared/Logo";
+import { HangingLeaves } from "@/components/shared/LoadingLeaves";
 
 const TAGLINES = [
   "MEASURED LIKE A TAILOR.",
@@ -45,8 +45,6 @@ export function LoadingScreen() {
     };
   }, []);
 
-  const letters = useMemo(() => LETTERS, []);
-
   return (
     <AnimatePresence>
       {isLoading && (
@@ -68,58 +66,25 @@ export function LoadingScreen() {
             className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[560px] h-[560px] rounded-full bg-aurum-400/10 blur-[120px]"
           />
 
+          {/* hanging coffee / cream leaves */}
+          <HangingLeaves />
+
           <div className="relative text-center px-8">
-            {/* monogram */}
+            {/* large logo */}
             <motion.div
-              initial={{ opacity: 0, y: 20, scale: 0.85 }}
+              initial={{ opacity: 0, y: 24, scale: 0.92 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ duration: 0.9, ease: EASE }}
-              className="flex items-center justify-center mb-7"
+              className="flex items-center justify-center mb-9"
             >
               <motion.div
-                animate={{ rotate: [0, -8, 8, 0], scale: [1, 1.08, 1.08, 1] }}
-                transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
-                className="relative w-14 h-14 bg-gradient-to-br from-aurum-500 via-aurum-400 to-aurum-300 flex items-center justify-center rounded-sm shadow-aurum-lg"
+                animate={{ rotate: [0, -2.5, 2.5, 0] }}
+                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+                className="leaf-float"
               >
-                <svg
-                  className="w-7 h-7 text-cosmic-base"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.4"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-                </svg>
-                <motion.div
-                  aria-hidden
-                  className="absolute inset-0 rounded-sm"
-                  style={{
-                    background:
-                      "linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.45) 50%, transparent 70%)",
-                    backgroundSize: "250% 100%",
-                  }}
-                  animate={{ backgroundPosition: ["200% 0", "-200% 0"] }}
-                  transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
-                />
+                <Logo className="w-72 md:w-96 h-auto drop-shadow-[0_18px_40px_rgba(87,58,39,0.35)]" />
               </motion.div>
             </motion.div>
-
-            {/* wordmark */}
-            <div className="flex items-baseline justify-center gap-[0.04em] mb-6 overflow-hidden">
-              {letters.map((letter, i) => (
-                <motion.span
-                  key={`${letter}-${i}`}
-                  initial={{ y: "120%", opacity: 0, rotate: 4 }}
-                  animate={{ y: "0%", opacity: 1, rotate: 0 }}
-                  transition={{ duration: 0.8, delay: 0.25 + i * 0.07, ease: EASE }}
-                  className="text-5xl md:text-7xl font-body font-bold tracking-tight text-gradient-aurum"
-                >
-                  {letter}
-                </motion.span>
-              ))}
-            </div>
 
             {/* progress */}
             <div className="relative mx-auto w-64 md:w-80 mb-5">
