@@ -175,6 +175,8 @@ export function FaceView3D({
       if (!dragging && Date.now() - lastMove > 1600) {
         yaw += 0.0032;
         pitch = 0.12 + Math.sin(Date.now() / 2600) * 0.02;
+        targetYaw = yaw;
+        targetPitch = pitch;
       } else {
         yaw += (targetYaw - yaw) * 0.12;
         pitch += (targetPitch - pitch) * 0.12;

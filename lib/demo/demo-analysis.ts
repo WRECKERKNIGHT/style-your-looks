@@ -29,13 +29,15 @@ export function generateDemoLandmarks(): number[][] {
     for (let i = 0; i < n && pts.length < 478; i++) {
       const a = (i / n) * Math.PI * 2 + phase;
       const jitter = 0.004 * Math.sin((i * 13 + phase * 7) % Math.PI);
+      const radial = rx / 0.26;
       pts.push([
         Math.max(0.02, Math.min(0.98, cx + Math.cos(a) * rx + jitter)),
         Math.max(0.02, Math.min(0.98, cy + Math.sin(a) * ry * 0.9 + jitter)),
+        -radial * 0.55 + 0.3 * Math.cos(a) * radial,
       ]);
     }
   }
-  while (pts.length < 478) pts.push([0.5, 0.5]);
+  while (pts.length < 478) pts.push([0.5, 0.5, -0.12]);
   return pts.slice(0, 478);
 }
 
