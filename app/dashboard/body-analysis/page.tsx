@@ -1,15 +1,16 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { ImageUploader } from "@/components/shared/ImageUploader";
 import { useAnalysisStore } from "@/store/analysis-store";
 import { useMediaPipe, AnalysisCancelledError } from "@/hooks/useMediaPipe";
 import { ProcessingOverlay } from "@/components/analysis/ProcessingOverlay";
 import { motion } from "framer-motion";
-import { Layers, AlertCircle, Shirt, Droplets, Ruler, TrendingUp, Activity } from "lucide-react";
+import { Layers, AlertCircle, Shirt, Droplets, Ruler, TrendingUp, Activity, Share2 } from "lucide-react";
 import { DemoAction } from "@/components/demo/DemoAction";
 import { DemoBadge } from "@/components/demo/DemoBadge";
 import { DEMO_BODY_PHOTO, buildDemoBodyResult } from "@/lib/demo/demo-analysis";
+import { ShareCardModal, type ShareCardData } from "@/components/shared/ShareCardModal";
 
 const stagger = {
   hidden: { opacity: 0 },
@@ -110,6 +111,7 @@ export default function BodyAnalysisPage() {
   } = useAnalysisStore();
   const { analyzeBodyFromImage, cancelAnalysis } = useMediaPipe();
   const [error, setError] = useState<string | null>(null);
+  const [shareOpen, setShareOpen] = useState(false);
 
   const handleImageUpload = useCallback(
     async (imageData: string) => {
@@ -142,6 +144,32 @@ export default function BodyAnalysisPage() {
     setBodyResult(result);
     setOutfitRecommendations(recommendations);
   }, [setFullBodyImage, setBodyResult, setOutfitRecommendations]);
+
+  const shareData = useMemo<ShareCardData | null>(() => {
+    if (!bodyResult) return null;
+    return {
+      photo: fullBodyImage,
+      brand: "ZERVEY",
+      brandTag: "Measured like a tailor",
+      title: `${bodyResult.bodyType} Body`,
+      subtitle: `${bodyResult.undertone} undertone`,
+      overview: [
+        { label: "Body Type", value: bodyResult.bodyType },
+        { label: "Skin Tone", value: bodyResult.skinToneScale },
+        { label: "Undertone", value: bodyResult.undertone },
+        { label: "Shoulder-to-Waist", value: `${bodyResult.shoulderToWaistRatio?.toFixed(2) ?? "—"}` },
+        { label: "Waist-to-Hip", value: `${bodyResult.waistToHipRatio?.toFixed(2) ?? "—"}` },
+        { label: "Symmetry", value: `${bodyResult.bodySymmetry?.toFixed(1) ?? "—"}/10` },
+      ],
+      scoreLabel: "BODY PROPORTION SCORE",
+      score: `${bodyResult.bodyProportionScore?.toFixed(1) ?? "8.4"}`,
+      scoreSuffix: "/10",
+      footer: "zervey.app · computed on-device",
+      fileName: `zervey-body-${bodyResult.bodyType.toLowerCase().replace(/\s+/g, "-")}.png`,
+      shareText: `My ZERVEY body analysis: ${bodyResult.bodyType} type · ${bodyResult.undertone} undertone · proportion score ${bodyResult.bodyProportionScore?.toFixed(1)}/10`,
+      demo: fullBodyImage === DEMO_BODY_PHOTO,
+    };
+  }, [bodyResult, fullBodyImage]);
 
   return (
     <div className="space-y-8">
@@ -360,8 +388,17 @@ export default function BodyAnalysisPage() {
           >
             Analyse Another Photo
           </button>
+
+          <div className="flex justify-center">
+            <button onClick={() => setShareOpen(true)} className="btn-outline !py-3 !px-8">
+              <Share2 className="w-4 h-4" />
+              SHARE RESULT CARD
+            </button>
+          </div>
         </motion.div>
       )}
+
+      <ShareCardModal open={shareOpen} onClose={() => setShareOpen(false)} data={shareData} />
     </div>
   );
 }

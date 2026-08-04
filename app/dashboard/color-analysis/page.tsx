@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { ImageUploader } from "@/components/shared/ImageUploader";
 import { useAnalysisStore } from "@/store/analysis-store";
 import { useMediaPipe, AnalysisCancelledError } from "@/hooks/useMediaPipe";
@@ -10,6 +10,7 @@ import { motion } from "framer-motion";
 import { DemoAction } from "@/components/demo/DemoAction";
 import { DemoBadge } from "@/components/demo/DemoBadge";
 import { DEMO_SKIN_PHOTO, buildDemoColorResult } from "@/lib/demo/demo-analysis";
+import { ShareCardModal, type ShareCardData } from "@/components/shared/ShareCardModal";
 import {
   Palette,
   AlertCircle,
@@ -372,6 +373,7 @@ export default function ColorAnalysisPage() {
   const { analyzeFaceFromImage, cancelAnalysis } = useMediaPipe();
   const [error, setError] = useState<string | null>(null);
   const [testColor, setTestColor] = useState("#C89D7C");
+  const [shareOpen, setShareOpen] = useState(false);
 
   useEffect(() => {
     if (faceResult && bodyResult && !colorAnalysis) {
@@ -421,6 +423,30 @@ export default function ColorAnalysisPage() {
     await new Promise((r) => setTimeout(r, 1400));
     setColorAnalysis(buildDemoColorResult());
   }, [setUploadedImage, setColorAnalysis]);
+
+  const shareData = useMemo<ShareCardData | null>(() => {
+    if (!colorAnalysis) return null;
+    return {
+      photo: uploadedImage,
+      brand: "ZERVEY",
+      brandTag: "Measured like a tailor",
+      title: colorAnalysis.subType,
+      subtitle: colorAnalysis.seasonalType,
+      overview: [
+        { label: "Seasonal Type", value: colorAnalysis.subType },
+        { label: "Metal Preference", value: colorAnalysis.metalPreference },
+        { label: "Pattern Guide", value: colorAnalysis.patternRecommendation.split(",")[0].trim() },
+        { label: "Neutrals", value: colorAnalysis.neutralColors.slice(0, 3).join(" · ") },
+      ],
+      scoreLabel: "BEST SHADES",
+      score: `${colorAnalysis.bestColors.length}`,
+      scoreSuffix: "COLORS FOR YOUR SEASON",
+      footer: "zervey.app · computed on-device",
+      fileName: `zervey-palette-${colorAnalysis.subType.toLowerCase().replace(/\s+/g, "-")}.png`,
+      shareText: `My ZERVEY seasonal palette: ${colorAnalysis.subType} · ${colorAnalysis.metalPreference} metals · ${colorAnalysis.bestColors.length} best shades`,
+      demo: uploadedImage === DEMO_SKIN_PHOTO,
+    };
+  }, [colorAnalysis, uploadedImage]);
 
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -595,6 +621,13 @@ export default function ColorAnalysisPage() {
                 >
                   <Share2 className="w-4 h-4" />
                   SHARE
+                </button>
+                <button
+                  onClick={() => setShareOpen(true)}
+                  className="btn-outline"
+                >
+                  <Share2 className="w-4 h-4" />
+                  RESULT CARD
                 </button>
               </div>
             </div>
@@ -836,6 +869,8 @@ export default function ColorAnalysisPage() {
           </button>
         </motion.div>
       )}
+
+      <ShareCardModal open={shareOpen} onClose={() => setShareOpen(false)} data={shareData} />
     </div>
   );
 }

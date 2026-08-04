@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef, Fragment } from "react";
+import { useState, useCallback, useRef, Fragment, useMemo } from "react";
 import { ImageUploader } from "@/components/shared/ImageUploader";
 import { AnalysisResults } from "@/components/analysis/AnalysisResults";
 import { FaceSkeletonOverlay } from "@/components/analysis/FaceSkeletonOverlay";
@@ -19,8 +19,9 @@ import { useMediaPipe, AnalysisCancelledError } from "@/hooks/useMediaPipe";
 import { useWebcam } from "@/hooks/useWebcam";
 import { useToast } from "@/components/shared/Toast";
 import { motion, AnimatePresence } from "framer-motion";
-import { ScanFace, Camera, AlertCircle, Eye, Save, CheckCircle, X, ShieldCheck, Copy, Check, Ruler, Gauge, AlertTriangle, GitCompareArrows, Box } from "lucide-react";
+import { ScanFace, Camera, AlertCircle, Eye, Save, CheckCircle, X, ShieldCheck, Copy, Check, Ruler, Gauge, AlertTriangle, GitCompareArrows, Box, Share2 } from "lucide-react";
 import { SymmetrySplit } from "@/components/analysis/SymmetrySplit";
+import { ShareCardModal, type ShareCardData } from "@/components/shared/ShareCardModal";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -156,6 +157,7 @@ export default function FaceAnalysisPage() {
   const [rejectedPhotos, setRejectedPhotos] = useState<RejectedPhoto[]>([]);
   const [step, setStep] = useState<"calibrate" | "capture">("calibrate");
   const [calibOpen, setCalibOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const imageRef = useRef<HTMLImageElement>(null);
   const [imageDims, setImageDims] = useState<{ w: number; h: number; aspect?: number } | null>(null);
 
@@ -246,6 +248,32 @@ export default function FaceAnalysisPage() {
     setProcessingPreview(null);
     setFaceResult(buildDemoFaceResult());
   }, [setUploadedImage, setProcessingPreview, setFaceResult]);
+
+  const shareData = useMemo<ShareCardData | null>(() => {
+    if (!faceResult) return null;
+    return {
+      photo: uploadedImage,
+      brand: "ZERVEY",
+      brandTag: "Measured like a tailor",
+      title: `${faceResult.facialShape} Face`,
+      subtitle: faceResult.styleProfile,
+      overview: [
+        { label: "Face Shape", value: faceResult.facialShape },
+        { label: "Style Profile", value: faceResult.styleProfile },
+        { label: "Skin Tone", value: faceResult.skinTone },
+        { label: "Undertone", value: faceResult.undertone },
+        { label: "Symmetry", value: `${faceResult.symmetry.toFixed(1)}/10` },
+        { label: "Confidence", value: `${faceResult.analysisConfidence}%` },
+      ],
+      scoreLabel: `${faceResult.overallRating} · FACEIQ`,
+      score: faceResult.overallScore.toFixed(1),
+      scoreSuffix: "/10 · TOP " + faceResult.percentile.bracket,
+      footer: "zervey.app · computed on-device",
+      fileName: `zervey-faceiq-${faceResult.overallScore.toFixed(1)}.png`,
+      shareText: `My ZERVEY FaceIQ: ${faceResult.overallScore.toFixed(1)}/10 (${faceResult.overallRating}) · ${faceResult.facialShape} face · ${faceResult.styleProfile}`,
+      demo: uploadedImage === DEMO_FACE_PHOTO,
+    };
+  }, [faceResult, uploadedImage]);
 
   const handleAnalyze = useCallback(async () => {
     if (photos.length < MIN_PHOTOS) {
@@ -637,6 +665,13 @@ export default function FaceAnalysisPage() {
               VIEW FULL REPORT
             </button>
             <button
+              onClick={() => setShareOpen(true)}
+              className="flex items-center gap-2 px-6 py-3 font-body text-sm tracking-wider uppercase transition-all btn-outline"
+            >
+              <Share2 className="w-5 h-5" />
+              SHARE CARD
+            </button>
+            <button
               onClick={() => {
                 useAnalysisStore.getState().reset();
                 setPhotos([]);
@@ -839,6 +874,8 @@ export default function FaceAnalysisPage() {
           setStep("capture");
         }}
       />
+
+      <ShareCardModal open={shareOpen} onClose={() => setShareOpen(false)} data={shareData} />
     </div>
   );
 }
