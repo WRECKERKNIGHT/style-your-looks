@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { motion, useInView, AnimatePresence } from "framer-motion";
 import { ScrollReveal, ScrollRevealItem, ScrollProgress } from "@/components/shared/ScrollReveal";
+import { ScrollParallax, ScrollBlur, SectionScrollProgress } from "@/components/shared/ScrollEffects";
 import { TiltCard } from "@/components/shared/TiltCard";
 import {
   ScanFace,
@@ -230,21 +231,25 @@ export default function DashboardHome() {
 
   return (
     <div className="space-y-16">
-      <ScrollReveal>
-        <span className="section-number">EST. MMXXIV // DASHBOARD</span>
-        <h1 className="mt-3 type-display text-[var(--text-primary)] tracking-tight">
-          WELCOME <span className="text-gradient-aurum">BACK.</span>
-        </h1>
-        <p className="text-[var(--text-muted)] font-body type-subhead max-w-xl mt-3">
-          {hasAnalysis
-            ? "Pick a tool. All analysis runs on your device. Zero server calls."
-            : "Run your first Face IQ scan — every module unlocks with real data from your measurements."}
-        </p>
-      </ScrollReveal>
+      <SectionScrollProgress className="mb-2" />
+      <ScrollParallax speed={0.15} distance={40}>
+        <ScrollReveal>
+          <span className="section-number">EST. MMXXIV // DASHBOARD</span>
+          <h1 className="mt-3 type-display text-[var(--text-primary)] tracking-tight">
+            WELCOME <span className="text-gradient-aurum">BACK.</span>
+          </h1>
+          <p className="text-[var(--text-muted)] font-body type-subhead max-w-xl mt-3">
+            {hasAnalysis
+              ? "Pick a tool. All analysis runs on your device. Zero server calls."
+              : "Run your first Face IQ scan — every module unlocks with real data from your measurements."}
+          </p>
+        </ScrollReveal>
+      </ScrollParallax>
 
       {/* Style Score Overview / Onboarding */}
-      <ScrollReveal>
-        <div className="relative overflow-hidden rounded-sm bg-[var(--bg-secondary)] border border-[var(--border-primary)] shadow-paper-lg p-8">
+      <ScrollBlur blur={8} minOpacity={0.85}>
+        <ScrollReveal>
+          <div className="relative overflow-hidden rounded-sm bg-[var(--bg-secondary)] border border-[var(--border-primary)] shadow-paper-lg p-8">
           <div className="absolute inset-0 bg-gradient-to-br from-[color-mix(in_srgb,var(--accent-caramel)_12%,transparent)] via-transparent to-[color-mix(in_srgb,var(--accent-honey)_8%,transparent)] pointer-events-none" />
           {hasAnalysis && faceResult ? (
             <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-8 items-center">
@@ -300,15 +305,18 @@ export default function DashboardHome() {
             </div>
           )}
         </div>
-      </ScrollReveal>
+        </ScrollReveal>
+      </ScrollBlur>
 
       {/* Quick Stats */}
-      <motion.div variants={container} initial="hidden" animate="show" className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCounter value={analysesDone > 0 ? String(analysesDone) : "--"} label="Analyses Done" icon={Activity} />
-        <StatCounter value={overallScore != null ? overallScore.toFixed(1) : "--"} label="Style Score" icon={TrendingUp} />
-        <StatCounter value={hasAnalysis ? "4" : "--"} label="Pillars Scored" icon={Target} />
-        <StatCounter value={hasAnalysis && faceResult?.improvements?.length ? String(faceResult.improvements.length) : "--"} label="Improvements" icon={Lightbulb} />
-      </motion.div>
+      <ScrollParallax speed={0.2} distance={30}>
+        <motion.div variants={container} initial="hidden" animate="show" className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <StatCounter value={analysesDone > 0 ? String(analysesDone) : "--"} label="Analyses Done" icon={Activity} />
+          <StatCounter value={overallScore != null ? overallScore.toFixed(1) : "--"} label="Style Score" icon={TrendingUp} />
+          <StatCounter value={hasAnalysis ? "4" : "--"} label="Pillars Scored" icon={Target} />
+          <StatCounter value={hasAnalysis && faceResult?.improvements?.length ? String(faceResult.improvements.length) : "--"} label="Improvements" icon={Lightbulb} />
+        </motion.div>
+      </ScrollParallax>
 
       <ScrollProgress />
 

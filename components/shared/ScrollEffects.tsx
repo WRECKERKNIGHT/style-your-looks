@@ -55,7 +55,7 @@ export function ScrollParallax({
 }
 
 interface ScrollBlurProps {
-  children: ReactNode;
+  children?: ReactNode;
   className?: string;
   /** Max blur in px applied while the element is out of the viewport pass. */
   blur?: number;
