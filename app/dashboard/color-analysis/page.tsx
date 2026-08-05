@@ -10,6 +10,7 @@ import { motion } from "framer-motion";
 import { DemoCarousel } from "@/components/demo/DemoCarousel";
 import { DemoBadge } from "@/components/demo/DemoBadge";
 import { DEMO_SKIN_PHOTO, buildDemoColorResult } from "@/lib/demo/demo-analysis";
+import { ScrollParallax, ScrollBlur, SectionScrollProgress } from "@/components/shared/ScrollEffects";
 import { ShareCardModal, type ShareCardData } from "@/components/shared/ShareCardModal";
 import {
   Palette,
@@ -519,6 +520,8 @@ export default function ColorAnalysisPage() {
 
   return (
     <div className="space-y-8">
+      <SectionScrollProgress />
+      <ScrollParallax speed={0.12} distance={30}>
       <div>
         <span className="section-number">EST. MMXXIV // TONE STUDIO</span>
         <div className="flex items-center gap-3 mt-3 mb-2">
@@ -531,6 +534,7 @@ export default function ColorAnalysisPage() {
           Discover your seasonal color type, find your most flattering shades, and learn which colors to avoid.
         </p>
       </div>
+      </ScrollParallax>
 
       {!colorAnalysis && (
         <div className="space-y-5">
@@ -578,6 +582,7 @@ export default function ColorAnalysisPage() {
               <DemoBadge />
             </motion.div>
           )}
+          <ScrollBlur blur={6} minOpacity={0.9}>
           <motion.div variants={fadeUp} className="glass-card p-10 relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[var(--accent-nexus)] via-[var(--accent-aurum)] to-[var(--accent-nexus)]" />
             <div className="flex flex-col md:flex-row items-center gap-8">
@@ -607,6 +612,7 @@ export default function ColorAnalysisPage() {
               </div>
             </div>
           </motion.div>
+          </ScrollBlur>
 
           <motion.div variants={fadeUp} className="glass-card p-6">
             <div className="flex items-center justify-between">

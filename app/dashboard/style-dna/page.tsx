@@ -6,6 +6,7 @@ import { ScoreGauge } from "@/components/analysis/ScoreGauge";
 import { RadarChart, type RadarAxis } from "@/components/shared/RadarChart";
 import { motion } from "framer-motion";
 import { getScoreTrends, type ScoreTrendPoint } from "@/lib/history";
+import { ScrollParallax, ScrollBlur, SectionScrollProgress } from "@/components/shared/ScrollEffects";
 import {
   Dna,
   ScanFace,
@@ -229,6 +230,8 @@ export default function StyleDnaPage() {
 
   return (
     <div className="space-y-8">
+      <SectionScrollProgress />
+      <ScrollParallax speed={0.12} distance={30}>
       <div>
         <span className="section-number">EST. MMXXIV // STYLE DNA</span>
         <div className="flex items-center gap-3 mt-3 mb-2">
@@ -242,6 +245,7 @@ export default function StyleDnaPage() {
           skin tone, and seasonal color classification into one unified style identity.
         </p>
       </div>
+      </ScrollParallax>
 
       {!hasData && (
         <div className="glass-card p-12 text-center">
@@ -255,6 +259,7 @@ export default function StyleDnaPage() {
 
       {hasData && (
         <motion.div variants={stagger} initial="hidden" animate="show" className="space-y-8">
+          <ScrollBlur blur={6} minOpacity={0.9}>
           <motion.div variants={fadeUp} className="glass-card p-10 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-[color-mix(in_srgb,var(--accent-nexus)_5%,transparent)] rounded-full -translate-y-1/2 translate-x-1/2" />
             <div className="relative">
@@ -284,6 +289,7 @@ export default function StyleDnaPage() {
               </div>
             </div>
           </motion.div>
+          </ScrollBlur>
 
           {faceResult && (
             <motion.div variants={fadeUp} className="glass-card p-10">
