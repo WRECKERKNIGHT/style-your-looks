@@ -19,6 +19,7 @@ import { useAnalysisStore } from "@/store/analysis-store";
 import { useMediaPipe, AnalysisCancelledError } from "@/hooks/useMediaPipe";
 import { useWebcam } from "@/hooks/useWebcam";
 import { useToast } from "@/components/shared/Toast";
+import { ScrollParallax, ScrollBlur, SectionScrollProgress } from "@/components/shared/ScrollEffects";
 import { motion, AnimatePresence } from "framer-motion";
 import { ScanFace, Camera, AlertCircle, Eye, Save, CheckCircle, X, ShieldCheck, Copy, Check, Ruler, Gauge, AlertTriangle, GitCompareArrows, Box, Share2 } from "lucide-react";
 import { SymmetrySplit } from "@/components/analysis/SymmetrySplit";
@@ -334,19 +335,22 @@ export default function FaceAnalysisPage() {
 
   return (
     <div className="space-y-8">
-      <motion.div variants={fadeUp} initial="hidden" animate="show">
-        <span className="section-number">EST. MMXXIV // FACE</span>
-        <div className="flex items-center gap-3 mt-3 mb-2">
-          <ScanFace className="w-7 h-7 text-[var(--accent-aurum)]" />
-          <h1 className="type-display text-[var(--text-primary)] tracking-tight">
-            FACE <span className="text-gradient-aurum">IQ.</span>
-          </h1>
-        </div>
-        <p className="text-[var(--text-muted)] font-body type-subhead max-w-xl">
-          Upload 2–3 front-facing photos for 478-landmark facial geometry analysis, golden ratio scoring,
-          and detailed grooming recommendations.
-        </p>
-      </motion.div>
+      <SectionScrollProgress />
+      <ScrollParallax speed={0.12} distance={30}>
+        <motion.div variants={fadeUp} initial="hidden" animate="show">
+          <span className="section-number">EST. MMXXIV // FACE</span>
+          <div className="flex items-center gap-3 mt-3 mb-2">
+            <ScanFace className="w-7 h-7 text-[var(--accent-aurum)]" />
+            <h1 className="type-display text-[var(--text-primary)] tracking-tight">
+              FACE <span className="text-gradient-aurum">IQ.</span>
+            </h1>
+          </div>
+          <p className="text-[var(--text-muted)] font-body type-subhead max-w-xl">
+            Upload 2–3 front-facing photos for 478-landmark facial geometry analysis, golden ratio scoring,
+            and detailed grooming recommendations.
+          </p>
+        </motion.div>
+      </ScrollParallax>
 
       {!faceResult && (
         <motion.div variants={fadeUp} initial="hidden" animate="show">
@@ -674,6 +678,7 @@ export default function FaceAnalysisPage() {
       )}
 
       {faceResult && (
+        <ScrollBlur blur={8} minOpacity={0.9}>
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -880,6 +885,7 @@ export default function FaceAnalysisPage() {
             Analyse Another Set of Photos
           </button>
         </motion.div>
+        </ScrollBlur>
       )}
 
       <AnimatePresence>
