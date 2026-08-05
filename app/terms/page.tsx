@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
 import { LegalPage } from "@/components/landing/LegalPage";
+import {
+  ScrollBlur,
+  SectionScrollProgress,
+} from "@/components/shared/ScrollEffects";
 
 export const metadata: Metadata = {
   title: "Terms of Service",
@@ -55,20 +59,28 @@ export default function TermsPage() {
       subtitle="The terms of using ZERVEY, written the way we wish everyone wrote them."
     >
       <div className="space-y-8">
+        <SectionScrollProgress />
         {sections.map((section) => (
-          <section key={section.heading} className="space-y-2">
+          <ScrollBlur
+            key={section.heading}
+            sharpAt={0.4}
+            minOpacity={0.4}
+            className="space-y-2"
+          >
             <h2 className="type-label text-[var(--text-primary)]">
               {section.heading}
             </h2>
             <p className="text-[var(--text-muted)] font-body leading-relaxed text-[15px]">
               {section.body}
             </p>
-          </section>
+          </ScrollBlur>
         ))}
       </div>
-      <p className="type-mono text-[0.6rem] text-[var(--text-muted)] tracking-widest pt-6 border-t border-[var(--border-primary)]">
-        LAST UPDATED: AUGUST 2026
-      </p>
+      <ScrollBlur sharpAt={0.3} minOpacity={0.3}>
+        <p className="type-mono text-[0.6rem] text-[var(--text-muted)] tracking-widest pt-6 border-t border-[var(--border-primary)]">
+          LAST UPDATED: AUGUST 2026
+        </p>
+      </ScrollBlur>
     </LegalPage>
   );
 }
