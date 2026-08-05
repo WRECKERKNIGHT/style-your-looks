@@ -1,7 +1,8 @@
 "use client";
 
 import { useRef, type ReactNode } from "react";
-import { motion, useScroll, useTransform, useReducedMotion } from "framer-motion";
+import { motion, useScroll, useTransform, useSpring, useReducedMotion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 interface ScrollParallaxProps {
   children: ReactNode;
@@ -108,5 +109,89 @@ export function ScrollBlur({
     >
       {children}
     </motion.div>
+  );
+}
+
+interface ScrollTrackerProps {
+  children: ReactNode;
+  className?: string;
+  /** Track bar placement on the tracked wrapper. */
+  trackSide?: "right" | "left";
+  trackClassName?: string;
+}
+
+/**
+ * Tracks an element's scroll position through the viewport and renders a
+ * vertical fill bar alongside it — a live "how far through the viewport is
+ * this block" indicator driven by useScroll + useTransform.
+ */
+export function ScrollTracker({
+  children,
+  className = "",
+  trackSide = "right",
+  trackClassName = "",
+}: ScrollTrackerProps) {
+  const ref = useRef<HTMLDivElement>(null);
+  const reduce = useReducedMotion();
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start center", "end center"],
+  });
+  const scaleY = useSpring(scrollYProgress, { stiffness: 120, damping: 30 });
+
+  return (
+    <div ref={ref} className={cn("relative", className)}>
+      {children}
+      {!reduce && (
+        <motion.div
+          aria-hidden
+          style={{ scaleY }}
+          className={cn(
+            "absolute top-0 bottom-0 w-px origin-top bg-gradient-to-b from-nexus-500 via-aurum-400 to-aurum-300",
+            trackSide === "right" ? "right-0" : "left-0",
+            trackClassName
+          )}
+        />
+      )}
+    </div>
+  );
+}
+
+interface SectionScrollProgressProps {
+  className?: string;
+  /** Show only after the section enters the viewport. */
+  ariaLabel?: string;
+}
+
+/**
+ * Live per-section horizontal progress line driven by the section's own
+ * scroll position (start↔end pass) — a bounded scroll progress bar.
+ */
+export function SectionScrollProgress({
+  className = "",
+  ariaLabel = "Section scroll progress",
+}: SectionScrollProgressProps) {
+  const ref = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start end", "end start"],
+  });
+  const scaleX = useSpring(scrollYProgress, {
+    stiffness: 120,
+    damping: 30,
+    restDelta: 0.001,
+  });
+
+  return (
+    <div ref={ref} className={cn("relative", className)}>
+      <div className="absolute top-0 left-0 right-0 h-px bg-[color-mix(in_srgb,var(--text-muted)_18%,transparent)]" />
+      <motion.div
+        aria-hidden
+        role="progressbar"
+        aria-label={ariaLabel}
+        className="absolute top-0 left-0 right-0 h-px origin-left bg-gradient-to-r from-nexus-500 via-aurum-400 to-aurum-300"
+        style={{ scaleX }}
+      />
+    </div>
   );
 }
