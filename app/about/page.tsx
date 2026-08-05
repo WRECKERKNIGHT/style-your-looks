@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { LegalPage } from "@/components/landing/LegalPage";
+import { ScrollBlur } from "@/components/shared/ScrollEffects";
 
 export const metadata: Metadata = {
   title: "About",
@@ -60,14 +61,19 @@ export default function AboutPage() {
         <h2 className="type-label text-[var(--text-primary)]">WHAT WE BELIEVE</h2>
         <div className="space-y-4">
           {values.map((value) => (
-            <div key={value.title} className="glass-card p-6">
+            <ScrollBlur
+              key={value.title}
+              sharpAt={0.35}
+              minOpacity={0.35}
+              className="glass-card p-6"
+            >
               <h3 className="type-mono text-[0.7rem] text-[var(--accent-mocha)] tracking-widest mb-2">
                 {value.title}
               </h3>
               <p className="text-sm text-[var(--text-muted)] font-body leading-relaxed">
                 {value.body}
               </p>
-            </div>
+            </ScrollBlur>
           ))}
         </div>
       </section>
