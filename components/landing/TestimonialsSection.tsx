@@ -3,6 +3,7 @@
 import { Star, Quote } from "lucide-react";
 import { KineticHeadline } from "./KineticHeadline";
 import { Reveal } from "@/components/shared/Reveal";
+import { ScrollParallax, ScrollBlur } from "@/components/shared/ScrollEffects";
 
 const testimonials = [
   {
@@ -57,7 +58,9 @@ export function TestimonialsSection() {
   return (
     <section className="relative py-32 md:py-44 overflow-hidden bg-cosmic-elevated" id="testimonials">
       <div className="absolute inset-0 grid-bg opacity-30" />
-      <div className="absolute top-1/3 left-1/4 w-[700px] h-[500px] rounded-full bg-aurum-400/10 blur-[200px] pointer-events-none" />
+      <ScrollParallax speed={0.3} distance={90} className="absolute top-1/3 left-1/4">
+        <div className="w-[700px] h-[500px] rounded-full bg-aurum-400/10 blur-[200px] pointer-events-none" />
+      </ScrollParallax>
 
       <div className="relative z-10 max-w-[1400px] mx-auto px-8 md:px-16 lg:px-24">
         <Reveal x={-30} className="mb-20">
@@ -72,7 +75,7 @@ export function TestimonialsSection() {
           </p>
         </Reveal>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <ScrollBlur blur={7} minOpacity={1} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {testimonials.map((t, index) => (
             <Reveal
               key={t.name}
@@ -102,7 +105,7 @@ export function TestimonialsSection() {
               </div>
             </Reveal>
           ))}
-        </div>
+        </ScrollBlur>
       </div>
     </section>
   );

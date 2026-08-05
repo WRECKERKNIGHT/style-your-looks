@@ -5,6 +5,7 @@ import { motion, useInView } from "framer-motion";
 import { Star, MessageCircle, TrendingUp } from "lucide-react";
 import { StatsCounter } from "./StatsCounter";
 import { SpotlightCard } from "@/components/shared/SpotlightCard";
+import { ScrollParallax, ScrollBlur } from "@/components/shared/ScrollEffects";
 import { KineticHeadline } from "./KineticHeadline";
 import { Reveal } from "@/components/shared/Reveal";
 
@@ -58,8 +59,12 @@ export function CommunitySection() {
 
       <div className="pointer-events-none absolute inset-0" aria-hidden>
         <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[1200px] h-80 rounded-full bg-aurum-400/8 blur-[160px]" />
-        <div className="absolute bottom-[12%] right-[3%] w-[460px] h-[460px] rounded-full bg-nexus-500/8 blur-[150px] animate-drift" />
-        <div className="absolute top-[30%] left-[2%] w-[380px] h-[380px] rounded-full bg-aurum-300/8 blur-[130px] animate-drift" style={{ animationDelay: "-12s" }} />
+        <ScrollParallax speed={0.35} distance={90} className="absolute bottom-[12%] right-[3%]">
+          <div className="w-[460px] h-[460px] rounded-full bg-nexus-500/8 blur-[150px] animate-drift" />
+        </ScrollParallax>
+        <ScrollParallax speed={0.25} distance={70} className="absolute top-[30%] left-[2%]">
+          <div className="w-[380px] h-[380px] rounded-full bg-aurum-300/8 blur-[130px] animate-drift" style={{ animationDelay: "-12s" }} />
+        </ScrollParallax>
       </div>
 
       <div className="relative z-10 max-w-[1400px] mx-auto px-8 md:px-16 lg:px-24">
@@ -75,8 +80,13 @@ export function CommunitySection() {
           </p>
         </Reveal>
 
-        <div ref={marqueeRef} className="marquee-container mb-16 md:mb-20 py-5 border-y border-[var(--border-primary)] overflow-hidden">
+        <ScrollBlur
+          blur={6}
+          minOpacity={0.6}
+          className="marquee-container mb-16 md:mb-20 py-5 border-y border-[var(--border-primary)] overflow-hidden"
+        >
           <div
+            ref={marqueeRef}
             className="marquee-content"
             style={{
               animationPlayState: marqueeInView ? "running" : "paused",
@@ -97,7 +107,7 @@ export function CommunitySection() {
               </div>
             ))}
           </div>
-        </div>
+        </ScrollBlur>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {posts.map((post, index) => (

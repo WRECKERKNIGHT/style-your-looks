@@ -5,6 +5,7 @@ import { motion, useScroll, useTransform, useSpring, type MotionValue } from "fr
 import { Camera, Cpu, Shirt } from "lucide-react";
 import { KineticHeadline } from "./KineticHeadline";
 import { Reveal } from "@/components/shared/Reveal";
+import { ScrollParallax } from "@/components/shared/ScrollEffects";
 
 const steps = [
   {
@@ -120,8 +121,12 @@ export function HowItWorksSection() {
 
       <div className="pointer-events-none absolute inset-0" aria-hidden>
         <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[1100px] h-72 rounded-full bg-aurum-400/10 blur-[150px]" />
-        <div className="absolute top-1/4 right-[2%] w-[420px] h-[420px] rounded-full bg-nexus-500/8 blur-[140px] animate-drift" />
-        <div className="absolute bottom-[10%] left-[4%] w-[360px] h-[360px] rounded-full bg-aurum-400/8 blur-[120px] animate-drift" style={{ animationDelay: "-8s" }} />
+        <ScrollParallax speed={0.35} distance={90} className="absolute top-1/4 right-[2%]">
+          <div className="w-[420px] h-[420px] rounded-full bg-nexus-500/8 blur-[140px] animate-drift" />
+        </ScrollParallax>
+        <ScrollParallax speed={0.25} distance={70} className="absolute bottom-[10%] left-[4%]">
+          <div className="w-[360px] h-[360px] rounded-full bg-aurum-400/8 blur-[120px] animate-drift" style={{ animationDelay: "-8s" }} />
+        </ScrollParallax>
       </div>
 
       <div className="relative z-10 max-w-[1400px] mx-auto px-8 md:px-16 lg:px-24">
