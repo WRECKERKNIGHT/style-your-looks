@@ -5,6 +5,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, ChevronLeft, ChevronRight, RotateCcw, BarChart3, ArrowRight } from "lucide-react";
 import { useToast } from "@/components/shared/Toast";
+import { ScrollParallax, ScrollBlur, SectionScrollProgress } from "@/components/shared/ScrollEffects";
 
 interface QuizQuestion {
   id: number;
@@ -116,6 +117,8 @@ export default function StyleQuizPage() {
 
   return (
     <div className="space-y-8">
+      <SectionScrollProgress />
+      <ScrollParallax speed={0.12} distance={30}>
       <motion.div variants={fadeUp} initial="hidden" animate="show">
         <span className="section-number">EST. MMXXIV // STYLE QUIZ</span>
         <div className="flex items-center gap-3 mt-3 mb-2">
@@ -128,7 +131,9 @@ export default function StyleQuizPage() {
           Discover your personal style archetype.
         </p>
       </motion.div>
+      </ScrollParallax>
 
+      <ScrollBlur blur={4} minOpacity={0.95}>
       <AnimatePresence mode="wait">
         {step === "intro" && (
           <motion.div key="intro" variants={fadeUp} initial="hidden" animate="show" exit={{ opacity: 0, y: -10 }}
@@ -213,6 +218,7 @@ export default function StyleQuizPage() {
           </motion.div>
         )}
       </AnimatePresence>
+      </ScrollBlur>
     </div>
   );
 }

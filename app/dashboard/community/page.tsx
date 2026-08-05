@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Users, Heart, MessageCircle, Share2, UserPlus, ArrowRight, Search, RefreshCw, Wifi, WifiOff, ExternalLink } from "lucide-react";
+import { ScrollParallax, ScrollBlur, SectionScrollProgress } from "@/components/shared/ScrollEffects";
 
 interface Post {
   id: string;
@@ -130,6 +131,8 @@ export default function CommunityPage() {
 
   return (
     <div className="space-y-8">
+      <SectionScrollProgress />
+      <ScrollParallax speed={0.12} distance={30}>
       <motion.div variants={fadeUp} initial="hidden" animate="show">
         <span className="section-number">EST. MMXXIV // COMMUNITY</span>
         <div className="flex items-center gap-3 mt-3 mb-2">
@@ -142,7 +145,9 @@ export default function CommunityPage() {
           Connect, share, and discover with fellow ZERVEY users.
         </p>
       </motion.div>
+      </ScrollParallax>
 
+      <ScrollBlur blur={4} minOpacity={0.95}>
       <motion.div variants={fadeUp} initial="hidden" animate="show" className="flex flex-wrap gap-2 items-center">
         {(["feed", "members", "tags"] as const).map((tab) => (
           <button key={tab} onClick={() => setActiveTab(tab)}
@@ -296,6 +301,7 @@ export default function CommunityPage() {
           </Link>
         </motion.div>
       </div>
+      </ScrollBlur>
     </div>
   );
 }

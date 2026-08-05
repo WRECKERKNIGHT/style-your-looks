@@ -12,6 +12,7 @@ import {
   isDemoEntry,
   type AnalysisEntry,
 } from "@/lib/history";
+import { ScrollParallax, ScrollBlur, SectionScrollProgress } from "@/components/shared/ScrollEffects";
 
 interface HistoryRow {
   id: string;
@@ -131,6 +132,8 @@ export default function HistoryPage() {
 
   return (
     <div className="space-y-8">
+      <SectionScrollProgress />
+      <ScrollParallax speed={0.12} distance={30}>
       <motion.div variants={fadeUp} initial="hidden" animate="show">
         <span className="section-number">EST. MMXXIV // HISTORY</span>
         <div className="flex items-center gap-3 mt-3 mb-2">
@@ -143,7 +146,9 @@ export default function HistoryPage() {
           Track your style evolution over time.
         </p>
       </motion.div>
+      </ScrollParallax>
 
+      <ScrollBlur blur={4} minOpacity={0.95}>
       <motion.div variants={fadeUp} initial="hidden" animate="show" className="flex flex-wrap gap-2 items-center">
         <select value={filter} onChange={e => setFilter(e.target.value)}
           className="px-3 py-2 border border-[var(--border-primary)] bg-[var(--bg-tertiary)] text-[var(--text-primary)] text-xs type-mono">
@@ -254,6 +259,7 @@ export default function HistoryPage() {
           </div>
         </motion.div>
       )}
+      </ScrollBlur>
     </div>
   );
 }

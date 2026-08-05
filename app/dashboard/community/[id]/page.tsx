@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { ArrowLeft, Star, Camera, MessageSquare, Send, Loader2, AlertCircle } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/components/shared/Toast";
+import { ScrollBlur, SectionScrollProgress } from "@/components/shared/ScrollEffects";
 
 interface Comment {
   id: string;
@@ -175,6 +176,7 @@ export default function CommunityPostPage() {
 
   return (
     <div className="space-y-8">
+      <SectionScrollProgress />
       <Link
         href="/dashboard/community"
         className="inline-flex items-center gap-2 text-sm text-[var(--accent-mocha)] hover:text-[var(--accent-aurum)] transition-colors font-body"
@@ -183,6 +185,7 @@ export default function CommunityPostPage() {
         Back to Community
       </Link>
 
+      <ScrollBlur blur={6} minOpacity={0.9}>
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="glass-card overflow-hidden">
         {post.imageUrl ? (
           <img src={post.imageUrl} alt={post.title} className="w-full max-h-96 object-contain bg-[var(--bg-secondary)]" />
@@ -288,6 +291,7 @@ export default function CommunityPostPage() {
           </div>
         ))}
       </div>
+      </ScrollBlur>
     </div>
   );
 }

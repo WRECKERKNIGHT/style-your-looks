@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
+import { ScrollParallax, ScrollBlur, SectionScrollProgress } from "@/components/shared/ScrollEffects";
 import {
   User,
   Settings,
@@ -102,6 +103,8 @@ export default function ProfilePage() {
 
   return (
     <div className="space-y-8">
+      <SectionScrollProgress />
+      <ScrollParallax speed={0.12} distance={30}>
       <motion.div variants={fadeUp} initial="hidden" animate="show">
         <span className="section-number">EST. MMXXIV // PROFILE</span>
         <div className="flex items-center gap-3 mt-3 mb-2">
@@ -111,7 +114,9 @@ export default function ProfilePage() {
           </h1>
         </div>
       </motion.div>
+      </ScrollParallax>
 
+      <ScrollBlur blur={4} minOpacity={0.95}>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <motion.div variants={fadeUp} initial="hidden" animate="show" className="lg:col-span-1 space-y-4">
           <div className="glass-card p-6 text-center">
@@ -251,6 +256,7 @@ export default function ProfilePage() {
           </motion.div>
         </motion.div>
       </div>
+      </ScrollBlur>
     </div>
   );
 }

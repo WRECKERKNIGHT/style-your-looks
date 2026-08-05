@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useAnalysisStore } from "@/store/analysis-store";
 import { motion } from "framer-motion";
 import { Lightbulb, ChevronRight, Sparkles, Shirt, Palette, Star, ArrowRight } from "lucide-react";
+import { ScrollParallax, ScrollBlur, SectionScrollProgress } from "@/components/shared/ScrollEffects";
 
 interface RecCategory {
   id: string;
@@ -90,6 +91,8 @@ export default function RecommendationsPage() {
 
   return (
     <div className="space-y-8">
+      <SectionScrollProgress />
+      <ScrollParallax speed={0.12} distance={30}>
       <motion.div variants={fadeUp} initial="hidden" animate="show">
         <span className="section-number">EST. MMXXIV // RECOMMENDATIONS</span>
         <div className="flex items-center gap-3 mt-3 mb-2">
@@ -102,7 +105,9 @@ export default function RecommendationsPage() {
           Data-driven suggestions based on your full analysis profile.
         </p>
       </motion.div>
+      </ScrollParallax>
 
+      <ScrollBlur blur={4} minOpacity={0.95}>
       {!pillarResult ? (
         <motion.div variants={fadeUp} initial="hidden" animate="show" className="glass-card p-8 text-center space-y-4">
           <Sparkles className="w-8 h-8 text-[var(--accent-aurum)] mx-auto" />
@@ -184,6 +189,7 @@ export default function RecommendationsPage() {
           </div>
         </>
       )}
+      </ScrollBlur>
     </div>
   );
 }
