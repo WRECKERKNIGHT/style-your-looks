@@ -84,7 +84,6 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <meta name="google-site-verification" content="D-ErFCv48rC-Nd_oYBDtFwe1DB0uwtPr54MA0OVVUl0" />
-        <link rel="icon" href="/icon.svg" />
         <link rel="apple-touch-icon" href="/icon-192.png" />
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#F6F0E5" media="(prefers-color-scheme: light)" />
