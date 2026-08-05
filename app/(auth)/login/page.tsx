@@ -7,6 +7,7 @@ import { Mail, Lock, Eye, EyeOff, AlertCircle, Loader2, Send } from "lucide-reac
 import { motion } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import { Logo } from "@/components/shared/Logo";
+import { ScrollParallax } from "@/components/shared/ScrollEffects";
 import { OAuthErrorPanel, isGoogleBlockError } from "@/components/shared/OAuthErrorPanel";
 import { safeNextPath } from "@/lib/validation";
 
@@ -115,10 +116,14 @@ export default function LoginPage() {
           backgroundSize: "40px 40px",
         }} />
 
-        <div className="absolute top-20 left-20 w-72 h-72 bg-nexus-400/10 rounded-full blur-3xl animate-float" />
-        <div className="absolute bottom-20 right-20 w-96 h-96 bg-aurum-500/5 rounded-full blur-3xl animate-float" style={{ animationDelay: "-3s" }} />
+        <ScrollParallax speed={0.4} distance={80} className="absolute top-20 left-20">
+          <div className="w-72 h-72 bg-nexus-400/10 rounded-full blur-3xl animate-float" />
+        </ScrollParallax>
+        <ScrollParallax speed={0.6} distance={110} className="absolute bottom-20 right-20">
+          <div className="w-96 h-96 bg-aurum-500/5 rounded-full blur-3xl animate-float" style={{ animationDelay: "-3s" }} />
+        </ScrollParallax>
 
-        <div className="relative z-10 text-center">
+        <ScrollParallax speed={0.15} distance={50} className="relative z-10 text-center">
           <Logo className="h-12 w-auto mx-auto mb-8 drop-shadow-aurum" />
           <h2 className="text-4xl font-body font-bold text-nexus-800 dark:text-white mb-3 tracking-tight">
             YOUR FACE
@@ -142,7 +147,7 @@ export default function LoginPage() {
               </div>
             ))}
           </div>
-        </div>
+        </ScrollParallax>
 
         <div className="absolute top-6 left-6 w-6 h-6 border-l-2 border-t-2 border-aurum-500/40" />
         <div className="absolute bottom-6 right-6 w-6 h-6 border-r-2 border-b-2 border-aurum-500/40" />
