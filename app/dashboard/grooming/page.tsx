@@ -8,6 +8,7 @@ import { initializeFaceLandmarker } from "@/lib/ml/face-analyzer";
 import { drawFacialHair, detectHairColor, scoreGroomingStyles, type GroomingScore } from "@/lib/ml/facial-hair";
 import { motion } from "framer-motion";
 import { Scissors, Check, Star, Sparkles } from "lucide-react";
+import { ScrollParallax, ScrollBlur, SectionScrollProgress } from "@/components/shared/ScrollEffects";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -77,6 +78,8 @@ export default function GroomingPage() {
 
   return (
     <div className="space-y-8">
+      <SectionScrollProgress />
+      <ScrollParallax speed={0.12} distance={30}>
       <motion.div variants={fadeUp} initial="hidden" animate="show">
         <span className="section-number">EST. MMXXIV // GROOMING</span>
         <div className="flex items-center gap-3 mt-3 mb-2">
@@ -89,12 +92,14 @@ export default function GroomingPage() {
           Try different beard and mustache styles virtually on your photo.
         </p>
       </motion.div>
+      </ScrollParallax>
 
       {!uploadedImage ? (
         <div className="glass-card p-8">
           <ImageUploader onImageUpload={handleImageUpload} label="Upload a face photo for grooming preview" accept="face" />
         </div>
       ) : (
+        <ScrollBlur blur={8} minOpacity={0.9}>
         <motion.div variants={fadeUp} initial="hidden" animate="show" className="space-y-8">
           <div className="glass-card overflow-hidden relative">
             {isAnalyzing && (
@@ -235,6 +240,7 @@ export default function GroomingPage() {
             Upload New Photo
           </button>
         </motion.div>
+        </ScrollBlur>
       )}
     </div>
   );

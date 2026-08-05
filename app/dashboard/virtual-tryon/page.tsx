@@ -8,6 +8,7 @@ import { loadRemoteProductImage, loadProductImage, type ProductItem, PRODUCT_CAT
 import { motion } from "framer-motion";
 import { Shirt, Link2, Loader2, Download, RotateCcw, Layers, Ruler } from "lucide-react";
 import { useToast } from "@/components/shared/Toast";
+import { ScrollParallax, ScrollBlur, SectionScrollProgress } from "@/components/shared/ScrollEffects";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -159,6 +160,8 @@ export default function VirtualTryOnPage() {
 
   return (
     <div className="space-y-8">
+      <SectionScrollProgress />
+      <ScrollParallax speed={0.12} distance={30}>
       <motion.div variants={fadeUp} initial="hidden" animate="show">
         <span className="section-number">EST. MMXXIV // TRY-ON</span>
         <div className="flex items-center gap-3 mt-3 mb-2">
@@ -171,12 +174,14 @@ export default function VirtualTryOnPage() {
           Real engine: pose + person segmentation + perspective warp. Load any public product image and try it on your photo.
         </p>
       </motion.div>
+      </ScrollParallax>
 
       {!uploadedImage ? (
         <div className="glass-card p-8">
           <ImageUploader onImageUpload={handleImageUpload} label="Upload a full-body photo for try-on" accept="any" />
         </div>
       ) : (
+        <ScrollBlur blur={8} minOpacity={0.9}>
         <motion.div variants={fadeUp} initial="hidden" animate="show" className="space-y-8">
           <div ref={containerRef} className="glass-card overflow-hidden relative">
             <canvas ref={canvasRef} className="w-full" />
@@ -345,6 +350,7 @@ export default function VirtualTryOnPage() {
             </div>
           </div>
         </motion.div>
+        </ScrollBlur>
       )}
     </div>
   );

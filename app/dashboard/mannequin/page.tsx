@@ -7,6 +7,7 @@ import { useAnalysisStore } from "@/store/analysis-store";
 import { motion } from "framer-motion";
 import { Shirt, Undo2, Redo2, Download, ArrowRight, RotateCcw } from "lucide-react";
 import { useToast } from "@/components/shared/Toast";
+import { ScrollParallax, ScrollBlur, SectionScrollProgress } from "@/components/shared/ScrollEffects";
 
 type MannequinPose = "front" | "three-quarter" | "side";
 type BodyType = "hourglass" | "rectangle" | "triangle" | "inverted-triangle" | "oval";
@@ -217,6 +218,8 @@ export default function MannequinPage() {
 
   return (
     <div className="space-y-8">
+      <SectionScrollProgress />
+      <ScrollParallax speed={0.12} distance={30}>
       <motion.div variants={fadeUp} initial="hidden" animate="show">
         <span className="section-number">EST. MMXXIV // OUTFIT LAB</span>
         <div className="flex items-center gap-3 mt-3 mb-2">
@@ -229,7 +232,9 @@ export default function MannequinPage() {
           Build outfits on a virtual model.
         </p>
       </motion.div>
+      </ScrollParallax>
 
+      <ScrollBlur blur={6} minOpacity={0.9}>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <motion.div variants={fadeUp} initial="hidden" animate="show" className="lg:col-span-2">
           <div className="glass-card overflow-hidden">
@@ -306,6 +311,7 @@ export default function MannequinPage() {
           </Link>
         </motion.div>
       </div>
+      </ScrollBlur>
     </div>
   );
 }

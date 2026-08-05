@@ -8,6 +8,7 @@ import { hairRegion } from "@/lib/ml/face-landmarks";
 import { motion } from "framer-motion";
 import { Palette, Download, Trash2, ArrowRight } from "lucide-react";
 import { useToast } from "@/components/shared/Toast";
+import { ScrollParallax, ScrollBlur, SectionScrollProgress } from "@/components/shared/ScrollEffects";
 
 interface HairColor {
   id: string;
@@ -120,6 +121,8 @@ export default function HairPreviewPage() {
 
   return (
     <div className="space-y-8">
+      <SectionScrollProgress />
+      <ScrollParallax speed={0.12} distance={30}>
       <motion.div variants={fadeUp} initial="hidden" animate="show">
         <span className="section-number">EST. MMXXIV // HAIR</span>
         <div className="flex items-center gap-3 mt-3 mb-2">
@@ -132,12 +135,14 @@ export default function HairPreviewPage() {
           See how different hair colors look on you before committing.
         </p>
       </motion.div>
+      </ScrollParallax>
 
       {!uploadedImage ? (
         <div className="glass-card p-8">
           <ImageUploader onImageUpload={handleImageUpload} label="Upload a photo for hair color preview" accept="any" />
         </div>
       ) : (
+        <ScrollBlur blur={8} minOpacity={0.9}>
         <motion.div variants={fadeUp} initial="hidden" animate="show" className="space-y-8">
           <div ref={containerRef} className="glass-card overflow-hidden relative">
             <canvas ref={canvasRef} className="w-full" />
@@ -187,6 +192,7 @@ export default function HairPreviewPage() {
             </Link>
           </div>
         </motion.div>
+        </ScrollBlur>
       )}
     </div>
   );
