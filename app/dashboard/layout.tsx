@@ -30,6 +30,7 @@ import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { PageTransition } from "@/components/shared/PageTransition";
 import { InstallApp } from "@/components/shared/InstallApp";
 import { UserAvatar } from "@/components/shared/UserAvatar";
+import { LogoMark } from "@/components/shared/Logo";
 
 const OnboardingTour = dynamic(
   () => import("@/components/shared/OnboardingTour").then((m) => m.OnboardingTour),
@@ -80,9 +81,7 @@ export default function DashboardLayout({
           )}
         </button>
         <div className="flex items-center gap-2.5 ml-3">
-          <div className="w-7 h-7 bg-gradient-to-br from-aurum-500 to-aurum-300 flex items-center justify-center rounded-sm shadow-aurum">
-            <Sparkles className="w-3.5 h-3.5 text-white" />
-          </div>
+          <LogoMark className="w-7 h-auto drop-shadow-aurum" />
           <span className="text-sm font-display font-bold text-[var(--text-primary)] tracking-wider">ZERVEY</span>
         </div>
         <UserAvatar compact />
@@ -99,9 +98,7 @@ export default function DashboardLayout({
         {/* Logo */}
         <div className="p-6 border-b border-[var(--border-primary)]">
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-9 h-9 bg-gradient-to-br from-aurum-500 to-aurum-300 flex items-center justify-center rounded-sm shadow-aurum group-hover:shadow-aurum-lg transition-shadow">
-              <Sparkles className="w-4 h-4 text-white" />
-            </div>
+            <LogoMark className="w-9 h-auto drop-shadow-aurum group-hover:opacity-90 transition-opacity" />
             <div>
               <span className="text-base font-display font-bold text-[var(--text-primary)] tracking-wider block leading-none">ZERVEY</span>
               <span className="text-[10px] font-mono text-[var(--text-muted)] tracking-widest uppercase">STYLE INTELLIGENCE</span>
