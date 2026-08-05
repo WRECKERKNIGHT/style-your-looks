@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { ScanLine, Download, ArrowRight, Shuffle, Layers, AlertCircle } from "lucide-react";
 import { useToast } from "@/components/shared/Toast";
 import { initializeFaceLandmarker } from "@/lib/ml/face-analyzer";
+import { ScrollParallax, ScrollBlur, SectionScrollProgress } from "@/components/shared/ScrollEffects";
 
 interface FeatureScore {
   name: string;
@@ -253,6 +254,8 @@ export default function FaceComparisonPage() {
 
   return (
     <div className="space-y-8">
+      <SectionScrollProgress />
+      <ScrollParallax speed={0.12} distance={30}>
       <motion.div variants={fadeUp} initial="hidden" animate="show">
         <span className="section-number">EST. MMXXIV // FACE COMPARISON</span>
         <div className="flex items-center gap-3 mt-3 mb-2">
@@ -266,6 +269,7 @@ export default function FaceComparisonPage() {
           geometry after scale + position alignment — no random placeholders.
         </p>
       </motion.div>
+      </ScrollParallax>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {([0, 1] as const).map(idx => (
@@ -299,6 +303,7 @@ export default function FaceComparisonPage() {
       )}
 
       {bothLoaded && (
+        <ScrollBlur blur={6} minOpacity={0.9}>
         <motion.div variants={fadeUp} initial="hidden" animate="show" className="space-y-6">
           <div ref={containerRef} className="glass-card overflow-hidden relative cursor-col-resize select-none"
             onMouseDown={handleDragStart} onTouchStart={handleDragStart}>
@@ -366,6 +371,7 @@ export default function FaceComparisonPage() {
             </motion.div>
           )}
         </motion.div>
+        </ScrollBlur>
       )}
 
       {bothLoaded && (

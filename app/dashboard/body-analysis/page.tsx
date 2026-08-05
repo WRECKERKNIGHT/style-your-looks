@@ -11,6 +11,7 @@ import { DemoCarousel } from "@/components/demo/DemoCarousel";
 import { DemoBadge } from "@/components/demo/DemoBadge";
 import { DEMO_BODY_PHOTO, buildDemoBodyResult } from "@/lib/demo/demo-analysis";
 import { detectPoseOnly } from "@/lib/ml/body-analyzer";
+import { ScrollParallax, ScrollBlur, SectionScrollProgress } from "@/components/shared/ScrollEffects";
 import { ShareCardModal, type ShareCardData } from "@/components/shared/ShareCardModal";
 
 const stagger = {
@@ -175,6 +176,8 @@ export default function BodyAnalysisPage() {
 
   return (
     <div className="space-y-8">
+      <SectionScrollProgress />
+      <ScrollParallax speed={0.12} distance={30}>
       <div>
         <span className="section-number">EST. MMXXIV // BODY</span>
         <div className="flex items-center gap-3 mt-3 mb-2">
@@ -187,6 +190,7 @@ export default function BodyAnalysisPage() {
           Upload a full-body photo for body type detection, proportion analysis, and skin undertone classification.
         </p>
       </div>
+      </ScrollParallax>
 
       {!bodyResult && (
         <div className="space-y-5">
@@ -223,6 +227,7 @@ export default function BodyAnalysisPage() {
       )}
 
       {bodyResult && (
+        <ScrollBlur blur={8} minOpacity={0.9}>
         <motion.div
           variants={stagger}
           initial="hidden"
@@ -408,6 +413,7 @@ export default function BodyAnalysisPage() {
             </button>
           </div>
         </motion.div>
+        </ScrollBlur>
       )}
 
       <ShareCardModal open={shareOpen} onClose={() => setShareOpen(false)} data={shareData} />
