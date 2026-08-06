@@ -83,6 +83,8 @@ export function buildDemoFaceResult(landmarks?: number[][]): FaceAnalysisResult 
     skinToneITA: 50,
     undertone: "Neutral",
     ageEstimation: 27,
+    ageConfidence: 0.62,
+    ageBasis: "Synthetic demo mesh — landmark proportions only, no skin texture sampled",
     genderEstimation: "Neutral",
     genderProfile: "neutral",
     emotionDetected: "Neutral",
