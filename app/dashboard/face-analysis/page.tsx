@@ -258,11 +258,19 @@ export default function FaceAnalysisPage() {
     setRejectedPhotos([]);
     setProcessingPreview({ image: DEMO_FACE_PHOTO, landmarks: [] });
     await new Promise((r) => setTimeout(r, 1100));
-    const landmarks = generateDemoLandmarks();
+    const img = new Image();
+    img.src = DEMO_FACE_PHOTO;
+    await new Promise((r) => { img.onload = r; });
+    let landmarks: number[][] = generateDemoLandmarks();
+    try {
+      landmarks = await detectFaceLandmarksOnly(img);
+    } catch {
+      // Real detection unavailable — fall back to the synthetic demo mesh.
+    }
     setProcessingPreview({ image: DEMO_FACE_PHOTO, landmarks });
     await new Promise((r) => setTimeout(r, 1100));
     setProcessingPreview(null);
-    setFaceResult(buildDemoFaceResult());
+    setFaceResult(buildDemoFaceResult(landmarks));
   }, [setUploadedImage, setProcessingPreview, setFaceResult]);
 
   const shareData = useMemo<ShareCardData | null>(() => {

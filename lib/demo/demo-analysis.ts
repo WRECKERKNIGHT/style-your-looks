@@ -53,7 +53,7 @@ export function generateDemoLandmarks(): number[][] {
   return pts.slice(0, 478);
 }
 
-export function buildDemoFaceResult(): FaceAnalysisResult {
+export function buildDemoFaceResult(landmarks?: number[][]): FaceAnalysisResult {
   const breakdown = [
     demoMetric("Facial Symmetry", 0.18, "Balance between left and right sides of your face.", "Centered hairstyles frame symmetry well.", 8.4),
     demoMetric("Golden Ratio Adherence", 0.14, "How closely your facial proportions match the φ ideal.", "Your proportions are mathematically harmonious.", 8.1, "Ratio 1.62 (ideal ≈ 1.62)"),
@@ -88,7 +88,7 @@ export function buildDemoFaceResult(): FaceAnalysisResult {
       "Light stubble sharpens the jawline further",
       "Hydrating skincare keeps the skin-clarity edge",
     ],
-    landmarks: generateDemoLandmarks(),
+    landmarks: landmarks && landmarks.length >= 478 ? landmarks : generateDemoLandmarks(),
     goldenRatio: 8.1,
     lipFullness: 8.1,
     noseProfile: 7.8,
