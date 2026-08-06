@@ -234,7 +234,7 @@ export default function BodyAnalysisPage() {
           animate="show"
           className="space-y-8"
         >
-          {fullBodyImage === DEMO_BODY_PHOTO && (
+          {isDemoPhoto(fullBodyImage) && (
             <motion.div variants={fadeUp}>
               <DemoBadge />
             </motion.div>

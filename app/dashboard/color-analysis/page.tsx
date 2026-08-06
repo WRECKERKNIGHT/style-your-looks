@@ -577,7 +577,7 @@ export default function ColorAnalysisPage() {
           animate="show"
           className="space-y-8"
         >
-          {uploadedImage === DEMO_SKIN_PHOTO && (
+          {isDemoPhoto(uploadedImage) && (
             <motion.div variants={fadeUp}>
               <DemoBadge />
             </motion.div>

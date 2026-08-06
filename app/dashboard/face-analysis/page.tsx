@@ -690,7 +690,7 @@ export default function FaceAnalysisPage() {
             <span className="type-mono text-[0.6rem] tracking-[0.25em] uppercase px-3 py-1.5 border border-aurum-500/40 text-[var(--accent-aurum)] bg-aurum-500/[0.06]">
               {faceResult.genderProfile.toUpperCase()} PROFILE
             </span>
-            {uploadedImage === DEMO_FACE_PHOTO && <DemoBadge />}
+            {isDemoPhoto(uploadedImage) && <DemoBadge />}
             <button
               onClick={() => {
                 if (useAnalysisStore.getState().source === "demo") {
