@@ -1,6 +1,8 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
+import { AnimatedCounter } from "@/components/shared/AnimatedCounter";
 
 interface MetricBarProps {
   label: string;
@@ -34,15 +36,18 @@ export function MetricBar({
       <div className="flex justify-between items-baseline">
         <span className="text-sm font-body font-bold text-nexus-800 dark:text-white">{label}</span>
         <span className="text-lg font-body font-bold text-nexus-800 dark:text-white">
-          {score.toFixed(1)}
+          <AnimatedCounter target={score} duration={1.2} decimals={1} className="inline-block" />
           <span className="text-nexus-400 dark:text-cosmic-muted font-body font-normal text-sm">/{maxScore}</span>
         </span>
       </div>
       <div className="relative h-6 bg-light-border dark:bg-cosmic-border overflow-hidden rounded-full">
-        <div
-          className="absolute inset-y-0 left-0 transition-all duration-1000 ease-out rounded-full shimmer"
+        <motion.div
+          initial={{ width: 0 }}
+          whileInView={{ width: `${percentage}%` }}
+          viewport={{ once: true, margin: "-40px" }}
+          transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+          className="absolute inset-y-0 left-0 rounded-full shimmer"
           style={{
-            width: `${percentage}%`,
             backgroundColor: color,
             backgroundImage: "linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)",
             backgroundSize: "200% 100%",

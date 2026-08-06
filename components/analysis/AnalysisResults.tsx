@@ -31,6 +31,7 @@ import {
   Eye,
   Radar,
   Award,
+  Palette,
   Check,
   X,
   ShieldCheck,
@@ -181,22 +182,25 @@ export function AnalysisResults() {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-light-base dark:bg-cosmic-elevated p-4 border border-light-border dark:border-cosmic-border rounded-sm">
-                  <span className="text-nexus-400 dark:text-cosmic-muted text-xs font-body tracking-wider uppercase">Face Shape</span>
-                  <p className="font-body font-bold text-nexus-800 dark:text-white text-lg mt-1">{faceResult.facialShape}</p>
-                </div>
-                <div className="bg-light-base dark:bg-cosmic-elevated p-4 border border-light-border dark:border-cosmic-border rounded-sm">
-                  <span className="text-nexus-400 dark:text-cosmic-muted text-xs font-body tracking-wider uppercase">Style Profile</span>
-                  <p className="font-body font-bold text-nexus-800 dark:text-white text-lg mt-1">{faceResult.styleProfile}</p>
-                </div>
-                <div className="bg-light-base dark:bg-cosmic-elevated p-4 border border-light-border dark:border-cosmic-border rounded-sm">
-                  <span className="text-nexus-400 dark:text-cosmic-muted text-xs font-body tracking-wider uppercase">Skin Tone</span>
-                  <p className="font-body font-bold text-nexus-800 dark:text-white text-lg mt-1">{faceResult.skinTone}</p>
-                </div>
-                <div className="bg-light-base dark:bg-cosmic-elevated p-4 border border-light-border dark:border-cosmic-border rounded-sm">
-                  <span className="text-nexus-400 dark:text-cosmic-muted text-xs font-body tracking-wider uppercase">Undertone</span>
-                  <p className="font-body font-bold text-nexus-800 dark:text-white text-lg mt-1">{faceResult.undertone}</p>
-                </div>
+                {[
+                  { label: "Face Shape", value: faceResult.facialShape, icon: ScanFace },
+                  { label: "Style Profile", value: faceResult.styleProfile, icon: Sparkles },
+                  { label: "Skin Tone", value: faceResult.skinTone, icon: Palette },
+                  { label: "Undertone", value: faceResult.undertone, icon: Fingerprint },
+                ].map((item, i) => (
+                  <motion.div
+                    key={item.label}
+                    initial={{ opacity: 0, y: 12 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.15 + i * 0.1, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                    className="bg-light-base dark:bg-cosmic-elevated p-4 border border-light-border dark:border-cosmic-border rounded-sm"
+                  >
+                    <item.icon className="w-4 h-4 text-aurum-500 mb-1.5" />
+                    <span className="text-nexus-400 dark:text-cosmic-muted text-xs font-body tracking-wider uppercase">{item.label}</span>
+                    <p className="font-body font-bold text-nexus-800 dark:text-white text-lg mt-1">{item.value}</p>
+                  </motion.div>
+                ))}
               </div>
 
               <div className="flex flex-wrap gap-2">
@@ -395,10 +399,25 @@ export function AnalysisResults() {
               { label: "Forehead Balance", value: faceResult.foreheadBalance },
               { label: "Cheekbone Definition", value: faceResult.cheekboneDefinition },
             ].map((item) => (
-              <div key={item.label} className="flex justify-between items-center bg-light-base dark:bg-cosmic-elevated p-4 border border-light-border dark:border-cosmic-border rounded-sm">
+              <motion.div
+                key={item.label}
+                initial={{ opacity: 0, x: 16 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                className="flex justify-between items-center bg-light-base dark:bg-cosmic-elevated p-4 border border-light-border dark:border-cosmic-border rounded-sm"
+              >
                 <span className="text-sm font-body text-nexus-800 dark:text-white">{item.label}</span>
-                <span className="font-body font-bold text-aurum-500">{item.value.toFixed(1)}/10</span>
-              </div>
+                <span className="font-body font-bold text-aurum-500">
+                  <AnimatedCounter
+                    target={item.value}
+                    duration={1.1}
+                    decimals={1}
+                    className="inline-block"
+                  />
+                  /10
+                </span>
+              </motion.div>
             ))}
           </div>
         </div>
