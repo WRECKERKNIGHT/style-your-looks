@@ -23,6 +23,7 @@ import { ScrollParallax, ScrollBlur, SectionScrollProgress } from "@/components/
 import { motion, AnimatePresence } from "framer-motion";
 import { ScanFace, Camera, AlertCircle, Eye, Save, CheckCircle, X, ShieldCheck, Copy, Check, Ruler, Gauge, AlertTriangle, GitCompareArrows, Box, Share2 } from "lucide-react";
 import { SymmetrySplit } from "@/components/analysis/SymmetrySplit";
+import { LaserScanOverlay } from "@/components/analysis/LaserScanOverlay";
 import { ShareCardModal, type ShareCardData } from "@/components/shared/ShareCardModal";
 
 const fadeUp = {
@@ -796,6 +797,14 @@ export default function FaceAnalysisPage() {
                 animate={{ top: "110%" }}
                 transition={{ duration: 1.4, ease: "easeInOut" }}
               />
+              {faceResult.landmarks.length > 0 && (
+                <LaserScanOverlay
+                  landmarks={faceResult.landmarks}
+                  width={imageDims?.w || imageRef.current?.clientWidth || 600}
+                  height={imageDims?.h || imageRef.current?.clientHeight || 480}
+                  imageAspect={imageDims?.aspect}
+                />
+              )}
               {showLandmarks && faceResult.landmarks.length > 0 && (
                 <FaceSkeletonOverlay
                   landmarks={faceResult.landmarks}
