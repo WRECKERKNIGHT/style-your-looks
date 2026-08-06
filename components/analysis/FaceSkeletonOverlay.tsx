@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { useMemo } from "react";
 import { mapCoverPoint } from "@/lib/image-geometry";
+import { calculateSymmetryAxis } from "@/lib/ml/face-geometry";
 
 export interface SkeletonMeasurements {
   fwhr?: number;
@@ -164,7 +165,14 @@ export function FaceSkeletonOverlay({
       ? { x1: x(33), y1: (y(33) + y(263)) / 2, x2: x(263), y2: (y(33) + y(263)) / 2 }
       : null;
 
-  const centerline = canSee(10) && canSee(152) && canSee(1) ? { x: x(1), y1: y(10), y2: y(152) } : null;
+  // Pose-aware symmetry axis: pupil midpoint → chin tip (follows head roll).
+  const axisLine = useMemo(() => {
+    const axis = calculateSymmetryAxis(landmarks);
+    if (!axis) return null;
+    const a = map(axis.a.x, axis.a.y);
+    const b = map(axis.b.x, axis.b.y);
+    return { x1: a.x, y1: a.y, x2: b.x, y2: b.y, angle: axis.angleDeg };
+  }, [landmarks, map]);
 
   const drawDelay = animate ? 0.2 : 0;
 
@@ -256,19 +264,37 @@ export function FaceSkeletonOverlay({
             );
           })}
 
-          {centerline && (
-            <motion.line
-              x1={centerline.x}
-              y1={centerline.y1}
-              x2={centerline.x}
-              y2={centerline.y2}
-              stroke={COLORS.centerline}
-              strokeWidth={1.2}
-              strokeDasharray="5 6"
-              initial={animate ? { pathLength: 0, opacity: 0 } : false}
-              animate={animate ? { pathLength: 1, opacity: 1 } : { opacity: 1 }}
-              transition={{ pathLength: { duration: 0.6, delay: drawDelay + 1.2 } }}
-            />
+          {axisLine && (
+            <>
+              <motion.line
+                x1={axisLine.x1}
+                y1={axisLine.y1}
+                x2={axisLine.x2}
+                y2={axisLine.y2}
+                stroke={COLORS.centerline}
+                strokeWidth={1.2}
+                strokeDasharray="5 6"
+                initial={animate ? { pathLength: 0, opacity: 0 } : false}
+                animate={animate ? { pathLength: 1, opacity: 1 } : { opacity: 1 }}
+                transition={{ pathLength: { duration: 0.6, delay: drawDelay + 1.2 } }}
+              />
+              <motion.g
+                initial={animate ? { opacity: 0 } : false}
+                animate={{ opacity: 1 }}
+                transition={{ delay: drawDelay + 1.5, duration: 0.4 }}
+              >
+                <text
+                  x={axisLine.x1 + 8}
+                  y={axisLine.y1 - 6}
+                  fill="#fff"
+                  fontSize="10"
+                  fontFamily="monospace"
+                  style={{ paintOrder: "stroke", stroke: "rgba(0,0,0,0.65)", strokeWidth: 3 }}
+                >
+                  AXIS {axisLine.angle >= 0 ? "+" : ""}{axisLine.angle.toFixed(1)}°
+                </text>
+              </motion.g>
+            </>
           )}
 
           {KEY_DOTS.map((dot) =>

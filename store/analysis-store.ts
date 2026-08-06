@@ -91,6 +91,8 @@ export interface FaceAnalysisResult {
   analysisConfidence: number;
   photoCount: number;
   qualityGate?: PhotoQualityGate;
+  /** Pose-aware symmetry axis tilt (degrees from vertical) for overlays. */
+  symmetryAxis?: { angleDeg: number };
 }
 
 export interface BodyAnalysisResult {

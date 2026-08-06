@@ -10,11 +10,13 @@ interface SymmetrySplitProps {
   centerX: number;
   imageAspect?: number;
   symmetryScore?: number;
+  /** Pose-aware axis tilt in degrees (positive = top of face tilts right). */
+  axisAngleDeg?: number;
 }
 
 const CONTAINER_ASPECT = 4 / 5;
 
-export function SymmetrySplit({ image, centerX, imageAspect, symmetryScore }: SymmetrySplitProps) {
+export function SymmetrySplit({ image, centerX, imageAspect, symmetryScore, axisAngleDeg = 0 }: SymmetrySplitProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [split, setSplit] = useState<number | null>(null);
   const [mirrorLeft, setMirrorLeft] = useState(true);
@@ -89,7 +91,7 @@ export function SymmetrySplit({ image, centerX, imageAspect, symmetryScore }: Sy
           }}
         />
 
-        {/* Mirrored layer — mirrored around the face centerline */}
+        {/* Mirrored layer — mirrored across the pose-aware face centerline */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={image}
@@ -97,7 +99,7 @@ export function SymmetrySplit({ image, centerX, imageAspect, symmetryScore }: Sy
           draggable={false}
           className="absolute inset-0 w-full h-full object-cover"
           style={{
-            transform: "scaleX(-1)",
+            transform: `rotate(${axisAngleDeg}deg) scaleX(-1) rotate(${-axisAngleDeg}deg)`,
             transformOrigin: `${mappedCenter * 100}% 50%`,
             clipPath:
               realLayer === "left"
@@ -106,8 +108,15 @@ export function SymmetrySplit({ image, centerX, imageAspect, symmetryScore }: Sy
           }}
         />
 
-        {/* Divider */}
-        <div className="absolute top-0 bottom-0 z-10" style={{ left: `${frac * 100}%` }}>
+        {/* Divider — rotated to ride the pose-aware axis */}
+        <div
+          className="absolute top-0 bottom-0 z-10"
+          style={{
+            left: `${frac * 100}%`,
+            transform: `rotate(${axisAngleDeg}deg)`,
+            transformOrigin: "50% 50%",
+          }}
+        >
           <div className="absolute inset-y-0 -translate-x-1/2 w-px bg-[var(--accent-aurum)] shadow-[0_0_12px_rgba(200,150,62,0.8)]" />
           <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-9 h-9 rounded-full bg-[var(--bg-primary)]/90 border border-[var(--accent-aurum)] flex items-center justify-center shadow-lg">
             <GitCompareArrows className="w-4 h-4 text-[var(--accent-aurum)]" />

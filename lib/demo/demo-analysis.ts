@@ -158,6 +158,7 @@ export function buildDemoFaceResult(): FaceAnalysisResult {
     consistencyScore: 96,
     analysisConfidence: 91,
     photoCount: 2,
+    symmetryAxis: { angleDeg: 1.2 },
     qualityGate: {
       brightness: 0.72,
       sharpness: 0.81,

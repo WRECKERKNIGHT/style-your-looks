@@ -835,6 +835,7 @@ export default function FaceAnalysisPage() {
                 centerX={faceResult.landmarks[1]?.[0] ?? 0.5}
                 imageAspect={imageDims?.aspect}
                 symmetryScore={faceResult.symmetry}
+                axisAngleDeg={faceResult.symmetryAxis?.angleDeg ?? 0}
               />
             </motion.div>
           )}

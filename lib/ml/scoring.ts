@@ -1,6 +1,7 @@
 import type { FaceLandmarkerResult } from "@mediapipe/tasks-vision";
 import {
   getFaceSymmetry,
+  getFaceSymmetryAxis,
   getFaceProportions,
   getJawlineScore,
   getEyeSpacingScore,
@@ -753,6 +754,7 @@ export function buildFaceScoreFromMetrics(
     consistencyScore: Math.round(consistencyScore * 10) / 10,
     analysisConfidence: Math.round(analysisConfidence),
     photoCount,
+    symmetryAxis: sourceResult ? getFaceSymmetryAxis(sourceResult) : undefined,
   };
 }
 
