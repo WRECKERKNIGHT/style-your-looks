@@ -10,6 +10,18 @@ export const DEMO_FACE_PHOTO = "/images/demo/face-sample.jpg";
 export const DEMO_BODY_PHOTO = "/images/demo/body-sample.jpg";
 export const DEMO_SKIN_PHOTO = "/images/demo/skin-sample.jpg";
 
+/** Every bundled demo asset. Demo results must never be treated as a photo of you. */
+export const DEMO_MEDIA: readonly string[] = [
+  DEMO_FACE_PHOTO,
+  DEMO_BODY_PHOTO,
+  DEMO_SKIN_PHOTO,
+];
+
+/** True when a media URL points at a bundled demo sample. */
+export function isDemoPhoto(url: string | null | undefined): boolean {
+  return url != null && DEMO_MEDIA.includes(url);
+}
+
 function demoMetric(label: string, weight: number, description: string, tip: string, score: number, value?: string): FacialMetric {
   const rating = score >= 8 ? "Excellent" : score >= 7 ? "Strong" : score >= 6 ? "Good" : score >= 5 ? "Fair" : "Needs focus";
   return { label, weight, description, tip, score, rating, value, spread: 0.15 };

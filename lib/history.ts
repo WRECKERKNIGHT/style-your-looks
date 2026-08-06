@@ -1,5 +1,6 @@
 import type { FaceAnalysisResult, BodyAnalysisResult, ColorAnalysisResult, OutfitRecommendation } from "@/store/analysis-store";
 import type { AnalysisSource } from "@/store/analysis-store";
+import { isDemoPhoto } from "@/lib/demo/demo-analysis";
 
 export interface AnalysisEntry {
   id: string;
@@ -90,16 +91,10 @@ export interface ScoreTrendPoint {
   harmony: number;
 }
 
-const DEMO_THUMBNAILS = new Set([
-  "/images/demo/face-sample.jpg",
-  "/images/demo/body-sample.jpg",
-  "/images/demo/skin-sample.jpg",
-]);
-
 export function isDemoEntry(entry: AnalysisEntry): boolean {
   return (
     entry.source === "demo" ||
-    (entry.thumbnailUrl != null && DEMO_THUMBNAILS.has(entry.thumbnailUrl))
+    isDemoPhoto(entry.thumbnailUrl)
   );
 }
 
