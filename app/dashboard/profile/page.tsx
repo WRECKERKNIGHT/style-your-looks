@@ -116,7 +116,7 @@ export default function ProfilePage() {
       </motion.div>
       </ScrollParallax>
 
-      <ScrollBlur blur={4} minOpacity={0.95}>
+      <ScrollBlur blur={0} minOpacity={0.95}>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <motion.div variants={fadeUp} initial="hidden" animate="show" className="lg:col-span-1 space-y-4">
           <div className="glass-card p-6 text-center">

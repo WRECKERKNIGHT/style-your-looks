@@ -185,7 +185,7 @@ export default function CommunityPostPage() {
         Back to Community
       </Link>
 
-      <ScrollBlur blur={6} minOpacity={0.9}>
+      <ScrollBlur blur={0} minOpacity={0.9}>
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="glass-card overflow-hidden">
         {post.imageUrl ? (
           <img src={post.imageUrl} alt={post.title} className="w-full max-h-96 object-contain bg-[var(--bg-secondary)]" />

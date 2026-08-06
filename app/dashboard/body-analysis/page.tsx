@@ -227,7 +227,7 @@ export default function BodyAnalysisPage() {
       )}
 
       {bodyResult && (
-        <ScrollBlur blur={8} minOpacity={0.9}>
+        <ScrollBlur blur={0} minOpacity={0.9}>
         <motion.div
           variants={stagger}
           initial="hidden"

@@ -107,7 +107,7 @@ export default function RecommendationsPage() {
       </motion.div>
       </ScrollParallax>
 
-      <ScrollBlur blur={4} minOpacity={0.95}>
+      <ScrollBlur blur={0} minOpacity={0.95}>
       {!pillarResult ? (
         <motion.div variants={fadeUp} initial="hidden" animate="show" className="glass-card p-8 text-center space-y-4">
           <Sparkles className="w-8 h-8 text-[var(--accent-aurum)] mx-auto" />

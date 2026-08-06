@@ -133,7 +133,7 @@ export default function StyleQuizPage() {
       </motion.div>
       </ScrollParallax>
 
-      <ScrollBlur blur={4} minOpacity={0.95}>
+      <ScrollBlur blur={0} minOpacity={0.95}>
       <AnimatePresence mode="wait">
         {step === "intro" && (
           <motion.div key="intro" variants={fadeUp} initial="hidden" animate="show" exit={{ opacity: 0, y: -10 }}

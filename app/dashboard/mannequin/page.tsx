@@ -234,7 +234,7 @@ export default function MannequinPage() {
       </motion.div>
       </ScrollParallax>
 
-      <ScrollBlur blur={6} minOpacity={0.9}>
+      <ScrollBlur blur={0} minOpacity={0.9}>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <motion.div variants={fadeUp} initial="hidden" animate="show" className="lg:col-span-2">
           <div className="glass-card overflow-hidden">

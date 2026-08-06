@@ -582,7 +582,7 @@ export default function ColorAnalysisPage() {
               <DemoBadge />
             </motion.div>
           )}
-          <ScrollBlur blur={6} minOpacity={0.9}>
+          <ScrollBlur blur={0} minOpacity={0.9}>
           <motion.div variants={fadeUp} className="glass-card p-10 relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[var(--accent-nexus)] via-[var(--accent-aurum)] to-[var(--accent-nexus)]" />
             <div className="flex flex-col md:flex-row items-center gap-8">

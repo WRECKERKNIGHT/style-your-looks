@@ -678,7 +678,7 @@ export default function FaceAnalysisPage() {
       )}
 
       {faceResult && (
-        <ScrollBlur blur={8} minOpacity={0.9}>
+        <ScrollBlur blur={0} minOpacity={0.9}>
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

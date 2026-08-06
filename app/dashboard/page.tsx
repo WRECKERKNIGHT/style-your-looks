@@ -247,7 +247,7 @@ export default function DashboardHome() {
       </ScrollParallax>
 
       {/* Style Score Overview / Onboarding */}
-      <ScrollBlur blur={8} minOpacity={0.85}>
+      <ScrollBlur blur={0} minOpacity={0.85}>
         <ScrollReveal>
           <div className="relative overflow-hidden rounded-sm bg-[var(--bg-secondary)] border border-[var(--border-primary)] shadow-paper-lg p-8">
           <div className="absolute inset-0 bg-gradient-to-br from-[color-mix(in_srgb,var(--accent-caramel)_12%,transparent)] via-transparent to-[color-mix(in_srgb,var(--accent-honey)_8%,transparent)] pointer-events-none" />

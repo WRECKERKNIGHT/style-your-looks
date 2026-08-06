@@ -157,7 +157,7 @@ export default function CommunityPage() {
       </motion.div>
       </ScrollParallax>
 
-      <ScrollBlur blur={4} minOpacity={0.95}>
+      <ScrollBlur blur={0} minOpacity={0.95}>
       <motion.div variants={fadeUp} initial="hidden" animate="show" className="flex flex-wrap gap-2 items-center">
         {(["feed", "members", "tags"] as const).map((tab) => (
           <button key={tab} onClick={() => setActiveTab(tab)}

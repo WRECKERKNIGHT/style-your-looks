@@ -259,7 +259,7 @@ export default function StyleDnaPage() {
 
       {hasData && (
         <motion.div variants={stagger} initial="hidden" animate="show" className="space-y-8">
-          <ScrollBlur blur={6} minOpacity={0.9}>
+          <ScrollBlur blur={0} minOpacity={0.9}>
           <motion.div variants={fadeUp} className="glass-card p-10 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-[color-mix(in_srgb,var(--accent-nexus)_5%,transparent)] rounded-full -translate-y-1/2 translate-x-1/2" />
             <div className="relative">

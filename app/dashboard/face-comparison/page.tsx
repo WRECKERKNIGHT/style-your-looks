@@ -303,7 +303,7 @@ export default function FaceComparisonPage() {
       )}
 
       {bothLoaded && (
-        <ScrollBlur blur={6} minOpacity={0.9}>
+        <ScrollBlur blur={0} minOpacity={0.9}>
         <motion.div variants={fadeUp} initial="hidden" animate="show" className="space-y-6">
           <div ref={containerRef} className="glass-card overflow-hidden relative cursor-col-resize select-none"
             onMouseDown={handleDragStart} onTouchStart={handleDragStart}>

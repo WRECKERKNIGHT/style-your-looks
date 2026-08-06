@@ -150,7 +150,7 @@ export default function HistoryPage() {
       </motion.div>
       </ScrollParallax>
 
-      <ScrollBlur blur={4} minOpacity={0.95}>
+      <ScrollBlur blur={0} minOpacity={0.95}>
       <motion.div variants={fadeUp} initial="hidden" animate="show" className="flex flex-wrap gap-2 items-center">
         <select value={filter} onChange={e => setFilter(e.target.value)}
           className="px-3 py-2 border border-[var(--border-primary)] bg-[var(--bg-tertiary)] text-[var(--text-primary)] text-xs type-mono">

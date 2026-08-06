@@ -93,11 +93,15 @@ export function ScrollBlur({
     [minOpacity, 1, 1, minOpacity]
   );
 
-  if (reduce) {
+  if (reduce || blur <= 0) {
     return (
-      <div ref={ref} className={className}>
+      <motion.div
+        ref={ref}
+        style={{ opacity }}
+        className={className}
+      >
         {children}
-      </div>
+      </motion.div>
     );
   }
 

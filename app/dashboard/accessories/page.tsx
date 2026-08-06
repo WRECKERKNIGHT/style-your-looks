@@ -176,7 +176,7 @@ export default function AccessoriesPage() {
           <ImageUploader onImageUpload={handleImageUpload} label="Upload a photo for glasses try-on" accept="face" />
         </div>
       ) : (
-        <ScrollBlur blur={8} minOpacity={0.9}>
+        <ScrollBlur blur={0} minOpacity={0.9}>
         <motion.div variants={fadeUp} initial="hidden" animate="show" className="space-y-8">
           <div ref={containerRef} className="glass-card overflow-hidden relative">
             <canvas ref={canvasRef} className="w-full" />
