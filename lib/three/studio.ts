@@ -57,10 +57,10 @@ export function createStudioScene(container: HTMLElement): StudioScene {
   scene.fog = new THREE.Fog("#161210", 5.5, 9);
 
   const camera = new THREE.PerspectiveCamera(42, 1, 0.05, 30);
-  camera.position.set(1.75, 1.25, 2.35);
+  camera.position.set(1.7, 1.05, 2.35);
 
   const controls = new OrbitControls(camera, renderer.domElement);
-  controls.target.set(0, 0.95, 0);
+  controls.target.set(0, 0.9, 0);
   controls.enableDamping = true;
   controls.dampingFactor = 0.08;
   controls.minDistance = 0.8;
@@ -89,12 +89,12 @@ export function createStudioScene(container: HTMLElement): StudioScene {
   const bounce = new THREE.HemisphereLight("#c9b18a", "#2a2018", 0.5);
   scene.add(bounce);
 
-  // Turntable pedestal
+  // Turntable pedestal — top surface sits at y=0, where the avatar's feet land
   const pedestal = new THREE.Mesh(
     new THREE.CylinderGeometry(0.85, 0.95, 0.06, 64),
     new THREE.MeshStandardMaterial({ color: "#241d18", roughness: 0.5, metalness: 0.25 })
   );
-  pedestal.position.y = -1.12;
+  pedestal.position.y = -0.03;
   pedestal.receiveShadow = true;
   scene.add(pedestal);
 
@@ -103,7 +103,7 @@ export function createStudioScene(container: HTMLElement): StudioScene {
     new THREE.MeshBasicMaterial({ color: "#C8963E", side: THREE.DoubleSide, transparent: true, opacity: 0.85 })
   );
   groundRing.rotation.x = -Math.PI / 2;
-  groundRing.position.y = -1.09;
+  groundRing.position.y = -0.005;
   scene.add(groundRing);
 
   const avatarGroup = new THREE.Group();
@@ -143,6 +143,8 @@ export function renderStudio(
     metalness: 0.0,
   });
 
+  const m = computeMeasurements(state.body);
+
   const avatar = buildAvatar(state.body, skinMat);
   avatar.traverse((o) => {
     const mesh = o as THREE.Mesh;
@@ -152,6 +154,7 @@ export function renderStudio(
     }
   });
   avatarGroup.add(avatar);
+  avatarGroup.position.y = -m.soleY;
 
   if (state.garment) {
     const g = buildGarment(state.body, state.garment);
@@ -163,13 +166,14 @@ export function renderStudio(
       }
     });
     garmentGroup.add(g);
+    garmentGroup.position.y = -m.soleY;
   }
 
   if (state.glasses) {
     const g = buildGlasses(state.glasses);
-    const m = computeMeasurements(state.body);
     g.position.set(0, m.chinY + m.headHeight * 0.78, m.headRadius * 0.88);
     glassesGroup.add(g);
+    glassesGroup.position.y = -m.soleY;
   }
 
   if (state.hairStyle !== "none") {
@@ -179,5 +183,6 @@ export function renderStudio(
       if (mesh.isMesh) mesh.castShadow = true;
     });
     hairGroup.add(h);
+    hairGroup.position.y = -m.soleY;
   }
 }
