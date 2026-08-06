@@ -6,6 +6,7 @@ import { useAnalysisStore } from "@/store/analysis-store";
 import { BEARD_STYLES, MUSTACHE_STYLES } from "@/lib/constants";
 import { initializeFaceLandmarker } from "@/lib/ml/face-analyzer";
 import { drawFacialHair, detectHairColor, scoreGroomingStyles, type GroomingScore } from "@/lib/ml/facial-hair";
+import { calculateFaceShape } from "@/lib/ml/face-geometry";
 import { motion } from "framer-motion";
 import { Scissors, Check, Star, Sparkles } from "lucide-react";
 import { ScrollParallax, ScrollBlur, SectionScrollProgress } from "@/components/shared/ScrollEffects";
@@ -33,6 +34,7 @@ export default function GroomingPage() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [faceResult, setFaceResult] = useState<any>(null);
   const [groomingScores, setGroomingScores] = useState<GroomingScore[]>([]);
+  const [faceShape, setFaceShape] = useState<string | null>(null);
 
   const analyzePhoto = useCallback(async (imageData: string) => {
     setIsAnalyzing(true);
@@ -50,8 +52,12 @@ export default function GroomingPage() {
           ctx.drawImage(img, 0, 0);
           const color = detectHairColor(canvas, result);
           setHairColor(color);
-          const faceShape = useAnalysisStore.getState().faceResult?.facialShape;
-          const scores = scoreGroomingStyles(faceShape);
+          const lm = result.faceLandmarks?.[0];
+          const shape = lm
+            ? calculateFaceShape(lm.map((l) => [l.x, l.y, l.z]))
+            : useAnalysisStore.getState().faceResult?.facialShape;
+          setFaceShape(shape ?? null);
+          const scores = scoreGroomingStyles(shape);
           setGroomingScores(scores);
         } finally {
           setIsAnalyzing(false);
@@ -151,6 +157,11 @@ export default function GroomingPage() {
               <div className="flex items-center gap-3 mb-6">
                 <Sparkles className="w-5 h-5 text-[var(--accent-aurum)]" />
                 <h3 className="type-heading text-[var(--text-primary)] tracking-tight">RECOMMENDED FOR YOUR FACE</h3>
+                {faceShape && (
+                  <span className="inline-flex items-center px-2.5 py-1 border border-[var(--border-primary)] bg-[var(--bg-tertiary)] text-[0.6rem] font-mono tracking-widest text-[var(--text-muted)]">
+                    {faceShape.toUpperCase()} FACE · DETECTED FROM THIS PHOTO
+                  </span>
+                )}
               </div>
               <div className="space-y-4">
                 {groomingScores.filter((s) => s.type === "beard").slice(0, 3).map((rec) => (
