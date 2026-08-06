@@ -192,7 +192,7 @@ export function LaserScanOverlay({
             { threshold: 0.05 }
           )
         : null;
-    observer?.observe(wrap);
+    if (wrap && observer) observer.observe(wrap);
 
     return () => {
       cancelAnimationFrame(raf);
