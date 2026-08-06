@@ -10,9 +10,12 @@ import {
   Sparkles,
   Check,
   Loader2,
+  Target,
 } from "lucide-react";
 import { useAnalysisStore } from "@/store/analysis-store";
 import { FaceSkeletonOverlay } from "@/components/analysis/FaceSkeletonOverlay";
+import { calculateFaceShape } from "@/lib/ml/face-geometry";
+import type { SkeletonMeasurements } from "@/components/analysis/FaceSkeletonOverlay";
 
 const phases = [
   { id: "detect", icon: Scan, label: "DETECTING", detail: "Initialising MediaPipe and locating your face", threshold: 15, color: "#A0764E" },
@@ -34,6 +37,39 @@ export function ProcessingOverlay({
   const [previewDims, setPreviewDims] = useState<{ w: number; h: number; aspect?: number } | null>(null);
 
   const previewImage = preview?.image ?? null;
+
+  // Live per-face measurements derived straight from the streamed landmarks, so
+  // the on-photo skeleton shows real geometry while analysis is still running.
+  const liveMetrics = useMemo<{
+    measurements?: SkeletonMeasurements;
+    shape?: string;
+  }>(() => {
+    const lm = preview?.landmarks;
+    if (!lm || lm.length < 478) return {};
+    const p = (i: number) => lm[i];
+    const fwhr =
+      p(234) && p(454) && p(9) && p(13)
+        ? Math.abs(p(234)[0] - p(454)[0]) / Math.max(1e-6, Math.abs(p(9)[1] - p(13)[1]))
+        : undefined;
+    const tilt = (() => {
+      const a = [p(33), p(133), p(263), p(362)];
+      if (a.some((v) => !v)) return undefined;
+      const left = Math.atan2(p(33)[1] - p(133)[1], p(33)[0] - p(133)[0]) * (180 / Math.PI);
+      const right = Math.atan2(p(263)[1] - p(362)[1], p(263)[0] - p(362)[0]) * (180 / Math.PI);
+      return (left + right) / 2;
+    })();
+    const eyeNoseRatio =
+      p(33) && p(263) && p(98) && p(327)
+        ? Math.abs(p(33)[0] - p(263)[0]) / Math.max(1e-6, Math.abs(p(98)[0] - p(327)[0]))
+        : undefined;
+    const measurements: SkeletonMeasurements = {};
+    if (fwhr !== undefined) measurements.fwhr = fwhr;
+    if (tilt !== undefined) measurements.canthalTilt = tilt;
+    if (eyeNoseRatio !== undefined) measurements.eyeNoseRatio = eyeNoseRatio;
+    return { measurements, shape: calculateFaceShape(lm as number[][]) };
+  }, [preview]);
+
+  const showPhoto = Boolean(preview);
 
   useEffect(() => {
     setPreviewDims(null);
@@ -59,8 +95,6 @@ export function ProcessingOverlay({
     () => phases.filter((p) => progress >= p.threshold),
     [progress]
   );
-
-  const showPhoto = Boolean(preview);
 
   return (
     <AnimatePresence mode="wait">
@@ -95,23 +129,57 @@ export function ProcessingOverlay({
 
             {showPhoto && (
               <div className="relative overflow-hidden border border-[var(--border-primary)] bg-black/40 mb-8">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  ref={previewRef}
-                  src={preview!.image}
-                  alt="Live analysis preview"
-                  onLoad={handlePreviewLoad}
-                  className="w-full max-h-[440px] object-cover"
-                />
+                <motion.div
+                  key={`zoom-${previewImage}`}
+                  initial={{ scale: 1.06 }}
+                  animate={{ scale: 1 }}
+                  transition={{ duration: 1.8, ease: [0.16, 1, 0.3, 1] }}
+                  className="w-full"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    ref={previewRef}
+                    src={preview!.image}
+                    alt="Live analysis preview"
+                    onLoad={handlePreviewLoad}
+                    className="w-full max-h-[440px] object-cover"
+                  />
+                </motion.div>
+
                 {previewDims && preview!.landmarks.length > 0 && (
                   <FaceSkeletonOverlay
+                    key={previewImage}
                     landmarks={preview!.landmarks}
                     width={previewDims.w}
                     height={previewDims.h}
                     imageAspect={previewDims.aspect}
+                    facialShape={liveMetrics.shape}
+                    measurements={liveMetrics.measurements}
                     animate
                   />
                 )}
+
+                {previewDims && preview!.landmarks.length === 0 && (
+                  <FaceFinder width={previewDims.w} height={previewDims.h} />
+                )}
+
+                <div
+                  className="pointer-events-none absolute inset-0"
+                  style={{
+                    background:
+                      "radial-gradient(110% 90% at 50% 45%, transparent 55%, rgba(0,0,0,0.35) 100%)",
+                  }}
+                />
+                <motion.div
+                  className="pointer-events-none absolute inset-x-0 h-24"
+                  style={{
+                    background:
+                      "linear-gradient(180deg, transparent, rgba(232,200,138,0.14) 50%, transparent)",
+                  }}
+                  animate={{ top: ["-20%", "110%"] }}
+                  transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
+                />
+
                 <div
                   className="absolute bottom-3 left-3 flex items-center gap-2 px-3 py-1.5 rounded-sm border bg-black/50 backdrop-blur-sm"
                   style={{ borderColor: "rgba(200,150,62,0.5)" }}
@@ -227,6 +295,58 @@ export function ProcessingOverlay({
         </motion.div>
       )}
     </AnimatePresence>
+  );
+}
+
+function FaceFinder({ width, height }: { width: number; height: number }) {
+  const brackets = 34;
+  const inset = 26;
+  const corners = [
+    { style: "top-0 left-0", borders: "border-t-2 border-l-2" },
+    { style: "top-0 right-0", borders: "border-t-2 border-r-2" },
+    { style: "bottom-0 left-0", borders: "border-b-2 border-l-2" },
+    { style: "bottom-0 right-0", borders: "border-b-2 border-r-2" },
+  ];
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ width, height }}>
+      {corners.map((c, i) => (
+        <motion.div
+          key={i}
+          className={`absolute ${c.style} ${c.borders}`}
+          style={{
+            width: brackets,
+            height: brackets,
+            borderColor: "rgba(232,200,138,0.8)",
+            margin: 18,
+          }}
+          animate={{ opacity: [0.35, 1, 0.35] }}
+          transition={{ duration: 1.6, repeat: Infinity, delay: i * 0.15, ease: "easeInOut" }}
+        />
+      ))}
+      <motion.div
+        className="absolute inset-x-0 h-px"
+        style={{
+          background: "linear-gradient(90deg, transparent, rgba(232,200,138,0.9), transparent)",
+          boxShadow: "0 0 12px rgba(232,200,138,0.6)",
+        }}
+        animate={{ top: [`${inset}px`, `${height - inset}px`] }}
+        transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+      />
+      <motion.div
+        className="absolute left-1/2 top-1/2 rounded-full border"
+        style={{ borderColor: "rgba(232,200,138,0.55)" }}
+        animate={{ width: [70, 190], height: [70, 190], x: [-95, -35], y: [-95, -35], opacity: [0.9, 0] }}
+        transition={{ duration: 1.8, repeat: Infinity, ease: "easeOut" }}
+      />
+      <motion.div
+        className="absolute left-1/2 top-1/2 w-14 h-14 -translate-x-1/2 -translate-y-1/2 rounded-full flex items-center justify-center"
+        style={{ background: "rgba(200,150,62,0.12)", border: "1px solid rgba(200,150,62,0.5)" }}
+        animate={{ scale: [1, 1.15, 1] }}
+        transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
+      >
+        <Target className="w-5 h-5 text-[#E8C88A]" />
+      </motion.div>
+    </div>
   );
 }
 

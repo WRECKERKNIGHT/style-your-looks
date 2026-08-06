@@ -147,6 +147,25 @@ export function FaceSkeletonOverlay({
   const canSee = (i: number) => Boolean(landmarks[i]);
   const shapeLabel = facialShape?.toUpperCase() ?? "";
 
+  // Continuous per-face energy loop: keyframes traced along the detected face
+  // contour, direction & pace tuned to that face's canthal tilt.
+  const ovalPts = useMemo(() => {
+    const pts: { x: number; y: number }[] = [];
+    for (const i of REGIONS[0].indices) {
+      const lm = landmarks[i];
+      if (!lm) continue;
+      pts.push(map(lm[0], lm[1]));
+    }
+    return pts;
+  }, [landmarks, map]);
+  const cometX = useMemo(() => ovalPts.map((p) => p.x), [ovalPts]);
+  const cometY = useMemo(() => ovalPts.map((p) => p.y), [ovalPts]);
+  const flowDuration = useMemo(() => {
+    const tilt = measurements?.canthalTilt ?? 0;
+    return Math.min(9, Math.max(4, 6 - tilt * 0.08));
+  }, [measurements?.canthalTilt]);
+  const flowForward = useMemo(() => (measurements?.canthalTilt ?? 0) >= 0, [measurements?.canthalTilt]);
+
   const fwhrLine =
     measurements?.fwhr !== undefined && canSee(234) && canSee(454) && canSee(9) && canSee(13)
       ? {
@@ -264,6 +283,43 @@ export function FaceSkeletonOverlay({
             );
           })}
 
+          {animate && ovalPts.length > 4 && (
+            <>
+              <motion.polyline
+                points={polylinePoints(landmarks, REGIONS[0].indices, map)!}
+                fill="none"
+                stroke="rgba(232,200,138,0.85)"
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                style={{ strokeDasharray: "7 15", filter: "url(#skel-glow)" }}
+                animate={{ strokeDashoffset: flowForward ? [0, -880] : [0, 880] }}
+                transition={{ duration: flowDuration, repeat: Infinity, ease: "linear" }}
+                opacity={0.5}
+              />
+              <motion.g
+                animate={{ scale: [1, 1.03, 1] }}
+                transition={{ duration: flowDuration / 2, repeat: Infinity, ease: "easeInOut" }}
+                style={{ transformOrigin: "center" }}
+              >
+                <motion.circle
+                  r={4}
+                  fill="rgba(242,217,168,0.95)"
+                  style={{ filter: "url(#skel-glow)" }}
+                  animate={{ cx: cometX, cy: cometY }}
+                  transition={{ duration: flowDuration, repeat: Infinity, ease: "linear" }}
+                />
+                <motion.circle
+                  r={8}
+                  fill="none"
+                  stroke="rgba(232,200,138,0.4)"
+                  animate={{ cx: cometX, cy: cometY, opacity: [0.5, 0.1, 0.5] }}
+                  transition={{ duration: flowDuration, repeat: Infinity, ease: "linear" }}
+                />
+              </motion.g>
+            </>
+          )}
+
           {axisLine && (
             <>
               <motion.line
@@ -299,16 +355,35 @@ export function FaceSkeletonOverlay({
 
           {KEY_DOTS.map((dot) =>
             canSee(dot.index) ? (
-              <motion.circle
-                key={`dot-${dot.index}`}
-                cx={x(dot.index)}
-                cy={y(dot.index)}
-                r={dot.r}
-                fill={COLORS.dot}
-                initial={animate ? { scale: 0, opacity: 0 } : false}
-                animate={animate ? { scale: 1, opacity: 1 } : { opacity: 1 }}
-                transition={{ delay: drawDelay + dot.delay, duration: 0.35, type: "spring" }}
-              />
+              <g key={`dot-${dot.index}`}>
+                {animate && (
+                  <motion.circle
+                    cx={x(dot.index)}
+                    cy={y(dot.index)}
+                    r={dot.r}
+                    fill="none"
+                    stroke={COLORS.oval}
+                    strokeWidth={1.2}
+                    initial={false}
+                    animate={{ r: [dot.r * 1.4, dot.r * 3.2], opacity: [0.5, 0] }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "easeOut",
+                      delay: drawDelay + dot.delay,
+                    }}
+                  />
+                )}
+                <motion.circle
+                  cx={x(dot.index)}
+                  cy={y(dot.index)}
+                  r={dot.r}
+                  fill={COLORS.dot}
+                  initial={animate ? { scale: 0, opacity: 0 } : false}
+                  animate={animate ? { scale: 1, opacity: 1 } : { opacity: 1 }}
+                  transition={{ delay: drawDelay + dot.delay, duration: 0.35, type: "spring" }}
+                />
+              </g>
             ) : null
           )}
         </g>
