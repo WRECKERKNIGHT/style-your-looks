@@ -407,10 +407,11 @@ export default function ColorAnalysisPage() {
         try {
           const result = await analyzeFaceFromImage(img);
           if (result?.skinTone) {
+            const { ita, monkScale } = result.skinTone;
             const analysis = analyzeColorSeason({
               undertone: result.skinTone.undertone || "Neutral",
-              ita: result.skinTone.ita || 35,
-              monkScaleId: result.skinTone.monkScale?.id || 4,
+              ita: ita || derivedITAFromScale(monkScale?.id),
+              monkScaleId: monkScale?.id ?? 4,
             });
             setColorAnalysis(analysis);
           }
