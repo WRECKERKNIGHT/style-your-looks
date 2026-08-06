@@ -46,19 +46,29 @@ function calculateITA(lab: CIELAB): number {
   return (Math.atan((lab.L - 50) / lab.b) * 180) / Math.PI;
 }
 
+export interface MonkScaleLevel {
+  id: number;
+  label: string;
+  hex: string;
+  minITA: number;
+}
+
+/** The 10-level Monk skin tone scale (ITA-based), ordered light → dark. */
+export const MONK_SCALE: MonkScaleLevel[] = [
+  { id: 1, label: "Very Light", hex: "#FDDBB4", minITA: 55 },
+  { id: 2, label: "Light", hex: "#E8B990", minITA: 48 },
+  { id: 3, label: "Light-Medium", hex: "#D4A574", minITA: 41 },
+  { id: 4, label: "Medium Light", hex: "#C08E62", minITA: 35 },
+  { id: 5, label: "Medium", hex: "#A87550", minITA: 28 },
+  { id: 6, label: "Medium Dark", hex: "#8D6342", minITA: 20 },
+  { id: 7, label: "Dark", hex: "#6F4E37", minITA: 13 },
+  { id: 8, label: "Dark", hex: "#5A3E2B", minITA: 6 },
+  { id: 9, label: "Very Dark", hex: "#3E2A1C", minITA: -5 },
+  { id: 10, label: "Deep", hex: "#2A1B10", minITA: -Infinity },
+];
+
 function mapITAToMonkScale(ita: number): { id: number; label: string; hex: string } {
-  const scale = [
-    { id: 1, label: "Very Light", hex: "#FDDBB4", minITA: 55 },
-    { id: 2, label: "Light", hex: "#E8B990", minITA: 48 },
-    { id: 3, label: "Light-Medium", hex: "#D4A574", minITA: 41 },
-    { id: 4, label: "Medium Light", hex: "#C08E62", minITA: 35 },
-    { id: 5, label: "Medium", hex: "#A87550", minITA: 28 },
-    { id: 6, label: "Medium Dark", hex: "#8D6342", minITA: 20 },
-    { id: 7, label: "Dark", hex: "#6F4E37", minITA: 13 },
-    { id: 8, label: "Dark", hex: "#5A3E2B", minITA: 6 },
-    { id: 9, label: "Very Dark", hex: "#3E2A1C", minITA: -5 },
-    { id: 10, label: "Deep", hex: "#2A1B10", minITA: -Infinity },
-  ];
+  const scale = MONK_SCALE;
 
   for (const level of scale) {
     if (ita >= level.minITA) return level;

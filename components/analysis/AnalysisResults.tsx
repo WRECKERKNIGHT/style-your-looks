@@ -12,6 +12,7 @@ import { ActionPlan } from "./ActionPlan";
 import { AnimatedCounter } from "@/components/shared/AnimatedCounter";
 import { SCORE_METRICS } from "@/lib/constants";
 import { motion, AnimatePresence } from "framer-motion";
+import { MONK_SCALE } from "@/lib/ml/skin-tone";
 import { ScrollReveal, ScrollRevealItem, ScrollProgress } from "@/components/shared/ScrollReveal";
 import {
   Sparkles,
@@ -39,26 +40,6 @@ function ordinalSuffix(n: number) {
   const s = ["th", "st", "nd", "rd"];
   const v = n % 100;
   return s[(v - 20) % 10] || s[v] || s[0];
-}
-
-function paletteSwatches(skinTone: string, undertone: string): string[] {
-  const base =
-    skinTone.toLowerCase().includes("fair")
-      ? ["#F5D6C6", "#E8BBA6", "#DCA68F"]
-      : skinTone.toLowerCase().includes("light")
-        ? ["#EECBB2", "#DEB093", "#C99775"]
-        : skinTone.toLowerCase().includes("medium")
-          ? ["#D8A27C", "#C38A5F", "#A97146"]
-          : skinTone.toLowerCase().includes("deep")
-            ? ["#8A5A33", "#6E4526", "#543418"]
-            : ["#E0B592", "#CB9370", "#B07754"];
-  if (undertone.toLowerCase().includes("warm")) {
-    return ["#E8B48A", "#D19C6E", "#B57F4E"];
-  }
-  if (undertone.toLowerCase().includes("cool")) {
-    return ["#F0C4B4", "#DB9F92", "#C08178"];
-  }
-  return base;
 }
 
 function CollapsibleSection({
@@ -234,25 +215,47 @@ export function AnalysisResults() {
               <div className="mt-5">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[0.6rem] font-mono tracking-widest text-nexus-400/60 dark:text-cosmic-muted/60">
-                    DETECTED SKIN PALETTE
+                    DETECTED SKIN TONE — MONK SCALE {MONK_SCALE.length}/10
                   </span>
-                  <span className="text-[0.6rem] font-mono text-aurum-500">{faceResult.skinTone}</span>
+                  <span className="text-[0.6rem] font-mono text-aurum-500">
+                    {faceResult.skinToneScaleId ? `LEVEL ${faceResult.skinToneScaleId}` : faceResult.skinTone}
+                  </span>
                 </div>
-                <div className="flex gap-2">
-                  {paletteSwatches(faceResult.skinTone, faceResult.undertone).map((c, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, y: 8 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: 0.1 + i * 0.08, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                      className="flex-1 h-9 rounded-sm border border-white/10"
-                      style={{ background: c, boxShadow: "inset 0 1px 0 rgba(255,255,255,0.15)" }}
-                    />
-                  ))}
+                <div className="flex gap-1.5">
+                  {MONK_SCALE.map((level, i) => {
+                    const detected = level.id === faceResult.skinToneScaleId;
+                    return (
+                      <motion.div
+                        key={level.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: 0.1 + i * 0.05, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                        className="flex-1"
+                        title={`${level.label} (Level ${level.id})`}
+                      >
+                        <div
+                          className="h-9 rounded-sm border transition-all duration-300"
+                          style={{
+                            background: level.hex,
+                            borderColor: detected ? "var(--color-aurum, #C9A227)" : "rgba(255,255,255,0.15)",
+                            boxShadow: detected
+                              ? "0 0 0 2px var(--color-aurum, #C9A227), 0 0 14px rgba(201,162,39,0.45)"
+                              : "inset 0 1px 0 rgba(255,255,255,0.15)",
+                            transform: detected ? "scale(1.08)" : "none",
+                          }}
+                        />
+                        <p
+                          className={`text-[0.55rem] font-mono text-center mt-1 tracking-wider ${detected ? "text-aurum-500 font-bold" : "text-nexus-400/50 dark:text-cosmic-muted/50"}`}
+                        >
+                          {i + 1}
+                        </p>
+                      </motion.div>
+                    );
+                  })}
                 </div>
                 <p className="text-[0.6rem] text-nexus-400/60 dark:text-cosmic-muted/60 font-mono mt-2">
-                  {faceResult.undertone.toUpperCase()} UNDERTONE MATCH
+                  {faceResult.skinTone.toUpperCase()} · {faceResult.undertone.toUpperCase()} UNDERTONE · ITA-MEASURED SCALE
                 </p>
               </div>
             </div>

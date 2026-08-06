@@ -102,6 +102,8 @@ function buildStoreFaceResult(
     skinClarity: scoreResult.skinClarity,
     facialShape: scoreResult.facialShape,
     skinTone: skinTone?.monkScale.label || "Unknown",
+    skinToneValue: skinTone?.monkScale.hex,
+    skinToneScaleId: skinTone?.monkScale.id,
     undertone: skinTone?.undertone || "Neutral",
     ageEstimation: 25,
     genderEstimation: genderProfile === "neutral" ? "Neutral" : genderProfile,

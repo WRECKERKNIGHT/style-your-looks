@@ -53,6 +53,8 @@ export interface FaceAnalysisResult {
   skinClarity: number;
   facialShape: string;
   skinTone: string;
+  skinToneValue?: string;
+  skinToneScaleId?: number;
   undertone: string;
   ageEstimation: number;
   genderEstimation: string;
