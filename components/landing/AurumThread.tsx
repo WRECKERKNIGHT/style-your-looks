@@ -52,10 +52,10 @@ export function AurumThread() {
     const restX = Array.from({ length: N }, (_, i) => {
       const k = i / (N - 1);
       return {
-        from: W * 0.62,
-        to: W * 0.16,
+        from: W * 0.78,
+        to: W * 0.6,
         s: k,
-        wave: Math.sin(k * Math.PI * 1.7) * W * 0.05,
+        wave: Math.sin(k * Math.PI * 1.7) * W * 0.028,
       };
     });
 
@@ -70,7 +70,7 @@ export function AurumThread() {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       for (let i = 0; i < N; i++) {
         const k = i / (N - 1);
-        pts[i].x = W * 0.62 + (W * 0.16 - W * 0.62) * k + restX[i].wave;
+        pts[i].x = W * 0.78 + (W * 0.6 - W * 0.78) * k + restX[i].wave;
         pts[i].y = H * 0.52 + (H + 60 - H * 0.52) * k;
       }
     };
@@ -113,16 +113,16 @@ export function AurumThread() {
       tension = Math.min(1, tension + Math.min(0.5, Math.abs(nowVel) * 0.0016));
       tension *= 0.94;
 
-      const waveAmp = W * (0.05 + tension * 0.12);
-      const baseX = W * 0.62;
+      const waveAmp = W * (0.028 + tension * 0.08);
+      const baseX = W * 0.78;
       const baseY = H * 0.52;
-      const tailX = W * 0.16;
+      const tailX = W * 0.6;
       const tailY = H + 80;
 
       const headTargetX =
         baseX +
-        Math.sin(t * 0.7) * W * 0.15 +
-        (mouseX - W * 0.5) * 0.1 +
+        Math.sin(t * 0.7) * W * 0.06 +
+        (mouseX - W * 0.5) * 0.04 +
         vel * 2.2;
       const headTargetY = baseY + Math.sin(t * 0.4) * 12;
 
@@ -145,7 +145,7 @@ export function AurumThread() {
 
       drawPath(N - 1, "rgba(201,160,102,0.09)", 7);
       drawPath(Math.floor(N * 0.8), "rgba(201,160,102,0.38)", 2.6);
-      drawPath(Math.floor(N * 0.5), "rgba(220,185,135,0.95)", 1.2);
+      drawPath(Math.floor(N * 0.5), "rgba(220,185,135,0.8)", 1.2);
 
       ctx.save();
       ctx.setLineDash([2, 14]);
@@ -158,7 +158,7 @@ export function AurumThread() {
         ctx.quadraticCurveTo(pts[i].x, pts[i].y, xc, yc);
       }
       ctx.lineTo(pts[N - 1].x, pts[N - 1].y);
-      ctx.strokeStyle = "rgba(185,139,86,0.5)";
+      ctx.strokeStyle = "rgba(185,139,86,0.4)";
       ctx.lineWidth = 0.8;
       ctx.stroke();
       ctx.restore();
@@ -219,7 +219,7 @@ export function AurumThread() {
     <canvas
       ref={canvasRef}
       aria-hidden
-      className="pointer-events-none fixed inset-0 z-[3]"
+      className="pointer-events-none fixed inset-0 z-0"
       style={{
         maskImage:
           "linear-gradient(to bottom, transparent 0%, black 16%, black 78%, transparent 100%)",
