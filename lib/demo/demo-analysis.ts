@@ -80,6 +80,7 @@ export function buildDemoFaceResult(landmarks?: number[][]): FaceAnalysisResult 
     skinTone: "Light",
     skinToneValue: "#E8B990",
     skinToneScaleId: 2,
+    skinToneITA: 50,
     undertone: "Neutral",
     ageEstimation: 27,
     genderEstimation: "Neutral",

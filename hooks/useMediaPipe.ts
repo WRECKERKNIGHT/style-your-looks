@@ -110,6 +110,7 @@ function buildStoreFaceResult(
     skinTone: skinTone?.monkScale.label || "Unknown",
     skinToneValue: skinTone?.monkScale.hex,
     skinToneScaleId: skinTone?.monkScale.id,
+    skinToneITA: skinTone?.ita,
     undertone: skinTone?.undertone || "Neutral",
     ageEstimation: age.age,
     ageConfidence: age.confidence,

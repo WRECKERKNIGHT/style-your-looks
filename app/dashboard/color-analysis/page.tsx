@@ -5,6 +5,7 @@ import { ImageUploader } from "@/components/shared/ImageUploader";
 import { useAnalysisStore } from "@/store/analysis-store";
 import { useMediaPipe, AnalysisCancelledError } from "@/hooks/useMediaPipe";
 import { analyzeColorSeason, getSeasonEmoji, getColorHarmonyScore } from "@/lib/ml/color-analysis";
+import { MONK_SCALE } from "@/lib/ml/skin-tone";
 import { ProcessingOverlay } from "@/components/analysis/ProcessingOverlay";
 import { motion } from "framer-motion";
 import { DemoCarousel } from "@/components/demo/DemoCarousel";
@@ -12,6 +13,14 @@ import { DemoBadge } from "@/components/demo/DemoBadge";
 import { DEMO_SKIN_PHOTO, buildDemoColorResult, isDemoPhoto } from "@/lib/demo/demo-analysis";
 import { ScrollParallax, ScrollBlur, SectionScrollProgress } from "@/components/shared/ScrollEffects";
 import { ShareCardModal, type ShareCardData } from "@/components/shared/ShareCardModal";
+
+function derivedITAFromScale(id?: number): number {
+  if (!id) return 35;
+  const idx = MONK_SCALE.findIndex((l) => l.id === id);
+  if (idx === -1) return 35;
+  const upper = idx > 0 ? MONK_SCALE[idx - 1].minITA : 60;
+  return Math.round((MONK_SCALE[idx].minITA + upper) / 2);
+}
 import {
   Palette,
   AlertCircle,
@@ -378,10 +387,11 @@ export default function ColorAnalysisPage() {
 
   useEffect(() => {
     if (faceResult && bodyResult && !colorAnalysis) {
+      const ita = faceResult.skinToneITA ?? derivedITAFromScale(faceResult.skinToneScaleId);
       const analysis = analyzeColorSeason({
         undertone: faceResult.undertone as "Warm" | "Cool" | "Neutral",
-        ita: 35,
-        monkScaleId: 4,
+        ita,
+        monkScaleId: faceResult.skinToneScaleId ?? 4,
       });
       setColorAnalysis(analysis);
     }
