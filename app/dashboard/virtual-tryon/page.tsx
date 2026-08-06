@@ -110,8 +110,8 @@ export default function VirtualTryOnPage() {
       setResult(res);
       setLayer("final");
       addToast("Try-on complete — first run may take a few seconds", "success");
-    } catch {
-      addToast("Try-on failed — check the photo has a visible person", "error");
+    } catch (err) {
+      addToast(err instanceof Error ? err.message : "Try-on failed — check the photo has a visible person", "error");
     } finally {
       setIsProcessing(false);
     }
@@ -150,9 +150,10 @@ export default function VirtualTryOnPage() {
 
   const downloadResult = () => {
     if (!result) return;
+    const src = layer === "original" ? result.original : layer === "warp" ? result.warp : result.final;
     const link = document.createElement("a");
-    link.download = "zervey-tryon.png";
-    link.href = result.final.toDataURL("image/png");
+    link.download = `zervey-tryon-${layer}.png`;
+    link.href = src.toDataURL("image/png");
     link.click();
     addToast("Try-on image saved", "success");
   };
@@ -264,7 +265,7 @@ export default function VirtualTryOnPage() {
               {GARMENT_TYPES.map((t) => (
                 <button
                   key={t.id}
-                  onClick={() => setGarmentType(t.id)}
+                  onClick={() => { setGarmentType(t.id); setResult(null); }}
                   className={`p-4 border text-center transition-all duration-300 ${
                     garmentType === t.id
                       ? "border-[var(--accent-aurum)] bg-[color-mix(in_srgb,var(--accent-aurum)_10%,transparent)]"

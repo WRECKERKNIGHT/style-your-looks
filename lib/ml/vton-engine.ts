@@ -149,6 +149,14 @@ export function fitFromShoulder(shoulderCm: number): { size: string; reason: str
   return { size, reason };
 }
 
+function maskCoverage(mask: HTMLCanvasElement): number {
+  const mctx = mask.getContext("2d")!;
+  const data = mctx.getImageData(0, 0, mask.width, mask.height).data;
+  let on = 0;
+  for (let i = 3; i < data.length; i += 4) if (data[i] > 0) on++;
+  return on / (mask.width * mask.height);
+}
+
 function scaleImage(
   img: HTMLImageElement | HTMLCanvasElement
 ): { canvas: HTMLCanvasElement; scale: number } {
@@ -173,6 +181,10 @@ export async function runVton(req: VtonRequest): Promise<VtonResult> {
 
   const pose = await detectPoseOnly(canvas);
   const seg = await segmentPerson(canvas);
+
+  if (maskCoverage(seg.personMask) < 0.01) {
+    throw new Error("No person detected in this photo — upload a full-body shot.");
+  }
 
   const segCv = document.createElement("canvas");
   segCv.width = w;
@@ -206,7 +218,7 @@ export async function runVton(req: VtonRequest): Promise<VtonResult> {
     const midY = (ls[1] + rs[1]) / 2;
     const shoulderSpan = Math.hypot(rs[0] - ls[0], rs[1] - ls[1]) * oversize;
     const halfSpan = shoulderSpan / 2;
-    const neckY = midY - (midY - (ls[1] + rs[1]) / 2) * 0.25;
+    const neckY = midY - shoulderSpan * 0.12;
     const topL: [number, number] = [midX - halfSpan, neckY];
     const topR: [number, number] = [midX + halfSpan, neckY];
     const hipSpan = Math.hypot(rh[0] - lh[0], rh[1] - lh[1]) * oversize * 0.96;
