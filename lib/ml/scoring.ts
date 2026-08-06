@@ -87,6 +87,8 @@ export interface FaceScoreResult {
   consistencyScore: number;
   analysisConfidence: number;
   photoCount: number;
+  /** Pose-aware symmetry axis tilt (degrees from vertical) for overlays. */
+  symmetryAxis?: { angleDeg: number };
 }
 
 export interface FaceMetricScores {
@@ -754,7 +756,10 @@ export function buildFaceScoreFromMetrics(
     consistencyScore: Math.round(consistencyScore * 10) / 10,
     analysisConfidence: Math.round(analysisConfidence),
     photoCount,
-    symmetryAxis: sourceResult ? getFaceSymmetryAxis(sourceResult) : undefined,
+    symmetryAxis: (() => {
+      const axis = sourceResult ? getFaceSymmetryAxis(sourceResult) : null;
+      return axis ? { angleDeg: axis.angleDeg } : undefined;
+    })(),
   };
 }
 
