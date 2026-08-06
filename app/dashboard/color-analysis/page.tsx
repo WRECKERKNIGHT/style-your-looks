@@ -9,7 +9,7 @@ import { ProcessingOverlay } from "@/components/analysis/ProcessingOverlay";
 import { motion } from "framer-motion";
 import { DemoCarousel } from "@/components/demo/DemoCarousel";
 import { DemoBadge } from "@/components/demo/DemoBadge";
-import { DEMO_SKIN_PHOTO, buildDemoColorResult } from "@/lib/demo/demo-analysis";
+import { DEMO_SKIN_PHOTO, buildDemoColorResult, isDemoPhoto } from "@/lib/demo/demo-analysis";
 import { ScrollParallax, ScrollBlur, SectionScrollProgress } from "@/components/shared/ScrollEffects";
 import { ShareCardModal, type ShareCardData } from "@/components/shared/ShareCardModal";
 import {
@@ -446,7 +446,7 @@ export default function ColorAnalysisPage() {
       footer: "zervey.app · computed on-device",
       fileName: `zervey-palette-${colorAnalysis.subType.toLowerCase().replace(/\s+/g, "-")}.png`,
       shareText: `My ZERVEY seasonal palette: ${colorAnalysis.subType} · ${colorAnalysis.metalPreference} metals · ${colorAnalysis.bestColors.length} best shades`,
-      demo: uploadedImage === DEMO_SKIN_PHOTO,
+      demo: isDemoPhoto(uploadedImage),
     };
   }, [colorAnalysis, uploadedImage]);
 

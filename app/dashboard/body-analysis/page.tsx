@@ -9,7 +9,7 @@ import { motion } from "framer-motion";
 import { Layers, AlertCircle, Shirt, Droplets, Ruler, TrendingUp, Activity, Share2 } from "lucide-react";
 import { DemoCarousel } from "@/components/demo/DemoCarousel";
 import { DemoBadge } from "@/components/demo/DemoBadge";
-import { DEMO_BODY_PHOTO, buildDemoBodyResult } from "@/lib/demo/demo-analysis";
+import { DEMO_BODY_PHOTO, buildDemoBodyResult, isDemoPhoto } from "@/lib/demo/demo-analysis";
 import { detectPoseOnly } from "@/lib/ml/body-analyzer";
 import { ScrollParallax, ScrollBlur, SectionScrollProgress } from "@/components/shared/ScrollEffects";
 import { ShareCardModal, type ShareCardData } from "@/components/shared/ShareCardModal";
@@ -170,7 +170,7 @@ export default function BodyAnalysisPage() {
       footer: "zervey.app · computed on-device",
       fileName: `zervey-body-${bodyResult.bodyType.toLowerCase().replace(/\s+/g, "-")}.png`,
       shareText: `My ZERVEY body analysis: ${bodyResult.bodyType} type · ${bodyResult.undertone} undertone · proportion score ${bodyResult.bodyProportionScore?.toFixed(1)}/10`,
-      demo: fullBodyImage === DEMO_BODY_PHOTO,
+      demo: isDemoPhoto(fullBodyImage),
     };
   }, [bodyResult, fullBodyImage]);
 

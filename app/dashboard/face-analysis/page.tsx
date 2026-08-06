@@ -13,7 +13,7 @@ import { CalibrationModal, type CalibrationProfile } from "@/components/analysis
 import { FaceView3D } from "@/components/analysis/FaceView3D";
 import { DemoCarousel } from "@/components/demo/DemoCarousel";
 import { DemoBadge } from "@/components/demo/DemoBadge";
-import { DEMO_FACE_PHOTO, buildDemoFaceResult, generateDemoLandmarks } from "@/lib/demo/demo-analysis";
+import { DEMO_FACE_PHOTO, buildDemoFaceResult, generateDemoLandmarks, isDemoPhoto } from "@/lib/demo/demo-analysis";
 import { detectFaceLandmarksOnly } from "@/lib/ml/face-analyzer";
 import { useAnalysisStore } from "@/store/analysis-store";
 import { useMediaPipe, AnalysisCancelledError } from "@/hooks/useMediaPipe";
@@ -279,7 +279,7 @@ export default function FaceAnalysisPage() {
       footer: "zervey.app · computed on-device",
       fileName: `zervey-faceiq-${faceResult.overallScore.toFixed(1)}.png`,
       shareText: `My ZERVEY FaceIQ: ${faceResult.overallScore.toFixed(1)}/10 (${faceResult.overallRating}) · ${faceResult.facialShape} face · ${faceResult.styleProfile}`,
-      demo: uploadedImage === DEMO_FACE_PHOTO,
+      demo: isDemoPhoto(uploadedImage),
     };
   }, [faceResult, uploadedImage]);
 
