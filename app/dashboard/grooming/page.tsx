@@ -35,9 +35,11 @@ export default function GroomingPage() {
   const [faceResult, setFaceResult] = useState<any>(null);
   const [groomingScores, setGroomingScores] = useState<GroomingScore[]>([]);
   const [faceShape, setFaceShape] = useState<string | null>(null);
+  const [analysisComplete, setAnalysisComplete] = useState(false);
 
   const analyzePhoto = useCallback(async (imageData: string) => {
     setIsAnalyzing(true);
+    setAnalysisComplete(false);
     try {
       const img = new Image();
       img.onload = async () => {
@@ -60,11 +62,13 @@ export default function GroomingPage() {
           const scores = scoreGroomingStyles(shape);
           setGroomingScores(scores);
         } finally {
+          setAnalysisComplete(true);
           setIsAnalyzing(false);
         }
       };
+      img.onerror = () => { setAnalysisComplete(true); setIsAnalyzing(false); };
       img.src = imageData;
-    } catch { setIsAnalyzing(false); }
+    } catch { setAnalysisComplete(true); setIsAnalyzing(false); }
   }, []);
 
   const handleImageUpload = useCallback((imageData: string) => {
@@ -213,6 +217,18 @@ export default function GroomingPage() {
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {analysisComplete && groomingScores.length === 0 && (
+            <div className="glass-card p-8">
+              <div className="flex items-center gap-3 mb-3">
+                <Sparkles className="w-5 h-5 text-[var(--accent-aurum)]" />
+                <h3 className="type-heading text-[var(--text-primary)] tracking-tight">NO FACE DETECTED</h3>
+              </div>
+              <p className="text-sm text-[var(--text-muted)] font-body leading-relaxed max-w-2xl">
+                We could not detect a face in this photo, so beard and mustache recommendations are unavailable. Upload a clear, front-facing photo with good lighting.
+              </p>
             </div>
           )}
 

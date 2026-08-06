@@ -532,29 +532,54 @@ const MUSTACHE_FACE_SHAPES: Record<string, Record<string, number>> = {
   "none": { Oval: 8, Round: 8, Square: 8, Oblong: 8, Diamond: 8, Triangle: 7, "Inverted Triangle": 7, Heart: 8, Rectangle: 8 },
 };
 
+const FACE_SHAPE_KEYS = new Set([
+  "Oval", "Round", "Square", "Oblong", "Diamond", "Triangle", "Inverted Triangle", "Heart", "Rectangle",
+]);
+
+function normalizeFaceShape(input: string | undefined | null): string | null {
+  if (!input) return null;
+  const trimmed = input.trim();
+  if (FACE_SHAPE_KEYS.has(trimmed)) return trimmed;
+  const aliases: Record<string, string> = {
+    oval: "Oval",
+    round: "Round",
+    square: "Square",
+    oblong: "Oblong",
+    diamond: "Diamond",
+    triangle: "Triangle",
+    "inverted triangle": "Inverted Triangle",
+    "inverted-triangle": "Inverted Triangle",
+    "inverted": "Inverted Triangle",
+    heart: "Heart",
+    rectangle: "Rectangle",
+  };
+  return aliases[trimmed.toLowerCase()] ?? null;
+}
+
 export function scoreGroomingStyles(faceShape: string | undefined): GroomingScore[] {
-  if (!faceShape) return [];
+  const shape = normalizeFaceShape(faceShape);
+  if (!shape) return [];
 
   const scores: GroomingScore[] = [];
 
   for (const [styleId, shapeScores] of Object.entries(BEARD_FACE_SHAPES)) {
-    const score = shapeScores[faceShape] ?? 7;
+    const score = shapeScores[shape] ?? 7;
     scores.push({
       styleId,
       type: "beard",
       score,
-      reason: getBeardReason(styleId, faceShape, score),
+      reason: getBeardReason(styleId, shape, score),
     });
   }
 
   for (const [styleId, shapeScores] of Object.entries(MUSTACHE_FACE_SHAPES)) {
     if (styleId === "none") continue;
-    const score = shapeScores[faceShape] ?? 7;
+    const score = shapeScores[shape] ?? 7;
     scores.push({
       styleId,
       type: "mustache",
       score,
-      reason: getMustacheReason(styleId, faceShape, score),
+      reason: getMustacheReason(styleId, shape, score),
     });
   }
 
