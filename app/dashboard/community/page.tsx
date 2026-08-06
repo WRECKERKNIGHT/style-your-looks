@@ -4,8 +4,9 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Users, Heart, MessageCircle, Share2, UserPlus, ArrowRight, Search, RefreshCw, Wifi, WifiOff, ExternalLink } from "lucide-react";
+import { Users, Heart, MessageCircle, Share2, UserPlus, ArrowRight, Search, RefreshCw, Wifi, WifiOff, ExternalLink, Sparkles } from "lucide-react";
 import { ScrollParallax, ScrollBlur, SectionScrollProgress } from "@/components/shared/ScrollEffects";
+import { getHistory, isDemoEntry } from "@/lib/history";
 
 interface Post {
   id: string;
@@ -88,6 +89,11 @@ export default function CommunityPage() {
   const [live, setLive] = useState(false);
   const [loading, setLoading] = useState(true);
   const [liked, setLiked] = useState<Record<string, boolean>>({});
+  const [realAnalyses, setRealAnalyses] = useState(0);
+
+  useEffect(() => {
+    setRealAnalyses(getHistory().filter((e) => !isDemoEntry(e)).length);
+  }, []);
 
   const loadFeed = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
@@ -144,6 +150,10 @@ export default function CommunityPage() {
         <p className="text-[var(--text-muted)] font-body type-subhead max-w-xl">
           Connect, share, and discover with fellow ZERVEY users.
         </p>
+        <div className="mt-3 inline-flex items-center gap-1.5 type-mono text-[0.55rem] tracking-[0.25em] uppercase px-3 py-1.5 border border-[color-mix(in_srgb,var(--accent-honey)_50%,transparent)] text-[var(--accent-honey)] bg-[color-mix(in_srgb,var(--accent-honey)_8%,transparent)]">
+          <Sparkles className="w-3 h-3" />
+          SAMPLE SHOWCASE &mdash; NOT YOUR STATS
+        </div>
       </motion.div>
       </ScrollParallax>
 
@@ -287,11 +297,20 @@ export default function CommunityPage() {
 
           <div className="glass-card p-4">
             <h3 className="type-label text-[var(--text-primary)] mb-3">YOUR STATS</h3>
+            {realAnalyses === 0 ? (
+              <p className="text-xs text-[var(--text-muted)] leading-relaxed mb-2">
+                No real analyses yet. Feed and member numbers above are sample
+                showcase data, not yours.
+              </p>
+            ) : (
+              <p className="text-xs text-[var(--text-muted)] leading-relaxed mb-2">
+                Based on your {realAnalyses} saved analysis{realAnalyses === 1 ? "" : "es"}.
+              </p>
+            )}
             <div className="space-y-2 text-xs">
-              <div className="flex justify-between text-[var(--text-muted)]"><span>Posts</span><span className="text-[var(--text-primary)]">3</span></div>
-              <div className="flex justify-between text-[var(--text-muted)]"><span>Followers</span><span className="text-[var(--text-primary)]">12</span></div>
-              <div className="flex justify-between text-[var(--text-muted)]"><span>Following</span><span className="text-[var(--text-primary)]">8</span></div>
-              <div className="flex justify-between text-[var(--text-muted)]"><span>Rank</span><span className="text-[var(--accent-aurum)]">SILVER</span></div>
+              <div className="flex justify-between text-[var(--text-muted)]"><span>Analyses</span><span className="text-[var(--text-primary)]">{realAnalyses}</span></div>
+              <div className="flex justify-between text-[var(--text-muted)]"><span>Posts</span><span className="text-[var(--text-primary)]">{realAnalyses > 0 ? realAnalyses : "0"}</span></div>
+              <div className="flex justify-between text-[var(--text-muted)]"><span>Rank</span><span className="text-[var(--accent-aurum)]">{realAnalyses > 0 ? "BRONZE" : "—"}</span></div>
             </div>
           </div>
 
