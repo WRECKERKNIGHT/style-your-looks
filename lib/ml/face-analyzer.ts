@@ -1,5 +1,6 @@
 import { FaceLandmarker, FilesetResolver, type FaceLandmarkerResult } from "@mediapipe/tasks-vision";
 import { prepareCanvas } from "./preprocessing";
+import { calculateSymmetryScore, calculateFaceShape, calculateSymmetryAxis } from "./face-geometry";
 
 const WASM_BASE = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.18/wasm";
 const MODEL_URL =
@@ -43,38 +44,12 @@ export { prepareCanvas };
 
 export function getFaceSymmetry(result: FaceLandmarkerResult): number {
   if (!result.faceLandmarks || result.faceLandmarks.length === 0) return 0;
+  return calculateSymmetryScore(result.faceLandmarks[0]);
+}
 
-  const landmarks = result.faceLandmarks[0];
-
-  const symmetryPairs = [
-    { left: 33, right: 263 },   // eye inner corners
-    { left: 133, right: 362 },  // eye outer corners
-    { left: 159, right: 386 },  // eye top
-    { left: 145, right: 374 },  // eye bottom
-    { left: 61, right: 291 },   // mouth corners
-    { left: 48, right: 278 },   // lips
-    { left: 127, right: 356 },  // cheekbones
-    { left: 234, right: 454 },  // jaw
-    { left: 93, right: 323 },   // forehead
-    { left: 172, right: 397 },  // mid cheek
-  ];
-
-  const noseX = landmarks[1].x;
-
-  let totalSymmetry = 0;
-  let count = 0;
-
-  for (const pair of symmetryPairs) {
-    const leftDist = Math.abs(landmarks[pair.left].x - noseX);
-    const rightDist = Math.abs(landmarks[pair.right].x - noseX);
-    const maxDist = Math.max(leftDist, rightDist);
-    if (maxDist > 0) {
-      totalSymmetry += 1 - Math.abs(leftDist - rightDist) / maxDist;
-      count++;
-    }
-  }
-
-  return Math.min(10, (totalSymmetry / count) * 10);
+export function getFaceSymmetryAxis(result: FaceLandmarkerResult) {
+  if (!result.faceLandmarks || result.faceLandmarks.length === 0) return null;
+  return calculateSymmetryAxis(result.faceLandmarks[0]);
 }
 
 export function getFaceProportions(result: FaceLandmarkerResult): number {
@@ -371,26 +346,7 @@ export function getSkinClarity(
 
 export function getFacialShape(result: FaceLandmarkerResult): string {
   if (!result.faceLandmarks || result.faceLandmarks.length === 0) return "Unknown";
-
-  const lm = result.faceLandmarks[0];
-
-  const faceWidth = Math.abs(lm[234].x - lm[454].x);
-  const jawWidth = Math.abs(lm[127].x - lm[356].x);
-  const cheekboneWidth = Math.abs(lm[123].x - lm[352].x);
-  const faceLength = Math.abs(lm[10].y - lm[152].y);
-  const foreheadWidth = Math.abs(lm[109].x - lm[338].x);
-
-  const jawToForehead = jawWidth / foreheadWidth;
-  const widthToLength = faceWidth / faceLength;
-  const cheekToJaw = cheekboneWidth / jawWidth;
-
-  if (jawToForehead > 0.9 && widthToLength > 0.75) return "Round";
-  if (widthToLength < 0.55 && jawToForehead > 0.85) return "Oblong";
-  if (jawToForehead > 0.95 && cheekToJaw > 1.05) return "Square";
-  if (jawToForehead < 0.75 && widthToLength > 0.65) return "Heart";
-  if (cheekToJaw > 1.15 && jawToForehead < 0.8) return "Diamond";
-  if (jawToForehead < 0.8 && widthToLength > 0.6) return "Triangle";
-  return "Oval";
+  return calculateFaceShape(result.faceLandmarks[0]);
 }
 
 export async function analyzeFace(
