@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
@@ -17,9 +17,13 @@ import {
   Clock,
   ScanFace,
   Dna,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { getHistory, isDemoEntry } from "@/lib/history";
+import { loadProfileAvatar, saveProfileAvatar, clearProfileAvatar, subscribeProfileAvatar, fileToAvatar } from "@/lib/profile-avatar";
+import { useToast } from "@/components/shared/Toast";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -36,9 +40,7 @@ interface SessionUser {
   name?: string;
   createdAt?: string;
   avatarUrl?: string | null;
-}
-
-function rankForXp(xp: number): { level: string; next: number } {
+}function rankForXp(xp: number): { level: string; next: number } {
   const tiers = [
     { level: "BRONZE", min: 0, next: 1000 },
     { level: "SILVER", min: 1000, next: 2500 },
@@ -55,7 +57,10 @@ function rankForXp(xp: number): { level: string; next: number } {
 
 export default function ProfilePage() {
   const router = useRouter();
+  const { addToast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [user, setUser] = useState<SessionUser | null>(null);
+  const [localAvatar, setLocalAvatar] = useState<string | null>(null);
   const [signingOut, setSigningOut] = useState(false);
   const [analysisCount, setAnalysisCount] = useState(0);
   const [bestScore, setBestScore] = useState<number | null>(null);
@@ -81,6 +86,32 @@ export default function ProfilePage() {
       .filter((s): s is number => typeof s === "number");
     if (scores.length) setBestScore(Math.max(...scores));
   }, []);
+
+  useEffect(() => {
+    const sync = () => setLocalAvatar(loadProfileAvatar());
+    sync();
+    return subscribeProfileAvatar(sync);
+  }, []);
+
+  const handleAvatarChange = async (file?: File | null) => {
+    if (!file) return;
+    try {
+      const dataUrl = await fileToAvatar(file);
+      saveProfileAvatar(dataUrl);
+      setLocalAvatar(dataUrl);
+      addToast("Profile photo updated", "success");
+    } catch {
+      addToast("Could not read that image", "error");
+    }
+  };
+
+  const handleAvatarRemove = () => {
+    clearProfileAvatar();
+    setLocalAvatar(null);
+    addToast("Profile photo removed", "info");
+  };
+
+  const avatarSrc = localAvatar ?? user?.avatarUrl ?? null;
 
   const xp = 500 + analysisCount * 120 + (bestScore ? Math.round(bestScore) : 0);
   const rank = rankForXp(xp);
@@ -121,10 +152,10 @@ export default function ProfilePage() {
         <motion.div variants={fadeUp} initial="hidden" animate="show" className="lg:col-span-1 space-y-4">
           <div className="glass-card p-6 text-center">
             <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[var(--accent-nexus)] to-[var(--accent-aurum)] mx-auto mb-4 flex items-center justify-center overflow-hidden border border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)] shadow-aurum">
-              {user?.avatarUrl ? (
+              {avatarSrc ? (
                 <Image
-                  src={user.avatarUrl}
-                  alt={user.name ?? "Profile"}
+                  src={avatarSrc}
+                  alt={user?.name ?? "Profile"}
                   width={80}
                   height={80}
                   referrerPolicy="no-referrer"
@@ -139,7 +170,21 @@ export default function ProfilePage() {
             </h2>
             <p className="text-xs text-[var(--text-muted)] mb-1">{user?.email || ""}</p>
             <p className="text-xs text-[var(--text-muted)] mb-4">Member since {joined}</p>
-            <div className="flex justify-center gap-2">
+            <div className="flex justify-center gap-2 flex-wrap">
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="btn-outline text-xs !py-1.5"
+              >
+                <Pencil className="w-3 h-3" /> {avatarSrc ? "CHANGE PHOTO" : "ADD PHOTO"}
+              </button>
+              {localAvatar && (
+                <button
+                  onClick={handleAvatarRemove}
+                  className="btn-outline text-xs !py-1.5 text-red-400 border-red-400/40 hover:border-red-400"
+                >
+                  <Trash2 className="w-3 h-3" /> REMOVE
+                </button>
+              )}
               <button
                 onClick={handleSignOut}
                 disabled={signingOut}
@@ -148,6 +193,16 @@ export default function ProfilePage() {
                 <LogOut className="w-3 h-3" /> {signingOut ? "SIGNING OUT…" : "SIGN OUT"}
               </button>
             </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                handleAvatarChange(e.target.files?.[0]);
+                e.currentTarget.value = "";
+              }}
+            />
           </div>
 
           <div className="glass-card p-4">

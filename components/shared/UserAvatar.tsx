@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { loadProfileAvatar, subscribeProfileAvatar } from "@/lib/profile-avatar";
 
 interface SessionUser {
   name?: string;
@@ -13,10 +14,18 @@ interface SessionUser {
 
 export function UserAvatar({ compact = false }: { compact?: boolean }) {
   const [user, setUser] = useState<SessionUser | null>(null);
+  const [localAvatar, setLocalAvatar] = useState<string | null>(null);
   const [checked, setChecked] = useState(false);
 
   useEffect(() => {
     let active = true;
+    const syncAvatar = () => {
+      setLocalAvatar(loadProfileAvatar());
+    };
+    syncAvatar();
+    const unsub = subscribeProfileAvatar(() => {
+      if (active) syncAvatar();
+    });
     const supabase = createClient();
     supabase.auth
       .getUser()
@@ -35,10 +44,12 @@ export function UserAvatar({ compact = false }: { compact?: boolean }) {
       .catch(() => setChecked(true));
     return () => {
       active = false;
+      unsub();
     };
   }, []);
 
   const initial = (user?.name?.[0] ?? user?.email?.[0] ?? "Z").toUpperCase();
+  const avatarSrc = localAvatar ?? user?.avatarUrl ?? null;
 
   return (
     <Link
@@ -49,10 +60,10 @@ export function UserAvatar({ compact = false }: { compact?: boolean }) {
       }`}
     >
       <div className="relative w-9 h-9 rounded-full overflow-hidden border border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)] shadow-aurum shrink-0">
-        {user?.avatarUrl ? (
+        {avatarSrc ? (
           <Image
-            src={user.avatarUrl}
-            alt={user.name ?? "Profile"}
+            src={avatarSrc}
+            alt={user?.name ?? "Profile"}
             fill
             sizes="36px"
             referrerPolicy="no-referrer"
