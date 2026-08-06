@@ -15,6 +15,26 @@ interface Pt3 {
   z: number;
 }
 
+function parseColor(color: string): { r: number; g: number; b: number; a: number } {
+  if (color.startsWith("#")) {
+    const h = color.slice(1);
+    return {
+      r: parseInt(h.slice(0, 2), 16),
+      g: parseInt(h.slice(2, 4), 16),
+      b: parseInt(h.slice(4, 6), 16),
+      a: 1,
+    };
+  }
+  const m = color.match(/rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?\)/);
+  if (m) {
+    return { r: +m[1], g: +m[2], b: +m[3], a: m[4] !== undefined ? +m[4] : 1 };
+  }
+  return { r: 200, g: 150, b: 62, a: 1 };
+}
+
+const rgba = (c: { r: number; g: number; b: number; a: number }, alpha: number) =>
+  `rgba(${c.r},${c.g},${c.b},${Math.max(0, Math.min(1, alpha))})`;
+
 const REGION_INDICES = [
   10, 338, 297, 332, 284, 251, 389, 356, 454, 323, 361, 288, 397, 365, 379, 378, 400, 377, 152,
   148, 176, 149, 150, 136, 172, 58, 132, 93, 234, 127, 162, 21, 54, 103, 67, 109,
@@ -106,9 +126,28 @@ export function FaceView3D({
     const cy = raw.reduce((a, p) => a + p.y, 0) / raw.length;
     const cz = raw.reduce((a, p) => a + p.z, 0) / raw.length;
 
-    const pts = raw.map((p) => ({ x: p.x - cx, y: p.y - cy, z: (p.z - cz) * 2.6 }));
+    let zMin = Infinity;
+    let zMax = -Infinity;
+    let xMin = Infinity;
+    let xMax = -Infinity;
+    const centered = raw.map((p) => {
+      const x = p.x - cx;
+      const y = p.y - cy;
+      const z = p.z - cz;
+      if (z < zMin) zMin = z;
+      if (z > zMax) zMax = z;
+      if (x < xMin) xMin = x;
+      if (x > xMax) xMax = x;
+      return { x, y, z };
+    });
 
-    const focal = width * 2.6;
+    const faceWidth = Math.max(0.001, xMax - xMin);
+    const depthSpan = Math.max(0.001, zMax - zMin);
+    const zScale = (faceWidth * 0.45) / depthSpan;
+
+    const pts: Pt3[] = centered.map((p) => ({ x: p.x, y: p.y, z: p.z * zScale }));
+
+    const persp = 1.2;
 
     const project = (p: Pt3): [number, number, number] => {
       const cosY = Math.cos(yaw);
@@ -121,8 +160,8 @@ export function FaceView3D({
       const y = p.y * cosX - z * sinX;
       z = p.y * sinX + z * cosX;
 
-      const scale = focal / (focal + z * focal * 0.6);
-      return [x * scale, y * scale, scale];
+      const s = 1 / (1 + z * persp);
+      return [x * s, y * s, s];
     };
 
     const render = () => {
@@ -136,33 +175,29 @@ export function FaceView3D({
       ctx.translate(ox, oy);
 
       for (const layer of EDGES) {
-        ctx.beginPath();
-        let started = false;
+        const col = parseColor(layer.color);
         for (const [a, b] of layer.pairs) {
           const pa = pts[a];
           const pb = pts[b];
           if (!pa || !pb) continue;
-          const [ax, ay] = project(pa);
-          const [bx, by] = project(pb);
-          const sx = ax * half;
-          const sy = ay * half;
-          const ex = bx * half;
-          const ey = by * half;
-          if (!started) {
-            ctx.moveTo(sx, sy);
-            started = true;
-          }
-          ctx.lineTo(ex, ey);
+          const [ax, ay, as] = project(pa);
+          const [bx, by, bs] = project(pb);
+          const n = Math.max(0, Math.min(1, (Math.min(as, bs) - 0.8) / 0.6));
+          ctx.strokeStyle = rgba(col, col.a * (0.3 + 0.7 * n));
+          ctx.lineWidth = layer.width;
+          ctx.beginPath();
+          ctx.moveTo(ax * half, ay * half);
+          ctx.lineTo(bx * half, by * half);
+          ctx.stroke();
         }
-        ctx.strokeStyle = layer.color;
-        ctx.lineWidth = layer.width;
-        ctx.stroke();
       }
 
       ctx.fillStyle = "rgba(242,217,168,0.9)";
       for (const p of pts) {
         const [sx, sy, s] = project(p);
-        const r = Math.max(0.8, 1.4 * s);
+        const n = Math.max(0, Math.min(1, (s - 0.8) / 0.6));
+        const r = Math.max(0.9, 0.9 + 1.1 * n);
+        ctx.fillStyle = rgba({ r: 242, g: 217, b: 168, a: 1 }, 0.45 + 0.55 * n);
         ctx.beginPath();
         ctx.arc(sx * half, sy * half, r, 0, Math.PI * 2);
         ctx.fill();
