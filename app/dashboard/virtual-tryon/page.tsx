@@ -28,7 +28,8 @@ const LAYER_TABS: { id: VtonLayer; label: string }[] = [
 ];
 
 export default function VirtualTryOnPage() {
-  const { uploadedImage, setUploadedImage } = useAnalysisStore();
+  const { uploadedImage, fullBodyImage, setUploadedImage } = useAnalysisStore();
+  const activePhoto = fullBodyImage ?? uploadedImage;
   const { addToast } = useToast();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -55,12 +56,12 @@ export default function VirtualTryOnPage() {
   );
 
   useEffect(() => {
-    if (uploadedImage) {
+    if (activePhoto) {
       const img = new Image();
       img.onload = () => { imgRef.current = img; };
-      img.src = uploadedImage;
+      img.src = activePhoto;
     }
-  }, [uploadedImage]);
+  }, [activePhoto]);
 
   const applyGarment = useCallback((canvas: HTMLCanvasElement, meta: { name: string; credit: string }) => {
     setGarmentCanvas(canvas);
@@ -176,7 +177,7 @@ export default function VirtualTryOnPage() {
       </motion.div>
       </ScrollParallax>
 
-      {!uploadedImage ? (
+      {!activePhoto ? (
         <div className="glass-card p-8">
           <ImageUploader onImageUpload={handleImageUpload} label="Upload a full-body photo for try-on" accept="any" />
         </div>
@@ -299,9 +300,9 @@ export default function VirtualTryOnPage() {
             </div>
 
             <div className="mt-8">
-              <h4 className="type-label text-[var(--text-muted)] mb-4">CURATED REAL PRODUCTS — PUBLIC LINKS</h4>
+              <h4 className="type-label text-[var(--text-muted)] mb-4">CURATED PRODUCTS FOR {garmentType.toUpperCase()}</h4>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                {PRODUCT_CATALOG.map((item) => {
+                {PRODUCT_CATALOG.filter((p) => p.category === garmentType).map((item) => {
                   const isSelected = garmentMeta?.name === item.name;
                   return (
                     <button
@@ -343,7 +344,7 @@ export default function VirtualTryOnPage() {
                 {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Shirt className="w-4 h-4" />}
                 RUN TRY-ON
               </button>
-              <button onClick={() => { useAnalysisStore.getState().setUploadedImage(null); setResult(null); setGarmentCanvas(null); }}
+              <button onClick={() => { const s = useAnalysisStore.getState(); s.setUploadedImage(null); s.setFullBodyImage(null); setResult(null); setGarmentCanvas(null); }}
                 className="btn-outline">
                 NEW PHOTO
               </button>

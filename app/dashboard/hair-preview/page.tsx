@@ -63,7 +63,8 @@ const fadeUp = {
 };
 
 export default function HairPreviewPage() {
-  const { uploadedImage, setUploadedImage, faceResult } = useAnalysisStore();
+  const { uploadedImage, fullBodyImage, setUploadedImage, faceResult } = useAnalysisStore();
+  const currentPhoto = fullBodyImage ?? uploadedImage;
   const { addToast } = useToast();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -80,8 +81,8 @@ export default function HairPreviewPage() {
   }, [setUploadedImage]);
 
   useEffect(() => {
-    if (uploadedImage) { const img = new Image(); img.onload = () => { imgRef.current = img; }; img.src = uploadedImage; }
-  }, [uploadedImage]);
+    if (currentPhoto) { const img = new Image(); img.onload = () => { imgRef.current = img; }; img.src = currentPhoto; }
+  }, [currentPhoto]);
 
   const renderCanvas = useCallback(() => {
     const canvas = canvasRef.current;
@@ -137,7 +138,7 @@ export default function HairPreviewPage() {
       </motion.div>
       </ScrollParallax>
 
-      {!uploadedImage ? (
+      {!currentPhoto ? (
         <div className="glass-card p-8">
           <ImageUploader onImageUpload={handleImageUpload} label="Upload a photo for hair color preview" accept="any" />
         </div>

@@ -26,7 +26,7 @@ const securityHeaders = [
       "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com data:",
-      "img-src 'self' data: blob: https://*.supabase.co https://**.supabase.co",
+      "img-src 'self' data: blob: https: http://localhost:*",
       "media-src 'self' blob: data:",
       "connect-src 'self' https://*.supabase.co https://**.supabase.co https://cdn.jsdelivr.net https://storage.googleapis.com",
       "worker-src 'self' blob:",
@@ -48,7 +48,7 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "**.supabase.co",
+        hostname: "**",
       },
     ],
     formats: ["image/avif", "image/webp"],

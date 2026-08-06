@@ -17,7 +17,8 @@ const fadeUp = {
 };
 
 export default function AccessoriesPage() {
-  const { uploadedImage, setUploadedImage, faceResult } = useAnalysisStore();
+  const { uploadedImage, fullBodyImage, setUploadedImage, faceResult } = useAnalysisStore();
+  const currentPhoto = fullBodyImage ?? uploadedImage;
   const { addToast } = useToast();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -42,12 +43,12 @@ export default function AccessoriesPage() {
   }, [setUploadedImage]);
 
   useEffect(() => {
-    if (uploadedImage) {
+    if (currentPhoto) {
       const img = new Image();
       img.onload = () => { imgRef.current = img; };
-      img.src = uploadedImage;
+      img.src = currentPhoto;
     }
-  }, [uploadedImage]);
+  }, [currentPhoto]);
 
   const selectProduct = async (item: ProductItem) => {
     setIsLoading(true);
@@ -166,12 +167,12 @@ export default function AccessoriesPage() {
           </h1>
         </div>
         <p className="text-[var(--text-muted)] font-body type-subhead max-w-xl">
-          Real product photos loaded from public links, anchored to your face landmarks.
+          Bundled studio frames anchored to your detected face landmarks — or load any product link.
         </p>
       </motion.div>
       </ScrollParallax>
 
-      {!uploadedImage ? (
+      {!currentPhoto ? (
         <div className="glass-card p-8">
           <ImageUploader onImageUpload={handleImageUpload} label="Upload a photo for glasses try-on" accept="face" />
         </div>
@@ -211,9 +212,9 @@ export default function AccessoriesPage() {
           </div>
 
           <div className="glass-card p-8">
-            <h3 className="type-heading text-[var(--text-primary)] tracking-tight mb-2">SELECT FRAMES — REAL PRODUCTS</h3>
+            <h3 className="type-heading text-[var(--text-primary)] tracking-tight mb-2">SELECT FRAMES</h3>
             <p className="text-sm text-[var(--text-muted)] font-body mb-6">
-              Images are pulled live from public product links; studio backgrounds are removed before rendering.
+              Bundled studio renders need no network — or load any public product link; studio backgrounds are removed automatically.
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {GLASSES_PRODUCTS.map((item) => (
