@@ -171,13 +171,33 @@ export function LaserScanOverlay({
       return;
     }
 
+    const wrap = canvas.parentElement;
+    let visible = true;
     let raf = 0;
     const tick = (time: number) => {
+      if (!visible) return;
       draw(time);
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+
+    const observer =
+      wrap && typeof IntersectionObserver !== "undefined"
+        ? new IntersectionObserver(
+            ([entry]) => {
+              visible = entry.isIntersecting;
+              if (visible) raf = requestAnimationFrame(tick);
+              else cancelAnimationFrame(raf);
+            },
+            { threshold: 0.05 }
+          )
+        : null;
+    observer?.observe(wrap);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      observer?.disconnect();
+    };
   }, [box, width, height, running]);
 
   return (
