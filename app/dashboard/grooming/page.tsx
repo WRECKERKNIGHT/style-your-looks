@@ -18,12 +18,15 @@ const fadeUp = {
 export default function GroomingPage() {
   const {
     uploadedImage,
+    fullBodyImage,
     setUploadedImage,
+    setFullBodyImage,
     selectedBeardStyle,
     setSelectedBeardStyle,
     selectedMustacheStyle,
     setSelectedMustacheStyle,
   } = useAnalysisStore();
+  const currentPhoto = fullBodyImage ?? uploadedImage;
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [hairColor, setHairColor] = useState("#3C2A21");
@@ -31,33 +34,48 @@ export default function GroomingPage() {
   const [faceResult, setFaceResult] = useState<any>(null);
   const [groomingScores, setGroomingScores] = useState<GroomingScore[]>([]);
 
-  const handleImageUpload = useCallback(async (imageData: string) => {
-    setUploadedImage(imageData);
+  const analyzePhoto = useCallback(async (imageData: string) => {
     setIsAnalyzing(true);
     try {
       const img = new Image();
       img.onload = async () => {
-        const landmarker = await initializeFaceLandmarker();
-        const result = landmarker.detect(img);
-        setFaceResult(result);
-        const canvas = document.createElement("canvas");
-        canvas.width = img.naturalWidth;
-        canvas.height = img.naturalHeight;
-        const ctx = canvas.getContext("2d")!;
-        ctx.drawImage(img, 0, 0);
-        const color = detectHairColor(canvas, result);
-        setHairColor(color);
-        const faceShape = useAnalysisStore.getState().faceResult?.facialShape;
-        const scores = scoreGroomingStyles(faceShape);
-        setGroomingScores(scores);
-        setIsAnalyzing(false);
+        try {
+          const landmarker = await initializeFaceLandmarker();
+          const result = landmarker.detect(img);
+          setFaceResult(result);
+          const canvas = document.createElement("canvas");
+          canvas.width = img.naturalWidth;
+          canvas.height = img.naturalHeight;
+          const ctx = canvas.getContext("2d")!;
+          ctx.drawImage(img, 0, 0);
+          const color = detectHairColor(canvas, result);
+          setHairColor(color);
+          const faceShape = useAnalysisStore.getState().faceResult?.facialShape;
+          const scores = scoreGroomingStyles(faceShape);
+          setGroomingScores(scores);
+        } finally {
+          setIsAnalyzing(false);
+        }
       };
       img.src = imageData;
     } catch { setIsAnalyzing(false); }
-  }, [setUploadedImage]);
+  }, []);
+
+  const handleImageUpload = useCallback((imageData: string) => {
+    setUploadedImage(imageData);
+    setFaceResult(null);
+    analyzePhoto(imageData);
+  }, [setUploadedImage, analyzePhoto]);
 
   useEffect(() => {
-    if (!faceResult || !uploadedImage || !canvasRef.current) return;
+    if (currentPhoto && !faceResult && !isAnalyzing) {
+      analyzePhoto(currentPhoto);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPhoto, faceResult]);
+
+  useEffect(() => {
+    if (!faceResult || !currentPhoto || !canvasRef.current) return;
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
@@ -73,8 +91,8 @@ export default function GroomingPage() {
         drawFacialHair(ctx, faceResult, selectedMustacheStyle, "mustache", hairColor, 0.8, canvas.width, canvas.height);
       }
     };
-    img.src = uploadedImage;
-  }, [faceResult, uploadedImage, selectedBeardStyle, selectedMustacheStyle, hairColor]);
+    img.src = currentPhoto;
+  }, [faceResult, currentPhoto, selectedBeardStyle, selectedMustacheStyle, hairColor]);
 
   return (
     <div className="space-y-8">
@@ -94,7 +112,7 @@ export default function GroomingPage() {
       </motion.div>
       </ScrollParallax>
 
-      {!uploadedImage ? (
+      {!currentPhoto ? (
         <div className="glass-card p-8">
           <ImageUploader onImageUpload={handleImageUpload} label="Upload a face photo for grooming preview" accept="face" />
         </div>
@@ -234,7 +252,7 @@ export default function GroomingPage() {
           <GroomingGuide selectedBeardStyle={selectedBeardStyle} />
 
           <button
-            onClick={() => { useAnalysisStore.getState().setUploadedImage(null); setFaceResult(null); }}
+            onClick={() => { useAnalysisStore.getState().setUploadedImage(null); useAnalysisStore.getState().setFullBodyImage(null); setFaceResult(null); }}
             className="btn-outline w-full justify-center"
           >
             Upload New Photo

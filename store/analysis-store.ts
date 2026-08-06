@@ -158,6 +158,8 @@ interface AnalysisState {
   setColorAnalysis: (analysis: ColorAnalysisResult | null) => void;
   setUploadedImage: (image: string | null) => void;
   setFullBodyImage: (image: string | null) => void;
+  /** Best available photo for face-based tools: the full-body shot falls back to the face upload. */
+  readonly currentPhoto: string | null;
   setIsAnalyzing: (val: boolean) => void;
   setAnalysisProgress: (val: number) => void;
   setProcessingPreview: (preview: { image: string; landmarks: number[][] } | null) => void;
@@ -184,6 +186,9 @@ export const useAnalysisStore = create<AnalysisState>((set, get) => ({
   selectedBeardStyle: "clean-shaven",
   selectedMustacheStyle: "none",
   lastSavedEntry: null,
+  get currentPhoto() {
+    return get().fullBodyImage ?? get().uploadedImage;
+  },
 
   setFaceResult: (result) => set({ faceResult: result }),
   setBodyResult: (result) => set({ bodyResult: result }),
