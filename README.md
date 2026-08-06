@@ -19,7 +19,7 @@ MediaPipe. Photos never leave the browser.
 
 | Area | What it does |
 | --- | --- |
-| **FaceIQ** | 478-landmark mesh, golden-ratio scoring, face-shape detection, symmetry split, 3D face view, head-pose + axis readout, holographic laser scan VFX |
+| **FaceIQ** | 478-landmark mesh, golden-ratio scoring, face-shape detection (temples/cheekbones/jaw anchors), pose-aware symmetry engine, symmetry split, 3D face view, holographic laser-scan VFX, head-pose + axis readout |
 | **Body Analysis** | Body typing (mesomorph/ectomorph/endomorph), shoulder–waist–hip ratios, fit recommendations |
 | **Color Analysis** | Skin-tone scale, undertone, seasonal palette (color season detection) |
 | **Style DNA** | Trend lines from your saved analysis history |
@@ -66,10 +66,16 @@ browser ──► MediaPipe (face/body landmarks, segmentation)
 Key modules:
 
 - `lib/ml/*` — on-device analysis engines (face, body, color, try-on, quality gates)
+- `lib/ml/face-geometry.ts` — pose-aware symmetry axis (pupil midpoint → chin tip),
+  mirror-based symmetry scoring, structural landmark chains, face-shape classification
 - `lib/three/*` — parametric 3D geometry (avatar, garments, hair, glasses, studio)
 - `lib/demo/demo-analysis.ts` — shared demo fixtures + demo-media constants
 - `lib/history.ts` — local history with demo-entry filtering
 - `store/analysis-store.ts` — Zustand analysis state + guarded persistence
+
+Results surfaces use a high-DPI canvas holographic laser scan (`LaserScanOverlay`)
+that sweeps the face bounding box; dashboard result panels intentionally skip
+scroll-driven blur filters so analysed photos always render crisp.
 
 ## Getting started
 
