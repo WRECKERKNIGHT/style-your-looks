@@ -5,6 +5,7 @@ import { analyzeFace } from "@/lib/ml/face-analyzer";
 import { preprocessImage, quickQualityGate, prepareCanvas } from "@/lib/ml/preprocessing";
 import { analyzeBody, extractBodyMeasurements, classifyBodyType } from "@/lib/ml/body-analyzer";
 import { analyzeSkinTone, analyzeSkinToneFromImage } from "@/lib/ml/skin-tone";
+import { estimateAgeFromFace } from "@/lib/ml/age-estimator";
 import {
   calculateFaceScore,
   computeFaceMetrics,
@@ -91,7 +92,12 @@ function buildStoreFaceResult(
   landmarks: number[][],
   skinTone: ReturnType<typeof analyzeSkinTone>,
   quality: PhotoQualityReport | null,
-  genderProfile: AnalysisProfile = "neutral"
+  genderProfile: AnalysisProfile = "neutral",
+  age: ReturnType<typeof estimateAgeFromFace> = {
+    age: 25,
+    confidence: 0.15,
+    basis: "No landmarks — default estimate",
+  }
 ) {
   return {
     overallScore: scoreResult.overallScore,
@@ -105,7 +111,9 @@ function buildStoreFaceResult(
     skinToneValue: skinTone?.monkScale.hex,
     skinToneScaleId: skinTone?.monkScale.id,
     undertone: skinTone?.undertone || "Neutral",
-    ageEstimation: 25,
+    ageEstimation: age.age,
+    ageConfidence: age.confidence,
+    ageBasis: age.basis,
     genderEstimation: genderProfile === "neutral" ? "Neutral" : genderProfile,
     genderProfile,
     emotionDetected: scoreResult.blendshapes.emotion,
@@ -239,7 +247,8 @@ export function useMediaPipe() {
             faceResult.faceLandmarks?.[0]?.map((l) => [l.x, l.y, l.z]) || [],
             skinTone,
             quality,
-            genderProfile
+            genderProfile,
+            estimateAgeFromFace(canvas, faceResult, skinClarityScore)
           )
         );
 
@@ -271,6 +280,7 @@ export function useMediaPipe() {
         const samples: FaceScoreSample[] = [];
         const rejected: { index: number; issues: string[] }[] = [];
         let bestResult: Awaited<ReturnType<typeof analyzeFace>> | null = null;
+        let bestCanvas: HTMLCanvasElement | null = null;
         let bestQuality = -1;
         let bestQualityReport: PhotoQualityReport | null = null;
         let bestSkinTone: ReturnType<typeof analyzeSkinTone> = null;
@@ -314,6 +324,7 @@ export function useMediaPipe() {
           if (quality.score > bestQuality) {
             bestQuality = quality.score;
             bestResult = faceResult;
+            bestCanvas = canvas;
             bestQualityReport = quality;
             bestSkinTone = analyzeSkinTone(canvas, faceResult);
           }
@@ -338,7 +349,14 @@ export function useMediaPipe() {
             landmarks,
             bestSkinTone,
             bestQualityReport,
-            genderProfile
+            genderProfile,
+            bestCanvas && bestResult
+              ? estimateAgeFromFace(
+                  bestCanvas,
+                  bestResult,
+                  samples[0]?.skinClarity ?? 7
+                )
+              : undefined
           )
         );
 

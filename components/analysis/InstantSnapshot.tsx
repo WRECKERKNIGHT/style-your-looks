@@ -49,6 +49,12 @@ export function InstantSnapshot() {
               <span className="inline-flex items-center px-2.5 py-1 border border-[var(--border-primary)] bg-[var(--bg-base)]/40 text-xs font-mono tracking-wider text-[var(--text-muted)]">
                 {faceResult.styleProfile.toUpperCase()}
               </span>
+              <span
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 border border-[var(--border-primary)] bg-[var(--bg-base)]/40 text-xs font-mono tracking-wider text-[var(--text-muted)]"
+                title={`Derived from ${faceResult.ageBasis ?? "skin texture signals"}. Confidence ${Math.round((faceResult.ageConfidence ?? 0) * 100)}%.`}
+              >
+                ~{faceResult.ageEstimation} YRS
+              </span>
             </div>
           </div>
         </div>

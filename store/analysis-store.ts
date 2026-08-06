@@ -57,6 +57,8 @@ export interface FaceAnalysisResult {
   skinToneScaleId?: number;
   undertone: string;
   ageEstimation: number;
+  ageConfidence?: number;
+  ageBasis?: string;
   genderEstimation: string;
   genderProfile: AnalysisProfile;
   emotionDetected: string;
