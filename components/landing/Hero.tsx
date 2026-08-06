@@ -7,6 +7,7 @@ import { FeaturesSection } from "./FeaturesSection";
 import { HowItWorksSection } from "./HowItWorksSection";
 import { HorizontalPipeline } from "./HorizontalPipeline";
 import { StorySection } from "./StorySection";
+import { StatementMarquee } from "./StatementMarquee";
 import { MannequinSection } from "./MannequinSection";
 import { CommunitySection } from "./CommunitySection";
 import { TestimonialsSection } from "./TestimonialsSection";
@@ -24,17 +25,30 @@ const ScrollParticles = dynamic(
   { ssr: false }
 );
 
+const AurumThread = dynamic(
+  () => import("./AurumThread").then((m) => m.AurumThread),
+  { ssr: false }
+);
+
+const TailorsTape = dynamic(
+  () => import("./TailorsTape").then((m) => m.TailorsTape),
+  { ssr: false }
+);
+
 export function Hero() {
   return (
     <div className="min-h-screen bg-cosmic-base">
       <ParticleField />
       <ScrollParticles />
+      <AurumThread />
+      <TailorsTape />
       <Nav />
       <HeroSection />
       <FeaturesSection />
       <HowItWorksSection />
       <HorizontalPipeline />
       <StorySection />
+      <StatementMarquee />
       <MannequinSection />
       <CommunitySection />
       <TestimonialsSection />

@@ -7,6 +7,8 @@ import {
   useTransform,
   useSpring,
   useMotionValue,
+  useMotionTemplate,
+  type MotionValue,
 } from "framer-motion";
 import Link from "next/link";
 import { StatsCounter } from "./StatsCounter";
@@ -58,10 +60,16 @@ export function HeroSection() {
   });
 
   const mannequinY = useTransform(smoothProgress, [0, 1], [0, -120]);
+  const mannequinRotate = useTransform(smoothProgress, [0, 1], [0, -14]);
+  const mannequinScale = useTransform(smoothProgress, [0, 1], [1, 0.9]);
   const typeY = useTransform(smoothProgress, [0, 1], [0, 140]);
   const typeScale = useTransform(smoothProgress, [0, 1], [1, 1.08]);
   const typeOpacity = useTransform(smoothProgress, [0, 0.7], [1, 0.15]);
   const fadeOut = useTransform(smoothProgress, [0.6, 1], [1, 0]);
+  const exitSkew = useTransform(smoothProgress, [0, 1], [0, -5]);
+  const exitBlur = useTransform(smoothProgress, [0.25, 1], [0, 10]);
+  const exitBlurFilter = useMotionTemplate`blur(${exitBlur}px)`;
+  const sideTextY = useTransform(smoothProgress, [0, 1], [0, -180]);
 
   const mx = useMotionValue(0.5);
   const my = useMotionValue(0.5);
@@ -98,6 +106,16 @@ export function HeroSection() {
         }}
       />
 
+      <motion.div
+        aria-hidden
+        style={{ y: sideTextY, willChange: "transform" }}
+        className="pointer-events-none absolute left-2 top-1/2 z-[1] hidden xl:block"
+      >
+        <span className="block rotate-180 font-display text-[10rem] font-black leading-none tracking-tight text-[color-mix(in_srgb,var(--text-primary)_6%,transparent)] [writing-mode:vertical-rl]">
+          MEASURED.
+        </span>
+      </motion.div>
+
       <motion.div style={{ opacity: fadeOut }} className="relative z-10 h-full flex flex-col justify-center px-8 md:px-16 lg:px-24 pt-20">
         <motion.div
           className="max-w-[1400px] mx-auto w-full"
@@ -112,7 +130,17 @@ export function HeroSection() {
                 <span className="section-number">AI Style Intelligence</span>
               </motion.div>
 
-              <motion.div variants={itemVariants} style={{ y: typeY, scale: typeScale, opacity: typeOpacity, willChange: "transform" }}>
+              <motion.div
+                variants={itemVariants}
+                style={{
+                  y: typeY,
+                  scale: typeScale,
+                  opacity: typeOpacity,
+                  skewY: exitSkew,
+                  filter: exitBlurFilter,
+                  willChange: "transform",
+                }}
+              >
                 <h1 className="type-massive text-[var(--text-primary)] leading-[0.85] mb-6">
                   {headlineWords.map((word, i) => (
                     <span key={i} className="inline-block overflow-hidden align-bottom">
@@ -216,7 +244,12 @@ export function HeroSection() {
 
                 {/* the mannequin */}
                 <motion.div
-                  style={{ y: mannequinY, willChange: "transform" }}
+                  style={{
+                    y: mannequinY,
+                    rotate: mannequinRotate,
+                    scale: mannequinScale,
+                    willChange: "transform",
+                  }}
                   className="absolute inset-0 z-10"
                 >
                   <Mannequin3D className="w-full h-full" />
@@ -224,27 +257,7 @@ export function HeroSection() {
 
                 {/* floating measurement tags */}
                 {floatingTags.map((tag) => (
-                  <motion.div
-                    key={tag.label}
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 1.2 + tag.delay, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                    className="absolute z-20"
-                    style={{ left: tag.x, top: tag.y }}
-                  >
-                    <motion.div
-                      animate={{ y: [0, -8, 0] }}
-                      transition={{ duration: 4 + tag.delay, repeat: Infinity, ease: "easeInOut" }}
-                      className="glass-card rounded-md px-3.5 py-2 border-glow"
-                    >
-                      <div className="type-mono text-[0.55rem] font-bold tracking-widest text-[var(--accent-mocha)]">
-                        {tag.label}
-                      </div>
-                      <div className="type-mono text-[0.5rem] text-[var(--text-muted)]">
-                        {tag.sub}
-                      </div>
-                    </motion.div>
-                  </motion.div>
+                  <FloatingTag key={tag.label} tag={tag} progress={smoothProgress} />
                 ))}
 
                 <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-[70%] h-5 bg-[var(--overlay)] blur-[16px] rounded-full" />
@@ -298,5 +311,53 @@ export function HeroSection() {
         as="p"
       />
     </section>
+  );
+}
+
+type FloatingTagProps = {
+  tag: (typeof floatingTags)[number];
+  progress: MotionValue<number>;
+};
+
+function FloatingTag({ tag, progress }: FloatingTagProps) {
+  const exitY = useTransform(
+    progress,
+    [0.35 + tag.delay * 0.12, 1],
+    [0, -(70 + tag.delay * 30)]
+  );
+  const exitOpacity = useTransform(
+    progress,
+    [0.4 + tag.delay * 0.1, 1],
+    [1, 0]
+  );
+  const exitBlur = useTransform(progress, [0.5, 1], [0, 6]);
+  const exitBlurFilter = useMotionTemplate`blur(${exitBlur}px)`;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.8 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ delay: 1.2 + tag.delay, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+      className="absolute z-20"
+      style={{ left: tag.x, top: tag.y }}
+    >
+      <motion.div
+        style={{ y: exitY, opacity: exitOpacity, filter: exitBlurFilter, willChange: "transform" }}
+        className="absolute"
+      >
+        <motion.div
+          animate={{ y: [0, -8, 0] }}
+          transition={{ duration: 4 + tag.delay, repeat: Infinity, ease: "easeInOut" }}
+          className="glass-card rounded-md px-3.5 py-2 border-glow"
+        >
+          <div className="type-mono text-[0.55rem] font-bold tracking-widest text-[var(--accent-mocha)]">
+            {tag.label}
+          </div>
+          <div className="type-mono text-[0.5rem] text-[var(--text-muted)]">
+            {tag.sub}
+          </div>
+        </motion.div>
+      </motion.div>
+    </motion.div>
   );
 }
