@@ -122,13 +122,15 @@ export default function HistoryPage() {
       ? new Date(b.date).getTime() - new Date(a.date).getTime()
       : new Date(a.date).getTime() - new Date(b.date).getTime());
 
+  // Progress aggregates real analyses only — demo previews never count.
+  const realRows = rows.filter((h) => !h.demo);
+  const types = Array.from(new Set(realRows.map((h) => h.type)));
+
   const clearHistoryAll = () => {
     clearHistory();
     setRows([]);
     addToast("History cleared", "success");
   };
-
-  const types = Array.from(new Set(rows.map((h) => h.type)));
 
   return (
     <div className="space-y-8">
@@ -224,12 +226,12 @@ export default function HistoryPage() {
         </motion.div>
       )}
 
-      {rows.length > 0 && (
+      {realRows.length > 0 && (
         <motion.div variants={fadeUp} initial="hidden" animate="show" className="glass-card p-6">
           <h3 className="type-label text-[var(--text-primary)] mb-4">PROGRESS</h3>
           <div className="space-y-3">
             {Object.entries(
-              rows.reduce((acc, h) => {
+              realRows.reduce((acc, h) => {
                 if (h.score !== undefined) {
                   acc[h.type] = acc[h.type] || [];
                   acc[h.type].push(h.score);
