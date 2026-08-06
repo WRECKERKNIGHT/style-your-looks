@@ -310,7 +310,12 @@ export default function DashboardHome() {
 
       {/* Quick Stats */}
       <ScrollParallax speed={0.2} distance={30}>
-        <motion.div variants={container} initial="hidden" animate="show" className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <motion.div
+          variants={container}
+          initial="hidden"
+          animate="show"
+          className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-5xl mx-auto w-full"
+        >
           <StatCounter value={analysesDone > 0 ? String(analysesDone) : "--"} label="Analyses Done" icon={Activity} />
           <StatCounter value={overallScore != null ? overallScore.toFixed(1) : "--"} label="Style Score" icon={TrendingUp} />
           <StatCounter value={hasAnalysis ? "4" : "--"} label="Pillars Scored" icon={Target} />

@@ -163,7 +163,7 @@ export default function DashboardLayout({
 
       {/* Main content */}
       <div className="lg:ml-64 pt-16 lg:pt-0 min-h-screen">
-        <div className="p-6 lg:p-10 max-w-7xl">
+        <div className="p-6 lg:p-10 max-w-7xl mx-auto w-full">
           <PageTransition>{children}</PageTransition>
         </div>
       </div>
