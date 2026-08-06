@@ -40,6 +40,7 @@ function DiagnosticStrip({
   confidence,
   headRoll,
   headPitch,
+  axisAngle,
   landmarks,
 }: {
   photoQuality: number;
@@ -47,6 +48,7 @@ function DiagnosticStrip({
   confidence: number;
   headRoll?: number;
   headPitch?: number;
+  axisAngle?: number;
   landmarks: number[][];
 }) {
   const irisScale = (() => {
@@ -91,6 +93,11 @@ function DiagnosticStrip({
       label: "HEAD PITCH",
       value: typeof headPitch === "number" ? `${headPitch > 0 ? "+" : ""}${headPitch.toFixed(1)}°` : "—",
       warn: typeof headPitch === "number" && Math.abs(headPitch) > 15,
+    },
+    {
+      label: "SYMMETRY AXIS",
+      value: typeof axisAngle === "number" ? `${axisAngle > 0 ? "+" : ""}${axisAngle.toFixed(1)}°` : "—",
+      warn: typeof axisAngle === "number" && Math.abs(axisAngle) > 10,
     },
     {
       label: "IRIS CALIBRATION",
@@ -872,6 +879,7 @@ export default function FaceAnalysisPage() {
                 confidence={faceResult.analysisConfidence}
                 headRoll={faceResult.qualityGate?.headRoll}
                 headPitch={faceResult.qualityGate?.headPitch}
+                axisAngle={faceResult.symmetryAxis?.angleDeg}
                 landmarks={faceResult.landmarks}
               />
             </motion.div>
