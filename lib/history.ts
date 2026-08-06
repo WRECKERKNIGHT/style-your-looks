@@ -29,7 +29,13 @@ export function getHistory(): AnalysisEntry[] {
   }
 }
 
-export function saveToHistory(entry: Omit<AnalysisEntry, "id" | "timestamp" | "date">): AnalysisEntry {
+export function saveToHistory(entry: Omit<AnalysisEntry, "id" | "timestamp" | "date">): AnalysisEntry | null {
+  // Demo previews are never real data — refuse to persist them so they can never
+  // appear in profile stats, feeds, or trend lines (defense in depth).
+  if (entry.source === "demo" || isDemoPhoto(entry.thumbnailUrl)) {
+    return null;
+  }
+
   const history = getHistory();
   const newEntry: AnalysisEntry = {
     ...entry,
