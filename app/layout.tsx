@@ -12,7 +12,7 @@ import ClientDecorations from "@/components/shared/ClientDecorations";
 import { CursorGlow } from "@/components/shared/CursorGlow";
 import { ScrollProgressBar } from "@/components/landing/ScrollProgressBar";
 
-const baseUrl = "https://zervey.app";
+const baseUrl = "https://zervey.vercel.app";
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
@@ -47,14 +47,14 @@ export const metadata: Metadata = {
     description:
       "AI-powered facial analysis, virtual try-on, and outfit recommendations. All analysis runs in your browser.",
     url: baseUrl,
-    images: [{ url: `${baseUrl}/icon-512.svg`, width: 512, height: 512, alt: "ZERVEY" }],
+    images: [{ url: "/og.png", width: 1200, height: 630, alt: "ZERVEY — AI style intelligence, entirely on-device" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "ZERVEY — AI-Powered Style Intelligence",
     description:
       "AI-powered facial analysis, virtual try-on, and outfit recommendations. All analysis runs in your browser.",
-    images: [`${baseUrl}/icon-512.svg`],
+    images: ["/og.png"],
   },
   appleWebApp: {
     capable: true,

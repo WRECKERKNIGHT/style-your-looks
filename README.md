@@ -1,11 +1,54 @@
-# ZERVEY — AI Style Intelligence
+<p align="center">
+  <img src="./docs/social-preview.png" alt="ZERVEY — AI style intelligence, entirely on-device" width="100%" max-width="960" />
+</p>
+
+<h1 align="center">ZERVEY — AI Style Intelligence</h1>
+
+<p align="center">
+  Privacy-first style analysis that runs <b>100% in your browser</b> — 478-landmark
+  face mesh, body typing, color-season detection, virtual try-on and a parametric
+  3D style studio. <b>Your photos never leave your device.</b>
+</p>
+
+<p align="center">
+  <a href="https://zervey.vercel.app"><b>▶ Try the live demo</b></a>
+  &nbsp;·&nbsp;
+  <a href="#feature-catalog">Features</a>
+  &nbsp;·&nbsp;
+  <a href="#architecture">Architecture</a>
+  &nbsp;·&nbsp;
+  <a href="#getting-started">Getting started</a>
+  &nbsp;·&nbsp;
+  <a href="./CONTRIBUTING.md">Contributing</a>
+  &nbsp;·&nbsp;
+  <a href="./DEPLOYMENT.md">Deploy</a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/WRECKERKNIGHT/style-your-looks/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/WRECKERKNIGHT/style-your-looks/ci.yml?style=flat-square&label=CI&color=8A5F3D" alt="CI" /></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-9C7142?style=flat-square" alt="MIT License" /></a>
+  <a href="https://github.com/WRECKERKNIGHT/style-your-looks/stargazers"><img src="https://img.shields.io/github/stars/WRECKERKNIGHT/style-your-looks?style=flat-square&color=C8963E" alt="GitHub stars" /></a>
+  <a href="https://zervey.vercel.app"><img src="https://img.shields.io/badge/live%20demo-zervey.vercel.app-6F4A30?style=flat-square" alt="Live demo" /></a>
+  <a href="https://github.com/WRECKERKNIGHT/style-your-looks/pulls"><img src="https://img.shields.io/badge/PRs-welcome-CCA066?style=flat-square" alt="PRs welcome" /></a>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Next.js%2014-17100D?style=flat-square&logo=nextdotjs&logoColor=white" alt="Next.js 14" />
+  <img src="https://img.shields.io/badge/TypeScript-17100D?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/Tailwind%20CSS-17100D?style=flat-square&logo=tailwindcss&logoColor=white" alt="Tailwind CSS" />
+  <img src="https://img.shields.io/badge/Supabase-17100D?style=flat-square&logo=supabase&logoColor=white" alt="Supabase" />
+  <img src="https://img.shields.io/badge/MediaPipe-17100D?style=flat-square&logo=google&logoColor=white" alt="MediaPipe" />
+  <img src="https://img.shields.io/badge/Three.js-17100D?style=flat-square&logo=threedotjs&logoColor=white" alt="Three.js" />
+  <img src="https://img.shields.io/badge/Vercel-17100D?style=flat-square&logo=vercel&logoColor=white" alt="Vercel" />
+  <img src="https://img.shields.io/badge/PWA-17100D?style=flat-square" alt="PWA" />
+</p>
 
 ZERVEY (formerly AuraStyle) is a privacy-first style analysis platform. It performs
 47-point facial analysis, 478-landmark face mesh tracking, body typing, color-season
 detection, virtual try-on, and outfit recommendations — entirely **on-device** via
 MediaPipe. Photos never leave the browser.
 
-## Stack
+## Tech stack
 
 - **Next.js 14 (App Router)** + React 18 + TypeScript
 - **Tailwind CSS** with a cosmic nexus/aurum design system
@@ -110,21 +153,18 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
 
 ![ZERVEY landing page](./docs/screenshots/landing.png)
 
-Live captures of the current dashboard are kept under `docs/screenshots/` (see
-`docs/screenshots/README.md`). To refresh them with a headless Chrome:
+Live captures of the current build live under `docs/screenshots/`. Refreshed with
+headless Chrome against the deployed site:
 
 ```bash
-npm run dev &
-npx --yes playwright@latest install chromium
+"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
+  --headless=new --hide-scrollbars --force-device-scale-factor=2 \
+  --window-size=1440,900 --screenshot=docs/screenshots/landing.png \
+  https://zervey.vercel.app
 ```
 
-Capture the landing page and any authenticated route, then update the thumbnails
-below. Placeholder slots:
-
-- Landing page — `docs/screenshots/landing.png`
-- FaceIQ results — `docs/screenshots/faceiq-results.png`
-- 3D Studio — `docs/screenshots/3d-studio.png`
-- Virtual Try-On — `docs/screenshots/virtual-tryon.png`
+More captures (FaceIQ results, 3D Studio, Virtual Try-On) will land here as they
+are added.
 
 ## Database
 
