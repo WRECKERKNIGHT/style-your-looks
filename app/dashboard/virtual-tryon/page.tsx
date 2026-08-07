@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import { ImageUploader } from "@/components/shared/ImageUploader";
+import { AIScanner } from "@/components/shared/AIScanner";
 import { useAnalysisStore } from "@/store/analysis-store";
 import { runVton, type GarmentType, type VtonLayer, type VtonResult } from "@/lib/ml/vton-engine";
 import { loadRemoteProductImage, loadProductImage, type ProductItem, PRODUCT_CATALOG } from "@/lib/ml/product-catalog";
@@ -189,12 +190,15 @@ export default function VirtualTryOnPage() {
             <canvas ref={canvasRef} className="w-full" />
 
             {isProcessing && (
-              <div className="absolute inset-0 glass-card backdrop-blur-sm flex items-center justify-center z-10">
-                <div className="text-center">
-                  <Loader2 className="w-7 h-7 animate-spin text-[var(--accent-aurum)] mx-auto mb-3" />
-                  <p className="text-sm text-[var(--text-muted)] font-body">WARPING GARMENT & MATCHING LIGHTING...</p>
-                  <p className="type-mono text-[0.5rem] text-[var(--text-muted)] tracking-widest mt-2">FIRST RUN DOWNLOADS THE SEGMENTATION MODEL</p>
-                </div>
+              <div className="absolute inset-0 glass-card backdrop-blur-sm flex items-center justify-center z-10 p-6">
+                <AIScanner
+                  compact
+                  active
+                  progress={70}
+                  done={false}
+                  title="WARPING GARMENT"
+                />
+                <p className="type-mono text-[0.5rem] text-[var(--text-muted)] tracking-widest mt-2 absolute bottom-4">FIRST RUN DOWNLOADS THE SEGMENTATION MODEL</p>
               </div>
             )}
 

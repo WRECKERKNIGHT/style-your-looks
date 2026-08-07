@@ -1,57 +1,46 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Scan, CheckCircle2, Loader2 } from "lucide-react";
+import { useAnalysisStore } from "@/store/analysis-store";
 
 interface AIScannerProps {
-  onComplete?: () => void;
-  duration?: number;
+  /** Title shown while scanning. Defaults to the store-aware copy. */
+  title?: string;
+  /**
+   * Controlled mode: pass these to drive the scanner from local async state
+   * (e.g. a try-on pipeline). When omitted the scanner reads the global
+   * analysis store (isAnalyzing / analysisProgress / results).
+   */
+  active?: boolean;
+  progress?: number;
+  done?: boolean;
+  compact?: boolean;
 }
 
-export function AIScanner({ onComplete, duration = 3000 }: AIScannerProps) {
-  const [phase, setPhase] = useState<"idle" | "scanning" | "processing" | "complete">("idle");
-  const [progress, setProgress] = useState(0);
-  const scanRef = useRef<HTMLDivElement>(null);
+type Phase = "idle" | "scanning" | "processing" | "complete";
 
-  useEffect(() => {
-    const startTimeout = setTimeout(() => {
-      setPhase("scanning");
-    }, 400);
-    return () => clearTimeout(startTimeout);
-  }, []);
+export function AIScanner({ title, active, progress, done, compact = false }: AIScannerProps) {
+  const storeAnalyzing = useAnalysisStore((s) => s.isAnalyzing);
+  const storeProgress = useAnalysisStore((s) => s.analysisProgress);
+  const storeHasResult = useAnalysisStore(
+    (s) => s.faceResult !== null || s.bodyResult !== null || s.colorAnalysis !== null
+  );
 
-  useEffect(() => {
-    if (phase !== "scanning") return;
+  const analyzing = active ?? storeAnalyzing;
+  const value = progress ?? storeProgress;
+  const finished = done ?? (storeHasResult && !analyzing);
 
-    const scanDuration = duration * 0.6;
-    const interval = 16;
-    const steps = scanDuration / interval;
-    let step = 0;
+  const phase: Phase =
+    analyzing && value < 60
+      ? "scanning"
+      : analyzing
+      ? "processing"
+      : finished
+      ? "complete"
+      : "idle";
 
-    const scanInterval = setInterval(() => {
-      step++;
-      const p = Math.min(step / steps, 1);
-      setProgress(p);
-      if (p >= 1) {
-        clearInterval(scanInterval);
-        setPhase("processing");
-      }
-    }, interval);
-
-    return () => clearInterval(scanInterval);
-  }, [phase, duration]);
-
-  useEffect(() => {
-    if (phase !== "processing") return;
-
-    const processTimeout = setTimeout(() => {
-      setPhase("complete");
-      onComplete?.();
-    }, duration * 0.3);
-
-    return () => clearTimeout(processTimeout);
-  }, [phase, duration, onComplete]);
+  const scanPct = Math.min(100, Math.max(0, value));
 
   return (
     <motion.div
@@ -60,9 +49,9 @@ export function AIScanner({ onComplete, duration = 3000 }: AIScannerProps) {
       transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       className="relative overflow-hidden rounded-sm bg-[var(--bg-secondary)] border border-[var(--border-primary)] shadow-paper"
     >
-      <div className="p-8 flex flex-col items-center gap-6">
+      <div className={compact ? "p-5 flex flex-col items-center gap-4" : "p-8 flex flex-col items-center gap-6"}>
         {/* Scanner frame */}
-        <div className="relative w-40 h-40">
+        <div className={compact ? "relative w-24 h-24" : "relative w-40 h-40"}>
           {/* Corner accents */}
           <div className="absolute top-0 left-0 w-8 h-[2px] bg-[var(--accent-caramel)] shadow-[0_0_8px_var(--accent-caramel)]" />
           <div className="absolute top-0 left-0 w-[2px] h-8 bg-[var(--accent-caramel)] shadow-[0_0_8px_var(--accent-caramel)]" />
@@ -109,12 +98,11 @@ export function AIScanner({ onComplete, duration = 3000 }: AIScannerProps) {
             </AnimatePresence>
           </div>
 
-          {/* Scan line */}
+          {/* Scan line — sweeps only while scanning, paced by real progress */}
           {phase === "scanning" && (
             <motion.div
-              ref={scanRef}
               className="absolute left-2 right-2 h-[2px] bg-gradient-to-r from-transparent via-[var(--accent-caramel)] to-transparent shadow-[0_0_12px_var(--accent-caramel)]"
-              style={{ top: `${4 + progress * 80}%` }}
+              style={{ top: `${4 + (scanPct / 100) * 80}%` }}
             />
           )}
 
@@ -151,7 +139,7 @@ export function AIScanner({ onComplete, duration = 3000 }: AIScannerProps) {
                 exit={{ opacity: 0, y: -8 }}
                 className="type-mono text-[var(--accent-caramel)] flex items-center justify-center gap-2"
               >
-                <span>SCANNING</span>
+                <span>{title ?? "SCANNING"}</span>
                 <motion.span
                   className="inline-flex gap-0.5"
                   animate={{ opacity: [1, 0.3, 1] }}
@@ -187,11 +175,11 @@ export function AIScanner({ onComplete, duration = 3000 }: AIScannerProps) {
             )}
           </AnimatePresence>
 
-          {/* Progress bar */}
+          {/* Progress bar — mirrors real progress from the driving pipeline */}
           <div className="mt-3 w-48 h-[2px] bg-[color-mix(in_srgb,var(--accent-caramel)_20%,transparent)] rounded-full overflow-hidden mx-auto">
             <motion.div
               className="h-full bg-gradient-to-r from-[var(--accent-nexus)] to-[var(--accent-caramel)]"
-              style={{ width: `${phase === "complete" ? 100 : phase === "idle" ? 0 : progress * 100}%` }}
+              style={{ width: `${phase === "complete" ? 100 : phase === "idle" ? 0 : scanPct}%` }}
               transition={{ duration: 0.1 }}
             />
           </div>
