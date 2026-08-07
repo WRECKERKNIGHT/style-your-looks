@@ -15,21 +15,34 @@ export async function POST(request: Request) {
       );
     }
 
-    const body = await request.json();
-    const { imageData, analysisType } = body;
-
-    if (!imageData || typeof imageData !== "string") {
-      return NextResponse.json({ error: "Image data is required" }, { status: 400 });
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
     }
 
-    if (imageData.length > MAX_IMAGE_BYTES) {
+    const { imageData, analysisType } = (body ?? {}) as {
+      imageData?: unknown;
+      analysisType?: unknown;
+    };
+
+    if (typeof imageData !== "string" || !imageData.startsWith("data:image/")) {
+      return NextResponse.json({ error: "A valid data-URL image is required" }, { status: 400 });
+    }
+
+    const approxBytes = Math.ceil((imageData.length * 3) / 4);
+    if (approxBytes > MAX_IMAGE_BYTES) {
       return NextResponse.json(
         { error: "Image exceeds maximum allowed size" },
         { status: 413 }
       );
     }
 
-    if (analysisType && !["face", "body", "color", "all"].includes(analysisType)) {
+    if (
+      analysisType !== undefined &&
+      (typeof analysisType !== "string" || !["face", "body", "color", "all"].includes(analysisType))
+    ) {
       return NextResponse.json({ error: "Invalid analysis type" }, { status: 400 });
     }
 
