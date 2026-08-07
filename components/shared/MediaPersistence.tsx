@@ -40,6 +40,8 @@ function applySnapshot(snap: MediaSnapshot) {
 export function MediaPersistence() {
   const lastSig = useRef<string | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastMutation = useRef(0);
+  const applying = useRef(false);
 
   useEffect(() => {
     const persist = () => {
@@ -64,8 +66,12 @@ export function MediaPersistence() {
     const hydrate = async () => {
       const snap = await loadMediaSnapshot();
       if (!snap) return;
+      if (snap.savedAt <= lastMutation.current) return;
       lastSig.current = mediaSignature(snap);
+      applying.current = true;
       applySnapshot(snap);
+      applying.current = false;
+      lastMutation.current = snap.savedAt;
     };
 
     void hydrate();
@@ -75,10 +81,14 @@ export function MediaPersistence() {
       const snap = loadMediaSnapshot();
       void snap.then((loaded) => {
         if (!loaded) return;
+        if (loaded.savedAt <= lastMutation.current) return;
         const sig = mediaSignature(loaded);
         if (sig === lastSig.current) return;
         lastSig.current = sig;
+        applying.current = true;
         applySnapshot(loaded);
+        applying.current = false;
+        lastMutation.current = loaded.savedAt;
       });
     };
 
@@ -88,7 +98,10 @@ export function MediaPersistence() {
 
     window.addEventListener("storage", onStorage);
     window.addEventListener("focus", onFocus);
-    const unsub = useAnalysisStore.subscribe(schedulePersist);
+    const unsub = useAnalysisStore.subscribe(() => {
+      if (!applying.current) lastMutation.current = Date.now();
+      schedulePersist();
+    });
 
     return () => {
       if (timer.current) clearTimeout(timer.current);
