@@ -1,7 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { mapCoverPoint } from "@/lib/image-geometry";
 import { calculateSymmetryAxis } from "@/lib/ml/face-geometry";
 import { faceBounds } from "@/lib/ml/face-landmarks";
@@ -35,7 +34,15 @@ const COLORS = {
   dot: "#F2D9A8",
 };
 
-const REGIONS: { id: string; color: string; indices: number[]; delay: number; width: number }[] = [
+interface RegionSpec {
+  id: string;
+  color: string;
+  indices: number[];
+  delay: number;
+  width: number;
+}
+
+const REGIONS: RegionSpec[] = [
   {
     id: "oval",
     color: COLORS.oval,
@@ -111,19 +118,361 @@ const KEY_DOTS: { index: number; delay: number; r: number }[] = [
   { index: 9, delay: 1.6, r: 3 },
 ];
 
-function polylinePoints(
+interface Pt {
+  x: number;
+  y: number;
+}
+
+function pathLength(pts: Pt[]): number {
+  let len = 0;
+  for (let i = 1; i < pts.length; i++) {
+    len += Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y);
+  }
+  return len;
+}
+
+interface PreparedRegion extends RegionSpec {
+  pts: Pt[];
+  len: number;
+}
+
+interface PreparedData {
+  regions: PreparedRegion[];
+  keyDots: { index: number; delay: number; r: number; p: Pt }[];
+  ovalPts: Pt[];
+  ovalLen: number;
+  axis: { x1: number; y1: number; x2: number; y2: number; angle: number } | null;
+  fwhr: { yw: number; x1: number; x2: number; yh1: number; yh2: number; xv: number } | null;
+  canthal: { x1: number; y1: number; x2: number; y2: number } | null;
+  eyeNose: { x1: number; y1: number; x2: number; y2: number } | null;
+  bounds: { x: number; y: number; w: number; h: number } | null;
+}
+
+function prepareData(
   landmarks: number[][],
-  indices: number[],
-  map: (u: number, v: number) => { x: number; y: number }
-): string | null {
-  const pts: string[] = [];
-  for (const i of indices) {
+  width: number,
+  height: number,
+  imageAspect?: number
+): PreparedData {
+  const map = (u: number, v: number) =>
+    mapCoverPoint(u, v, { boxW: width, boxH: height, imageAspect: imageAspect ?? width / height });
+  const pt = (i: number): Pt | null => {
     const lm = landmarks[i];
     if (!lm) return null;
-    const p = map(lm[0], lm[1]);
-    pts.push(`${p.x.toFixed(1)},${p.y.toFixed(1)}`);
+    return map(lm[0], lm[1]);
+  };
+
+  const regions: PreparedRegion[] = REGIONS.map((region) => {
+    const pts: Pt[] = [];
+    for (const i of region.indices) {
+      const p = pt(i);
+      if (p) pts.push(p);
+    }
+    return { ...region, pts, len: pathLength(pts) };
+  });
+
+  const keyDots: PreparedData["keyDots"] = [];
+  for (const dot of KEY_DOTS) {
+    const p = pt(dot.index);
+    if (p) keyDots.push({ ...dot, p });
   }
-  return pts.join(" ");
+
+  const ovalRegion = regions[0];
+  const ovalPts = ovalRegion.pts;
+  const ovalLen = ovalRegion.len;
+
+  const axisRaw = calculateSymmetryAxis(landmarks);
+  const axis =
+    axisRaw && width > 0 && height > 0
+      ? (() => {
+          const a = map(axisRaw.a.x, axisRaw.a.y);
+          const b = map(axisRaw.b.x, axisRaw.b.y);
+          return { x1: a.x, y1: a.y, x2: b.x, y2: b.y, angle: axisRaw.angleDeg };
+        })()
+      : null;
+
+  const fwhr =
+    landmarks[234] && landmarks[454] && landmarks[9] && landmarks[13]
+      ? {
+          yw: (pt(9)!.y + pt(13)!.y) / 2,
+          x1: pt(234)!.x,
+          x2: pt(454)!.x,
+          yh1: pt(9)!.y,
+          yh2: pt(13)!.y,
+          xv: (pt(234)!.x + pt(454)!.x) / 2,
+        }
+      : null;
+
+  const canthal =
+    landmarks[133] && landmarks[33] ? { x1: pt(133)!.x, y1: pt(133)!.y, x2: pt(33)!.x, y2: pt(33)!.y } : null;
+
+  const eyeNose =
+    landmarks[33] && landmarks[263]
+      ? { x1: pt(33)!.x, y1: (pt(33)!.y + pt(263)!.y) / 2, x2: pt(263)!.x, y2: (pt(33)!.y + pt(263)!.y) / 2 }
+      : null;
+
+  let bounds: PreparedData["bounds"] = null;
+  const rawBounds = faceBounds(landmarks, 1, 1);
+  if (rawBounds) {
+    const a = map(rawBounds.x, rawBounds.y);
+    const b = map(rawBounds.x + rawBounds.w, rawBounds.y + rawBounds.h);
+    const x = Math.max(0, a.x);
+    const y = Math.max(0, a.y);
+    const w = Math.min(width, b.x) - x;
+    const h = Math.min(height, b.y) - y;
+    if (w > 0 && h > 0) bounds = { x, y, w, h };
+  }
+
+  return { regions, keyDots, ovalPts, ovalLen, axis, fwhr, canthal, eyeNose, bounds };
+}
+
+function drawOverlay(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  timeSec: number,
+  animate: boolean,
+  data: PreparedData,
+  measurements: SkeletonMeasurements
+) {
+  ctx.clearRect(0, 0, width, height);
+
+  const bounds = data.bounds;
+  const drawDelay = animate ? 0.2 : 0;
+
+  if (animate && bounds) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(bounds.x, bounds.y, bounds.w, bounds.h);
+    ctx.clip();
+
+    const gridStep = 36;
+    ctx.strokeStyle = "rgba(232,200,138,0.04)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let gx = bounds.x; gx < bounds.x + bounds.w; gx += gridStep) {
+      ctx.moveTo(gx, bounds.y);
+      ctx.lineTo(gx, bounds.y + bounds.h);
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  ctx.save();
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+
+  for (const region of data.regions) {
+    if (region.pts.length < 2) continue;
+    const start = drawDelay + region.delay;
+    const revealT = animate ? (timeSec - start) / 0.8 : 1;
+    if (revealT <= 0) continue;
+
+    ctx.beginPath();
+    ctx.moveTo(region.pts[0].x, region.pts[0].y);
+    for (let i = 1; i < region.pts.length; i++) {
+      ctx.lineTo(region.pts[i].x, region.pts[i].y);
+    }
+    ctx.strokeStyle = region.color;
+    ctx.lineWidth = region.width;
+    ctx.globalAlpha = Math.min(1, revealT) * 0.95;
+    ctx.shadowColor = "rgba(200,150,62,0.35)";
+    ctx.shadowBlur = 4;
+
+    if (revealT < 1 && animate) {
+      ctx.setLineDash([region.len, region.len]);
+      ctx.lineDashOffset = region.len * (1 - revealT);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.lineDashOffset = 0;
+  }
+
+  ctx.shadowBlur = 0;
+  ctx.globalAlpha = 1;
+
+  if (data.axis) {
+    ctx.save();
+    ctx.strokeStyle = COLORS.centerline;
+    ctx.lineWidth = 1.2;
+    ctx.setLineDash([5, 6]);
+    const start = drawDelay + 1.2;
+    const revealT = animate ? (timeSec - start) / 0.6 : 1;
+    if (revealT > 0) {
+      const len = Math.hypot(data.axis.x2 - data.axis.x1, data.axis.y2 - data.axis.y1);
+      ctx.setLineDash([len, len]);
+      ctx.lineDashOffset = len * (1 - Math.min(1, revealT));
+      ctx.beginPath();
+      ctx.moveTo(data.axis.x1, data.axis.y1);
+      ctx.lineTo(data.axis.x2, data.axis.y2);
+      ctx.stroke();
+      ctx.setLineDash([5, 6]);
+      ctx.lineDashOffset = 0;
+      if (timeSec > drawDelay + 1.5) {
+        const label = `AXIS ${data.axis.angle >= 0 ? "+" : ""}${data.axis.angle.toFixed(1)}°`;
+        drawLabel(ctx, label, data.axis.x1 + 8, data.axis.y1 - 6);
+      }
+    }
+    ctx.restore();
+  }
+
+  if (data.fwhr && measurements?.fwhr !== undefined) {
+    const t = animate ? Math.min(1, (timeSec - (drawDelay + 1.7)) / 0.5) : 1;
+    if (t > 0) {
+      ctx.save();
+      ctx.globalAlpha = t;
+      ctx.strokeStyle = COLORS.measure;
+      ctx.lineWidth = 1.4;
+      ctx.setLineDash([7, 5]);
+      ctx.beginPath();
+      ctx.moveTo(data.fwhr.x1, data.fwhr.yw);
+      ctx.lineTo(data.fwhr.x2, data.fwhr.yw);
+      ctx.moveTo(data.fwhr.xv, data.fwhr.yh1);
+      ctx.lineTo(data.fwhr.xv, data.fwhr.yh2);
+      ctx.stroke();
+      drawLabel(ctx, `FWHR ${measurements.fwhr.toFixed(2)}`, Math.min(data.fwhr.x1, data.fwhr.x2) + 8, data.fwhr.yw - 6);
+      ctx.restore();
+    }
+  }
+
+  if (data.canthal && measurements?.canthalTilt !== undefined) {
+    const t = animate ? Math.min(1, (timeSec - (drawDelay + 1.9)) / 0.5) : 1;
+    if (t > 0) {
+      ctx.save();
+      ctx.globalAlpha = t;
+      ctx.strokeStyle = COLORS.measure;
+      ctx.lineWidth = 1.4;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(data.canthal.x1, data.canthal.y1);
+      ctx.lineTo(data.canthal.x2, data.canthal.y2);
+      ctx.stroke();
+      const label = `${measurements.canthalTilt >= 0 ? "+" : ""}${measurements.canthalTilt.toFixed(1)}°`;
+      drawLabel(ctx, label, data.canthal.x2 - 4, data.canthal.y2 - 8);
+      ctx.restore();
+    }
+  }
+
+  if (data.eyeNose && measurements?.eyeNoseRatio !== undefined) {
+    const t = animate ? Math.min(1, (timeSec - (drawDelay + 2.05)) / 0.5) : 1;
+    if (t > 0) {
+      ctx.save();
+      ctx.globalAlpha = t;
+      ctx.strokeStyle = COLORS.measure;
+      ctx.lineWidth = 1.4;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(data.eyeNose.x1, data.eyeNose.y1);
+      ctx.lineTo(data.eyeNose.x2, data.eyeNose.y2);
+      ctx.stroke();
+      drawLabel(
+        ctx,
+        `E/N ${measurements.eyeNoseRatio.toFixed(2)}`,
+        (data.eyeNose.x1 + data.eyeNose.x2) / 2 - 40,
+        data.eyeNose.y1 - 8
+      );
+      ctx.restore();
+    }
+  }
+
+  for (const dot of data.keyDots) {
+    const start = drawDelay + dot.delay;
+    const appear = animate ? Math.min(1, (timeSec - start) / 0.35) : 1;
+    if (appear <= 0) continue;
+
+    if (animate) {
+      const cycle = ((timeSec - start) % 2) / 2;
+      const ringR = dot.r * (1.4 + 1.8 * cycle);
+      ctx.beginPath();
+      ctx.arc(dot.p.x, dot.p.y, ringR, 0, Math.PI * 2);
+      ctx.strokeStyle = COLORS.oval;
+      ctx.lineWidth = 1.2;
+      ctx.globalAlpha = 0.5 * (1 - cycle);
+      ctx.stroke();
+    }
+
+    ctx.beginPath();
+    ctx.arc(dot.p.x, dot.p.y, dot.r, 0, Math.PI * 2);
+    ctx.fillStyle = COLORS.dot;
+    ctx.globalAlpha = appear;
+    ctx.fill();
+  }
+
+  ctx.globalAlpha = 1;
+
+  if (animate && data.ovalPts.length > 4 && data.ovalLen > 0) {
+    const tilt = measurements?.canthalTilt ?? 0;
+    const flowDuration = Math.min(9, Math.max(4, 6 - tilt * 0.08));
+    const flowForward = (measurements?.canthalTilt ?? 0) >= 0;
+    const t = (timeSec % flowDuration) / flowDuration;
+
+    ctx.save();
+    ctx.strokeStyle = "rgba(232,200,138,0.85)";
+    ctx.lineWidth = 2;
+    ctx.setLineDash([7, 15]);
+    ctx.lineDashOffset = flowForward ? -880 * t : 880 * t;
+    ctx.globalAlpha = 0.5;
+    ctx.beginPath();
+    ctx.moveTo(data.ovalPts[0].x, data.ovalPts[0].y);
+    for (let i = 1; i < data.ovalPts.length; i++) {
+      ctx.lineTo(data.ovalPts[i].x, data.ovalPts[i].y);
+    }
+    ctx.closePath();
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.lineDashOffset = 0;
+    ctx.globalAlpha = 1;
+
+    const target = flowForward ? t : 1 - t;
+    const segF = target * (data.ovalPts.length - 1);
+    const idx = Math.min(data.ovalPts.length - 2, Math.floor(segF));
+    const f = segF - idx;
+    const a = data.ovalPts[idx];
+    const b = data.ovalPts[idx + 1];
+    const cx = a.x + (b.x - a.x) * f;
+    const cy = a.y + (b.y - a.y) * f;
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, 8, 0, Math.PI * 2);
+    ctx.strokeStyle = "rgba(232,200,138,0.4)";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(242,217,168,0.95)";
+    ctx.fill();
+    ctx.restore();
+  }
+
+  if (animate && bounds) {
+    ctx.save();
+    ctx.strokeStyle = "rgba(200,150,62,0.5)";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(bounds.x + 0.5, bounds.y + 0.5, bounds.w - 1, bounds.h - 1);
+
+    const sweep = (timeSec % 3.2) / 3.2;
+    const scanStart = bounds.y;
+    const scanEnd = Math.max(scanStart, bounds.y + bounds.h - 2);
+    const scanY = scanStart + (scanEnd - scanStart) * sweep;
+    const grad = ctx.createLinearGradient(bounds.x, scanY - 2, bounds.x, scanY + 2);
+    grad.addColorStop(0, "rgba(232,200,138,0)");
+    grad.addColorStop(0.5, "rgba(232,200,138,0.9)");
+    grad.addColorStop(1, "rgba(232,200,138,0)");
+    ctx.fillStyle = grad;
+    ctx.fillRect(bounds.x, scanY - 2, bounds.w, 4);
+    ctx.restore();
+  }
+}
+
+function drawLabel(ctx: CanvasRenderingContext2D, text: string, x: number, y: number) {
+  ctx.font = "600 11px ui-monospace, SFMono-Regular, Menlo, monospace";
+  ctx.textBaseline = "bottom";
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = "rgba(0,0,0,0.65)";
+  ctx.strokeText(text, x, y);
+  ctx.fillStyle = "#fff";
+  ctx.fillText(text, x, y);
 }
 
 export function FaceSkeletonOverlay({
@@ -136,383 +485,59 @@ export function FaceSkeletonOverlay({
   animate = true,
   className,
 }: FaceSkeletonOverlayProps) {
-  const map = useMemo(
-    () => (u: number, v: number) =>
-      mapCoverPoint(u, v, { boxW: width, boxH: height, imageAspect: imageAspect ?? width / height }),
-    [width, height, imageAspect]
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const dataRef = useRef<PreparedData | null>(null);
+
+  const data = useMemo(
+    () => prepareData(landmarks, width, height, imageAspect),
+    [landmarks, width, height, imageAspect]
   );
 
-  const x = (i: number) => map(landmarks[i][0], landmarks[i][1]).x;
-  const y = (i: number) => map(landmarks[i][0], landmarks[i][1]).y;
-
-  const canSee = (i: number) => Boolean(landmarks[i]);
   const shapeLabel = facialShape?.toUpperCase() ?? "";
 
-  // Continuous per-face energy loop: keyframes traced along the detected face
-  // contour, direction & pace tuned to that face's canthal tilt.
-  const ovalPts = useMemo(() => {
-    const pts: { x: number; y: number }[] = [];
-    for (const i of REGIONS[0].indices) {
-      const lm = landmarks[i];
-      if (!lm) continue;
-      pts.push(map(lm[0], lm[1]));
-    }
-    return pts;
-  }, [landmarks, map]);
-  const cometX = useMemo(() => ovalPts.map((p) => p.x), [ovalPts]);
-  const cometY = useMemo(() => ovalPts.map((p) => p.y), [ovalPts]);
-  const flowDuration = useMemo(() => {
-    const tilt = measurements?.canthalTilt ?? 0;
-    return Math.min(9, Math.max(4, 6 - tilt * 0.08));
-  }, [measurements?.canthalTilt]);
-  const flowForward = useMemo(() => (measurements?.canthalTilt ?? 0) >= 0, [measurements?.canthalTilt]);
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || width <= 0 || height <= 0) return;
 
-  const fwhrLine =
-    measurements?.fwhr !== undefined && canSee(234) && canSee(454) && canSee(9) && canSee(13)
-      ? {
-          yw: (y(9) + y(13)) / 2,
-          x1: x(234),
-          x2: x(454),
-          yh1: y(9),
-          yh2: y(13),
-          xv: (x(234) + x(454)) / 2,
-        }
-      : null;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+    canvas.width = Math.max(1, Math.round(width * dpr));
+    canvas.height = Math.max(1, Math.round(height * dpr));
+    canvas.style.width = `${width}px`;
+    canvas.style.height = `${height}px`;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
 
-  const canthalLine = canSee(133) && canSee(33) ? { x1: x(133), y1: y(133), x2: x(33), y2: y(33) } : null;
-  const eyeNoseLine =
-    measurements?.eyeNoseRatio !== undefined && canSee(33) && canSee(263)
-      ? { x1: x(33), y1: (y(33) + y(263)) / 2, x2: x(263), y2: (y(33) + y(263)) / 2 }
-      : null;
+    dataRef.current = data;
+    let raf = 0;
+    let running = true;
 
-  // Pose-aware symmetry axis: pupil midpoint → chin tip (follows head roll).
-  const axisLine = useMemo(() => {
-    const axis = calculateSymmetryAxis(landmarks);
-    if (!axis) return null;
-    const a = map(axis.a.x, axis.a.y);
-    const b = map(axis.b.x, axis.b.y);
-    return { x1: a.x, y1: a.y, x2: b.x, y2: b.y, angle: axis.angleDeg };
-  }, [landmarks, map]);
+    const tick = (now: number) => {
+      if (!running) return;
+      const timeSec = now / 1000;
+      const c = ctx;
+      c.setTransform(dpr, 0, 0, dpr, 0, 0);
+      if (dataRef.current) {
+        drawOverlay(c, width, height, timeSec, animate, dataRef.current, measurements ?? {});
+      }
+      raf = requestAnimationFrame(tick);
+    };
 
-  const drawDelay = animate ? 0.2 : 0;
-
-  // Face-anchored bounding box: everything decorative (grid, scan line, frame
-  // brackets) is clipped to the detected oval instead of painting the full frame.
-  const bounds = useMemo(() => {
-    const raw = faceBounds(landmarks, 1, 1);
-    if (!raw) return null;
-    const a = map(raw.x, raw.y);
-    const b = map(raw.x + raw.w, raw.y + raw.h);
-    const x = Math.max(0, a.x);
-    const y = Math.max(0, a.y);
-    const w = Math.min(width, b.x) - x;
-    const h = Math.min(height, b.y) - y;
-    if (w <= 0 || h <= 0) return null;
-    return { x, y, w, h };
-  }, [landmarks, map, width, height]);
-
-  const clipInset = bounds
-    ? `inset(${bounds.y}px ${Math.max(0, width - bounds.x - bounds.w)}px ${Math.max(0, height - bounds.y - bounds.h)}px ${bounds.x}px)`
-    : undefined;
-  const scanStart = bounds?.y ?? 0;
-  const scanEnd = Math.max(scanStart, (bounds ? bounds.y + bounds.h : height) - 24);
-  const scanWidth = bounds?.w ?? width;
-  const scanX = bounds?.x ?? 0;
+    raf = requestAnimationFrame(tick);
+    return () => {
+      running = false;
+      cancelAnimationFrame(raf);
+    };
+  }, [data, width, height, animate, measurements]);
 
   return (
     <div
       className={`absolute inset-0 pointer-events-none overflow-hidden ${className || ""}`}
       style={{ width, height }}
     >
-      {animate && (
-        <motion.div
-          className="absolute inset-0"
-          style={{
-            background:
-              "repeating-linear-gradient(90deg, rgba(232,200,138,0.04) 0px, rgba(232,200,138,0.04) 1px, transparent 1px, transparent 36px)",
-            clipPath: clipInset,
-          }}
-        />
-      )}
-
-      <svg
-        viewBox={`0 0 ${width} ${height}`}
-        width={width}
-        height={height}
-        className="absolute inset-0"
-      >
-        <defs>
-          <filter id="skel-glow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="2.2" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-          <linearGradient id="scan-gradient" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stopColor="rgba(232,200,138,0)" />
-            <stop offset="0.5" stopColor="rgba(232,200,138,0.9)" />
-            <stop offset="1" stopColor="rgba(232,200,138,0)" />
-          </linearGradient>
-        </defs>
-
-        {animate && bounds && (
-          <motion.rect
-            x={bounds.x}
-            y={bounds.y}
-            width={bounds.w}
-            height={bounds.h}
-            fill="none"
-            stroke="rgba(200,150,62,0.5)"
-            strokeWidth={1}
-          />
-        )}
-
-        {animate && (
-          <motion.g
-            initial={{ y: scanStart, opacity: 0.9 }}
-            animate={{ y: scanEnd, opacity: 0.2 }}
-            transition={{ duration: 3.2, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }}
-          >
-            <rect
-              x={scanX}
-              y={0}
-              width={scanWidth}
-              height={2}
-              fill="url(#scan-gradient)"
-              opacity={0.7}
-            />
-          </motion.g>
-        )}
-
-        <g filter="url(#skel-glow)">
-          {REGIONS.map((region) => {
-            const points = polylinePoints(landmarks, region.indices, map);
-            if (!points) return null;
-            return (
-              <motion.polyline
-                key={region.id}
-                points={points}
-                fill="none"
-                stroke={region.color}
-                strokeWidth={region.width}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                initial={animate ? { pathLength: 0, opacity: 0 } : false}
-                animate={animate ? { pathLength: 1, opacity: 0.95 } : { opacity: 0.95 }}
-                transition={{
-                  pathLength: { duration: 0.8, delay: drawDelay + region.delay, ease: "easeInOut" },
-                  opacity: { duration: 0.4, delay: drawDelay + region.delay },
-                }}
-              />
-            );
-          })}
-
-          {animate && ovalPts.length > 4 && (
-            <>
-              <motion.polyline
-                points={polylinePoints(landmarks, REGIONS[0].indices, map)!}
-                fill="none"
-                stroke="rgba(232,200,138,0.85)"
-                strokeWidth={2}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                style={{ strokeDasharray: "7 15", filter: "url(#skel-glow)" }}
-                animate={{ strokeDashoffset: flowForward ? [0, -880] : [0, 880] }}
-                transition={{ duration: flowDuration, repeat: Infinity, ease: "linear" }}
-                opacity={0.5}
-              />
-              <motion.g
-                animate={{ scale: [1, 1.03, 1] }}
-                transition={{ duration: flowDuration / 2, repeat: Infinity, ease: "easeInOut" }}
-                style={{ transformOrigin: "center" }}
-              >
-                <motion.circle
-                  r={4}
-                  fill="rgba(242,217,168,0.95)"
-                  style={{ filter: "url(#skel-glow)" }}
-                  animate={{ cx: cometX, cy: cometY }}
-                  transition={{ duration: flowDuration, repeat: Infinity, ease: "linear" }}
-                />
-                <motion.circle
-                  r={8}
-                  fill="none"
-                  stroke="rgba(232,200,138,0.4)"
-                  animate={{ cx: cometX, cy: cometY, opacity: [0.5, 0.1, 0.5] }}
-                  transition={{ duration: flowDuration, repeat: Infinity, ease: "linear" }}
-                />
-              </motion.g>
-            </>
-          )}
-
-          {axisLine && (
-            <>
-              <motion.line
-                x1={axisLine.x1}
-                y1={axisLine.y1}
-                x2={axisLine.x2}
-                y2={axisLine.y2}
-                stroke={COLORS.centerline}
-                strokeWidth={1.2}
-                strokeDasharray="5 6"
-                initial={animate ? { pathLength: 0, opacity: 0 } : false}
-                animate={animate ? { pathLength: 1, opacity: 1 } : { opacity: 1 }}
-                transition={{ pathLength: { duration: 0.6, delay: drawDelay + 1.2 } }}
-              />
-              <motion.g
-                initial={animate ? { opacity: 0 } : false}
-                animate={{ opacity: 1 }}
-                transition={{ delay: drawDelay + 1.5, duration: 0.4 }}
-              >
-                <text
-                  x={axisLine.x1 + 8}
-                  y={axisLine.y1 - 6}
-                  fill="#fff"
-                  fontSize="10"
-                  fontFamily="monospace"
-                  style={{ paintOrder: "stroke", stroke: "rgba(0,0,0,0.65)", strokeWidth: 3 }}
-                >
-                  AXIS {axisLine.angle >= 0 ? "+" : ""}{axisLine.angle.toFixed(1)}°
-                </text>
-              </motion.g>
-            </>
-          )}
-
-          {KEY_DOTS.map((dot) =>
-            canSee(dot.index) ? (
-              <g key={`dot-${dot.index}`}>
-                {animate && (
-                  <motion.circle
-                    cx={x(dot.index)}
-                    cy={y(dot.index)}
-                    r={dot.r}
-                    fill="none"
-                    stroke={COLORS.oval}
-                    strokeWidth={1.2}
-                    initial={false}
-                    animate={{ r: [dot.r * 1.4, dot.r * 3.2], opacity: [0.5, 0] }}
-                    transition={{
-                      duration: 2,
-                      repeat: Infinity,
-                      ease: "easeOut",
-                      delay: drawDelay + dot.delay,
-                    }}
-                  />
-                )}
-                <motion.circle
-                  cx={x(dot.index)}
-                  cy={y(dot.index)}
-                  r={dot.r}
-                  fill={COLORS.dot}
-                  initial={animate ? { scale: 0, opacity: 0 } : false}
-                  animate={animate ? { scale: 1, opacity: 1 } : { opacity: 1 }}
-                  transition={{ delay: drawDelay + dot.delay, duration: 0.35, type: "spring" }}
-                />
-              </g>
-            ) : null
-          )}
-        </g>
-
-        {fwhrLine && (
-          <motion.g
-            initial={animate ? { opacity: 0 } : false}
-            animate={{ opacity: 1 }}
-            transition={{ delay: drawDelay + 1.7, duration: 0.5 }}
-          >
-            <line
-              x1={fwhrLine.x1}
-              y1={fwhrLine.yw}
-              x2={fwhrLine.x2}
-              y2={fwhrLine.yw}
-              stroke={COLORS.measure}
-              strokeWidth={1.4}
-              strokeDasharray="7 5"
-            />
-            <line
-              x1={fwhrLine.xv}
-              y1={fwhrLine.yh1}
-              x2={fwhrLine.xv}
-              y2={fwhrLine.yh2}
-              stroke={COLORS.measure}
-              strokeWidth={1.4}
-              strokeDasharray="7 5"
-            />
-            <text
-              x={Math.min(fwhrLine.x1, fwhrLine.x2) + 8}
-              y={fwhrLine.yw - 6}
-              fill="#fff"
-              fontSize="11"
-              fontFamily="monospace"
-              style={{ paintOrder: "stroke", stroke: "rgba(0,0,0,0.65)", strokeWidth: 3 }}
-            >
-              FWHR {measurements?.fwhr?.toFixed(2)}
-            </text>
-          </motion.g>
-        )}
-
-        {canthalLine && measurements?.canthalTilt !== undefined && (
-          <motion.g
-            initial={animate ? { opacity: 0 } : false}
-            animate={{ opacity: 1 }}
-            transition={{ delay: drawDelay + 1.9, duration: 0.5 }}
-          >
-            <line
-              x1={canthalLine.x1}
-              y1={canthalLine.y1}
-              x2={canthalLine.x2}
-              y2={canthalLine.y2}
-              stroke={COLORS.measure}
-              strokeWidth={1.4}
-              strokeDasharray="4 4"
-            />
-            <text
-              x={canthalLine.x2 - 4}
-              y={canthalLine.y2 - 8}
-              fill="#fff"
-              fontSize="11"
-              fontFamily="monospace"
-              style={{ paintOrder: "stroke", stroke: "rgba(0,0,0,0.65)", strokeWidth: 3 }}
-            >
-              {measurements.canthalTilt >= 0 ? "+" : ""}
-              {measurements.canthalTilt.toFixed(1)}°
-            </text>
-          </motion.g>
-        )}
-
-        {eyeNoseLine && (
-          <motion.g
-            initial={animate ? { opacity: 0 } : false}
-            animate={{ opacity: 1 }}
-            transition={{ delay: drawDelay + 2.05, duration: 0.5 }}
-          >
-            <line
-              x1={eyeNoseLine.x1}
-              y1={eyeNoseLine.y1}
-              x2={eyeNoseLine.x2}
-              y2={eyeNoseLine.y2}
-              stroke={COLORS.measure}
-              strokeWidth={1.4}
-              strokeDasharray="4 4"
-            />
-            <text
-              x={(eyeNoseLine.x1 + eyeNoseLine.x2) / 2 - 40}
-              y={eyeNoseLine.y1 - 8}
-              fill="#fff"
-              fontSize="11"
-              fontFamily="monospace"
-              style={{ paintOrder: "stroke", stroke: "rgba(0,0,0,0.65)", strokeWidth: 3 }}
-            >
-              E/N {measurements?.eyeNoseRatio?.toFixed(2)}
-            </text>
-          </motion.g>
-        )}
-      </svg>
+      <canvas ref={canvasRef} className="absolute inset-0" />
 
       {shapeLabel && (
-        <motion.div
-          initial={animate ? { opacity: 0, y: -10 } : false}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: drawDelay + 2.2, duration: 0.5 }}
+        <div
           className="absolute bottom-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-sm border bg-black/45 backdrop-blur-sm"
           style={{ borderColor: "rgba(200,150,62,0.5)" }}
         >
@@ -520,7 +545,7 @@ export function FaceSkeletonOverlay({
           <span className="text-[0.65rem] font-mono tracking-[0.25em] text-[#F2D9A8]">
             SHAPE: {shapeLabel}
           </span>
-        </motion.div>
+        </div>
       )}
 
       {animate && (
@@ -532,27 +557,36 @@ export function FaceSkeletonOverlay({
         </div>
       )}
 
-      {animate && bounds && (
+      {animate && data.bounds && (
         <>
-          <div className="absolute w-8 h-8 border-t-2 border-l-2" style={{ top: bounds.y, left: bounds.x, borderColor: "rgba(200,150,62,0.7)" }} />
-          <div className="absolute w-8 h-8 border-t-2 border-r-2" style={{ top: bounds.y, left: bounds.x + bounds.w - 32, borderColor: "rgba(200,150,62,0.7)" }} />
-          <div className="absolute w-8 h-8 border-b-2 border-l-2" style={{ top: bounds.y + bounds.h - 32, left: bounds.x, borderColor: "rgba(200,150,62,0.7)" }} />
-          <div className="absolute w-8 h-8 border-b-2 border-r-2" style={{ top: bounds.y + bounds.h - 32, left: bounds.x + bounds.w - 32, borderColor: "rgba(200,150,62,0.7)" }} />
+          <div
+            className="absolute w-8 h-8 border-t-2 border-l-2"
+            style={{ top: data.bounds.y, left: data.bounds.x, borderColor: "rgba(200,150,62,0.7)" }}
+          />
+          <div
+            className="absolute w-8 h-8 border-t-2 border-r-2"
+            style={{ top: data.bounds.y, left: data.bounds.x + data.bounds.w - 32, borderColor: "rgba(200,150,62,0.7)" }}
+          />
+          <div
+            className="absolute w-8 h-8 border-b-2 border-l-2"
+            style={{ top: data.bounds.y + data.bounds.h - 32, left: data.bounds.x, borderColor: "rgba(200,150,62,0.7)" }}
+          />
+          <div
+            className="absolute w-8 h-8 border-b-2 border-r-2"
+            style={{ top: data.bounds.y + data.bounds.h - 32, left: data.bounds.x + data.bounds.w - 32, borderColor: "rgba(200,150,62,0.7)" }}
+          />
         </>
       )}
 
       {measurements?.fwhr !== undefined && (
-        <motion.div
-          initial={animate ? { opacity: 0 } : false}
-          animate={{ opacity: 1 }}
-          transition={{ delay: drawDelay + 2.3, duration: 0.5 }}
+        <div
           className="absolute top-4 right-4 px-3 py-1.5 rounded-sm border bg-black/45 backdrop-blur-sm"
           style={{ borderColor: "rgba(232,200,138,0.45)" }}
         >
           <span className="text-[0.6rem] font-mono tracking-widest text-[#E8C88A]">
             VERIFIED GEOMETRY
           </span>
-        </motion.div>
+        </div>
       )}
     </div>
   );
