@@ -43,7 +43,7 @@ function xyzToCIELAB(X: number, Y: number, Z: number): CIELAB {
 }
 
 function calculateITA(lab: CIELAB): number {
-  return (Math.atan((lab.L - 50) / lab.b) * 180) / Math.PI;
+  return (Math.atan2(lab.L - 50, lab.b) * 180) / Math.PI;
 }
 
 export interface MonkScaleLevel {
