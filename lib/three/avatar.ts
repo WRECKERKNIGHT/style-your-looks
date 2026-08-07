@@ -154,80 +154,108 @@ function addCapsule(
   return mesh;
 }
 
+export interface ArmPoints {
+  shoulder: THREE.Vector3;
+  elbow: THREE.Vector3;
+  wrist: THREE.Vector3;
+}
+
 /**
- * Build the full parametric human body. Origin sits at hip center, +Y up.
- * The avatar is built from smooth primitive shells so it renders with zero
- * external assets on any device.
+ * Mannequin pose for one arm side (`s` = -1 left / +1 right). Shared by the
+ * body builder and garment sleeves so sleeves always cover the posed arm.
+ * Arms stand in a gentle A-pose with hands angled slightly forward, like a
+ * clothing-store mannequin.
+ */
+export function armPoints(m: BodyMeasurements, s: number): ArmPoints {
+  const shoulder = new THREE.Vector3(s * m.shoulderHalf * 0.98, m.shoulderY * 0.97, 0);
+  const elbow = new THREE.Vector3(
+    s * (m.shoulderHalf * 1.04 + 0.016 * m.H),
+    m.shoulderY * 0.97 - m.armLength * 0.42,
+    0
+  );
+  const wrist = new THREE.Vector3(
+    s * (m.shoulderHalf * 1.06 + 0.032 * m.H),
+    m.shoulderY * 0.97 - m.armLength * 0.86,
+    0.012 * m.H
+  );
+  return { shoulder, elbow, wrist };
+}
+
+/**
+ * Build the parametric clothing-store mannequin. Origin sits at hip center,
+ * +Y up. The body is a seamless smooth-shell form with a featureless head and
+ * A-pose arms so garments drape like on a store mannequin. All geometry is
+ * generated at runtime — zero external assets.
  */
 export function buildAvatar(p: BodyParams, material: THREE.Material): THREE.Group {
   const m = computeMeasurements(p);
   const root = new THREE.Group();
 
-  // --- Torso -------------------------------------------------------------
+  // --- Torso: smooth, unbroken shell -------------------------------------
   const torso = new THREE.Mesh(
     buildRingStack(
       (y) => torsoHalfWidth(m, y),
       (y) => torsoHalfDepth(m, y),
       m.crotchY,
       m.shoulderY,
-      { rings: 28, segments: 48, capBottom: true }
+      { rings: 32, segments: 48, capBottom: true }
     ),
     material
   );
   root.add(torso);
 
-  // Neck
-  const neck = new THREE.Mesh(new THREE.CylinderGeometry(m.neckHalf * 0.92, m.neckHalf, m.shoulderY * 0.16 + 0.02, 24), material);
+  // Neck — a short tapered column blending the torso into the head
+  const neck = new THREE.Mesh(
+    new THREE.CylinderGeometry(m.neckHalf * 0.9, m.neckHalf * 1.04, m.shoulderY * 0.16 + 0.02, 24),
+    material
+  );
   neck.position.y = m.shoulderY + (m.neckY - m.shoulderY) * 0.5;
   root.add(neck);
 
-  // Deltoid caps to smooth shoulders
+  // Shoulder caps keep the shoulder line smooth and mannequin-like
   for (const s of [-1, 1]) {
-    const delt = new THREE.Mesh(new THREE.SphereGeometry(m.shoulderHalf * 0.5, 24, 18), material);
-    delt.position.set(s * m.shoulderHalf * 0.86, m.shoulderY * 0.98, 0);
-    delt.scale.set(1, 1.05, 0.72);
+    const delt = new THREE.Mesh(new THREE.SphereGeometry(m.shoulderHalf * 0.52, 24, 18), material);
+    delt.position.set(s * m.shoulderHalf * 0.9, m.shoulderY * 0.99, 0);
+    delt.scale.set(1, 1.0, 0.7);
     root.add(delt);
   }
 
-  // --- Head --------------------------------------------------------------
+  // --- Head: featureless mannequin head ----------------------------------
   const head = new THREE.Mesh(new THREE.SphereGeometry(m.headRadius, 32, 24), material);
   head.position.y = m.chinY + m.headHeight * 0.46;
-  head.scale.set(1, 1.18, 0.92);
+  head.scale.set(1, 1.2, 0.9);
   root.add(head);
 
-  // --- Arms --------------------------------------------------------------
-  const armMat = material;
-  for (const s of [-1, 1]) {
-    const shoulder = new THREE.Vector3(s * m.shoulderHalf * 0.98, m.shoulderY * 0.97, 0);
-    const elbow = new THREE.Vector3(
-      s * (m.shoulderHalf * 0.98 + 0.015 * m.H),
-      m.shoulderY * 0.97 - m.armLength * 0.46,
-      0
-    );
-    const wrist = new THREE.Vector3(
-      s * (m.shoulderHalf * 0.98 + 0.018 * m.H),
-      m.shoulderY * 0.97 - m.armLength,
-      0
-    );
-    addCapsule(root, shoulder, elbow, m.armRadius, armMat);
-    addCapsule(root, elbow, wrist, m.forearmRadius, armMat);
+  // Subtle stylised jaw so the head reads as a face without any features
+  const jaw = new THREE.Mesh(new THREE.SphereGeometry(m.headRadius * 0.52, 24, 18), material);
+  jaw.position.set(0, m.chinY + m.headHeight * 0.02, m.headRadius * 0.72);
+  jaw.scale.set(1.18, 0.72, 0.6);
+  root.add(jaw);
 
-    const hand = new THREE.Mesh(new THREE.SphereGeometry(m.forearmRadius * 0.95, 16, 12), armMat);
-    hand.position.copy(wrist);
-    hand.scale.set(1, 1.35, 0.7);
+  // --- Arms: A-pose -------------------------------------------------------
+  for (const s of [-1, 1]) {
+    const { shoulder, elbow, wrist } = armPoints(m, s);
+    addCapsule(root, shoulder, elbow, m.armRadius, material);
+    addCapsule(root, elbow, wrist, m.forearmRadius, material);
+
+    // Stylised mitten hand — smooth, no fingers
+    const hand = new THREE.Mesh(new THREE.SphereGeometry(m.forearmRadius * 0.95, 16, 12), material);
+    hand.position.copy(wrist).add(new THREE.Vector3(s * 0.006 * m.H, -0.006 * m.H, 0.008 * m.H));
+    hand.scale.set(1, 1.35, 0.72);
+    hand.rotation.z = s * 0.08;
     root.add(hand);
   }
 
-  // --- Legs --------------------------------------------------------------
+  // --- Legs ----------------------------------------------------------------
   for (const s of [-1, 1]) {
     const hip = new THREE.Vector3(s * m.hipHalf * 0.72, m.crotchY, 0);
-    const knee = new THREE.Vector3(s * m.hipHalf * 0.78, m.kneeY, 0);
-    const ankle = new THREE.Vector3(s * m.hipHalf * 0.68, m.ankleY, 0);
+    const knee = new THREE.Vector3(s * m.hipHalf * 0.76, m.kneeY, 0);
+    const ankle = new THREE.Vector3(s * m.hipHalf * 0.66, m.ankleY, 0);
     addCapsule(root, hip, knee, m.thighRadius, material);
     addCapsule(root, knee, ankle, m.shinRadius, material);
 
     const foot = new THREE.Mesh(new THREE.BoxGeometry(m.H * 0.03, m.H * 0.02, m.H * 0.012), material);
-    foot.position.set(s * m.hipHalf * 0.66, m.soleY + m.H * 0.012, m.H * 0.006);
+    foot.position.set(s * m.hipHalf * 0.64, m.soleY + m.H * 0.012, m.H * 0.006);
     root.add(foot);
   }
 
