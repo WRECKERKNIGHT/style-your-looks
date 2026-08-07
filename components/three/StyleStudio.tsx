@@ -12,6 +12,7 @@ import type { BodyParams } from "@/lib/three/avatar";
 import type { GarmentOptions } from "@/lib/three/garments";
 import type { GlassesOptions } from "@/lib/three/glasses";
 import type { HairStyleId } from "@/lib/three/hair";
+import type { BeardStyleId } from "@/lib/three/beard";
 import StudioControls from "./StudioControls";
 
 const DEFAULT_BODY: BodyParams = {
@@ -40,6 +41,8 @@ export default function StyleStudio() {
   const [glasses, setGlasses] = useState<GlassesOptions | null>(null);
   const [hairStyle, setHairStyle] = useState<HairStyleId>("textured");
   const [hairColor, setHairColor] = useState("#2E2118");
+  const [beardStyle, setBeardStyle] = useState<BeardStyleId>("none");
+  const [beardColor, setBeardColor] = useState("#2E2118");
   const [autoRotate, setAutoRotate] = useState(false);
   const [webglUnsupported, setWebglUnsupported] = useState(false);
 
@@ -96,8 +99,8 @@ export default function StyleStudio() {
   useEffect(() => {
     const studio = studioRef.current;
     if (!studio) return;
-    renderStudio(studio, { body, skinTone, garment, glasses, hairStyle, hairColor });
-  }, [body, skinTone, garment, glasses, hairStyle, hairColor]);
+    renderStudio(studio, { body, skinTone, garment, glasses, hairStyle, hairColor, beardStyle, beardColor });
+  }, [body, skinTone, garment, glasses, hairStyle, hairColor, beardStyle, beardColor]);
 
   useEffect(() => {
     if (studioRef.current) {
@@ -154,6 +157,10 @@ export default function StyleStudio() {
           onHairStyle={(id) => setHairStyle(id as HairStyleId)}
           hairColor={hairColor}
           onHairColor={setHairColor}
+          beardStyle={beardStyle}
+          onBeardStyle={(id) => setBeardStyle(id as BeardStyleId)}
+          beardColor={beardColor}
+          onBeardColor={setBeardColor}
           onCapture={capture}
           onResetCamera={resetCamera}
           autoRotate={autoRotate}

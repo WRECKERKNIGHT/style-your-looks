@@ -5,6 +5,7 @@ import { buildAvatar, computeMeasurements, type BodyParams } from "./avatar";
 import { buildGarment, type GarmentOptions } from "./garments";
 import { buildGlasses, type GlassesOptions } from "./glasses";
 import { buildHair, type HairStyleId } from "./hair";
+import { buildBeard, type BeardStyleId } from "./beard";
 
 export interface StudioScene {
   renderer: THREE.WebGLRenderer;
@@ -15,6 +16,7 @@ export interface StudioScene {
   garmentGroup: THREE.Group;
   glassesGroup: THREE.Group;
   hairGroup: THREE.Group;
+  beardGroup: THREE.Group;
 }
 
 export const SKIN_TONES: { id: string; name: string; color: string }[] = [
@@ -138,9 +140,10 @@ export function createStudioScene(container: HTMLElement): StudioScene {
   const garmentGroup = new THREE.Group();
   const glassesGroup = new THREE.Group();
   const hairGroup = new THREE.Group();
-  scene.add(avatarGroup, garmentGroup, glassesGroup, hairGroup);
+  const beardGroup = new THREE.Group();
+  scene.add(avatarGroup, garmentGroup, glassesGroup, hairGroup, beardGroup);
 
-  return { renderer, scene, camera, controls, avatarGroup, garmentGroup, glassesGroup, hairGroup };
+  return { renderer, scene, camera, controls, avatarGroup, garmentGroup, glassesGroup, hairGroup, beardGroup };
 }
 
 export function renderStudio(
@@ -152,24 +155,32 @@ export function renderStudio(
     glasses: GlassesOptions | null;
     hairStyle: HairStyleId;
     hairColor: string;
+    beardStyle: BeardStyleId;
+    beardColor: string;
   }
 ) {
-  const { avatarGroup, garmentGroup, glassesGroup, hairGroup } = studio;
+  const { avatarGroup, garmentGroup, glassesGroup, hairGroup, beardGroup } = studio;
 
   disposeObject(avatarGroup);
   disposeObject(garmentGroup);
   disposeObject(glassesGroup);
   disposeObject(hairGroup);
+  disposeObject(beardGroup);
   avatarGroup.clear();
   garmentGroup.clear();
   glassesGroup.clear();
   hairGroup.clear();
+  beardGroup.clear();
 
-  const skinMat = new THREE.MeshStandardMaterial({
+  // Satin mannequin finish: glossy fiberglass-style surface so the form reads
+  // as a clothing-store mannequin rather than a human body.
+  const skinMat = new THREE.MeshPhysicalMaterial({
     color: state.skinTone,
-    roughness: 0.62,
+    roughness: 0.34,
     metalness: 0.0,
-    envMapIntensity: 0.85,
+    clearcoat: 0.7,
+    clearcoatRoughness: 0.28,
+    envMapIntensity: 0.95,
   });
 
   const m = computeMeasurements(state.body);
@@ -213,5 +224,15 @@ export function renderStudio(
     });
     hairGroup.add(h);
     hairGroup.position.y = -m.soleY;
+  }
+
+  if (state.beardStyle !== "none") {
+    const b = buildBeard(state.body, state.beardStyle, state.beardColor);
+    b.traverse((o) => {
+      const mesh = o as THREE.Mesh;
+      if (mesh.isMesh) mesh.castShadow = true;
+    });
+    beardGroup.add(b);
+    beardGroup.position.y = -m.soleY;
   }
 }

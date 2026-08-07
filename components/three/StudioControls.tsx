@@ -8,9 +8,10 @@ import {
 } from "@/lib/three/garments";
 import { GLASSES_CATALOG, type GlassesOptions } from "@/lib/three/glasses";
 import { HAIR_STYLES, HAIR_COLORS } from "@/lib/three/hair";
+import { BEARD_STYLES, BEARD_COLORS, type BeardStyleId } from "@/lib/three/beard";
 import { SKIN_TONES } from "@/lib/three/studio";
 import type { BodyParams } from "@/lib/three/avatar";
-import { Shirt, Glasses, Scissors, Users } from "lucide-react";
+import { Shirt, Glasses, Scissors, Users, Brush } from "lucide-react";
 
 export interface StudioControlsProps {
   body: BodyParams;
@@ -25,6 +26,10 @@ export interface StudioControlsProps {
   onHairStyle: (id: string) => void;
   hairColor: string;
   onHairColor: (color: string) => void;
+  beardStyle: string;
+  onBeardStyle: (id: string) => void;
+  beardColor: string;
+  onBeardColor: (color: string) => void;
   onCapture: () => void;
   onResetCamera: () => void;
   autoRotate: boolean;
@@ -112,6 +117,10 @@ export default function StudioControls({
   onHairStyle,
   hairColor,
   onHairColor,
+  beardStyle,
+  onBeardStyle,
+  beardColor,
+  onBeardColor,
   onCapture,
   onResetCamera,
   autoRotate,
@@ -177,6 +186,30 @@ export default function StudioControls({
           </div>
           <p className="text-[10px] font-mono text-[var(--text-muted)] tracking-widest uppercase mb-2">Hair Color</p>
           <SwatchRow colors={HAIR_COLORS.map((c) => c.color)} value={hairColor} onPick={onHairColor} />
+        </Panel>
+
+        <Panel title="BEARD" icon={Brush}>
+          <div className="flex flex-wrap gap-1.5 mb-4">
+            {BEARD_STYLES.map((b) => (
+              <button
+                key={b.id}
+                onClick={() => onBeardStyle(b.id as BeardStyleId)}
+                className={`px-2.5 py-1.5 text-[10px] border transition-all tracking-wider ${
+                  beardStyle === b.id
+                    ? "border-[var(--accent-aurum)] text-[var(--accent-aurum)]"
+                    : "border-[var(--border-primary)] text-[var(--text-muted)] hover:border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)]"
+                }`}
+              >
+                {b.name.toUpperCase()}
+              </button>
+            ))}
+          </div>
+          {beardStyle !== "none" && (
+            <>
+              <p className="text-[10px] font-mono text-[var(--text-muted)] tracking-widest uppercase mb-2">Beard Color</p>
+              <SwatchRow colors={BEARD_COLORS.map((c) => c.color)} value={beardColor} onPick={onBeardColor} />
+            </>
+          )}
         </Panel>
 
         <Panel title="GARMENTS" icon={Shirt}>
