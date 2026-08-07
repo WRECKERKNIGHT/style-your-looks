@@ -5,6 +5,7 @@ import {
   createStudioScene,
   disposeObject,
   renderStudio,
+  canUseWebGL,
   type StudioScene,
 } from "@/lib/three/studio";
 import type { BodyParams } from "@/lib/three/avatar";
@@ -40,6 +41,7 @@ export default function StyleStudio() {
   const [hairStyle, setHairStyle] = useState<HairStyleId>("textured");
   const [hairColor, setHairColor] = useState("#2E2118");
   const [autoRotate, setAutoRotate] = useState(false);
+  const [webglUnsupported, setWebglUnsupported] = useState(false);
 
   const patchBody = useCallback((patch: Partial<BodyParams>) => {
     setBody((prev) => ({ ...prev, ...patch }));
@@ -49,7 +51,18 @@ export default function StyleStudio() {
     const container = containerRef.current;
     if (!container) return;
 
-    const studio = createStudioScene(container);
+    if (!canUseWebGL()) {
+      setWebglUnsupported(true);
+      return;
+    }
+
+    let studio: StudioScene;
+    try {
+      studio = createStudioScene(container);
+    } catch {
+      setWebglUnsupported(true);
+      return;
+    }
     studioRef.current = studio;
 
     const resize = () => {
@@ -113,7 +126,19 @@ export default function StyleStudio() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
       <div className="lg:col-span-2">
-        <div ref={containerRef} className="glass-card overflow-hidden" style={{ height: 640 }} />
+        {webglUnsupported ? (
+          <div className="glass-card flex items-center justify-center" style={{ height: 640 }}>
+            <div className="px-8 text-center max-w-sm">
+              <p className="font-semibold text-aurum-300 mb-2">3D Studio unavailable</p>
+              <p className="text-sm text-[var(--text-muted)] opacity-80">
+                Your browser has WebGL disabled or blocked. Enable hardware acceleration (or
+                WebGL) and reload to use the 3D preview.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div ref={containerRef} className="glass-card overflow-hidden" style={{ height: 640 }} />
+        )}
       </div>
       <div className="lg:col-span-3">
         <StudioControls
