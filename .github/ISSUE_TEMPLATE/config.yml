@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Project docs
+    url: https://github.com/WRECKERKNIGHT/style-your-looks#readme
+    about: Check the README and docs before opening an issue.
+  - name: Security reports
+    url: https://github.com/WRECKERKNIGHT/style-your-looks/security/policy
+    about: Please report security issues privately via the security policy, not as public issues.
