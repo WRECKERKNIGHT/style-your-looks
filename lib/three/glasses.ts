@@ -1,6 +1,6 @@
 import * as THREE from "three";
 
-export type GlassesStyle = "round" | "square" | "rectangle" | "wayfarer" | "aviator" | "cat-eye" | "sport";
+export type GlassesStyle = "round" | "square" | "rectangle" | "wayfarer" | "aviator" | "cat-eye" | "sport" | "clubmaster" | "browline" | "oval" | "shield";
 export type LensType = "clear" | "tint" | "dark";
 
 export interface GlassesOptions {
@@ -30,6 +30,10 @@ export const GLASSES_CATALOG: GlassesSpec[] = [
   { id: "rectangle-silver", name: "Silver Rect", style: "rectangle", colors: ["#B9C0C8", "#8A93A0"], lensType: "clear", metal: true },
   { id: "cat-eye", name: "Cat Eye", style: "cat-eye", colors: ["#2A2622", "#4A2E1E"], lensType: "tint", metal: false },
   { id: "sport", name: "Sport Wrap", style: "sport", colors: ["#1E3A5F", "#2A3A5A"], lensType: "dark", metal: false },
+  { id: "clubmaster", name: "Clubmaster", style: "clubmaster", colors: ["#2A2622", "#6B4A2E"], lensType: "tint", metal: false },
+  { id: "browline", name: "Browline", style: "browline", colors: ["#1E1B18", "#4A3A2A"], lensType: "clear", metal: false },
+  { id: "oval-gold", name: "Gold Oval", style: "oval", colors: ["#CCA066", "#B98B56"], lensType: "clear", metal: true },
+  { id: "shield-gold", name: "Shield", style: "shield", colors: ["#CCA066", "#8A5F3D"], lensType: "dark", metal: true },
 ];
 
 /** Build a rounded polygon path (CCW) with radius r at each corner. */
@@ -95,6 +99,53 @@ function lensContours(style: GlassesStyle, w: number, h: number, thickness: numb
       const inner = roundedPoly(innerPts, h * 0.45);
       return { outer, inner };
     }
+    case "clubmaster": {
+      const pts: [number, number][] = [
+        [-w * 0.94, h * 0.95], [w * 0.94, h * 0.95], [w, -h * 0.8], [-w, -h * 0.8],
+      ];
+      const outer = roundedPoly(pts, h * 0.5);
+      const iw = thickness * 0.7;
+      const innerPts: [number, number][] = [
+        [-w * 0.94 + iw, h * 0.95 - iw], [w * 0.94 - iw, h * 0.95 - iw], [w - iw, -h * 0.8 + iw], [-w + iw, -h * 0.8 + iw],
+      ];
+      const inner = roundedPoly(innerPts, h * 0.4);
+      return { outer, inner };
+    }
+    case "browline":
+      return rectLens(w, h * 0.95, thickness * 0.8, h * 0.55);
+    case "oval": {
+      const outer = new THREE.Shape();
+      outer.ellipse(0, 0, w, h, 0, Math.PI * 2, false, 0);
+      const inner = new THREE.Path();
+      inner.ellipse(0, 0, Math.max(w - thickness, 0.004), Math.max(h - thickness, 0.004), 0, Math.PI * 2, false, 0);
+      outer.holes.push(inner);
+      const lens = new THREE.Shape();
+      lens.ellipse(0, 0, Math.max(w - thickness, 0.004), Math.max(h - thickness, 0.004), 0, Math.PI * 2, false, 0);
+      return { outer, inner: lens };
+    }
+    case "shield": {
+      const outer = new THREE.Shape();
+      outer.moveTo(-w, h);
+      outer.quadraticCurveTo(0, h * 1.15, w, h);
+      outer.quadraticCurveTo(w * 1.12, 0, w, -h);
+      outer.quadraticCurveTo(0, -h * 1.1, -w, -h);
+      outer.quadraticCurveTo(-w * 1.12, 0, -w, h);
+      const s2 = 1 - thickness / Math.min(w, h);
+      const inner = new THREE.Path();
+      inner.moveTo(-w * s2, h * s2);
+      inner.quadraticCurveTo(0, h * 1.12 * s2, w * s2, h * s2);
+      inner.quadraticCurveTo(w * 1.1 * s2, 0, w * s2, -h * s2);
+      inner.quadraticCurveTo(0, -h * 1.06 * s2, -w * s2, -h * s2);
+      inner.quadraticCurveTo(-w * 1.1 * s2, 0, -w * s2, h * s2);
+      outer.holes.push(inner);
+      const lens = new THREE.Shape();
+      lens.moveTo(-w * s2, h * s2);
+      lens.quadraticCurveTo(0, h * 1.12 * s2, w * s2, h * s2);
+      lens.quadraticCurveTo(w * 1.1 * s2, 0, w * s2, -h * s2);
+      lens.quadraticCurveTo(0, -h * 1.06 * s2, -w * s2, -h * s2);
+      lens.quadraticCurveTo(-w * 1.1 * s2, 0, -w * s2, h * s2);
+      return { outer, inner: lens };
+    }
     case "aviator": {
       const outer = new THREE.Shape();
       outer.moveTo(0, -h);
@@ -133,10 +184,18 @@ function lensContours(style: GlassesStyle, w: number, h: number, thickness: numb
 export function buildGlasses(options: GlassesOptions): THREE.Group {
   const root = new THREE.Group();
   const style = options.style;
-  const w = style === "round" ? 0.024 : style === "rectangle" || style === "sport" ? 0.028 : 0.026;
-  const h = style === "sport" ? 0.016 : 0.02;
+  const w =
+    style === "round" ? 0.024
+    : style === "oval" ? 0.022
+    : style === "rectangle" || style === "sport" ? 0.028
+    : style === "shield" ? 0.032
+    : 0.026;
+  const h = style === "sport" ? 0.016 : style === "browline" ? 0.019 : 0.02;
   const thickness = 0.005;
-  const bridge = style === "sport" ? 0.014 : 0.018;
+  const bridge =
+    style === "sport" ? 0.014
+    : style === "shield" ? 0.012
+    : 0.018;
   const lensX = w + bridge / 2;
 
   const frameMat = new THREE.MeshStandardMaterial({
@@ -168,6 +227,47 @@ export function buildGlasses(options: GlassesOptions): THREE.Group {
     lensMat = new THREE.MeshStandardMaterial({ color: lensColor, roughness: 0.08, metalness: 0.0 });
   }
 
+  // Temples shared by every style
+  const templeLen = 0.13;
+  const templeH = 0.0045;
+  const addTemples = () => {
+    for (const s of [-1, 1]) {
+      const outerX = s * (lensX + w);
+      const temple = new THREE.Mesh(new THREE.BoxGeometry(0.0035, templeH, templeLen), frameMat);
+      temple.position.set(outerX - s * 0.001, 0, -0.003 - templeLen / 2);
+      temple.rotation.z = s * 0.02;
+      root.add(temple);
+    }
+  };
+
+  // Shield: one continuous visor lens instead of two framed lenses
+  if (style === "shield") {
+    const { outer, inner } = lensContours("shield", w, h, thickness);
+    const frameGeo = new THREE.ExtrudeGeometry(outer, {
+      depth: 0.0035,
+      bevelEnabled: true,
+      bevelThickness: 0.0006,
+      bevelSize: 0.0007,
+      bevelSegments: 3,
+      curveSegments: 24,
+    });
+    frameGeo.translate(0, 0, -0.00175);
+    const frame = new THREE.Mesh(frameGeo, frameMat);
+    root.add(frame);
+
+    const lensGeo = new THREE.ShapeGeometry(inner);
+    const lens = new THREE.Mesh(lensGeo, lensMat);
+    lens.position.z = -0.0017;
+    root.add(lens);
+
+    const brow = new THREE.Mesh(new THREE.BoxGeometry((w * 2 + bridge) * 0.92, h * 0.16, 0.0035), frameMat);
+    brow.position.set(0, h * 0.82, -0.001);
+    root.add(brow);
+
+    addTemples();
+    return root;
+  }
+
   for (const s of [-1, 1]) {
     const { outer, inner } = lensContours(style, w, h, thickness);
     const frameGeo = new THREE.ExtrudeGeometry(outer, {
@@ -190,10 +290,17 @@ export function buildGlasses(options: GlassesOptions): THREE.Group {
   }
 
   // Bridge
-  const bridgeMat = frameMat;
-  const bridgeMesh = new THREE.Mesh(new THREE.BoxGeometry(bridge, h * 0.16, 0.0025), bridgeMat);
+  const bridgeMesh = new THREE.Mesh(new THREE.BoxGeometry(bridge, h * 0.16, 0.0025), frameMat);
   bridgeMesh.position.set(0, h * 0.45, -0.001);
   root.add(bridgeMesh);
+
+  // Thick brow bar across the top of the lenses (browline / clubmaster)
+  if (style === "browline" || style === "clubmaster") {
+    const browW = lensX * 2 + w * (style === "clubmaster" ? 0.9 : 0.94);
+    const brow = new THREE.Mesh(new THREE.BoxGeometry(browW, h * (style === "browline" ? 0.3 : 0.22), 0.004), frameMat);
+    brow.position.set(0, h * 0.62, -0.0012);
+    root.add(brow);
+  }
 
   // Nose pads
   const padMat = new THREE.MeshStandardMaterial({ color: "#6B4A2E", roughness: 0.6 });
@@ -203,16 +310,7 @@ export function buildGlasses(options: GlassesOptions): THREE.Group {
     root.add(pad);
   }
 
-  // Temples
-  const templeLen = 0.13;
-  const templeH = 0.0045;
-  for (const s of [-1, 1]) {
-    const outerX = s * (lensX + w);
-    const temple = new THREE.Mesh(new THREE.BoxGeometry(0.0035, templeH, templeLen), frameMat);
-    temple.position.set(outerX - s * 0.001, 0, -0.003 - templeLen / 2);
-    temple.rotation.z = s * 0.02;
-    root.add(temple);
-  }
+  addTemples();
 
   return root;
 }
