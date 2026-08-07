@@ -1,13 +1,12 @@
 "use client";
 
-import { useState, useCallback, useRef, Fragment, useMemo } from "react";
+import { useState, useCallback, useRef, Fragment, useMemo, useEffect } from "react";
 import { ImageUploader } from "@/components/shared/ImageUploader";
 import { AnalysisResults } from "@/components/analysis/AnalysisResults";
 import { FaceSkeletonOverlay } from "@/components/analysis/FaceSkeletonOverlay";
 import { ProcessingOverlay } from "@/components/analysis/ProcessingOverlay";
 import { PhotoGuidelines } from "@/components/analysis/PhotoGuidelines";
 import { PhotoReviewPanel, type RejectedPhoto } from "@/components/analysis/PhotoReviewPanel";
-import { TryItOnPanel } from "@/components/analysis/TryItOnPanel";
 import { FaceCalibration } from "@/components/analysis/FaceCalibration";
 import { CalibrationModal, type CalibrationProfile } from "@/components/analysis/CalibrationModal";
 import { FaceView3D } from "@/components/analysis/FaceView3D";
@@ -171,6 +170,19 @@ export default function FaceAnalysisPage() {
   const [shareOpen, setShareOpen] = useState(false);
   const imageRef = useRef<HTMLImageElement>(null);
   const [imageDims, setImageDims] = useState<{ w: number; h: number; aspect?: number } | null>(null);
+
+  // Demo previews are session-local: they must be forgotten the moment the
+  // user leaves this page, so they never persist across tabs or come back on
+  // a reload. Real results stay in-memory so the rest of the dashboard
+  // (hair-preview, accessories, studio...) can reuse the photo + analysis, and
+  // only the explicit "SAVE ANALYSIS" button writes to history.
+  useEffect(() => {
+    return () => {
+      if (useAnalysisStore.getState().source === "demo") {
+        useAnalysisStore.getState().reset();
+      }
+    };
+  }, []);
 
   const buildReport = useCallback(() => {
     if (!faceResult) return "";
@@ -863,10 +875,6 @@ export default function FaceAnalysisPage() {
                 {showLandmarks ? "HIDE" : "SHOW"} SKELETON
               </button>
             </motion.div>
-          )}
-
-          {faceResult.landmarks.length > 0 && uploadedImage && (
-            <TryItOnPanel image={uploadedImage} landmarks={faceResult.landmarks} />
           )}
 
           {faceResult.landmarks.length > 0 && uploadedImage && (

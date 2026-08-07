@@ -6,7 +6,6 @@ import { ThemeInitializer } from "@/components/shared/ThemeInitializer";
 import { OfflineIndicator } from "@/components/shared/OfflineIndicator";
 import { ServiceWorkerRegister } from "@/components/shared/ServiceWorkerRegister";
 import { SkipLink } from "@/components/shared/SkipLink";
-import { AutoSave } from "@/components/shared/AutoSave";
 import { JsonLd } from "@/components/shared/JsonLd";
 import ClientDecorations from "@/components/shared/ClientDecorations";
 import { CursorGlow } from "@/components/shared/CursorGlow";
@@ -99,7 +98,6 @@ export default function RootLayout({
         <SkipLink />
         <OfflineIndicator />
         <ServiceWorkerRegister />
-        <AutoSave />
         <ClientDecorations />
         <CursorGlow />
         <ScrollProgressBar />
