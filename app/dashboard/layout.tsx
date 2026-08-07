@@ -32,6 +32,7 @@ import { PageTransition } from "@/components/shared/PageTransition";
 import { InstallApp } from "@/components/shared/InstallApp";
 import { UserAvatar } from "@/components/shared/UserAvatar";
 import { LogoMark } from "@/components/shared/Logo";
+import { MediaPersistence } from "@/components/shared/MediaPersistence";
 
 const OnboardingTour = dynamic(
   () => import("@/components/shared/OnboardingTour").then((m) => m.OnboardingTour),
@@ -169,6 +170,7 @@ export default function DashboardLayout({
       </div>
 
       <OnboardingTour />
+      <MediaPersistence />
     </div>
   );
 }

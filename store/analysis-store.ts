@@ -156,6 +156,11 @@ interface AnalysisState {
   selectedBeardStyle: string;
   selectedMustacheStyle: string;
   lastSavedEntry: AnalysisEntry | null;
+  /** Monotonic revision bumped whenever a new photo enters the store. Consumers
+   *  subscribe to this to re-run their derived pipelines when it changes. */
+  pipelineRev: number;
+  /** True when the active photo is newer than the cached analysis results. */
+  photoDirty: boolean;
 
   setFaceResult: (result: FaceAnalysisResult) => void;
   setBodyResult: (result: BodyAnalysisResult) => void;
@@ -172,6 +177,13 @@ interface AnalysisState {
   setSelectedBeardStyle: (style: string) => void;
   setSelectedMustacheStyle: (style: string) => void;
   setSource: (source: AnalysisSource) => void;
+  /**
+   * Canonical photo entry point. Sets the face or full-body photo, bumps the
+   * pipeline revision so subscribed tools re-derive, and flags results stale.
+   */
+  setPhoto: (photo: string, kind: "face" | "body") => void;
+  /** Marks current results as fresh against the active photo. */
+  markAnalyzed: () => void;
   saveCurrentAnalysis: (label?: string) => AnalysisEntry | null;
   reset: () => void;
 }
@@ -191,6 +203,8 @@ export const useAnalysisStore = create<AnalysisState>((set, get) => ({
   selectedBeardStyle: "clean-shaven",
   selectedMustacheStyle: "none",
   lastSavedEntry: null,
+  pipelineRev: 0,
+  photoDirty: false,
   get currentPhoto() {
     return get().fullBodyImage ?? get().uploadedImage;
   },
@@ -208,6 +222,17 @@ export const useAnalysisStore = create<AnalysisState>((set, get) => ({
   setSelectedBeardStyle: (style) => set({ selectedBeardStyle: style }),
   setSelectedMustacheStyle: (style) => set({ selectedMustacheStyle: style }),
   setSource: (source) => set({ source }),
+
+  setPhoto: (photo, kind) =>
+    set((state) => ({
+      ...(kind === "body"
+        ? { fullBodyImage: photo }
+        : { uploadedImage: photo }),
+      pipelineRev: state.pipelineRev + 1,
+      photoDirty: true,
+    })),
+
+  markAnalyzed: () => set({ photoDirty: false }),
 
   saveCurrentAnalysis: (label?: string) => {
     const state = get();
@@ -242,7 +267,7 @@ export const useAnalysisStore = create<AnalysisState>((set, get) => ({
   },
 
   reset: () =>
-    set({
+    set((state) => ({
       source: "real",
       faceResult: null,
       bodyResult: null,
@@ -256,5 +281,7 @@ export const useAnalysisStore = create<AnalysisState>((set, get) => ({
       selectedBeardStyle: "clean-shaven",
       selectedMustacheStyle: "none",
       lastSavedEntry: null,
-    }),
+      pipelineRev: state.pipelineRev + 1,
+      photoDirty: false,
+    })),
 }));

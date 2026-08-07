@@ -21,7 +21,7 @@ import { useWebcam } from "@/hooks/useWebcam";
 import { useToast } from "@/components/shared/Toast";
 import { ScrollParallax, ScrollBlur, SectionScrollProgress } from "@/components/shared/ScrollEffects";
 import { motion, AnimatePresence } from "framer-motion";
-import { ScanFace, Camera, AlertCircle, Eye, Save, CheckCircle, X, ShieldCheck, Copy, Check, Ruler, Gauge, AlertTriangle, GitCompareArrows, Box, Share2 } from "lucide-react";
+import { ScanFace, Camera, AlertCircle, Eye, Save, CheckCircle, X, ShieldCheck, Copy, Check, Ruler, Gauge, AlertTriangle, GitCompareArrows, Box, Share2, RefreshCw } from "lucide-react";
 import { SymmetrySplit } from "@/components/analysis/SymmetrySplit";
 import { LaserScanOverlay } from "@/components/analysis/LaserScanOverlay";
 import { ShareCardModal, type ShareCardData } from "@/components/shared/ShareCardModal";
@@ -153,7 +153,7 @@ function DiagnosticStrip({
 }
 
 export default function FaceAnalysisPage() {
-  const { uploadedImage, setUploadedImage, faceResult, isAnalyzing, genderProfile, setGenderProfile, setProcessingPreview, setFaceResult } =
+  const { uploadedImage, setUploadedImage, setPhoto, markAnalyzed, photoDirty, faceResult, isAnalyzing, genderProfile, setGenderProfile, setProcessingPreview, setFaceResult } =
     useAnalysisStore();
   const { analyzeFacePhotos, cancelAnalysis } = useMediaPipe();
   const { videoRef, isStreaming, startWebcam, stopWebcam, captureFrame, error: webcamError } = useWebcam();
@@ -253,7 +253,7 @@ export default function FaceAnalysisPage() {
     useAnalysisStore.getState().reset();
     useAnalysisStore.getState().setSource("demo");
     setPhotos([DEMO_FACE_PHOTO]);
-    setUploadedImage(DEMO_FACE_PHOTO);
+    setPhoto(DEMO_FACE_PHOTO, "face");
     setError(null);
     setRejectedPhotos([]);
     setProcessingPreview({ image: DEMO_FACE_PHOTO, landmarks: [] });
@@ -271,7 +271,8 @@ export default function FaceAnalysisPage() {
     await new Promise((r) => setTimeout(r, 1100));
     setProcessingPreview(null);
     setFaceResult(buildDemoFaceResult(landmarks));
-  }, [setUploadedImage, setProcessingPreview, setFaceResult]);
+    markAnalyzed();
+  }, [setPhoto, setProcessingPreview, setFaceResult, markAnalyzed]);
 
   const shareData = useMemo<ShareCardData | null>(() => {
     if (!faceResult) return null;
@@ -307,7 +308,7 @@ export default function FaceAnalysisPage() {
 
     setError(null);
     useAnalysisStore.getState().reset();
-    setUploadedImage(photos[0]);
+    setPhoto(photos[0], "face");
     setProcessingPreview({ image: photos[0], landmarks: [] });
 
     try {
@@ -329,6 +330,7 @@ export default function FaceAnalysisPage() {
         (index, landmarks) =>
           setProcessingPreview({ image: photos[index], landmarks })
       );
+      markAnalyzed();
       setRejectedPhotos(rejected);
       if (rejected.length > 0) {
         addToast(
@@ -347,7 +349,7 @@ export default function FaceAnalysisPage() {
     } finally {
       setProcessingPreview(null);
     }
-  }, [photos, setUploadedImage, setProcessingPreview, analyzeFacePhotos, addToast, genderProfile]);
+  }, [photos, setPhoto, setProcessingPreview, analyzeFacePhotos, addToast, genderProfile, markAnalyzed]);
 
   return (
     <div className="space-y-8">
@@ -685,6 +687,20 @@ export default function FaceAnalysisPage() {
             >
               <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
               <p className="text-sm text-red-400 font-body">{error}</p>
+            </motion.div>
+          )}
+
+          {photoDirty && faceResult && !isAnalyzing && (
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-center gap-3 bg-aurum-400/10 border border-aurum-400/40 p-5"
+            >
+              <RefreshCw className="w-5 h-5 text-[var(--accent-aurum)] flex-shrink-0" />
+              <p className="text-sm text-[var(--text-primary)] font-body">
+                A new photo was loaded — the results below are from an older photo.
+                Run analysis again for up-to-date scores.
+              </p>
             </motion.div>
           )}
               </motion.div>
