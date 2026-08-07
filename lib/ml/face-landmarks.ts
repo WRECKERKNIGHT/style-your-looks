@@ -20,6 +20,44 @@ const LANDMARK = {
   NOSE_BRIDGE: 6,
 } as const;
 
+/** Canonical MediaPipe face-oval perimeter (1-indexed landmark ids, 0-indexed
+ *  into the 478-point mesh). Used for a tight, hair/background-free bbox. */
+const FACE_OVAL = [
+  10, 109, 67, 103, 54, 21, 162, 127, 234, 93, 132, 58, 172, 136, 150, 149,
+  176, 148, 152, 377, 400, 378, 379, 365, 397, 288, 361, 323, 454, 356, 389,
+  251, 284, 332, 297, 338,
+];
+
+export function faceBounds(
+  landmarks: number[][],
+  dw: number,
+  dh: number,
+  margin = 0.04
+): { x: number; y: number; w: number; h: number } | null {
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  let valid = 0;
+  for (const idx of FACE_OVAL) {
+    const lm = landmarks[idx];
+    if (!lm || !Number.isFinite(lm[0]) || !Number.isFinite(lm[1])) continue;
+    minX = Math.min(minX, lm[0]);
+    minY = Math.min(minY, lm[1]);
+    maxX = Math.max(maxX, lm[0]);
+    maxY = Math.max(maxY, lm[1]);
+    valid += 1;
+  }
+  if (valid < 4) return null;
+  const padX = (maxX - minX) * margin;
+  const padY = (maxY - minY) * margin;
+  const x = Math.max(0, (minX - padX) * dw);
+  const y = Math.max(0, (minY - padY) * dh);
+  const w = Math.min(dw - x, (maxX - minX + padX * 2) * dw);
+  const h = Math.min(dh - y, (maxY - minY + padY * 2) * dh);
+  return { x, y, w, h };
+}
+
 export function toPixel(
   landmarks: number[][],
   index: number,
