@@ -4,7 +4,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import Link from "next/link";
 import { ImageUploader } from "@/components/shared/ImageUploader";
 import { useAnalysisStore } from "@/store/analysis-store";
-import { glassesPosition } from "@/lib/ml/face-landmarks";
+import { fitGlasses } from "@/lib/ml/face-landmarks";
 import { GLASSES_PRODUCTS, loadProductImage, loadRemoteProductImage, type ProductItem } from "@/lib/ml/product-catalog";
 import { motion } from "framer-motion";
 import { Glasses, ArrowRight, Download, Trash2, Link2, Loader2 } from "lucide-react";
@@ -114,13 +114,11 @@ export default function AccessoriesPage() {
     let totalWidth: number;
     let rotation = 0;
     if (faceResult && faceResult.landmarks.length > 362) {
-      const pos = glassesPosition(faceResult.landmarks, displayWidth, displayHeight);
-      centerX = pos.centerX;
-      eyeY = pos.eyeY;
-      totalWidth = pos.totalWidth;
-      const dx = pos.rightEye.x - pos.leftEye.x;
-      const dy = pos.rightEye.y - pos.leftEye.y;
-      rotation = Math.atan2(dy, dx);
+      const fit = fitGlasses(faceResult.landmarks, displayWidth, displayHeight);
+      centerX = fit.centerX;
+      eyeY = fit.eyeY;
+      totalWidth = fit.totalWidth;
+      rotation = fit.rotation;
     } else {
       centerX = displayWidth * 0.5;
       eyeY = displayHeight * 0.36;

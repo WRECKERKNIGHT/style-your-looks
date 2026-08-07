@@ -103,6 +103,21 @@ export function glassesPosition(landmarks: number[][], dw: number, dh: number) {
   return { centerX, eyeY, totalWidth, leftEye, rightEye };
 }
 
+/** Temple tilt: rotation from the line joining the outer eye corners. */
+export function glassesRotation(landmarks: number[][]): number {
+  const left = landmarks[LANDMARK.LEFT_EYE_OUTER];
+  const right = landmarks[LANDMARK.RIGHT_EYE_OUTER];
+  if (!left || !right) return 0;
+  return Math.atan2(right[1] - left[1], right[0] - left[0]);
+}
+
+/** Consolidated landmark-anchored glasses fit: bridge (eye midpoint), rotation,
+ *  and temple-to-temple width. */
+export function fitGlasses(landmarks: number[][], dw: number, dh: number) {
+  const pos = glassesPosition(landmarks, dw, dh);
+  return { ...pos, rotation: glassesRotation(landmarks) };
+}
+
 export function hairRegion(landmarks: number[][], dw: number, dh: number) {
   const forehead = toPixel(landmarks, LANDMARK.FOREHEAD, dw, dh);
   const chin = toPixel(landmarks, LANDMARK.CHIN, dw, dh);
