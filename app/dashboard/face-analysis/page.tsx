@@ -252,26 +252,31 @@ export default function FaceAnalysisPage() {
   const runDemo = useCallback(async () => {
     useAnalysisStore.getState().reset();
     useAnalysisStore.getState().setSource("demo");
+    useAnalysisStore.getState().setIsAnalyzing(true);
     setPhotos([DEMO_FACE_PHOTO]);
     setPhoto(DEMO_FACE_PHOTO, "face");
     setError(null);
     setRejectedPhotos([]);
     setProcessingPreview({ image: DEMO_FACE_PHOTO, landmarks: [] });
-    await new Promise((r) => setTimeout(r, 1100));
-    const img = new Image();
-    img.src = DEMO_FACE_PHOTO;
-    await new Promise((r) => { img.onload = r; });
-    let landmarks: number[][] = generateDemoLandmarks();
     try {
-      landmarks = await detectFaceLandmarksOnly(img);
-    } catch {
-      // Real detection unavailable — fall back to the synthetic demo mesh.
+      await new Promise((r) => setTimeout(r, 1100));
+      const img = new Image();
+      img.src = DEMO_FACE_PHOTO;
+      await new Promise((r) => { img.onload = r; });
+      let landmarks: number[][] = generateDemoLandmarks();
+      try {
+        landmarks = await detectFaceLandmarksOnly(img);
+      } catch {
+        // Real detection unavailable — fall back to the synthetic demo mesh.
+      }
+      setProcessingPreview({ image: DEMO_FACE_PHOTO, landmarks });
+      await new Promise((r) => setTimeout(r, 1100));
+      setProcessingPreview(null);
+      setFaceResult(buildDemoFaceResult(landmarks));
+      markAnalyzed();
+    } finally {
+      useAnalysisStore.getState().setIsAnalyzing(false);
     }
-    setProcessingPreview({ image: DEMO_FACE_PHOTO, landmarks });
-    await new Promise((r) => setTimeout(r, 1100));
-    setProcessingPreview(null);
-    setFaceResult(buildDemoFaceResult(landmarks));
-    markAnalyzed();
   }, [setPhoto, setProcessingPreview, setFaceResult, markAnalyzed]);
 
   const shareData = useMemo<ShareCardData | null>(() => {

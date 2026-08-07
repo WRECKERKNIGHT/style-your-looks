@@ -84,7 +84,7 @@ const fadeUp = {
 };
 
 export default function HairPreviewPage() {
-  const { uploadedImage, fullBodyImage, setUploadedImage, faceResult } = useAnalysisStore();
+  const { uploadedImage, fullBodyImage, setUploadedImage, setFullBodyImage, faceResult } = useAnalysisStore();
   const currentPhoto = fullBodyImage ?? uploadedImage;
   const { addToast } = useToast();
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -118,11 +118,12 @@ export default function HairPreviewPage() {
 
   const handleImageUpload = useCallback((imageData: string) => {
     setUploadedImage(imageData);
+    setFullBodyImage(null);
     setSelectedColor(null);
     const img = new Image();
     img.onload = () => { imgRef.current = img; };
     img.src = imageData;
-  }, [setUploadedImage]);
+  }, [setUploadedImage, setFullBodyImage]);
 
   useEffect(() => {
     if (currentPhoto) { const img = new Image(); img.onload = () => { imgRef.current = img; }; img.src = currentPhoto; }
@@ -150,7 +151,7 @@ export default function HairPreviewPage() {
       applyHairColor(ctx, displayWidth, displayHeight, selectedColor, faceResult?.landmarks, hairSeg?.hairMask);
       ctx.globalAlpha = 1;
     }
-  }, [selectedColor, intensity, faceResult, hairSeg]);
+  }, [selectedColor, intensity, faceResult, hairSeg, currentPhoto]);
 
   useEffect(() => { renderCanvas(); }, [renderCanvas]);
 

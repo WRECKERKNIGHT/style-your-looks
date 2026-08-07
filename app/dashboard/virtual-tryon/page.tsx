@@ -29,7 +29,7 @@ const LAYER_TABS: { id: VtonLayer; label: string }[] = [
 ];
 
 export default function VirtualTryOnPage() {
-  const { uploadedImage, fullBodyImage, setUploadedImage } = useAnalysisStore();
+  const { uploadedImage, fullBodyImage, setUploadedImage, setFullBodyImage } = useAnalysisStore();
   const activePhoto = fullBodyImage ?? uploadedImage;
   const { addToast } = useToast();
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -48,12 +48,13 @@ export default function VirtualTryOnPage() {
   const handleImageUpload = useCallback(
     (imageData: string) => {
       setUploadedImage(imageData);
+      setFullBodyImage(null);
       setResult(null);
       const img = new Image();
       img.onload = () => { imgRef.current = img; };
       img.src = imageData;
     },
-    [setUploadedImage]
+    [setUploadedImage, setFullBodyImage]
   );
 
   useEffect(() => {
@@ -143,7 +144,7 @@ export default function VirtualTryOnPage() {
     } else {
       ctx.drawImage(img, 0, 0, displayWidth, displayHeight);
     }
-  }, [result, layer]);
+  }, [result, layer, activePhoto]);
 
   useEffect(() => {
     renderCanvas();

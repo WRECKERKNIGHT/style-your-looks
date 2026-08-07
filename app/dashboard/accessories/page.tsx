@@ -19,7 +19,7 @@ const fadeUp = {
 };
 
 export default function AccessoriesPage() {
-  const { uploadedImage, fullBodyImage, setUploadedImage, faceResult } = useAnalysisStore();
+  const { uploadedImage, fullBodyImage, setUploadedImage, setFullBodyImage, faceResult } = useAnalysisStore();
   const currentPhoto = fullBodyImage ?? uploadedImage;
   const { addToast } = useToast();
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -60,12 +60,13 @@ export default function AccessoriesPage() {
 
   const handleImageUpload = useCallback((imageData: string) => {
     setUploadedImage(imageData);
+    setFullBodyImage(null);
     setSelectedProduct(null);
     productRef.current = null;
     const img = new Image();
     img.onload = () => { imgRef.current = img; };
     img.src = imageData;
-  }, [setUploadedImage]);
+  }, [setUploadedImage, setFullBodyImage]);
 
   useEffect(() => {
     if (currentPhoto) {
@@ -172,7 +173,7 @@ export default function AccessoriesPage() {
       }
     }
     ctx.drawImage(layer, 0, 0);
-  }, [selectedProduct, glassesY, glassesScale, faceResult, hairSeg]);
+  }, [selectedProduct, glassesY, glassesScale, faceResult, hairSeg, currentPhoto]);
 
   useEffect(() => { renderCanvas(); }, [renderCanvas]);
 

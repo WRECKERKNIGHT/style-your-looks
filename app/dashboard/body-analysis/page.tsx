@@ -24,7 +24,7 @@ const fadeUp = {
 };
 
 function BodyProportionViz({ shoulderWidth, waistWidth, hipWidth }: { shoulderWidth: number; waistWidth: number; hipWidth: number }) {
-  const maxVal = Math.max(shoulderWidth, waistWidth, hipWidth);
+  const maxVal = Math.max(shoulderWidth, waistWidth, hipWidth, 1);
   const scale = (v: number) => (v / maxVal) * 100;
 
   return (
