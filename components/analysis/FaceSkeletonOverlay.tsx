@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useMemo } from "react";
 import { mapCoverPoint } from "@/lib/image-geometry";
 import { calculateSymmetryAxis } from "@/lib/ml/face-geometry";
+import { faceBounds } from "@/lib/ml/face-landmarks";
 
 export interface SkeletonMeasurements {
   fwhr?: number;
@@ -195,6 +196,29 @@ export function FaceSkeletonOverlay({
 
   const drawDelay = animate ? 0.2 : 0;
 
+  // Face-anchored bounding box: everything decorative (grid, scan line, frame
+  // brackets) is clipped to the detected oval instead of painting the full frame.
+  const bounds = useMemo(() => {
+    const raw = faceBounds(landmarks, 1, 1);
+    if (!raw) return null;
+    const a = map(raw.x, raw.y);
+    const b = map(raw.x + raw.w, raw.y + raw.h);
+    const x = Math.max(0, a.x);
+    const y = Math.max(0, a.y);
+    const w = Math.min(width, b.x) - x;
+    const h = Math.min(height, b.y) - y;
+    if (w <= 0 || h <= 0) return null;
+    return { x, y, w, h };
+  }, [landmarks, map, width, height]);
+
+  const clipInset = bounds
+    ? `inset(${bounds.y}px ${Math.max(0, width - bounds.x - bounds.w)}px ${Math.max(0, height - bounds.y - bounds.h)}px ${bounds.x}px)`
+    : undefined;
+  const scanStart = bounds?.y ?? 0;
+  const scanEnd = Math.max(scanStart, (bounds ? bounds.y + bounds.h : height) - 24);
+  const scanWidth = bounds?.w ?? width;
+  const scanX = bounds?.x ?? 0;
+
   return (
     <div
       className={`absolute inset-0 pointer-events-none overflow-hidden ${className || ""}`}
@@ -206,6 +230,7 @@ export function FaceSkeletonOverlay({
           style={{
             background:
               "repeating-linear-gradient(90deg, rgba(232,200,138,0.04) 0px, rgba(232,200,138,0.04) 1px, transparent 1px, transparent 36px)",
+            clipPath: clipInset,
           }}
         />
       )}
@@ -231,12 +256,12 @@ export function FaceSkeletonOverlay({
           </linearGradient>
         </defs>
 
-        {animate && (
+        {animate && bounds && (
           <motion.rect
-            x={0}
-            y={0}
-            width={width}
-            height={height}
+            x={bounds.x}
+            y={bounds.y}
+            width={bounds.w}
+            height={bounds.h}
             fill="none"
             stroke="rgba(200,150,62,0.5)"
             strokeWidth={1}
@@ -245,14 +270,14 @@ export function FaceSkeletonOverlay({
 
         {animate && (
           <motion.g
-            initial={{ y: 0, opacity: 0.9 }}
-            animate={{ y: height - 24, opacity: 0.2 }}
+            initial={{ y: scanStart, opacity: 0.9 }}
+            animate={{ y: scanEnd, opacity: 0.2 }}
             transition={{ duration: 3.2, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }}
           >
             <rect
-              x={0}
+              x={scanX}
               y={0}
-              width={width}
+              width={scanWidth}
               height={2}
               fill="url(#scan-gradient)"
               opacity={0.7}
@@ -507,12 +532,12 @@ export function FaceSkeletonOverlay({
         </div>
       )}
 
-      {animate && (
+      {animate && bounds && (
         <>
-          <div className="absolute top-2 left-2 w-8 h-8 border-t-2 border-l-2" style={{ borderColor: "rgba(200,150,62,0.7)" }} />
-          <div className="absolute top-2 right-2 w-8 h-8 border-t-2 border-r-2" style={{ borderColor: "rgba(200,150,62,0.7)" }} />
-          <div className="absolute bottom-2 left-2 w-8 h-8 border-b-2 border-l-2" style={{ borderColor: "rgba(200,150,62,0.7)" }} />
-          <div className="absolute bottom-2 right-2 w-8 h-8 border-b-2 border-r-2" style={{ borderColor: "rgba(200,150,62,0.7)" }} />
+          <div className="absolute w-8 h-8 border-t-2 border-l-2" style={{ top: bounds.y, left: bounds.x, borderColor: "rgba(200,150,62,0.7)" }} />
+          <div className="absolute w-8 h-8 border-t-2 border-r-2" style={{ top: bounds.y, left: bounds.x + bounds.w - 32, borderColor: "rgba(200,150,62,0.7)" }} />
+          <div className="absolute w-8 h-8 border-b-2 border-l-2" style={{ top: bounds.y + bounds.h - 32, left: bounds.x, borderColor: "rgba(200,150,62,0.7)" }} />
+          <div className="absolute w-8 h-8 border-b-2 border-r-2" style={{ top: bounds.y + bounds.h - 32, left: bounds.x + bounds.w - 32, borderColor: "rgba(200,150,62,0.7)" }} />
         </>
       )}
 
