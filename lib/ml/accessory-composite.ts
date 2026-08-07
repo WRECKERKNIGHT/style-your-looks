@@ -31,6 +31,8 @@ export function compositeUnderHair(
     ctx.save();
     ctx.globalCompositeOperation = "destination-out";
     ctx.drawImage(seg.hairMask, 0, 0, out.width, out.height);
+    ctx.globalCompositeOperation = "source-over";
+    ctx.drawImage(seg.hairMask, 0, 0, out.width, out.height);
     ctx.restore();
   }
 
