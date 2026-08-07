@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { buildAvatar, computeMeasurements, type BodyParams } from "./avatar";
 import { buildGarment, type GarmentOptions } from "./garments";
 import { buildGlasses, type GlassesOptions } from "./glasses";
@@ -50,11 +51,23 @@ export function createStudioScene(container: HTMLElement): StudioScene {
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.08;
   container.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color("#161210");
   scene.fog = new THREE.Fog("#161210", 5.5, 9);
+
+  // Image-based lighting: bake a neutral studio environment once so PBR
+  // materials (skin, fabric, metal) pick up realistic reflections + specular.
+  try {
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    const envTex = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+    scene.environment = envTex;
+  } catch (err) {
+    console.warn("Environment map unavailable — falling back to direct lights:", err);
+  }
 
   const camera = new THREE.PerspectiveCamera(42, 1, 0.05, 30);
   camera.position.set(1.7, 1.05, 2.35);
@@ -141,6 +154,7 @@ export function renderStudio(
     color: state.skinTone,
     roughness: 0.62,
     metalness: 0.0,
+    envMapIntensity: 0.85,
   });
 
   const m = computeMeasurements(state.body);
