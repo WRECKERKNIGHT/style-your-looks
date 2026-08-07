@@ -185,13 +185,14 @@ function getLipFullness(result: FaceLandmarkerResult): number {
 
 function getNoseProfile(result: FaceLandmarkerResult): number {
   const landmarks = result.faceLandmarks?.[0];
-  if (!landmarks || landmarks.length < 468) return 5;
+  if (!landmarks || landmarks.length < 478) return 5;
 
-  const noseWidth = Math.abs(landmarks[33].x - landmarks[263].x);
-  const faceWidth = Math.abs(landmarks[263].x - landmarks[33].x);
+  const noseWidth = Math.abs(landmarks[458].x - landmarks[468].x);
+  const faceWidth = Math.abs(landmarks[234].x - landmarks[454].x);
+  if (faceWidth === 0) return 5;
   const noseToFace = noseWidth / faceWidth;
 
-  const idealNoseRatio = 0.45;
+  const idealNoseRatio = 0.28;
   const deviation = Math.abs(noseToFace - idealNoseRatio);
   const score = 10 - deviation * 18;
   return Math.max(2, Math.min(9.5, score));
@@ -640,7 +641,7 @@ export function buildFaceScoreFromMetrics(
     {
       label: "Nose Profile",
       weight: weights.noseProfile,
-      description: "Nose width relative to face width. The ideal nose-to-face width ratio is approximately 0.45.",
+      description: "Nose width relative to face width. The ideal nose-to-face width ratio is approximately 0.28.",
       tip: "Your nose proportions work with your facial structure for a cohesive look.",
     },
     {
