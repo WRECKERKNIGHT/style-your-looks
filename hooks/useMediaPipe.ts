@@ -201,6 +201,7 @@ export function useMediaPipe() {
       onPreview?: (landmarks: number[][]) => void
     ) => {
       cancelledRef.current = false;
+      useAnalysisStore.getState().setSource("real");
       setIsAnalyzing(true);
       setAnalysisProgress(0);
 
