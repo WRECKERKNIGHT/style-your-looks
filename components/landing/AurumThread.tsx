@@ -52,10 +52,10 @@ export function AurumThread() {
     const restX = Array.from({ length: N }, (_, i) => {
       const k = i / (N - 1);
       return {
-        from: W * 0.78,
-        to: W * 0.6,
+        from: W * 0.9,
+        to: W * 0.76,
         s: k,
-        wave: Math.sin(k * Math.PI * 1.7) * W * 0.028,
+        wave: Math.sin(k * Math.PI * 1.7) * W * 0.02,
       };
     });
 
@@ -70,8 +70,8 @@ export function AurumThread() {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       for (let i = 0; i < N; i++) {
         const k = i / (N - 1);
-        pts[i].x = W * 0.78 + (W * 0.6 - W * 0.78) * k + restX[i].wave;
-        pts[i].y = H * 0.52 + (H + 60 - H * 0.52) * k;
+        pts[i].x = W * 0.9 + (W * 0.76 - W * 0.9) * k + restX[i].wave;
+        pts[i].y = H * 0.62 + (H + 80 - H * 0.62) * k;
       }
     };
 
@@ -113,16 +113,16 @@ export function AurumThread() {
       tension = Math.min(1, tension + Math.min(0.5, Math.abs(nowVel) * 0.0016));
       tension *= 0.94;
 
-      const waveAmp = W * (0.028 + tension * 0.08);
-      const baseX = W * 0.78;
-      const baseY = H * 0.52;
-      const tailX = W * 0.6;
+      const waveAmp = W * (0.02 + tension * 0.05);
+      const baseX = W * 0.9;
+      const baseY = H * 0.62;
+      const tailX = W * 0.76;
       const tailY = H + 80;
 
       const headTargetX =
         baseX +
-        Math.sin(t * 0.7) * W * 0.06 +
-        (mouseX - W * 0.5) * 0.04 +
+        Math.sin(t * 0.7) * W * 0.04 +
+        (mouseX - W * 0.5) * 0.02 +
         vel * 2.2;
       const headTargetY = baseY + Math.sin(t * 0.4) * 12;
 
@@ -222,9 +222,9 @@ export function AurumThread() {
       className="pointer-events-none fixed inset-0 z-0"
       style={{
         maskImage:
-          "linear-gradient(to bottom, transparent 0%, black 16%, black 78%, transparent 100%)",
+          "linear-gradient(to bottom, transparent 0%, black 32%, black 84%, transparent 100%)",
         WebkitMaskImage:
-          "linear-gradient(to bottom, transparent 0%, black 16%, black 78%, transparent 100%)",
+          "linear-gradient(to bottom, transparent 0%, black 32%, black 84%, transparent 100%)",
       }}
     />
   );
