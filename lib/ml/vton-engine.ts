@@ -79,6 +79,31 @@ function applyH(m: Mat3, x: number, y: number): [number, number] {
   return [(m[0] * x + m[1] * y + m[2]) / w, (m[3] * x + m[4] * y + m[5]) / w];
 }
 
+function flatWarp(
+  src: HTMLCanvasElement,
+  quad: [number, number][],
+  w: number,
+  h: number
+): HTMLCanvasElement {
+  const out = document.createElement("canvas");
+  out.width = w;
+  out.height = h;
+  const ctx = out.getContext("2d")!;
+  const xs = quad.map((p) => p[0]);
+  const ys = quad.map((p) => p[1]);
+  const minX = Math.min(...xs);
+  const maxX = Math.max(...xs);
+  const minY = Math.min(...ys);
+  const maxY = Math.max(...ys);
+  const bw = Math.max(1, maxX - minX);
+  const bh = Math.max(1, maxY - minY);
+  const scale = Math.min(bw / Math.max(1, src.width), bh / Math.max(1, src.height));
+  ctx.translate((minX + maxX) / 2, (minY + maxY) / 2);
+  ctx.scale(scale, scale);
+  ctx.drawImage(src, -src.width / 2, -src.height / 2);
+  return out;
+}
+
 export function warpHomography(
   src: HTMLCanvasElement,
   H: Mat3,
@@ -235,17 +260,22 @@ export async function runVton(req: VtonRequest): Promise<VtonResult> {
 
   const srcCorners = [0, 0, gw, 0, gw, gh, 0, gh];
   const destCorners = [quad[0][0], quad[0][1], quad[1][0], quad[1][1], quad[2][0], quad[2][1], quad[3][0], quad[3][1]];
-  const H = computeHomography(
-    [srcCorners[0], srcCorners[2], srcCorners[4], srcCorners[6]],
-    [srcCorners[1], srcCorners[3], srcCorners[5], srcCorners[7]],
-    [destCorners[0], destCorners[2], destCorners[4], destCorners[6]],
-    [destCorners[1], destCorners[3], destCorners[5], destCorners[7]]
-  );
+  let warp: HTMLCanvasElement;
+  try {
+    const H = computeHomography(
+      [srcCorners[0], srcCorners[2], srcCorners[4], srcCorners[6]],
+      [srcCorners[1], srcCorners[3], srcCorners[5], srcCorners[7]],
+      [destCorners[0], destCorners[2], destCorners[4], destCorners[6]],
+      [destCorners[1], destCorners[3], destCorners[5], destCorners[7]]
+    );
 
-  const warp = document.createElement("canvas");
-  warp.width = w;
-  warp.height = h;
-  warpHomography(garmentCv.canvas, H, warp);
+    warp = document.createElement("canvas");
+    warp.width = w;
+    warp.height = h;
+    warpHomography(garmentCv.canvas, H, warp);
+  } catch {
+    warp = flatWarp(garmentCv.canvas, quad, w, h);
+  }
 
   const torsoPath = (g: CanvasRenderingContext2D) => {
     g.beginPath();
