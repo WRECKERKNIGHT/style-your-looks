@@ -106,8 +106,11 @@ export function fitShell(
   };
 }
 
-/** Canvas-based fabric texture: solid, stripe, check, denim, camo, knit. */
-export function fabricTexture(color: string, pattern: "solid" | "stripe" | "check" | "denim" | "camo" | "knit"): THREE.CanvasTexture {
+/** Canvas-based fabric texture: solid, stripe, check, denim, camo, knit, quilt, heather. */
+export function fabricTexture(
+  color: string,
+  pattern: "solid" | "stripe" | "check" | "denim" | "camo" | "knit" | "quilt" | "heather"
+): THREE.CanvasTexture {
   const size = 128;
   const canvas = document.createElement("canvas");
   canvas.width = size;
@@ -170,6 +173,42 @@ export function fabricTexture(color: string, pattern: "solid" | "stripe" | "chec
       }
       ctx.stroke();
     }
+  } else if (pattern === "quilt") {
+    // diamond quilting grid with stitched seams + raised padding
+    ctx.strokeStyle = adjust(color, -24);
+    ctx.lineWidth = 1.5;
+    const cell = 22;
+    for (let x = -size; x < size * 2; x += cell) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x + cell / 2, size);
+      ctx.moveTo(x + cell / 2, 0);
+      ctx.lineTo(x, size);
+      ctx.stroke();
+    }
+    ctx.strokeStyle = adjust(color, 26);
+    ctx.lineWidth = 2;
+    ctx.globalAlpha = 0.35;
+    for (let x = -cell; x < size + cell; x += cell) {
+      for (let y = 0; y < size; y += cell) {
+        if ((x / cell + y / cell) % 2 === 0) {
+          ctx.beginPath();
+          ctx.ellipse(x + cell / 2, y + cell / 2, 7, 5, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
+    ctx.globalAlpha = 1;
+  } else if (pattern === "heather") {
+    // fine speckled knit
+    ctx.fillStyle = adjust(color, 18);
+    for (let i = 0; i < 1400; i++) {
+      ctx.fillRect(Math.random() * size, Math.random() * size, 1, 1);
+    }
+    ctx.fillStyle = adjust(color, -20);
+    for (let i = 0; i < 900; i++) {
+      ctx.fillRect(Math.random() * size, Math.random() * size, 1, 1);
+    }
   }
 
   const tex = new THREE.CanvasTexture(canvas);
@@ -181,7 +220,11 @@ export function fabricTexture(color: string, pattern: "solid" | "stripe" | "chec
 }
 
 /** Soft warm rim light material shared across the studio. */
-export function garmentMaterial(color: string, pattern: "solid" | "stripe" | "check" | "denim" | "camo" | "knit", roughness = 0.9): THREE.MeshStandardMaterial {
+export function garmentMaterial(
+  color: string,
+  pattern: "solid" | "stripe" | "check" | "denim" | "camo" | "knit" | "quilt" | "heather",
+  roughness = 0.9
+): THREE.MeshStandardMaterial {
   const mat = new THREE.MeshStandardMaterial({
     roughness,
     metalness: 0.0,
