@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { Box, Rotate3d, Maximize2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Box, Rotate3d, Maximize2, ScanFace } from "lucide-react";
 
 interface FaceView3DProps {
   landmarks: number[][];
@@ -87,12 +87,17 @@ export function FaceView3D({
 }: FaceView3DProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     const wrap = wrapRef.current;
     if (!canvas || !wrap) return;
-    if (!landmarks || landmarks.length < 468) return;
+    if (!landmarks || landmarks.length < 468) {
+      setReady(false);
+      return;
+    }
+    setReady(true);
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
@@ -279,24 +284,35 @@ export function FaceView3D({
       className={`relative overflow-hidden rounded-sm bg-[var(--bg-secondary)] border border-[var(--border-primary)] ${className || ""}`}
     >
       <canvas ref={canvasRef} className="block w-full touch-none" />
-      <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-sm bg-black/45 backdrop-blur-sm border border-[var(--border-primary)]">
-        <Box className="w-3 h-3 text-[var(--accent-aurum)]" />
-        <span className="text-[0.55rem] font-mono tracking-[0.25em] text-[var(--accent-aurum)] uppercase">
-          3D Face Mesh
-        </span>
-      </div>
-      <div className="absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1 rounded-sm bg-black/45 backdrop-blur-sm border border-[var(--border-primary)]">
-        <Rotate3d className="w-3 h-3 text-[var(--accent-mocha)]" />
-        <span className="text-[0.5rem] font-mono tracking-widest text-[var(--accent-mocha)] uppercase">
-          Drag to rotate
-        </span>
-      </div>
-      <div className="absolute bottom-3 right-3 flex items-center gap-1.5 px-2.5 py-1 rounded-sm bg-black/45 backdrop-blur-sm border border-[var(--border-primary)]">
-        <Maximize2 className="w-3 h-3 text-[var(--text-muted)]" />
-        <span className="text-[0.5rem] font-mono tracking-widest text-[var(--text-muted)] uppercase">
-          478 pts
-        </span>
-      </div>
+      {ready ? (
+        <>
+          <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-sm bg-black/45 backdrop-blur-sm border border-[var(--border-primary)]">
+            <Box className="w-3 h-3 text-[var(--accent-aurum)]" />
+            <span className="text-[0.55rem] font-mono tracking-[0.25em] text-[var(--accent-aurum)] uppercase">
+              3D Face Mesh
+            </span>
+          </div>
+          <div className="absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1 rounded-sm bg-black/45 backdrop-blur-sm border border-[var(--border-primary)]">
+            <Rotate3d className="w-3 h-3 text-[var(--accent-mocha)]" />
+            <span className="text-[0.5rem] font-mono tracking-widest text-[var(--accent-mocha)] uppercase">
+              Drag to rotate
+            </span>
+          </div>
+          <div className="absolute bottom-3 right-3 flex items-center gap-1.5 px-2.5 py-1 rounded-sm bg-black/45 backdrop-blur-sm border border-[var(--border-primary)]">
+            <Maximize2 className="w-3 h-3 text-[var(--text-muted)]" />
+            <span className="text-[0.5rem] font-mono tracking-widest text-[var(--text-muted)] uppercase">
+              478 pts
+            </span>
+          </div>
+        </>
+      ) : (
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[color-mix(in_srgb,var(--bg-secondary)_60%,transparent)]">
+          <ScanFace className="w-8 h-8 text-[var(--text-muted)] opacity-50" />
+          <p className="text-xs text-[var(--text-muted)] font-body px-6 text-center">
+            3D mesh unavailable — run a face analysis to generate the 478-point landmark set.
+          </p>
+        </div>
+      )}
     </div>
   );
 }
