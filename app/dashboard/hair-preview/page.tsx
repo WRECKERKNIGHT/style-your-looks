@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ImageUploader } from "@/components/shared/ImageUploader";
 import { useAnalysisStore } from "@/store/analysis-store";
 import { hairRegion } from "@/lib/ml/face-landmarks";
+import { segmentPerson, type PersonSegmentation } from "@/lib/ml/segmenter";
 import { motion } from "framer-motion";
 import { Palette, Download, Trash2, ArrowRight } from "lucide-react";
 import { useToast } from "@/components/shared/Toast";
@@ -32,7 +33,27 @@ const HAIR_COLORS: HairColor[] = [
   { id: "sage-green", name: "Sage Green", color: "#556B2F", overlay: "rgba(85,107,47,0.3)" },
 ];
 
-function applyHairColor(ctx: CanvasRenderingContext2D, displayWidth: number, displayHeight: number, color: HairColor, landmarks?: number[][]) {
+function applyHairColor(
+  ctx: CanvasRenderingContext2D,
+  displayWidth: number,
+  displayHeight: number,
+  color: HairColor,
+  landmarks?: number[][],
+  hairMask?: HTMLCanvasElement | null
+) {
+  if (hairMask) {
+    const layer = document.createElement("canvas");
+    layer.width = displayWidth;
+    layer.height = displayHeight;
+    const lctx = layer.getContext("2d");
+    if (!lctx) return;
+    lctx.fillStyle = color.overlay;
+    lctx.fillRect(0, 0, displayWidth, displayHeight);
+    lctx.globalCompositeOperation = "destination-in";
+    lctx.drawImage(hairMask, 0, 0, displayWidth, displayHeight);
+    ctx.drawImage(layer, 0, 0);
+    return;
+  }
   ctx.save();
   let topY: number, bottomY: number, leftX: number, rightX: number, centerX: number;
   if (landmarks && landmarks.length > 152) {
@@ -71,6 +92,29 @@ export default function HairPreviewPage() {
   const imgRef = useRef<HTMLImageElement | null>(null);
   const [selectedColor, setSelectedColor] = useState<HairColor | null>(null);
   const [intensity, setIntensity] = useState(0.7);
+  const [hairSeg, setHairSeg] = useState<PersonSegmentation | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!currentPhoto) {
+      setHairSeg(null);
+      return;
+    }
+    const img = new Image();
+    img.onload = () => {
+      segmentPerson(img)
+        .then((seg) => {
+          if (!cancelled) setHairSeg(seg);
+        })
+        .catch(() => {
+          if (!cancelled) setHairSeg(null);
+        });
+    };
+    img.src = currentPhoto;
+    return () => {
+      cancelled = true;
+    };
+  }, [currentPhoto]);
 
   const handleImageUpload = useCallback((imageData: string) => {
     setUploadedImage(imageData);
@@ -103,10 +147,10 @@ export default function HairPreviewPage() {
     ctx.drawImage(img, 0, 0, displayWidth, displayHeight);
     if (selectedColor) {
       ctx.globalAlpha = intensity;
-      applyHairColor(ctx, displayWidth, displayHeight, selectedColor, faceResult?.landmarks);
+      applyHairColor(ctx, displayWidth, displayHeight, selectedColor, faceResult?.landmarks, hairSeg?.hairMask);
       ctx.globalAlpha = 1;
     }
-  }, [selectedColor, intensity, faceResult]);
+  }, [selectedColor, intensity, faceResult, hairSeg]);
 
   useEffect(() => { renderCanvas(); }, [renderCanvas]);
 

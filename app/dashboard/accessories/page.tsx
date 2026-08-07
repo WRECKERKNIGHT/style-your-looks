@@ -5,6 +5,8 @@ import Link from "next/link";
 import { ImageUploader } from "@/components/shared/ImageUploader";
 import { useAnalysisStore } from "@/store/analysis-store";
 import { fitGlasses } from "@/lib/ml/face-landmarks";
+import { segmentPerson, type PersonSegmentation } from "@/lib/ml/segmenter";
+import { compositeUnderHair } from "@/lib/ml/accessory-composite";
 import { GLASSES_PRODUCTS, loadProductImage, loadRemoteProductImage, type ProductItem } from "@/lib/ml/product-catalog";
 import { motion } from "framer-motion";
 import { Glasses, ArrowRight, Download, Trash2, Link2, Loader2 } from "lucide-react";
@@ -32,6 +34,29 @@ export default function AccessoriesPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [glassesY, setGlassesY] = useState(0);
   const [glassesScale, setGlassesScale] = useState(1);
+  const [hairSeg, setHairSeg] = useState<PersonSegmentation | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!currentPhoto) {
+      setHairSeg(null);
+      return;
+    }
+    const img = new Image();
+    img.onload = () => {
+      segmentPerson(img)
+        .then((seg) => {
+          if (!cancelled) setHairSeg(seg);
+        })
+        .catch(() => {
+          if (!cancelled) setHairSeg(null);
+        });
+    };
+    img.src = currentPhoto;
+    return () => {
+      cancelled = true;
+    };
+  }, [currentPhoto]);
 
   const handleImageUpload = useCallback((imageData: string) => {
     setUploadedImage(imageData);
@@ -127,12 +152,27 @@ export default function AccessoriesPage() {
 
     const drawW = totalWidth * glassesScale * 1.12;
     const drawH = drawW * (product.height / product.width);
-    ctx.save();
-    ctx.translate(centerX, eyeY + glassesY);
-    ctx.rotate(rotation);
-    ctx.drawImage(product, -drawW / 2, -drawH / 2, drawW, drawH);
-    ctx.restore();
-  }, [selectedProduct, glassesY, glassesScale, faceResult]);
+
+    const layer = document.createElement("canvas");
+    layer.width = displayWidth;
+    layer.height = displayHeight;
+    const lctx = layer.getContext("2d");
+    if (!lctx) return;
+    lctx.save();
+    lctx.translate(centerX, eyeY + glassesY);
+    lctx.rotate(rotation);
+    lctx.drawImage(product, -drawW / 2, -drawH / 2, drawW, drawH);
+    lctx.restore();
+
+    if (hairSeg) {
+      const final = compositeUnderHair(img, layer, hairSeg, { displayWidth, displayHeight });
+      if (final) {
+        ctx.drawImage(final, 0, 0);
+        return;
+      }
+    }
+    ctx.drawImage(layer, 0, 0);
+  }, [selectedProduct, glassesY, glassesScale, faceResult, hairSeg]);
 
   useEffect(() => { renderCanvas(); }, [renderCanvas]);
 

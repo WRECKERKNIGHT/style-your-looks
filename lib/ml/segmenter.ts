@@ -52,6 +52,7 @@ export interface PersonSegmentation {
   height: number;
   categories: Uint8Array;
   personMask: HTMLCanvasElement;
+  hairMask: HTMLCanvasElement;
   clothesMask: HTMLCanvasElement;
   skinMask: HTMLCanvasElement;
 }
@@ -88,6 +89,7 @@ export async function segmentPerson(
       height,
       categories,
       personMask: maskCanvas(categories, width, height, (c) => c !== PersonCategory.Background),
+      hairMask: maskCanvas(categories, width, height, (c) => c === PersonCategory.Hair),
       clothesMask: maskCanvas(categories, width, height, (c) => c === PersonCategory.Clothes),
       skinMask: maskCanvas(categories, width, height, (c) => c === PersonCategory.BodySkin || c === PersonCategory.FaceSkin),
     };
