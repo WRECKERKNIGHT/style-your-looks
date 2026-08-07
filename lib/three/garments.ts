@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { buildRingStack, garmentMaterial, type RingStackOptions } from "./geometry";
 import { computeMeasurements, torsoHalfWidth, torsoHalfDepth, type BodyMeasurements, type BodyParams } from "./avatar";
 
@@ -20,6 +21,30 @@ export interface GarmentOptions {
   color: string;
   pattern?: FabricPattern;
   fit?: number; // meters of ease; negative = tight
+}
+
+const gltfCache = new Map<string, Promise<THREE.Group>>();
+
+/**
+ * Loads a glTF/GLB garment from a URL (local bundle or remote CDN), cached by
+ * URL and returned as a fresh clone per caller. Callers that need a full body
+ * fallback can catch the rejection and use buildGarment() instead.
+ */
+export async function loadGarmentGltf(url: string): Promise<THREE.Group> {
+  let pending = gltfCache.get(url);
+  if (!pending) {
+    pending = new Promise<THREE.Group>((resolve, reject) => {
+      new GLTFLoader().load(
+        url,
+        (gltf) => resolve(gltf.scene),
+        undefined,
+        (err) => reject(err instanceof Error ? err : new Error("Failed to load GLB garment"))
+      );
+    });
+    gltfCache.set(url, pending);
+  }
+  const scene = await pending;
+  return scene.clone(true);
 }
 
 export const GARMENT_CATALOG: GarmentSpec[] = [
