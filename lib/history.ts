@@ -29,6 +29,16 @@ export function getHistory(): AnalysisEntry[] {
   }
 }
 
+function fingerprint(e: Pick<AnalysisEntry, "faceResult" | "bodyResult" | "colorAnalysis" | "thumbnailUrl" | "label">): string {
+  const f = e.faceResult;
+  const b = e.bodyResult;
+  const c = e.colorAnalysis;
+  const face = f ? `${f.overallScore}|${f.symmetry}|${f.jawline}|${f.facialShape}|${f.photoCount}` : "";
+  const body = b ? `${b.bodyType}|${b.bodyProportionScore ?? 0}` : "";
+  const color = c ? `${c.subType}|${c.seasonalType}` : "";
+  return `${face}#${body}#${color}#${e.thumbnailUrl ?? ""}#${e.label}`;
+}
+
 export function saveToHistory(entry: Omit<AnalysisEntry, "id" | "timestamp" | "date">): AnalysisEntry | null {
   // Demo previews are never real data — refuse to persist them so they can never
   // appear in profile stats, feeds, or trend lines (defense in depth).
@@ -50,18 +60,21 @@ export function saveToHistory(entry: Omit<AnalysisEntry, "id" | "timestamp" | "d
     }),
   };
 
-  history.unshift(newEntry);
-  if (history.length > MAX_ENTRIES) {
-    history.length = MAX_ENTRIES;
-  }
+  const fingerprintOf = fingerprint(newEntry);
+  const top = history[0];
+  const deduped =
+    top && fingerprint(top) === fingerprintOf
+      ? [{ ...top, ...newEntry, id: top.id }, ...history.slice(1)]
+      : [newEntry, ...history];
+  const trimmed = deduped.slice(0, MAX_ENTRIES);
 
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed));
   } catch {
     // Storage full — remove oldest entries
-    history.length = Math.floor(MAX_ENTRIES / 2);
+    const reduced = trimmed.slice(0, Math.floor(MAX_ENTRIES / 2));
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(reduced));
     } catch {
       throw new Error("Could not save to history — browser storage is full.");
     }
