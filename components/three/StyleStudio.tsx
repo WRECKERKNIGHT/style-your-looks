@@ -1,22 +1,22 @@
-"use client";
+'use client';
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   createStudioScene,
   disposeObject,
   renderStudio,
   canUseWebGL,
   type StudioScene,
-} from "@/lib/three/studio";
-import type { BodyParams } from "@/lib/three/avatar";
-import type { GarmentOptions } from "@/lib/three/garments";
-import type { GlassesOptions } from "@/lib/three/glasses";
-import type { HairStyleId } from "@/lib/three/hair";
-import type { BeardStyleId } from "@/lib/three/beard";
-import StudioControls from "./StudioControls";
+} from '@/lib/three/studio';
+import type { BodyParams } from '@/lib/three/avatar';
+import type { GarmentOptions } from '@/lib/three/garments';
+import type { GlassesOptions } from '@/lib/three/glasses';
+import type { HairStyleId } from '@/lib/three/hair';
+import type { BeardStyleId } from '@/lib/three/beard';
+import StudioControls from './StudioControls';
 
 const DEFAULT_BODY: BodyParams = {
-  gender: "male",
+  gender: 'male',
   height: 178,
   build: 0.5,
   mass: 0.3,
@@ -31,18 +31,18 @@ export default function StyleStudio() {
   const rafRef = useRef<number>(0);
 
   const [body, setBody] = useState<BodyParams>(DEFAULT_BODY);
-  const [skinTone, setSkinTone] = useState("#C99B6E");
+  const [skinTone, setSkinTone] = useState('#C99B6E');
   const [garment, setGarment] = useState<GarmentOptions | null>({
-    kind: "tshirt",
-    color: "#F2F0EB",
-    pattern: "solid",
+    kind: 'tshirt',
+    color: '#F2F0EB',
+    pattern: 'solid',
     fit: 0.008,
   });
   const [glasses, setGlasses] = useState<GlassesOptions | null>(null);
-  const [hairStyle, setHairStyle] = useState<HairStyleId>("textured");
-  const [hairColor, setHairColor] = useState("#2E2118");
-  const [beardStyle, setBeardStyle] = useState<BeardStyleId>("none");
-  const [beardColor, setBeardColor] = useState("#2E2118");
+  const [hairStyle, setHairStyle] = useState<HairStyleId>('textured');
+  const [hairColor, setHairColor] = useState('#2E2118');
+  const [beardStyle, setBeardStyle] = useState<BeardStyleId>('none');
+  const [beardColor, setBeardColor] = useState('#2E2118');
   const [autoRotate, setAutoRotate] = useState(false);
   const [webglUnsupported, setWebglUnsupported] = useState(false);
 
@@ -99,7 +99,19 @@ export default function StyleStudio() {
   useEffect(() => {
     const studio = studioRef.current;
     if (!studio) return;
-    renderStudio(studio, { body, skinTone, garment, glasses, hairStyle, hairColor, beardStyle, beardColor });
+    const timer = window.setTimeout(() => {
+      renderStudio(studio, {
+        body,
+        skinTone,
+        garment,
+        glasses,
+        hairStyle,
+        hairColor,
+        beardStyle,
+        beardColor,
+      });
+    }, 120);
+    return () => window.clearTimeout(timer);
   }, [body, skinTone, garment, glasses, hairStyle, hairColor, beardStyle, beardColor]);
 
   useEffect(() => {
@@ -119,9 +131,9 @@ export default function StyleStudio() {
   const capture = useCallback(() => {
     const s = studioRef.current;
     if (!s) return;
-    const url = s.renderer.domElement.toDataURL("image/png");
-    const link = document.createElement("a");
-    link.download = "zervey-3d-preview.png";
+    const url = s.renderer.domElement.toDataURL('image/png');
+    const link = document.createElement('a');
+    link.download = 'zervey-3d-preview.png';
     link.href = url;
     link.click();
   }, []);
@@ -134,8 +146,8 @@ export default function StyleStudio() {
             <div className="px-8 text-center max-w-sm">
               <p className="font-semibold text-aurum-300 mb-2">3D Studio unavailable</p>
               <p className="text-sm text-[var(--text-muted)] opacity-80">
-                Your browser has WebGL disabled or blocked. Enable hardware acceleration (or
-                WebGL) and reload to use the 3D preview.
+                Your browser has WebGL disabled or blocked. Enable hardware acceleration (or WebGL)
+                and reload to use the 3D preview.
               </p>
             </div>
           </div>
