@@ -204,12 +204,20 @@ export function buildAvatar(p: BodyParams, material: THREE.Material): THREE.Grou
   );
   root.add(torso);
 
-  // Neck — a short tapered column blending the torso into the head
+  // Neck — a short tapered column bridging the torso into the head, sized to
+  // reach the head's underside so the mannequin reads as one continuous shell.
+  const neckTopY = m.chinY + m.headHeight * 0.46 - m.headRadius * 1.2;
+  const neckBottomY = m.shoulderY + 0.03;
   const neck = new THREE.Mesh(
-    new THREE.CylinderGeometry(m.neckHalf * 0.9, m.neckHalf * 1.04, m.shoulderY * 0.16 + 0.02, 24),
+    new THREE.CylinderGeometry(
+      m.neckHalf * 0.9,
+      m.neckHalf * 1.04,
+      Math.max(0.02, neckTopY - neckBottomY),
+      24
+    ),
     material
   );
-  neck.position.y = m.shoulderY + (m.neckY - m.shoulderY) * 0.5;
+  neck.position.y = (neckTopY + neckBottomY) / 2;
   root.add(neck);
 
   // Shoulder caps keep the shoulder line smooth and mannequin-like

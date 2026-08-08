@@ -286,6 +286,7 @@ export function useMediaPipe() {
         let bestQuality = -1;
         let bestQualityReport: PhotoQualityReport | null = null;
         let bestSkinTone: ReturnType<typeof analyzeSkinTone> = null;
+        let bestIndex = 0;
 
         for (let i = 0; i < imageElements.length; i++) {
           setAnalysisProgress(Math.round((i / imageElements.length) * 75));
@@ -329,6 +330,7 @@ export function useMediaPipe() {
             bestCanvas = canvas;
             bestQualityReport = quality;
             bestSkinTone = analyzeSkinTone(canvas, faceResult);
+            bestIndex = i;
           }
         }
 
@@ -364,7 +366,7 @@ export function useMediaPipe() {
 
         setAnalysisProgress(100);
         saveCurrentAnalysis();
-        return { scoreResult, samples, rejected, photoCount: samples.length };
+        return { scoreResult, samples, rejected, photoCount: samples.length, bestIndex };
       } catch (err) {
         console.error("Multi-photo face analysis error:", err);
         throw err;

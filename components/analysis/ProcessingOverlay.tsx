@@ -134,7 +134,7 @@ export function ProcessingOverlay({
                   initial={{ scale: 1.06 }}
                   animate={{ scale: 1 }}
                   transition={{ duration: 1.8, ease: [0.16, 1, 0.3, 1] }}
-                  className="w-full"
+                  className="w-full relative"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
@@ -144,24 +144,24 @@ export function ProcessingOverlay({
                     onLoad={handlePreviewLoad}
                     className="w-full max-h-[440px] object-cover"
                   />
+
+                  {previewDims && preview!.landmarks.length > 0 && (
+                    <FaceSkeletonOverlay
+                      key={previewImage}
+                      landmarks={preview!.landmarks}
+                      width={previewDims.w}
+                      height={previewDims.h}
+                      imageAspect={previewDims.aspect}
+                      facialShape={liveMetrics.shape}
+                      measurements={liveMetrics.measurements}
+                      animate
+                    />
+                  )}
+
+                  {previewDims && preview!.landmarks.length === 0 && (
+                    <FaceFinder width={previewDims.w} height={previewDims.h} />
+                  )}
                 </motion.div>
-
-                {previewDims && preview!.landmarks.length > 0 && (
-                  <FaceSkeletonOverlay
-                    key={previewImage}
-                    landmarks={preview!.landmarks}
-                    width={previewDims.w}
-                    height={previewDims.h}
-                    imageAspect={previewDims.aspect}
-                    facialShape={liveMetrics.shape}
-                    measurements={liveMetrics.measurements}
-                    animate
-                  />
-                )}
-
-                {previewDims && preview!.landmarks.length === 0 && (
-                  <FaceFinder width={previewDims.w} height={previewDims.h} />
-                )}
 
                 <div
                   className="pointer-events-none absolute inset-0"

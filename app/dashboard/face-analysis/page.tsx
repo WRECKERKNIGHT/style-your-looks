@@ -341,12 +341,15 @@ export default function FaceAnalysisPage() {
         )
       );
 
-      const { photoCount, rejected } = await analyzeFacePhotos(
+      const { photoCount, rejected, bestIndex } = await analyzeFacePhotos(
         images,
         genderProfile,
         (index, landmarks) =>
           setProcessingPreview({ image: photos[index], landmarks })
       );
+      // Landmarks come from the best-scoring photo; show that same photo so the
+      // wireframe, laser scan and symmetry overlay align with the face.
+      setPhoto(photos[bestIndex] ?? photos[0], "face");
       markAnalyzed();
       setRejectedPhotos(rejected);
       if (rejected.length > 0) {
