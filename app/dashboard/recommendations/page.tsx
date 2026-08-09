@@ -1,69 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { useAnalysisStore } from "@/store/analysis-store";
 import { motion } from "framer-motion";
-import { Lightbulb, ChevronRight, Sparkles, Shirt, Palette, Star, ArrowRight } from "lucide-react";
+import { Sparkles, ChevronRight, Shirt, ArrowRight, Palette } from "lucide-react";
 import { ScrollParallax, ScrollBlur, SectionScrollProgress } from "@/components/shared/ScrollEffects";
-
-interface RecCategory {
-  id: string;
-  title: string;
-  icon: typeof Shirt;
-  items: { title: string; desc: string; match: number }[];
-}
-
-const RECOMMENDATIONS: RecCategory[] = [
-  {
-    id: "colors",
-    title: "COLOR PALETTE",
-    icon: Palette,
-    items: [
-      { title: "Deep Navy Blazer", desc: "Core investment piece for your palette", match: 98 },
-      { title: "Burgundy Turtleneck", desc: "Complements your undertone perfectly", match: 95 },
-      { title: "Cream Silk Blouse", desc: "Adds softness while staying in range", match: 92 },
-      { title: "Forest Green Trousers", desc: "Strong accent piece for your profile", match: 90 },
-      { title: "Charcoal Wool Coat", desc: "Neutral layer with high versatility", match: 88 },
-    ],
-  },
-  {
-    id: "silhouettes",
-    title: "SILHOUETTES",
-    icon: Shirt,
-    items: [
-      { title: "Structured Shoulder Coat", desc: "Balances your proportions", match: 96 },
-      { title: "High-Waisted Wide Leg", desc: "Creates a lengthening effect", match: 93 },
-      { title: "Wrap Dress", desc: "Defines waist elegantly", match: 91 },
-      { title: "A-Line Midi Skirt", desc: "Flowing yet structured shape", match: 89 },
-      { title: "Cropped Blazer", desc: "Modern proportion for your frame", match: 86 },
-    ],
-  },
-  {
-    id: "essentials",
-    title: "WARDROBE ESSENTIALS",
-    icon: Star,
-    items: [
-      { title: "Italian Leather Belt", desc: "Defines waist; choose dark brown", match: 97 },
-      { title: "Silk Scarf", desc: "Adds face-framing color near features", match: 94 },
-      { title: "Minimalist Watch", desc: "Gold-tone case, neutral strap", match: 91 },
-      { title: "Structured Tote", desc: "Neutral investment carried daily", match: 88 },
-      { title: "Block-Heel Pumps", desc: "Nude tone to elongate legs", match: 85 },
-    ],
-  },
-  {
-    id: "grooming",
-    title: "GROOMING",
-    icon: Sparkles,
-    items: [
-      { title: "Hydrating Serum", desc: "For your skin type & climate", match: 99 },
-      { title: "Volumizing Texture Spray", desc: "Matches your hair density analysis", match: 93 },
-      { title: "SPF 50 Mineral Sunscreen", desc: "Essential for your skin health score", match: 92 },
-      { title: "Lightweight Moisturizer", desc: "Non-comedogenic for your skin type", match: 90 },
-      { title: "Tinted Lip Balm", desc: "Enhances natural lip color subtly", match: 88 },
-    ],
-  },
-];
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -75,10 +16,7 @@ const stagger = {
 };
 
 export default function RecommendationsPage() {
-  const { faceResult, bodyResult, colorAnalysis } = useAnalysisStore();
-  const [activeCategory, setActiveCategory] = useState("colors");
-
-  const activeRecs = RECOMMENDATIONS.find(r => r.id === activeCategory);
+  const { faceResult, bodyResult, colorAnalysis, outfitRecommendations } = useAnalysisStore();
 
   const pillarResult = faceResult || bodyResult || colorAnalysis
     ? {
@@ -89,6 +27,8 @@ export default function RecommendationsPage() {
       }
     : null;
 
+  const unlocked = pillarResult && outfitRecommendations.length > 0;
+
   return (
     <div className="space-y-8">
       <SectionScrollProgress />
@@ -96,7 +36,7 @@ export default function RecommendationsPage() {
       <motion.div variants={fadeUp} initial="hidden" animate="show">
         <span className="section-number">EST. MMXXIV // RECOMMENDATIONS</span>
         <div className="flex items-center gap-3 mt-3 mb-2">
-          <Lightbulb className="w-7 h-7 text-[var(--accent-aurum)]" />
+          <Sparkles className="w-7 h-7 text-[var(--accent-aurum)]" />
           <h1 className="type-display text-[var(--text-primary)] tracking-tight">
             CURATED <span className="text-gradient-aurum">RECOMMENDATIONS.</span>
           </h1>
@@ -108,59 +48,62 @@ export default function RecommendationsPage() {
       </ScrollParallax>
 
       <ScrollBlur blur={0} minOpacity={0.95}>
-      {!pillarResult ? (
+      {!unlocked ? (
         <motion.div variants={fadeUp} initial="hidden" animate="show" className="glass-card p-8 text-center space-y-4">
           <Sparkles className="w-8 h-8 text-[var(--accent-aurum)] mx-auto" />
-          <p className="text-[var(--text-muted)] type-body">Complete your pillar analysis first to unlock personalized recommendations.</p>
-          <Link href="/dashboard/pillar-analysis" className="btn-nexus inline-flex items-center gap-2">
-            TAKE PILLAR ANALYSIS <ArrowRight className="w-4 h-4" />
+          <p className="text-[var(--text-muted)] type-body">
+            {pillarResult
+              ? "Run a Body + Tone analysis first — outfit picks are generated from your real measurements and undertone."
+              : "Complete your pillar analysis first to unlock personalized recommendations."}
+          </p>
+          <Link href="/dashboard/body-analysis" className="btn-nexus inline-flex items-center gap-2">
+            {pillarResult ? "RUN BODY ANALYSIS" : "TAKE PILLAR ANALYSIS"} <ArrowRight className="w-4 h-4" />
           </Link>
         </motion.div>
       ) : (
         <>
-          <motion.div variants={fadeUp} initial="hidden" animate="show" className="flex gap-2 overflow-x-auto pb-2">
-            {RECOMMENDATIONS.map(cat => {
-              const Icon = cat.icon;
-              return (
-                <button key={cat.id} onClick={() => setActiveCategory(cat.id)}
-                  className={`flex items-center gap-2 px-4 py-2 border whitespace-nowrap transition-all ${
-                    activeCategory === cat.id
-                      ? "border-[var(--accent-aurum)] bg-[color-mix(in_srgb,var(--accent-aurum)_10%,transparent)] text-[var(--accent-aurum)]"
-                      : "border-[var(--border-primary)] text-[var(--text-muted)] hover:border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)] card-nexus"
-                  }`}>
-                  <Icon className="w-4 h-4" />
-                  <span className="type-label">{cat.title}</span>
-                </button>
-              );
-            })}
-          </motion.div>
-
-          {activeRecs && (
-            <motion.div variants={stagger} initial="hidden" animate="show" className="glass-card p-6">
-              <h3 className="type-label text-[var(--text-primary)] mb-5">{activeRecs.title}</h3>
-              <div className="space-y-3">
-                {activeRecs.items.map((item, i) => (
-                  <motion.div key={i} variants={fadeUp}
-                    className="flex items-center justify-between p-4 border border-[var(--border-primary)] bg-[var(--bg-tertiary)] card-nexus group hover:border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)] transition-all">
-                    <div className="flex items-center gap-3">
+          <motion.div variants={fadeUp} initial="hidden" animate="show" className="glass-card p-6">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="type-label text-[var(--text-primary)]">
+                OUTFIT PICKS <span className="text-[var(--text-muted)]">({outfitRecommendations.length})</span>
+              </h3>
+              <span className="type-mono text-[0.55rem] text-[var(--accent-mocha)] tracking-widest bg-aurum-400/15 px-2.5 py-1 rounded">
+                GENERATED FROM YOUR ANALYSIS
+              </span>
+            </div>
+            <motion.div variants={stagger} initial="hidden" animate="show" className="space-y-3">
+              {outfitRecommendations.map((rec, i) => (
+                <motion.div key={rec.id} variants={fadeUp}
+                  className="p-4 border border-[var(--border-primary)] bg-[var(--bg-tertiary)] card-nexus group hover:border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)] transition-all">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-start gap-3">
                       <span className="type-mono text-[var(--accent-aurum)] text-xs">{String(i + 1).padStart(2, "0")}</span>
                       <div>
-                        <p className="type-body text-[var(--text-primary)]">{item.title}</p>
-                        <p className="text-xs text-[var(--text-muted)]">{item.desc}</p>
+                        <p className="type-body text-[var(--text-primary)]">{rec.name}</p>
+                        <p className="text-xs text-[var(--text-muted)] mt-1">{rec.description}</p>
+                        {rec.keyPieces.length > 0 && (
+                          <p className="text-xs text-[var(--text-muted)] mt-2">
+                            <span className="type-mono text-[0.55rem] tracking-widest text-[var(--accent-mocha)]">KEY PIECES: </span>
+                            {rec.keyPieces.join(" · ")}
+                          </p>
+                        )}
+                        <p className="text-xs text-[var(--text-muted)] mt-2 italic">{rec.reasoning}</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-12 h-1 bg-[var(--bg-tertiary)] overflow-hidden">
-                        <div className="h-full bg-gradient-to-r from-[var(--accent-nexus)] to-[var(--accent-aurum)]" style={{ width: `${item.match}%` }} />
+                    <div className="flex flex-col items-end gap-2 shrink-0">
+                      <span className="type-mono text-[0.55rem] text-[var(--text-muted)] tracking-widest">{rec.occasion.toUpperCase()}</span>
+                      <div className="flex items-center gap-1.5">
+                        {rec.colors.slice(0, 5).map((c) => (
+                          <span key={c} className="w-5 h-5 rounded-full border border-[var(--border-primary)]" style={{ backgroundColor: c }} />
+                        ))}
                       </div>
-                      <span className="type-mono text-[var(--accent-aurum)] text-xs">{item.match}%</span>
                       <ChevronRight className="w-4 h-4 text-[var(--text-muted)] group-hover:text-[var(--accent-aurum)] transition-colors" />
                     </div>
-                  </motion.div>
-                ))}
-              </div>
+                  </div>
+                </motion.div>
+              ))}
             </motion.div>
-          )}
+          </motion.div>
 
           <motion.div variants={fadeUp} initial="hidden" animate="show" className="glass-card p-6">
             <h3 className="type-label text-[var(--text-primary)] mb-3">ANALYSIS SUMMARY</h3>
@@ -183,8 +126,8 @@ export default function RecommendationsPage() {
             <Link href="/dashboard/mannequin" className="btn-nexus flex-1 justify-center">
               <Shirt className="w-4 h-4" /> TRY ON MANNEQUIN
             </Link>
-            <Link href="/dashboard/community" className="btn-nexus flex-1 justify-center">
-              COMMUNITY <ArrowRight className="w-4 h-4" />
+            <Link href="/dashboard/color-analysis" className="btn-nexus flex-1 justify-center">
+              <Palette className="w-4 h-4" /> VIEW YOUR PALETTE <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
         </>
