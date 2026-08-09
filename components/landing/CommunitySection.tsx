@@ -2,44 +2,44 @@
 
 import { useRef } from "react";
 import { motion, useInView } from "framer-motion";
-import { Star, MessageCircle, TrendingUp } from "lucide-react";
+import { Star, MessageCircle, TrendingUp, ScanFace, Ban, EyeOff } from "lucide-react";
 import { SpotlightCard } from "@/components/shared/SpotlightCard";
 import { ScrollParallax, ScrollBlur } from "@/components/shared/ScrollEffects";
 import { KineticHeadline } from "./KineticHeadline";
 import { Reveal } from "@/components/shared/Reveal";
 
-const posts = [
+const pillars = [
   {
-    name: "ALEX_M",
-    score: 8.4,
-    tag: "NIGHT OUT",
-    rating: 9.2,
-    comments: 23,
-    quote: "The jawline score was brutal but accurate.",
+    icon: ScanFace,
+    tag: "REAL RESULTS",
+    score: "YOU",
+    label: "YOUR FACEIQ",
+    quote:
+      "Community posts are generated from your actual on-device analysis — never from pre-baked sample scores.",
   },
   {
-    name: "KIRA.S",
-    score: 7.8,
-    tag: "STREETWEAR",
-    rating: 8.7,
-    comments: 41,
-    quote: "Finally a color palette that actually works.",
+    icon: Star,
+    tag: "HONEST RATINGS",
+    score: "1-10",
+    label: "VERIFIED RATERS",
+    quote:
+      "Ratings come from confirmed accounts with a confirmed email. You cannot rate your own post.",
   },
   {
-    name: "DANIEL_B",
-    score: 9.1,
-    tag: "FORMAL",
-    rating: 9.5,
-    comments: 18,
-    quote: "The golden ratio breakdown blew my mind.",
+    icon: Ban,
+    tag: "NO SELF-RATING",
+    score: "0",
+    label: "FAKED SCORES",
+    quote:
+      "No bots, no sock accounts, no inflated averages. A fake-looking score gets pulled.",
   },
   {
-    name: "MAYA.X",
-    score: 8.0,
-    tag: "CASUAL",
-    rating: 8.9,
-    comments: 56,
-    quote: "Shared my grooming recs. Game changer.",
+    icon: EyeOff,
+    tag: "YOUR CALL",
+    score: "100%",
+    label: "PRIVATE OPTION",
+    quote:
+      "Share a blurred photo or keep it private entirely. Community is opt-in, never default.",
   },
 ];
 
@@ -74,8 +74,8 @@ export function CommunitySection() {
           </div>
           <KineticHeadline text="HONEST FEEDBACK." className="type-display text-[var(--text-primary)]" weightFrom={300} weightTo={800} />
           <p className="mt-5 text-[var(--text-secondary)] max-w-md font-body text-base leading-relaxed">
-            Real people. Real ratings. No filters, no fakery. The kind of
-            feedback your friends won&apos;t give you.
+            No fabricated posts, no inflated scores. When you share, the
+            numbers are real — and so is the feedback.
           </p>
         </Reveal>
 
@@ -109,9 +109,9 @@ export function CommunitySection() {
         </ScrollBlur>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {posts.map((post, index) => (
+          {pillars.map((pillar, index) => (
             <Reveal
-              key={post.name}
+              key={pillar.tag}
               y={50}
               rotate={index % 2 === 0 ? -1.5 : 1.5}
               delay={index * 0.1}
@@ -120,7 +120,7 @@ export function CommunitySection() {
               <SpotlightCard spotlightColor="rgba(185, 139, 86, 0.15)" className="h-full rounded-2xl">
               <div className="flex items-center justify-between mb-5">
                 <span className="type-mono text-[0.55rem] text-[var(--accent-mocha)] tracking-widest bg-aurum-400/15 px-2.5 py-1 rounded">
-                  {post.tag}
+                  {pillar.tag}
                 </span>
                 <span className="type-mono text-[0.5rem] text-[var(--text-muted)] tracking-widest">
                   #{String(index + 1).padStart(3, "0")}
@@ -128,45 +128,35 @@ export function CommunitySection() {
               </div>
 
               <div className="mb-4">
-                <div className="text-5xl font-display font-bold text-gradient-aurum leading-none">
-                  {post.score}
+                <pillar.icon className="w-7 h-7 text-aurum-400 mb-2" />
+                <div className="text-4xl font-display font-bold text-gradient-aurum leading-none">
+                  {pillar.score}
                 </div>
                 <div className="type-mono text-[0.5rem] text-[var(--text-muted)] tracking-widest mt-2">
-                  FACEIQ SCORE
+                  {pillar.label}
                 </div>
               </div>
 
               <p className="text-sm text-[var(--text-secondary)] font-body italic mb-5 leading-relaxed">
-                &ldquo;{post.quote}&rdquo;
+                &ldquo;{pillar.quote}&rdquo;
               </p>
 
               <div className="flex items-center gap-4 pt-4 border-t border-[var(--border-primary)]">
                 <div className="flex items-center gap-1.5">
                   <Star className="w-3 h-3 text-aurum-400" fill="#C8963E" />
                   <span className="type-mono text-[0.65rem] text-[color-mix(in_srgb,var(--text-primary)_80%,transparent)]">
-                    {post.rating}
+                    VERIFIED
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <MessageCircle className="w-3 h-3 text-[var(--text-muted)]" />
                   <span className="type-mono text-[0.65rem] text-[var(--text-muted)]">
-                    {post.comments}
+                    OPT-IN
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <TrendingUp className="w-3 h-3 text-success/60" />
                 </div>
-              </div>
-
-              <div className="mt-4 flex items-center gap-2.5">
-                <div className="w-7 h-7 rounded-full bg-[var(--bg-tertiary)] border border-[var(--border-primary)] flex items-center justify-center">
-                  <span className="text-[0.5rem] font-mono text-[var(--accent-mocha)] font-bold">
-                    {post.name[0]}
-                  </span>
-                </div>
-                <span className="type-mono text-[0.6rem] text-[var(--text-muted)]">
-                  {post.name}
-                </span>
               </div>
               </SpotlightCard>
             </Reveal>
@@ -176,7 +166,7 @@ export function CommunitySection() {
         <Reveal y={30} delay={0.6} className="mt-16 text-center">
           <div className="inline-flex items-center gap-3 glass-card rounded-full px-8 py-4">
             <span className="type-mono text-[0.6rem] text-[var(--accent-mocha)] tracking-widest">
-              SAMPLE SHOWCASE — ILLUSTRATIVE SCORES, NOT USER DATA
+              NO SAMPLE POSTS. THE FEED SHOWS REAL USER SUBMISSIONS ONLY.
             </span>
           </div>
         </Reveal>

@@ -4,37 +4,22 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Users, Heart, MessageCircle, Share2, UserPlus, ArrowRight, Search, RefreshCw, Wifi, WifiOff, ExternalLink, Sparkles } from "lucide-react";
+import { Users, Star, MessageCircle, ArrowRight, RefreshCw, Wifi, WifiOff, ExternalLink } from "lucide-react";
 import { ScrollParallax, ScrollBlur, SectionScrollProgress } from "@/components/shared/ScrollEffects";
 import { getHistory, isDemoEntry } from "@/lib/history";
-import { DEMO_FEED, DEMO_MEMBERS } from "@/lib/demo/demo-community";
 
 interface Post {
   id: string;
   user: string;
   avatar: string;
-  badge: string;
   content: string;
-  likes: number;
+  ratingCount: number;
   comments: number;
   tags: string[];
   time: string;
 }
 
-interface Member {
-  id: string;
-  name: string;
-  avatar: string;
-  badge: string;
-  style: string;
-  match: number;
-}
-
-const FEED: Post[] = DEMO_FEED;
-
-const MEMBERS: Member[] = DEMO_MEMBERS;
-
-const TRENDING_TAGS = ["color-analysis", "virtual-tryon", "silhouettes", "skin-health", "accessories", "deep-autumn", "capsule-wardrobe", "sustainable-fashion"];
+const CATEGORIES = ["outfit", "face", "grooming", "body", "color", "tryon"];
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -52,9 +37,8 @@ function mapPost(raw: Record<string, unknown>, index: number): Post {
     id: String(raw.id || `seed_${index}`),
     user: user.full_name || `Member${index + 1}`,
     avatar: (user.full_name || "NX").split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase(),
-    badge: "STYLE ICON",
     content: String(raw.title || raw.description || raw.content || ""),
-    likes: Number(raw.rating_count ?? 0),
+    ratingCount: Number(raw.rating_count ?? 0),
     comments: 0,
     tags: category ? [category] : [],
     time: raw.created_at ? timeAgo(String(raw.created_at)) : "recently",
@@ -74,10 +58,9 @@ function timeAgo(iso: string): string {
 export default function CommunityPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"feed" | "members" | "tags">("feed");
-  const [feed, setFeed] = useState<Post[]>(FEED);
+  const [feed, setFeed] = useState<Post[]>([]);
   const [live, setLive] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [liked, setLiked] = useState<Record<string, boolean>>({});
   const [realAnalyses, setRealAnalyses] = useState(0);
 
   useEffect(() => {
@@ -89,6 +72,10 @@ export default function CommunityPage() {
     try {
       const res = await fetch("/api/community/feed?limit=20", { signal });
       if (signal?.aborted) return;
+      if (res.status === 401) {
+        setLive(false);
+        return;
+      }
       if (res.status === 503 || !res.ok) {
         setLive(false);
         return;
@@ -112,18 +99,6 @@ export default function CommunityPage() {
     return () => controller.abort();
   }, [loadFeed]);
 
-  const toggleLike = (e: React.MouseEvent, id: string) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setLiked((prev) => {
-      const next = { ...prev, [id]: !prev[id] };
-      setFeed((f) =>
-        f.map((p) => (p.id === id ? { ...p, likes: p.likes + (next[id] ? 1 : -1) } : p))
-      );
-      return next;
-    });
-  };
-
   return (
     <div className="space-y-8">
       <SectionScrollProgress />
@@ -137,12 +112,8 @@ export default function CommunityPage() {
           </h1>
         </div>
         <p className="text-[var(--text-muted)] font-body type-subhead max-w-xl">
-          Connect, share, and discover with fellow ZERVEY users.
+          Real posts from verified ZERVEY users. No sample data, no inflated scores.
         </p>
-        <div className="mt-3 inline-flex items-center gap-1.5 type-mono text-[0.55rem] tracking-[0.25em] uppercase px-3 py-1.5 border border-[color-mix(in_srgb,var(--accent-honey)_50%,transparent)] text-[var(--accent-honey)] bg-[color-mix(in_srgb,var(--accent-honey)_8%,transparent)]">
-          <Sparkles className="w-3 h-3" />
-          SAMPLE SHOWCASE &mdash; NOT YOUR STATS
-        </div>
       </motion.div>
       </ScrollParallax>
 
@@ -168,7 +139,7 @@ export default function CommunityPage() {
         >
           <RefreshCw className={`w-3 h-3 ${loading ? "animate-spin" : ""}`} />
           {live ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
-          {loading ? "LOADING" : live ? "LIVE FEED" : "DEMO FEED"}
+          {loading ? "LOADING" : live ? "LIVE FEED" : "FEED OFFLINE"}
         </button>
       </motion.div>
 
@@ -197,10 +168,7 @@ export default function CommunityPage() {
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--accent-nexus)] to-[var(--accent-aurum)] flex items-center justify-center type-mono text-sm text-white">{post.avatar}</div>
                       <div>
-                        <div className="flex items-center gap-2">
-                          <p className="type-body text-[var(--text-primary)]">{post.user}</p>
-                          <span className="type-mono text-[0.55rem] px-1.5 py-0.5 border border-[var(--accent-aurum)] text-[var(--accent-aurum)]">{post.badge}</span>
-                        </div>
+                        <p className="type-body text-[var(--text-primary)]">{post.user}</p>
                         <p className="text-xs text-[var(--text-muted)]">{post.time}</p>
                       </div>
                     </div>
@@ -213,15 +181,11 @@ export default function CommunityPage() {
                     ))}
                   </div>
                   <div className="flex items-center gap-4 text-xs text-[var(--text-muted)]">
-                    <button onClick={(e) => toggleLike(e, post.id)}
-                      className={`flex items-center gap-1 transition-colors ${liked[post.id] ? "text-[var(--accent-aurum)]" : "hover:text-[var(--accent-aurum)]"}`}>
-                      <Heart className={`w-3.5 h-3.5 ${liked[post.id] ? "fill-current" : ""}`} /> {post.likes}
-                    </button>
-                    <span className="flex items-center gap-1">
-                      <MessageCircle className="w-3.5 h-3.5" /> {post.comments}
+                    <span className="flex items-center gap-1.5">
+                      <Star className="w-3.5 h-3.5 text-[var(--accent-aurum)]" /> {post.ratingCount} ratings
                     </span>
                     <span className="flex items-center gap-1">
-                      <Share2 className="w-3.5 h-3.5" /> SHARE
+                      <MessageCircle className="w-3.5 h-3.5" /> {post.comments} comments
                     </span>
                   </div>
                 </motion.div>
@@ -230,40 +194,28 @@ export default function CommunityPage() {
           )}
 
           {activeTab === "members" && (
-            <motion.div variants={stagger} initial="hidden" animate="show" className="space-y-4">
-              {MEMBERS.map((member) => (
-                <motion.div key={member.id} variants={fadeUp}
-                  className="glass-card p-4 flex items-center justify-between group hover:border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)] transition-all">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--accent-nexus)] to-[var(--accent-aurum)] flex items-center justify-center type-mono text-sm text-white">{member.avatar}</div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <p className="type-body text-[var(--text-primary)]">{member.name}</p>
-                        <span className="type-mono text-[0.5rem] px-1.5 py-0.5 border border-[var(--accent-aurum)] text-[var(--accent-aurum)]">{member.badge}</span>
-                      </div>
-                      <p className="text-xs text-[var(--text-muted)]">{member.style}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="type-mono text-[var(--accent-aurum)]">{member.match}% MATCH</span>
-                    <button className="btn-outline text-xs !py-1 !px-3">
-                      <UserPlus className="w-3 h-3" /> FOLLOW
-                    </button>
-                  </div>
-                </motion.div>
-              ))}
+            <motion.div variants={stagger} initial="hidden" animate="show" className="glass-card p-10 text-center space-y-3">
+              <Users className="w-10 h-10 text-[var(--text-muted)] mx-auto" />
+              <h3 className="type-label text-[var(--text-primary)]">MEMBER DIRECTORY — COMING SOON</h3>
+              <p className="text-xs text-[var(--text-muted)] max-w-md mx-auto">
+                We don&apos;t ship a fake roster of profiles. When the member
+                directory is live, it will list real, verified accounts only.
+              </p>
             </motion.div>
           )}
 
           {activeTab === "tags" && (
             <motion.div variants={stagger} initial="hidden" animate="show" className="glass-card p-6">
-              <h3 className="type-label text-[var(--text-primary)] mb-4">TRENDING TOPICS</h3>
+              <h3 className="type-label text-[var(--text-primary)] mb-1">POST CATEGORIES</h3>
+              <p className="text-xs text-[var(--text-muted)] mb-4">
+                Static category labels — not fabricated trending data.
+              </p>
               <div className="flex flex-wrap gap-3">
-                {TRENDING_TAGS.map((tag) => (
-                  <motion.button key={tag} variants={fadeUp}
-                    className="px-4 py-2 border border-[var(--border-primary)] card-nexus hover:border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)] transition-all type-mono text-xs text-[var(--text-muted)] hover:text-[var(--accent-aurum)]">
+                {CATEGORIES.map((tag) => (
+                  <span key={tag}
+                    className="px-4 py-2 border border-[var(--border-primary)] card-nexus type-mono text-xs text-[var(--text-muted)]">
                     #{tag}
-                  </motion.button>
+                  </span>
                 ))}
               </div>
             </motion.div>
@@ -273,23 +225,21 @@ export default function CommunityPage() {
         <motion.div variants={fadeUp} initial="hidden" animate="show" className="space-y-4">
           <div className="glass-card p-4">
             <h3 className="type-label text-[var(--text-primary)] mb-3">CONNECT</h3>
-            <p className="text-xs text-[var(--text-muted)] mb-4">Link your profiles and share your style journey.</p>
-            <button className="btn-nexus w-full justify-center text-sm mb-2">
-              <UserPlus className="w-4 h-4" /> FIND FRIENDS
-            </button>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[var(--text-muted)]" />
-              <input type="text" placeholder="Search community..."
-                className="w-full pl-8 pr-3 py-2 text-xs bg-[var(--bg-tertiary)] border border-[var(--border-primary)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[var(--accent-aurum)] outline-none" />
-            </div>
+            <p className="text-xs text-[var(--text-muted)] mb-2">
+              Friend discovery and search are not built yet. They will be
+              released before we pretend they exist.
+            </p>
+            <span className="inline-block type-mono text-[0.55rem] text-[var(--accent-mocha)] tracking-widest bg-aurum-400/15 px-2.5 py-1 rounded">
+              COMING SOON
+            </span>
           </div>
 
           <div className="glass-card p-4">
             <h3 className="type-label text-[var(--text-primary)] mb-3">YOUR STATS</h3>
             {realAnalyses === 0 ? (
               <p className="text-xs text-[var(--text-muted)] leading-relaxed mb-2">
-                No real analyses yet. Feed and member numbers above are sample
-                showcase data, not yours.
+                No saved analyses yet. Every number shown here is computed from
+                your own history — nothing is seeded.
               </p>
             ) : (
               <p className="text-xs text-[var(--text-muted)] leading-relaxed mb-2">
@@ -298,8 +248,6 @@ export default function CommunityPage() {
             )}
             <div className="space-y-2 text-xs">
               <div className="flex justify-between text-[var(--text-muted)]"><span>Analyses</span><span className="text-[var(--text-primary)]">{realAnalyses}</span></div>
-              <div className="flex justify-between text-[var(--text-muted)]"><span>Posts</span><span className="text-[var(--text-primary)]">{realAnalyses > 0 ? realAnalyses : "0"}</span></div>
-              <div className="flex justify-between text-[var(--text-muted)]"><span>Rank</span><span className="text-[var(--accent-aurum)]">{realAnalyses > 0 ? "BRONZE" : "—"}</span></div>
             </div>
           </div>
 
