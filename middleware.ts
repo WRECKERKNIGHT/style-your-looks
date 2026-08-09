@@ -26,11 +26,22 @@ export async function middleware(request: NextRequest) {
 
   const isAuthPath = AUTH_PATHS.some((route) => path.startsWith(route));
 
-  // Demo mode / missing Supabase config: never block navigation.
-  // Session-based auth simply isn't enforced; dashboard pages stay reachable.
+  // Fail closed: if Supabase is not configured, auth cannot be verified, so
+  // protected pages must NOT be reachable. Treat every request as anonymous.
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!isAuthPath || !supabaseUrl || !supabaseAnonKey) {
+  if (!supabaseUrl || !supabaseAnonKey) {
+    if (path.startsWith("/dashboard")) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/login";
+      url.searchParams.set("next", path);
+      url.searchParams.set("error", "AUTH_NOT_CONFIGURED");
+      return NextResponse.redirect(url);
+    }
+    return NextResponse.next({ request });
+  }
+
+  if (!isAuthPath) {
     return NextResponse.next({ request });
   }
 

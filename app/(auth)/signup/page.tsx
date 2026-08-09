@@ -139,7 +139,8 @@ export default function SignupPage() {
             <span className="text-nexus-400">ALGORITHM.</span>
           </h2>
           <p className="text-nexus-600 dark:text-nexus-200 text-sm max-w-xs mx-auto font-body mt-4">
-            Join thousands discovering their perfect look. Free forever.
+            Your analysis runs on-device. Free forever — no credit card, no
+            data selling.
           </p>
 
           <div className="mt-12 grid grid-cols-3 gap-4 max-w-xs mx-auto">
