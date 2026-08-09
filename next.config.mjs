@@ -26,7 +26,7 @@ const securityHeaders = [
       "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com data:",
-      "img-src 'self' data: blob: https: http://localhost:*",
+      "img-src 'self' data: blob: https:",
       "media-src 'self' blob: data:",
       "connect-src 'self' https://*.supabase.co https://**.supabase.co https://cdn.jsdelivr.net https://storage.googleapis.com",
       "worker-src 'self' blob:",
@@ -45,10 +45,13 @@ const nextConfig = {
   poweredByHeader: false,
   output: "standalone",
   images: {
+    // Only proxy images served from this project's Supabase storage bucket.
+    // A wildcard hostname here would turn the optimizer into an open proxy.
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "**",
+        hostname: "ujgrjatrthhqrzasssuh.supabase.co",
+        pathname: "/storage/v1/**",
       },
     ],
     formats: ["image/avif", "image/webp"],
