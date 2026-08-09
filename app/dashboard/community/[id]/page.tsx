@@ -7,6 +7,7 @@ import { ArrowLeft, Star, Camera, MessageSquare, Send, Loader2, AlertCircle } fr
 import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/components/shared/Toast";
 import { ScrollBlur, SectionScrollProgress } from "@/components/shared/ScrollEffects";
+import { DEMO_FEED } from "@/lib/demo/demo-community";
 
 interface Comment {
   id: string;
@@ -48,6 +49,7 @@ export default function CommunityPostPage() {
   const [post, setPost] = useState<PostDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [isDemo, setIsDemo] = useState(false);
   const [myRating, setMyRating] = useState(5);
   const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -57,6 +59,35 @@ export default function CommunityPostPage() {
     async (signal?: AbortSignal) => {
       if (!id) {
         setNotFound(true);
+        setLoading(false);
+        return;
+      }
+      // Showcase sample posts (p1..p5) are static — render them locally so
+      // clicking a demo feed card opens a working detail view.
+      const demo = DEMO_FEED.find((p) => p.id === id);
+      if (demo) {
+        setPost({
+          id: demo.id,
+          title: demo.badge ? `${demo.user}'s ${demo.badge} update` : "Community post",
+          description: demo.content,
+          category: demo.tags[0] || "outfit",
+          imageUrl: "",
+          avgRating: 8,
+          ratingCount: demo.comments * 3,
+          createdAt: demo.time,
+          userName: demo.user,
+          avatar: demo.avatar,
+        });
+        setComments(
+          Array.from({ length: demo.comments }, (_, i) => ({
+            id: `demo-${i}`,
+            user: i === 0 ? "Maya" : i === 1 ? "Leo" : "Sam",
+            text: i === 0 ? "Love this — the palette is spot on." : i === 1 ? "Agreed, sharing with my group." : "This helped a lot, thanks!",
+            rating: 8,
+            createdAt: "earlier",
+          }))
+        );
+        setIsDemo(true);
         setLoading(false);
         return;
       }
@@ -105,6 +136,10 @@ export default function CommunityPostPage() {
     const text = comment.trim();
     if (!text) {
       addToast("Write a comment first", "error");
+      return;
+    }
+    if (isDemo) {
+      addToast("Demo posts are showcase samples and can't be rated", "error");
       return;
     }
     setSubmitting(true);
@@ -211,6 +246,14 @@ export default function CommunityPostPage() {
               {post.category}
             </span>
           </div>
+
+          {isDemo && (
+            <div className="flex items-center gap-2">
+              <span className="type-mono text-[0.55rem] text-[var(--accent-mocha)] tracking-widest bg-aurum-400/15 px-2.5 py-1 rounded">
+                DEMO SAMPLE — SHOWCASE CONTENT
+              </span>
+            </div>
+          )}
 
           <h1 className="text-2xl md:text-3xl font-display font-bold text-[var(--text-primary)] tracking-tight">
             {post.title}
