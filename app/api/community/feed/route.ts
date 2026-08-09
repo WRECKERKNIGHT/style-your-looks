@@ -39,6 +39,16 @@ export async function GET(request: Request) {
       );
     }
 
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+
     let query = supabase
       .from("community_posts")
       .select(
@@ -60,7 +70,10 @@ export async function GET(request: Request) {
     const { data: posts, count, error } = await query;
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json(
+        { error: "Could not load the community feed" },
+        { status: 500 }
+      );
     }
 
     // Resolve display names. profiles are RLS-protected, so names come from a
@@ -86,9 +99,11 @@ export async function GET(request: Request) {
       }
     }
 
-    const postsWithUser = rows.map((post) => ({
+    // Strip internal user ids from the public response to prevent account
+    // enumeration via the feed.
+    const postsWithUser = rows.map(({ user_id, ...post }) => ({
       ...post,
-      user: post.user_id ? names[post.user_id] || null : null,
+      user: user_id ? names[user_id] || null : null,
     }));
 
     return NextResponse.json(
