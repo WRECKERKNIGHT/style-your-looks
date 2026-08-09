@@ -73,6 +73,10 @@ export function TestimonialsSection() {
             Designers, creators, and everyone in between — already measuring,
             dressing, and showing up better.
           </p>
+          <p className="mt-3 text-xs text-[var(--text-muted)] font-body max-w-md">
+            Illustrative voices for now — we&apos;ll publish verified community
+            stories as they arrive.
+          </p>
         </Reveal>
 
         <ScrollBlur blur={7} minOpacity={1} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

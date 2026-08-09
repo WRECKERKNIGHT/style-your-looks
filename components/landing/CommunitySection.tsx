@@ -3,7 +3,6 @@
 import { useRef } from "react";
 import { motion, useInView } from "framer-motion";
 import { Star, MessageCircle, TrendingUp } from "lucide-react";
-import { StatsCounter } from "./StatsCounter";
 import { SpotlightCard } from "@/components/shared/SpotlightCard";
 import { ScrollParallax, ScrollBlur } from "@/components/shared/ScrollEffects";
 import { KineticHeadline } from "./KineticHeadline";
@@ -175,14 +174,10 @@ export function CommunitySection() {
         </div>
 
         <Reveal y={30} delay={0.6} className="mt-16 text-center">
-          <div className="inline-flex items-center gap-4 glass-card rounded-full px-8 py-4">
-            <div className="text-2xl font-display font-bold text-gradient-aurum">
-              <StatsCounter target={12400} suffix="+" />
-            </div>
-            <div className="h-8 w-px bg-[var(--border-primary)]" />
-            <p className="type-mono text-[0.65rem] text-[var(--text-muted)] tracking-widest">
-              STYLE PROFILES CREATED
-            </p>
+          <div className="inline-flex items-center gap-3 glass-card rounded-full px-8 py-4">
+            <span className="type-mono text-[0.6rem] text-[var(--accent-mocha)] tracking-widest">
+              SAMPLE SHOWCASE — ILLUSTRATIVE SCORES, NOT USER DATA
+            </span>
           </div>
         </Reveal>
       </div>
