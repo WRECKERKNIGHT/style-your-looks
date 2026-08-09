@@ -12,7 +12,7 @@ const chapters = [
   {
     label: "CHAPTER I",
     title: "YOUR FACE IS YOUR FIRST LANGUAGE.",
-    sub: "Before you speak a word, 47 objective signals are already speaking for you.",
+    sub: "Before you speak a word, 478 tracked landmarks are already measuring proportion for you.",
     accent: "#8A5F3D",
     tint: "from-[#8A5F3D]/25",
   },

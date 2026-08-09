@@ -36,9 +36,9 @@ const itemVariants = {
 const headlineWords = ["ZERVEY."];
 
 const stats = [
-  { target: 47, suffix: "-Point", label: "Analysis" },
+  { target: 478, suffix: "-Point", label: "Facial Analysis" },
   { target: 100, suffix: "%", label: "Private" },
-  { target: 0, suffix: "", prefix: "Real-time ", label: "AI" },
+  { target: 0, suffix: "", prefix: "", label: "Photo Uploads" },
 ];
 
 const floatingTags = [
@@ -173,7 +173,7 @@ export function HeroSection() {
                 variants={itemVariants}
                 className="text-[var(--text-secondary)] text-lg md:text-xl max-w-lg font-body leading-relaxed"
               >
-                Unlock your style DNA with 47-point facial analysis, body
+                Unlock your style DNA with 478-point facial analysis, body
                 typing, and personalized recommendations — all running
                 privately on your device. Measured like a tailor, computed
                 like an atelier.
