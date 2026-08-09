@@ -65,6 +65,7 @@ export function HeroSection() {
   const typeY = useTransform(smoothProgress, [0, 1], [0, 140]);
   const typeScale = useTransform(smoothProgress, [0, 1], [1, 1.08]);
   const typeOpacity = useTransform(smoothProgress, [0, 0.7], [1, 0.15]);
+  const headlineWeight = useTransform(smoothProgress, [0, 1], [300, 800]);
   const fadeOut = useTransform(smoothProgress, [0.6, 1], [1, 0]);
   const exitSkew = useTransform(smoothProgress, [0, 1], [0, -5]);
   const exitBlur = useTransform(smoothProgress, [0.25, 1], [0, 10]);
@@ -138,6 +139,7 @@ export function HeroSection() {
                   opacity: typeOpacity,
                   skewY: exitSkew,
                   filter: exitBlurFilter,
+                  fontWeight: headlineWeight,
                   willChange: "transform",
                 }}
               >
