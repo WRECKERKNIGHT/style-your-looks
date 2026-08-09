@@ -24,8 +24,8 @@ export default function AccessoriesPage() {
   const { addToast } = useToast();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const imgRef = useRef<HTMLImageElement | null>(null);
   const productRef = useRef<HTMLCanvasElement | null>(null);
+  const [loadedImg, setLoadedImg] = useState<HTMLImageElement | null>(null);
 
   const [selectedProduct, setSelectedProduct] = useState<ProductItem | null>(null);
   const [productCredit, setProductCredit] = useState<string>("");
@@ -64,14 +64,14 @@ export default function AccessoriesPage() {
     setSelectedProduct(null);
     productRef.current = null;
     const img = new Image();
-    img.onload = () => { imgRef.current = img; };
+    img.onload = () => { setLoadedImg(img); };
     img.src = imageData;
   }, [setUploadedImage, setFullBodyImage]);
 
   useEffect(() => {
     if (currentPhoto) {
       const img = new Image();
-      img.onload = () => { imgRef.current = img; };
+      img.onload = () => { setLoadedImg(img); };
       img.src = currentPhoto;
     }
   }, [currentPhoto]);
@@ -116,7 +116,7 @@ export default function AccessoriesPage() {
 
   const renderCanvas = useCallback(() => {
     const canvas = canvasRef.current;
-    const img = imgRef.current;
+    const img = loadedImg;
     const container = containerRef.current;
     if (!canvas || !img || !container) return;
     const displayWidth = container.clientWidth;
@@ -173,7 +173,7 @@ export default function AccessoriesPage() {
       }
     }
     ctx.drawImage(layer, 0, 0);
-  }, [selectedProduct, glassesY, glassesScale, faceResult, hairSeg, currentPhoto]);
+  }, [selectedProduct, glassesY, glassesScale, faceResult, hairSeg, loadedImg]);
 
   useEffect(() => { renderCanvas(); }, [renderCanvas]);
 

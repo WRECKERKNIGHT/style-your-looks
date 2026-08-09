@@ -89,7 +89,7 @@ export default function HairPreviewPage() {
   const { addToast } = useToast();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const imgRef = useRef<HTMLImageElement | null>(null);
+  const [loadedImg, setLoadedImg] = useState<HTMLImageElement | null>(null);
   const [selectedColor, setSelectedColor] = useState<HairColor | null>(null);
   const [intensity, setIntensity] = useState(0.7);
   const [hairSeg, setHairSeg] = useState<PersonSegmentation | null>(null);
@@ -121,17 +121,17 @@ export default function HairPreviewPage() {
     setFullBodyImage(null);
     setSelectedColor(null);
     const img = new Image();
-    img.onload = () => { imgRef.current = img; };
+    img.onload = () => { setLoadedImg(img); };
     img.src = imageData;
   }, [setUploadedImage, setFullBodyImage]);
 
   useEffect(() => {
-    if (currentPhoto) { const img = new Image(); img.onload = () => { imgRef.current = img; }; img.src = currentPhoto; }
+    if (currentPhoto) { const img = new Image(); img.onload = () => { setLoadedImg(img); }; img.src = currentPhoto; }
   }, [currentPhoto]);
 
   const renderCanvas = useCallback(() => {
     const canvas = canvasRef.current;
-    const img = imgRef.current;
+    const img = loadedImg;
     const container = containerRef.current;
     if (!canvas || !img || !container) return;
     const displayWidth = container.clientWidth;
@@ -151,7 +151,7 @@ export default function HairPreviewPage() {
       applyHairColor(ctx, displayWidth, displayHeight, selectedColor, faceResult?.landmarks, hairSeg?.hairMask);
       ctx.globalAlpha = 1;
     }
-  }, [selectedColor, intensity, faceResult, hairSeg, currentPhoto]);
+  }, [selectedColor, intensity, faceResult, hairSeg, loadedImg]);
 
   useEffect(() => { renderCanvas(); }, [renderCanvas]);
 

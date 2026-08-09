@@ -34,7 +34,7 @@ export default function VirtualTryOnPage() {
   const { addToast } = useToast();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const imgRef = useRef<HTMLImageElement | null>(null);
+  const [loadedImg, setLoadedImg] = useState<HTMLImageElement | null>(null);
 
   const [garmentType, setGarmentType] = useState<GarmentType>("top");
   const [productUrl, setProductUrl] = useState("");
@@ -51,7 +51,7 @@ export default function VirtualTryOnPage() {
       setFullBodyImage(null);
       setResult(null);
       const img = new Image();
-      img.onload = () => { imgRef.current = img; };
+      img.onload = () => { setLoadedImg(img); };
       img.src = imageData;
     },
     [setUploadedImage, setFullBodyImage]
@@ -60,7 +60,7 @@ export default function VirtualTryOnPage() {
   useEffect(() => {
     if (activePhoto) {
       const img = new Image();
-      img.onload = () => { imgRef.current = img; };
+      img.onload = () => { setLoadedImg(img); };
       img.src = activePhoto;
     }
   }, [activePhoto]);
@@ -104,7 +104,7 @@ export default function VirtualTryOnPage() {
   };
 
   const runTryOn = async () => {
-    const img = imgRef.current;
+    const img = loadedImg;
     if (!img || !garmentCanvas) return;
     setIsProcessing(true);
     try {
@@ -122,7 +122,7 @@ export default function VirtualTryOnPage() {
   const renderCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     const container = containerRef.current;
-    const img = imgRef.current;
+    const img = loadedImg;
     if (!canvas || !container || !img) return;
 
     const displayWidth = container.clientWidth;
@@ -144,7 +144,7 @@ export default function VirtualTryOnPage() {
     } else {
       ctx.drawImage(img, 0, 0, displayWidth, displayHeight);
     }
-  }, [result, layer, activePhoto]);
+  }, [result, layer, loadedImg]);
 
   useEffect(() => {
     renderCanvas();

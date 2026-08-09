@@ -9,12 +9,13 @@ CDN, service worker support) with **Supabase** for auth + community data.
 | --- | --- |
 | Production URL | https://zervey-ten.vercel.app |
 | Vercel project | `zervey` (team `harshithardik312-9603s-projects`) |
-| Supabase project | `aurastyler` (`ujgrjatrthhqrzasssuh`) |
+| Supabase project ref | `ujgrjatrthhqrzasssuh` |
 | Deploy method | GitHub connection — pushes to `main` auto-deploy |
 | CI | `.github/workflows/ci.yml` — lint + build on every push/PR |
 
-Supabase auth is configured with **email confirmation disabled**
-(`mailer_autoconfirm = true`) for instant signup.
+Supabase auth must have **email confirmation enabled** — the community API
+routes reject unconfirmed accounts (`email_confirmed_at` is checked
+server-side).
 
 ## Prerequisites
 
@@ -27,16 +28,19 @@ Supabase auth is configured with **email confirmation disabled**
 1. Create a project at [supabase.com](https://supabase.com).
 2. Run migrations in order from the SQL editor (or `supabase db push`):
    - `supabase/migrations/001_initial.sql`
-   - `supabase/migrations/001_community_tables.sql`
    - `supabase/migrations/002_hardening.sql`
+   - `supabase/migrations/003_fix_community_rls.sql`
+   - `supabase/migrations/004_lock_community_security_definers.sql`
 
    `002_hardening.sql` creates the `handle_new_user` profile trigger on signup,
-   adds `updated_at` triggers, RLS policies, performance indexes, and the
-   `recalculate_rating_average` trigger.
+   adds `updated_at` triggers and RLS policies. `003_fix_community_rls.sql`
+   rewrites the post-rating trigger (`on_rating_change` / `on_rating_delete`)
+   through the security-definer `recompute_post_rating()` helper so RLS can't
+   deadlock on write, and adds `get_public_profiles()` for the feed.
+   `004` revokes anon access to both helpers.
 
-3. If you enabled email confirmation, users must confirm before posting.
-   Tune **Auth → Providers → Email** (disable "Confirm email" for instant signup,
-   or leave enabled for stricter flow).
+3. Email confirmation is required before users can post — leave
+   **Auth → Providers → Email → "Confirm email"** enabled.
 
 ## 2. Env vars
 
@@ -78,7 +82,7 @@ docker run -p 3000:3000 \
 
 ## 4. Post-deploy checks
 
-- [ ] `curl -I https://zervey.app` returns `strict-transport-security`,
+- [ ] `curl -I https://zervey-ten.vercel.app` returns `strict-transport-security`,
       `content-security-policy`, `cross-origin-opener-policy`.
 - [ ] `/manifest.json` serves `Cache-Control: public, max-age=0, must-revalidate`.
 - [ ] `/sw.js` serves `Cache-Control: no-cache` and `Service-Worker-Allowed: /`.
@@ -103,6 +107,7 @@ docker run -p 3000:3000 \
 | Symptom | Fix |
 | --- | --- |
 | Build crash / SIGBUS on macOS | Use Node 20 (`nvm use`). Reinstall deps: delete `node_modules` + `package-lock.json`, `npm ci` from a complete lockfile. |
-| Community shows DEMO FEED | Check Supabase env vars and that migrations ran; the feed endpoint returns real posts when the table exists. |
+| Community feed returns 503 | Supabase env vars missing or migrations not applied; the feed endpoint no longer falls back to demo data. |
+| Community feed returns 401 | The requesting user isn't signed in; the feed requires an authenticated session. |
 | Photos not analyzing | MediaPipe WASM loads from jsdelivr — confirm `https://cdn.jsdelivr.net` is reachable and allowed by CSP. |
 | Service worker not updating | `/sw.js` is cached with `no-cache`; a new deploy bumps the cache version automatically. |
