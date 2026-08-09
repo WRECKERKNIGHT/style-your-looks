@@ -139,9 +139,9 @@ export function buildDemoFaceResult(landmarks?: number[][]): FaceAnalysisResult 
       jawline: 88,
       skinClarity: 90,
       harmony: 86,
-    bracket: "TOP 10%",
+    bracket: "Excellent",
     comparisonText:
-      "Your geometry places in ZERVEY's top score band — a score-relative rating, not a population comparison.",
+      "Your geometry places in ZERVEY's Excellent band — a score-based rating, not a population comparison.",
     },
     beautyIndex: 86,
     faceShapeDetails: {

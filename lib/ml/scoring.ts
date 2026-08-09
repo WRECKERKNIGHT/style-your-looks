@@ -129,13 +129,19 @@ function scoreToRating(score: number): string {
 }
 
 function scoreToDetailedLabel(score: number): string {
-  if (score >= 9) return "Top 1% — runway-tier facial structure";
-  if (score >= 8) return "Top 5% — striking, memorable features";
-  if (score >= 7) return "Top 15% — above-average attractiveness";
-  if (score >= 6) return "Top 30% — solid, well-proportioned face";
-  if (score >= 5) return "Average — common facial proportions";
-  if (score >= 4) return "Below average — room for improvement";
-  return "Lower range — significant room for enhancement";
+  if (score >= 9)
+    return `An exceptional ${score.toFixed(1)}/10 result — outstanding structural consistency across every measured zone.`;
+  if (score >= 8)
+    return `A strong ${score.toFixed(1)}/10 result — well-proportioned and highly consistent across measured zones.`;
+  if (score >= 7)
+    return `A solid ${score.toFixed(1)}/10 result — above-average geometry with clearly balanced proportions.`;
+  if (score >= 6)
+    return `A respectable ${score.toFixed(1)}/10 result — good proportions with room to tune individual zones.`;
+  if (score >= 5)
+    return `A ${score.toFixed(1)}/10 result — average proportions. Targeted grooming can lift specific metrics.`;
+  if (score >= 4)
+    return `A ${score.toFixed(1)}/10 result — below average. Individual metric tips outline where to focus.`;
+  return `A ${score.toFixed(1)}/10 result — the improvements section lists the highest-impact next steps.`;
 }
 
 function getGoldenRatio(result: FaceLandmarkerResult): number {
@@ -318,31 +324,26 @@ function analyzeBlendshapes(result: FaceLandmarkerResult): BlendshapeAnalysis {
   };
 }
 
-function calculatePercentile(score: number): number {
-  if (score >= 9.5) return 99;
-  if (score >= 9.0) return 97;
-  if (score >= 8.5) return 94;
-  if (score >= 8.0) return 89;
-  if (score >= 7.5) return 82;
-  if (score >= 7.0) return 73;
-  if (score >= 6.5) return 63;
-  if (score >= 6.0) return 52;
-  if (score >= 5.5) return 40;
-  if (score >= 5.0) return 30;
-  if (score >= 4.5) return 22;
-  if (score >= 4.0) return 15;
-  if (score >= 3.5) return 10;
-  if (score >= 3.0) return 6;
-  return 3;
+/**
+ * Maps a 1-10 score to a 0-100 index for display. This is a direct linear
+ * rescale of the measured score — NOT a population percentile. ZERVEY does
+ * not yet hold a large enough analysed dataset to report real percentiles,
+ * and any number labelled a percentile would be fabricated.
+ */
+function calculateScoreIndex(score: number): number {
+  return Math.max(0, Math.min(100, Math.round(score * 10)));
 }
 
-function getPercentileBracket(percentile: number): string {
-  if (percentile >= 95) return "Elite Tier";
-  if (percentile >= 85) return "Top Tier";
-  if (percentile >= 70) return "Above Average";
-  if (percentile >= 50) return "Average";
-  if (percentile >= 30) return "Below Average";
-  return "Room to Grow";
+function getScoreBand(index: number): string {
+  const score = index / 10;
+  if (score >= 9) return "Exceptional";
+  if (score >= 8) return "Excellent";
+  if (score >= 7) return "Very Good";
+  if (score >= 6) return "Good";
+  if (score >= 5) return "Above Average";
+  if (score >= 4) return "Average";
+  if (score >= 3) return "Below Average";
+  return "Needs Work";
 }
 
 const WEIGHTS = {
@@ -708,14 +709,14 @@ export function buildFaceScoreFromMetrics(
     headTilt: 0,
   };
   const percentile = {
-    overall: calculatePercentile(roundedScore),
-    symmetry: calculatePercentile(symmetry),
-    goldenRatio: calculatePercentile(goldenRatio),
-    jawline: calculatePercentile(jawline),
-    skinClarity: calculatePercentile(skinClarityScore),
-    harmony: calculatePercentile(facialHarmony),
-    bracket: getPercentileBracket(calculatePercentile(roundedScore)),
-    comparisonText: `This places your overall score in ZERVEY's ${getPercentileBracket(calculatePercentile(roundedScore))} band — a score-relative rating, not a population comparison.`,
+    overall: calculateScoreIndex(roundedScore),
+    symmetry: calculateScoreIndex(symmetry),
+    goldenRatio: calculateScoreIndex(goldenRatio),
+    jawline: calculateScoreIndex(jawline),
+    skinClarity: calculateScoreIndex(skinClarityScore),
+    harmony: calculateScoreIndex(facialHarmony),
+    bracket: getScoreBand(calculateScoreIndex(roundedScore)),
+    comparisonText: `Your overall score of ${roundedScore.toFixed(1)}/10 maps to a ${getScoreBand(calculateScoreIndex(roundedScore))} band (index ${calculateScoreIndex(roundedScore)}/100). This is a direct rescale of your measured score — not a population percentile, because ZERVEY does not yet have enough analysed faces to publish real rankings.`,
   };
   const beautyIndex = calculateBeautyIndex(metrics, skinClarityScore, weights);
   const faceShapeDetails = FACE_SHAPE_INFO[facialShape] || FACE_SHAPE_INFO.Oval;

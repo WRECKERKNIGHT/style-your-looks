@@ -37,12 +37,6 @@ import {
   ShieldCheck,
 } from "lucide-react";
 
-function ordinalSuffix(n: number) {
-  const s = ["th", "st", "nd", "rd"];
-  const v = n % 100;
-  return s[(v - 20) % 10] || s[v] || s[0];
-}
-
 function CollapsibleSection({
   icon: Icon,
   title,
@@ -121,7 +115,7 @@ function PercentileBar({ label, percentile }: { label: string; percentile: numbe
         />
       </div>
       <span className="text-sm font-mono font-bold text-nexus-800 dark:text-white min-w-[50px] text-right">
-        {percentile}th
+        {percentile}/100
       </span>
     </div>
   );
@@ -171,7 +165,7 @@ export function AnalysisResults() {
               <div className="bg-nexus-400/10 p-5 border border-aurum-500/20 rounded-sm">
                 <div className="flex items-center gap-2 mb-2">
                   <Percent className="w-5 h-5 text-aurum-500" />
-                  <span className="text-sm font-body font-bold text-aurum-500 tracking-wider">POPULATION RANKING</span>
+                  <span className="text-sm font-body font-bold text-aurum-500 tracking-wider">SCORE INDEX</span>
                 </div>
                 <p className="text-nexus-800 dark:text-white font-body text-base leading-relaxed">
                   {faceResult.percentile.comparisonText}
@@ -351,7 +345,7 @@ export function AnalysisResults() {
         </div>
       </CollapsibleSection>
 
-      <CollapsibleSection icon={Eye} title="PERCENTILE RANKINGS" defaultOpen>
+      <CollapsibleSection icon={Eye} title="SCORE INDEX" defaultOpen>
         <div className="flex flex-col md:flex-row items-center gap-6 mb-6">
           <div className="text-center shrink-0">
             <div className="flex items-baseline justify-center gap-1">
@@ -362,17 +356,16 @@ export function AnalysisResults() {
                 className="text-5xl font-body font-bold text-gradient-aurum"
               />
               <span className="text-3xl font-body font-bold text-aurum-500">
-                {ordinalSuffix(faceResult.percentile.overall)}
+                /100
               </span>
             </div>
-            <span className="type-mono text-[0.6rem] text-nexus-400/50 dark:text-cosmic-muted/50 tracking-widest block mt-1">POPULATION PERCENTILE</span>
+            <span className="type-mono text-[0.6rem] text-nexus-400/50 dark:text-cosmic-muted/50 tracking-widest block mt-1">SCORE INDEX</span>
             <span className="inline-block mt-2 px-3 py-1 bg-aurum-500 text-white text-xs font-mono tracking-wider rounded-full">
               {faceResult.percentile.bracket}
             </span>
           </div>
           <div className="flex-1 text-sm text-nexus-400 dark:text-cosmic-muted font-body leading-relaxed">
-            {faceResult.percentile.comparisonText} Percentiles compare your geometry against a
-            reference distribution of analysed faces. {faceResult.percentile.overall >= 85 ? "You rank in an elite tier — striking bone structure." : faceResult.percentile.overall >= 50 ? "You sit in the upper half — strong, balanced features." : "Targeted styling moves these bars fastest."}
+            {faceResult.percentile.comparisonText}
           </div>
         </div>
         <div className="space-y-3">

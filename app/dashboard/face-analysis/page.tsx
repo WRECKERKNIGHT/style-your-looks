@@ -309,7 +309,7 @@ export default function FaceAnalysisPage() {
       ],
       scoreLabel: `${faceResult.overallRating} · FACEIQ`,
       score: faceResult.overallScore.toFixed(1),
-      scoreSuffix: "/10 · TOP " + faceResult.percentile.bracket,
+      scoreSuffix: "/10 · " + faceResult.percentile.bracket,
       footer: "zervey.app · computed on-device",
       fileName: `zervey-faceiq-${faceResult.overallScore.toFixed(1)}.png`,
       shareText: `My ZERVEY FaceIQ: ${faceResult.overallScore.toFixed(1)}/10 (${faceResult.overallRating}) · ${faceResult.facialShape} face · ${faceResult.styleProfile}`,

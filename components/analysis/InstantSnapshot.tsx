@@ -113,7 +113,7 @@ export function InstantSnapshot() {
           decimals={1}
           className="text-sm font-bold text-gradient-aurum"
         />
-        <span className="text-xs text-[var(--text-muted)] font-mono">BEAUTY INDEX · TOP {faceResult.percentile.bracket.toUpperCase()}</span>
+        <span className="text-xs text-[var(--text-muted)] font-mono">BEAUTY INDEX · {faceResult.percentile.bracket.toUpperCase()}</span>
       </div>
     </motion.div>
   );
