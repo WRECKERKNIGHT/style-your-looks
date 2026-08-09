@@ -58,16 +58,34 @@ export async function POST(request: Request) {
       );
     }
 
+    // Unverified email addresses must not be able to influence community
+    // ratings. Prevents account-squatting abuse of the public feed.
+    if (!user.email_confirmed_at) {
+      return NextResponse.json(
+        { error: "Confirm your email before rating or commenting" },
+        { status: 403 }
+      );
+    }
+
     // Ensure the target post exists and is visible to the caller (private posts
     // owned by someone else are filtered out by RLS and treated as not found).
     const { data: post, error: postError } = await supabase
       .from("community_posts")
-      .select("id")
+      .select("id, user_id")
       .eq("id", postId)
       .maybeSingle();
 
     if (postError || !post) {
       return NextResponse.json({ error: "Post not found" }, { status: 404 });
+    }
+
+    // No self-rating: a user cannot rate their own post, so averages can't be
+    // inflated by the author.
+    if (post.user_id === user.id) {
+      return NextResponse.json(
+        { error: "You cannot rate your own post" },
+        { status: 403 }
+      );
     }
 
     const { error: ratingError } = await supabase
@@ -82,7 +100,10 @@ export async function POST(request: Request) {
       );
 
     if (ratingError) {
-      return NextResponse.json({ error: ratingError.message }, { status: 500 });
+      return NextResponse.json(
+        { error: "Could not save your rating" },
+        { status: 500 }
+      );
     }
 
     if (comment) {
@@ -96,7 +117,10 @@ export async function POST(request: Request) {
         });
 
       if (commentError) {
-        return NextResponse.json({ error: commentError.message }, { status: 500 });
+        return NextResponse.json(
+          { error: "Could not save your comment" },
+          { status: 500 }
+        );
       }
     }
 
