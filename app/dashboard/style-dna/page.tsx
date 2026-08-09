@@ -494,7 +494,7 @@ function generateReport(face: any, body: any, color: any) {
   svg.innerHTML = `
     <rect width="${w}" height="${h}" fill="#241812"/>
     <rect width="${w}" height="8" fill="#8A5F3D"/>
-    <text x="${w/2}" y="40" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#C9B18C" letter-spacing="4">N E X A R I</text>
+    <text x="${w/2}" y="40" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#C9B18C" letter-spacing="4">Z E R V E Y</text>
     <text x="${w/2}" y="68" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" fill="#F3EAD9" font-weight="bold">Style Analysis Report</text>
     <text x="${w/2}" y="88" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#C8963E">${new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}</text>
     <line x1="40" y1="100" x2="${w-40}" y2="100" stroke="#8A5F3D" stroke-width="1"/>
