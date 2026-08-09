@@ -310,6 +310,8 @@ export function HeroSection() {
         className="absolute bottom-24 right-8 md:right-16 z-[1] hidden lg:block"
         fillClassName="text-gradient-aurum"
         dimClassName="text-[color-mix(in_srgb,var(--text-primary)_8%,transparent)]"
+        weightFrom={300}
+        weightTo={800}
         as="p"
       />
     </section>

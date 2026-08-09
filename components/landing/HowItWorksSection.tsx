@@ -135,7 +135,7 @@ export function HowItWorksSection() {
             <div className="section-divider" />
             <span className="section-number">02 // Process</span>
           </div>
-          <KineticHeadline text="HOW IT WORKS." className="type-display text-[var(--text-primary)]" />
+          <KineticHeadline text="HOW IT WORKS." className="type-display text-[var(--text-primary)]" weightFrom={300} weightTo={800} />
         </Reveal>
 
         <div className="relative">

@@ -73,7 +73,7 @@ export function CommunitySection() {
             <div className="section-divider" />
             <span className="section-number">04 // Community</span>
           </div>
-          <KineticHeadline text="HONEST FEEDBACK." className="type-display text-[var(--text-primary)]" />
+          <KineticHeadline text="HONEST FEEDBACK." className="type-display text-[var(--text-primary)]" weightFrom={300} weightTo={800} />
           <p className="mt-5 text-[var(--text-secondary)] max-w-md font-body text-base leading-relaxed">
             Real people. Real ratings. No filters, no fakery. The kind of
             feedback your friends won&apos;t give you.

@@ -53,7 +53,7 @@ export function FaqSection() {
             <div className="section-divider" />
             <span className="section-number">06 // FAQ</span>
           </div>
-          <KineticHeadline text="THE FINE PRINT." className="type-display text-[var(--text-primary)]" />
+          <KineticHeadline text="THE FINE PRINT." className="type-display text-[var(--text-primary)]" weightFrom={300} weightTo={800} />
           <p className="mt-5 text-[var(--text-secondary)] max-w-md font-body text-base leading-relaxed">
             Straight answers. No fine print, no data harvesting, no hidden
             costs.

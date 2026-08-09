@@ -68,7 +68,7 @@ export function TestimonialsSection() {
             <div className="section-divider" />
             <span className="section-number">05 // Voices</span>
           </div>
-          <KineticHeadline text="PEOPLE LIKE YOU." className="type-display text-[var(--text-primary)]" />
+          <KineticHeadline text="PEOPLE LIKE YOU." className="type-display text-[var(--text-primary)]" weightFrom={300} weightTo={800} />
           <p className="mt-5 text-[var(--text-secondary)] max-w-md font-body text-base leading-relaxed">
             Designers, creators, and everyone in between — already measuring,
             dressing, and showing up better.

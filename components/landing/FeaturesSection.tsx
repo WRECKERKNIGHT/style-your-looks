@@ -125,6 +125,8 @@ export function FeaturesSection() {
           <KineticHeadline
             text="WHAT WE BUILD."
             className="type-display text-[var(--text-primary)]"
+            weightFrom={300}
+            weightTo={800}
           />
           <p className="mt-5 text-[var(--text-secondary)] max-w-md font-body text-base leading-relaxed">
             Seven instruments, one fitting room. Every analysis runs on your
