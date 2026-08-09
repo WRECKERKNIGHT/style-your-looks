@@ -715,7 +715,7 @@ export function buildFaceScoreFromMetrics(
     skinClarity: calculatePercentile(skinClarityScore),
     harmony: calculatePercentile(facialHarmony),
     bracket: getPercentileBracket(calculatePercentile(roundedScore)),
-    comparisonText: `You scored higher than ${calculatePercentile(roundedScore)}% of analyzed faces.`,
+    comparisonText: `This places your overall score in ZERVEY's ${getPercentileBracket(calculatePercentile(roundedScore))} band — a score-relative rating, not a population comparison.`,
   };
   const beautyIndex = calculateBeautyIndex(metrics, skinClarityScore, weights);
   const faceShapeDetails = FACE_SHAPE_INFO[facialShape] || FACE_SHAPE_INFO.Oval;

@@ -139,9 +139,9 @@ export function buildDemoFaceResult(landmarks?: number[][]): FaceAnalysisResult 
       jawline: 88,
       skinClarity: 90,
       harmony: 86,
-      bracket: "TOP 10%",
-      comparisonText:
-        "Your geometry ranks in the 89th percentile — you place in the top tier of analysed faces.",
+    bracket: "TOP 10%",
+    comparisonText:
+      "Your geometry places in ZERVEY's top score band — a score-relative rating, not a population comparison.",
     },
     beautyIndex: 86,
     faceShapeDetails: {

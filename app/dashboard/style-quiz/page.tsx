@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, ChevronLeft, ChevronRight, RotateCcw, BarChart3, ArrowRight } from "lucide-react";
@@ -78,12 +78,24 @@ const fadeUp = {
   show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
 };
 
+const QUIZ_STORAGE_KEY = "zervey_style_quiz";
+
 export default function StyleQuizPage() {
   const { addToast } = useToast();
   const [step, setStep] = useState<"intro" | "quiz" | "result">("intro");
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [result, setResult] = useState<string | null>(null);
+  const [savedResult, setSavedResult] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem(QUIZ_STORAGE_KEY);
+      if (saved) setSavedResult(saved);
+    } catch {
+      // storage unavailable — ignore
+    }
+  }, []);
 
   const startQuiz = () => setStep("quiz");
 
@@ -97,8 +109,14 @@ export default function StyleQuizPage() {
       vals.forEach(v => { counts[v] = (counts[v] || 0) + 1; });
       const topResult = Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0];
       setResult(topResult);
+      setSavedResult(topResult);
+      try {
+        window.localStorage.setItem(QUIZ_STORAGE_KEY, topResult);
+      } catch {
+        // storage unavailable — ignore
+      }
       setStep("result");
-      addToast("Quiz complete!", "success");
+      addToast("Quiz complete — result saved!", "success");
     }
   };
 
@@ -141,7 +159,13 @@ export default function StyleQuizPage() {
             <Sparkles className="w-12 h-12 text-[var(--accent-aurum)] mx-auto" />
             <h2 className="type-display text-[var(--text-primary)]">FIND YOUR STYLE</h2>
             <p className="text-[var(--text-muted)] type-body">Answer 5 quick questions and we&apos;ll identify your personal style archetype.</p>
-            <button onClick={startQuiz} className="btn-nexus">START QUIZ</button>
+            {savedResult && RESULTS[savedResult] && (
+              <div className="border border-[var(--border-primary)] bg-[var(--bg-tertiary)] p-4">
+                <p className="type-mono text-[0.55rem] text-[var(--text-muted)] tracking-widest mb-1">YOUR SAVED STYLE</p>
+                <p className="type-display text-[var(--accent-aurum)]">{RESULTS[savedResult].title}</p>
+              </div>
+            )}
+            <button onClick={startQuiz} className="btn-nexus">{savedResult ? "RETAKE QUIZ" : "START QUIZ"}</button>
           </motion.div>
         )}
 
