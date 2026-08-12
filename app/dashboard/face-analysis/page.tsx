@@ -20,10 +20,11 @@ import { useWebcam } from "@/hooks/useWebcam";
 import { useToast } from "@/components/shared/Toast";
 import { ScrollParallax, ScrollBlur, SectionScrollProgress } from "@/components/shared/ScrollEffects";
 import { motion, AnimatePresence } from "framer-motion";
-import { ScanFace, Camera, AlertCircle, Eye, Save, CheckCircle, X, ShieldCheck, Copy, Check, Ruler, Gauge, AlertTriangle, GitCompareArrows, Box, Share2, RefreshCw } from "lucide-react";
+import { ScanFace, Camera, AlertCircle, Eye, Save, CheckCircle, X, ShieldCheck, Copy, Check, Ruler, Gauge, AlertTriangle, GitCompareArrows, Box, Share2, RefreshCw, Users } from "lucide-react";
 import { SymmetrySplit } from "@/components/analysis/SymmetrySplit";
 import { LaserScanOverlay } from "@/components/analysis/LaserScanOverlay";
 import { ShareCardModal, type ShareCardData } from "@/components/shared/ShareCardModal";
+import { ShareToCommunity } from "@/components/community/ShareToCommunity";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -168,6 +169,7 @@ export default function FaceAnalysisPage() {
   const [calibOpen, setCalibOpen] = useState(false);
   const [calibration, setCalibration] = useState<CalibrationProfile | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
+  const [shareCommunityOpen, setShareCommunityOpen] = useState(false);
   const imageRef = useRef<HTMLImageElement>(null);
   const [imageDims, setImageDims] = useState<{ w: number; h: number; aspect?: number } | null>(null);
 
@@ -795,6 +797,16 @@ export default function FaceAnalysisPage() {
               <Share2 className="w-5 h-5" />
               SHARE CARD
             </button>
+            {!isDemoPhoto(uploadedImage) && (
+              <button
+                onClick={() => setShareCommunityOpen(true)}
+                aria-label="Share to community"
+                className="flex items-center gap-2 px-6 py-3 font-body text-sm tracking-wider uppercase transition-all btn-nexus"
+              >
+                <Users className="w-5 h-5" />
+                SHARE TO COMMUNITY
+              </button>
+            )}
             <button
               onClick={() => {
                 useAnalysisStore.getState().reset();
@@ -1009,6 +1021,15 @@ export default function FaceAnalysisPage() {
       />
 
       <ShareCardModal open={shareOpen} onClose={() => setShareOpen(false)} data={shareData} />
+
+      <ShareToCommunity
+        open={shareCommunityOpen}
+        onClose={() => setShareCommunityOpen(false)}
+        photo={uploadedImage}
+        landmarks={faceResult?.landmarks ?? []}
+        defaultCategory="face"
+        summary={`${faceResult?.facialShape ?? "Face"} · ${faceResult?.overallRating ?? "FaceIQ"} ${faceResult ? faceResult.overallScore.toFixed(1) : ""}/10`}
+      />
     </div>
   );
 }
