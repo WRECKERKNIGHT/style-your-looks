@@ -34,6 +34,8 @@ export function ScrollParticles() {
   const progressRef = useRef(0);
   const heroElRef = useRef<HTMLElement | null>(null);
   const featuresElRef = useRef<HTMLElement | null>(null);
+  const heroRectRef = useRef<DOMRect | null>(null);
+  const featuresRectRef = useRef<DOMRect | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -114,7 +116,9 @@ export function ScrollParticles() {
       t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 
     const onScroll = () => {
-      const hr = heroEl.getBoundingClientRect();
+      heroRectRef.current = heroEl.getBoundingClientRect();
+      featuresRectRef.current = featuresEl?.getBoundingClientRect() ?? null;
+      const hr = heroRectRef.current;
       progressRef.current = clamp01((H - hr.bottom) / H);
     };
     onScroll();
@@ -140,8 +144,7 @@ export function ScrollParticles() {
 
       ctx.clearRect(0, 0, W, H);
 
-      let fr: DOMRect | null = null;
-      if (featuresEl) fr = featuresEl.getBoundingClientRect();
+      const fr = featuresRectRef.current;
       const targetDepth = fr
         ? Math.max(200, Math.min(560, fr.height - 260))
         : 400;
@@ -182,24 +185,26 @@ export function ScrollParticles() {
         py[i] = by + (ty - by) * c;
       }
 
-      // connection lines — draw a swarm feel during convergence
-      const linePath = new Path2D();
-      const CONNECT = 90;
-      const CONNECT_SQ = CONNECT * CONNECT;
-      for (let i = 0; i < n; i++) {
-        for (let j = i + 1; j < n; j++) {
-          const dx = px[i] - px[j];
-          const dy = py[i] - py[j];
-          const d2 = dx * dx + dy * dy;
-          if (d2 < CONNECT_SQ) {
-            linePath.moveTo(px[i], py[i]);
-            linePath.lineTo(px[j], py[j]);
+      // connection lines — draw a swarm feel during convergence only
+      if (progress > 0.15) {
+        const linePath = new Path2D();
+        const CONNECT = 90;
+        const CONNECT_SQ = CONNECT * CONNECT;
+        for (let i = 0; i < n; i++) {
+          for (let j = i + 1; j < n; j++) {
+            const dx = px[i] - px[j];
+            const dy = py[i] - py[j];
+            const d2 = dx * dx + dy * dy;
+            if (d2 < CONNECT_SQ) {
+              linePath.moveTo(px[i], py[i]);
+              linePath.lineTo(px[j], py[j]);
+            }
           }
         }
+        ctx.strokeStyle = "rgba(185, 139, 86, 0.07)";
+        ctx.lineWidth = 0.5;
+        ctx.stroke(linePath);
       }
-      ctx.strokeStyle = "rgba(185, 139, 86, 0.07)";
-      ctx.lineWidth = 0.5;
-      ctx.stroke(linePath);
 
       const globalFade = 1 - clamp01((progress - 0.9) / 0.1);
 

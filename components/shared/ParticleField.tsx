@@ -75,9 +75,18 @@ export function ParticleField() {
 
     const CONNECTION_DIST_SQ = CONNECTION_DIST * CONNECTION_DIST;
 
-    const animate = () => {
+    // Slow drift reads identically at 30fps — gating the loop here roughly halves CPU.
+    const FRAME_MS = 33;
+    let lastFrame = 0;
+
+    const animate = (now: number) => {
       animRef.current = 0;
       if (!running) return;
+      if (now - lastFrame < FRAME_MS) {
+        animRef.current = requestAnimationFrame(animate);
+        return;
+      }
+      lastFrame = now;
 
       const W = window.innerWidth;
       const H = window.innerHeight;
@@ -140,7 +149,6 @@ export function ParticleField() {
     }
 
     animRef.current = requestAnimationFrame(animate);
-
     return () => {
       running = false;
       cancelAnimationFrame(animRef.current);
