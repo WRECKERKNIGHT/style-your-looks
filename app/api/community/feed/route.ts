@@ -99,10 +99,25 @@ export async function GET(request: Request) {
       }
     }
 
+    // Real comment counts via a security-definer helper (RLS-safe aggregate).
+    const commentCounts: Record<string, number> = {};
+    if (rows.length > 0) {
+      const { data: countRows, error: countError } = await supabase.rpc(
+        "get_post_comment_counts",
+        { target_ids: rows.map((p) => p.id) }
+      );
+      if (!countError && Array.isArray(countRows)) {
+        for (const row of countRows) {
+          commentCounts[row.post_id] = Number(row.count ?? 0);
+        }
+      }
+    }
+
     // Strip internal user ids from the public response to prevent account
     // enumeration via the feed.
     const postsWithUser = rows.map(({ user_id, ...post }) => ({
       ...post,
+      comment_count: commentCounts[post.id] ?? 0,
       user: user_id ? names[user_id] || null : null,
     }));
 
