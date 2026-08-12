@@ -11,6 +11,43 @@ export function CustomCursor() {
   const followerPos = useRef({ x: -100, y: -100 });
   const isVisible = useRef(false);
   const isHoveringElement = useRef(false);
+  const lastMoveRef = useRef(0);
+  const lastFrameRef = useRef(0);
+
+  const animate = useCallback(() => {
+    requestRef.current = 0;
+
+    const mouse = mousePos.current;
+    const follower = followerPos.current;
+    const dx = mouse.x - follower.x;
+    const dy = mouse.y - follower.y;
+
+    // Frame-rate-independent smoothing: same time-to-converge at 30fps or 120fps.
+    const now = performance.now();
+    const dt = Math.min(50, Math.max(1, now - lastFrameRef.current));
+    lastFrameRef.current = now;
+    const k = 1 - Math.pow(0.88, dt / 16.7);
+    follower.x += dx * k;
+    follower.y += dy * k;
+
+    // Idle sleep: once the follower catches the pointer and nothing moves for
+    // a while, stop the rAF loop entirely instead of running at 60fps forever.
+    const settled = Math.abs(dx) < 0.4 && Math.abs(dy) < 0.4;
+    if (settled && now - lastMoveRef.current > 1200) {
+      return;
+    }
+
+    if (cursorRef.current) {
+      cursorRef.current.style.left = `${mouse.x}px`;
+      cursorRef.current.style.top = `${mouse.y}px`;
+    }
+    if (followerRef.current) {
+      followerRef.current.style.left = `${follower.x}px`;
+      followerRef.current.style.top = `${follower.y}px`;
+    }
+
+    requestRef.current = requestAnimationFrame(animate);
+  }, []);
 
   useEffect(() => {
     const fine = window.matchMedia("(pointer: fine)").matches;
@@ -21,12 +58,17 @@ export function CustomCursor() {
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
     mousePos.current = { x: e.clientX, y: e.clientY };
+    lastMoveRef.current = performance.now();
     if (!isVisible.current) {
       isVisible.current = true;
       if (cursorRef.current) cursorRef.current.style.opacity = "1";
       if (followerRef.current) followerRef.current.style.opacity = "1";
     }
-  }, []);
+    // Wake the follower loop from its idle sleep when the pointer moves again.
+    if (requestRef.current === 0) {
+      requestRef.current = requestAnimationFrame(animate);
+    }
+  }, [animate]);
 
   const handleMouseLeave = useCallback(() => {
     isVisible.current = false;
@@ -86,24 +128,6 @@ export function CustomCursor() {
 
     observer.observe(document.body, { childList: true, subtree: true });
 
-    const animate = () => {
-      const dx = mousePos.current.x - followerPos.current.x;
-      const dy = mousePos.current.y - followerPos.current.y;
-      followerPos.current.x += dx * 0.12;
-      followerPos.current.y += dy * 0.12;
-
-      if (cursorRef.current) {
-        cursorRef.current.style.left = `${mousePos.current.x}px`;
-        cursorRef.current.style.top = `${mousePos.current.y}px`;
-      }
-      if (followerRef.current) {
-        followerRef.current.style.left = `${followerPos.current.x}px`;
-        followerRef.current.style.top = `${followerPos.current.y}px`;
-      }
-
-      requestRef.current = requestAnimationFrame(animate);
-    };
-
     requestRef.current = requestAnimationFrame(animate);
 
     return () => {
@@ -116,7 +140,7 @@ export function CustomCursor() {
       observer.disconnect();
       cancelAnimationFrame(requestRef.current);
     };
-  }, [enabled, handleMouseMove, handleMouseLeave, handleHoverStart, handleHoverEnd]);
+  }, [enabled, animate, handleMouseMove, handleMouseLeave, handleHoverStart, handleHoverEnd]);
 
   if (!enabled) return null;
 
