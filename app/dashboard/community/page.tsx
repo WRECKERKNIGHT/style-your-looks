@@ -37,9 +37,9 @@ function mapPost(raw: Record<string, unknown>, index: number): Post {
     id: String(raw.id || `seed_${index}`),
     user: user.full_name || `Member${index + 1}`,
     avatar: (user.full_name || "NX").split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase(),
-    content: String(raw.title || raw.description || raw.content || ""),
+    content: String(raw.title || raw.description || ""),
     ratingCount: Number(raw.rating_count ?? 0),
-    comments: 0,
+    comments: Number(raw.comment_count ?? 0),
     tags: category ? [category] : [],
     time: raw.created_at ? timeAgo(String(raw.created_at)) : "recently",
   };
@@ -58,6 +58,7 @@ function timeAgo(iso: string): string {
 export default function CommunityPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"feed" | "members" | "tags">("feed");
+  const [activeCategory, setActiveCategory] = useState<string>("all");
   const [feed, setFeed] = useState<Post[]>([]);
   const [live, setLive] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -70,7 +71,9 @@ export default function CommunityPage() {
   const loadFeed = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
     try {
-      const res = await fetch("/api/community/feed?limit=20", { signal });
+      const categoryParam =
+        activeCategory === "all" ? "" : `&category=${encodeURIComponent(activeCategory)}`;
+      const res = await fetch(`/api/community/feed?limit=20${categoryParam}`, { signal });
       if (signal?.aborted) return;
       if (res.status === 401) {
         setLive(false);
@@ -91,7 +94,7 @@ export default function CommunityPage() {
     } finally {
       if (!signal?.aborted) setLoading(false);
     }
-  }, []);
+  }, [activeCategory]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -143,6 +146,34 @@ export default function CommunityPage() {
         </button>
       </motion.div>
 
+      {activeTab === "feed" && (
+        <div className="flex flex-wrap gap-2 items-center">
+          <button
+            onClick={() => setActiveCategory("all")}
+            className={`px-3 py-1.5 border type-mono text-[0.55rem] tracking-widest transition-all ${
+              activeCategory === "all"
+                ? "border-[var(--accent-aurum)] bg-[color-mix(in_srgb,var(--accent-aurum)_10%,transparent)] text-[var(--accent-aurum)]"
+                : "border-[var(--border-primary)] text-[var(--text-muted)] hover:border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)] card-nexus"
+            }`}
+          >
+            ALL
+          </button>
+          {CATEGORIES.map((tag) => (
+            <button
+              key={tag}
+              onClick={() => setActiveCategory(activeCategory === tag ? "all" : tag)}
+              className={`px-3 py-1.5 border type-mono text-[0.55rem] tracking-widest transition-all ${
+                activeCategory === tag
+                  ? "border-[var(--accent-aurum)] bg-[color-mix(in_srgb,var(--accent-aurum)_10%,transparent)] text-[var(--accent-aurum)]"
+                  : "border-[var(--border-primary)] text-[var(--text-muted)] hover:border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)] card-nexus"
+              }`}
+            >
+              #{tag}
+            </button>
+          ))}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-4">
           {activeTab === "feed" && (
@@ -150,7 +181,9 @@ export default function CommunityPage() {
               {feed.length === 0 && !loading && (
                 <div className="glass-card p-10 text-center">
                   <p className="text-[var(--text-muted)] font-body text-sm mb-2">
-                    No posts yet.
+                    {activeCategory === "all"
+                      ? "No posts yet."
+                      : `No ${activeCategory} posts yet.`}
                   </p>
                   <p className="text-xs text-[var(--text-muted)]">
                     Run an analysis, then share your results to start the feed.
