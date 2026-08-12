@@ -77,7 +77,11 @@ MediaPipe. Photos never leave the browser.
 ## Demo mode isolation
 
 Every analysis page ships with a **demo run** so you can watch a full scan on a sample
-photo — no camera or upload needed.
+photo — no camera or upload needed. The demo carousel carries **multiple people**
+(Aarav, Maya, Kian, Ishaa), each with their **own photo and their own result profile** —
+running any sample produces that person's distinct face shape, scores, body type and
+seasonal palette rather than reusing a single canned result. Each person's photo is run
+through the real on-device detectors with a synthetic-mesh fallback.
 
 Demo previews are **strictly isolated**:
 

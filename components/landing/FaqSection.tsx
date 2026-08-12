@@ -26,7 +26,11 @@ const faqs = [
   },
   {
     q: "Do I need an account to try it?",
-    a: "No. You can run a full analysis instantly without an account. Sign up only if you want to save history, publish looks, and join the community.",
+    a: "No. Analysis runs entirely on-device, so you can start without an account. Sign up only for the features that genuinely need one: publishing looks to the community, rating others, and syncing your profile across devices.",
+  },
+  {
+    q: "How does the community verify ratings?",
+    a: "Only confirmed accounts with a verified email can rate, and you can never rate your own post — enforced at the database level, not just in the UI.",
   },
   {
     q: "What happens to my photos?",

@@ -93,7 +93,7 @@ export function CtaSection() {
           <div className="mt-16 flex items-center justify-center gap-8 flex-wrap">
             {[
               { label: "100% ON-DEVICE", color: "bg-nexus-500/60" },
-              { label: "ZERO SERVER CALLS", color: "bg-aurum-400/50" },
+              { label: "ANALYSIS STAYS LOCAL", color: "bg-aurum-400/50" },
               { label: "FREE FOREVER", color: "bg-aurum-400/50" },
               { label: "YOUR DATA STAYS YOURS", color: "bg-nexus-500/60" },
             ].map((item, i) => (
