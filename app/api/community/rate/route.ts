@@ -2,16 +2,24 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { rateLimit } from "@/lib/rate-limit";
 import { sanitizeText, isUuid } from "@/lib/validation";
+import { assertSameOrigin } from "@/lib/request-guard";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
   try {
+    const originGuard = assertSameOrigin(request);
+    if (originGuard) return originGuard;
+
     const limitCheck = rateLimit(request, 20);
     if (limitCheck.limited) {
+      const retryAfter = Math.max(
+        1,
+        Math.ceil((limitCheck.resetAt - Date.now()) / 1000)
+      );
       return NextResponse.json(
         { error: "Rate limit exceeded. Slow down!" },
-        { status: 429 }
+        { status: 429, headers: { "Retry-After": String(retryAfter) } }
       );
     }
 
