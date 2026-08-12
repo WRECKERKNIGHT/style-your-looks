@@ -33,7 +33,33 @@ export function clampInt(value: unknown, min: number, max: number, fallback: num
 }
 
 export function isAllowedCategory(value: string): boolean {
-  return ["outfit", "face", "grooming", "party"].includes(value);
+  return ["outfit", "face", "grooming", "body", "color", "tryon"].includes(value);
+}
+
+export function isDataUrl(value: unknown): boolean {
+  return (
+    typeof value === "string" &&
+    /^data:image\/(?:png|jpe?g|webp);base64,[a-z0-9+/=]+$/i.test(value)
+  );
+}
+
+export function dataUrlToBuffer(value: string): {
+  buffer: Buffer;
+  contentType: string;
+} {
+  const match = /^data:image\/(\w+);base64,(.+)$/i.exec(value);
+  if (!match) throw new Error("Invalid image data URL");
+  const mimeByExt: Record<string, string> = {
+    jpeg: "image/jpeg",
+    jpg: "image/jpeg",
+    png: "image/png",
+    webp: "image/webp",
+  };
+  const contentType = mimeByExt[match[1].toLowerCase()] || "image/jpeg";
+  return {
+    buffer: Buffer.from(match[2], "base64"),
+    contentType,
+  };
 }
 
 export function safeNextPath(
