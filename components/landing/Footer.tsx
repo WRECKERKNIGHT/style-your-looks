@@ -30,18 +30,18 @@ export function Footer() {
     target: ref,
     offset: ["start end", "end end"],
   });
-  const watermarkY = useSpring(useTransform(scrollYProgress, [0, 1], [160, 0]), {
+  const watermarkY = useSpring(useTransform(scrollYProgress, [0, 1], [28, 0]), {
     stiffness: 70,
     damping: 22,
   });
-  const watermarkOpacity = useTransform(scrollYProgress, [0, 0.6], [0, 1]);
+  const watermarkOpacity = useTransform(scrollYProgress, [0, 0.4], [0, 1]);
 
   return (
     <footer ref={ref} className="bg-[var(--bg-primary)] border-t border-[var(--border-primary)] relative overflow-hidden">
       <motion.div
         aria-hidden
-        style={{ y: watermarkY, opacity: watermarkOpacity }}
-        className="pointer-events-none absolute z-0 -bottom-20 left-1/2 -translate-x-1/2 text-[20vw] font-display font-black text-[var(--text-primary)]/[0.03] dark:text-[var(--cosmic-muted)]/[0.03] tracking-tight whitespace-nowrap select-none"
+        style={{ y: watermarkY, opacity: watermarkOpacity, willChange: "transform, opacity" }}
+        className="pointer-events-none absolute inset-x-0 bottom-0 z-0 flex items-end justify-center text-[clamp(5.5rem,19vw,17rem)] font-display font-black leading-none text-[var(--text-primary)]/[0.04] dark:text-[var(--cosmic-muted)]/[0.04] tracking-tight whitespace-nowrap select-none"
       >
         ZERVEY
       </motion.div>
