@@ -168,10 +168,14 @@ are added.
 
 ## Database
 
-Migrations live in `supabase/migrations/`. Apply in order:
+Migrations live in `supabase/migrations/`. Apply in order (oldest first):
 
 - `001_initial.sql` / `001_community_tables.sql` — core + community schema
 - `002_hardening.sql` — RLS, triggers, indexes, rating recalculation
+- `003_fix_community_rls.sql` — corrects community row-level security
+- `004_lock_community_security_definers.sql` — locks down security-definer functions
+- `005_harden_community_integrity.sql` — integrity guards (no self-rating, protected averages)
+- `006_community_storage_and_helpers.sql` — image bucket + comment/member read helpers
 
 ## Authentication
 
