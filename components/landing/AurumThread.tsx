@@ -62,7 +62,7 @@ export function AurumThread() {
     const resize = () => {
       W = window.innerWidth;
       H = window.innerHeight;
-      dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+      dpr = Math.min(window.devicePixelRatio || 1, 1.25);
       canvas.width = Math.round(W * dpr);
       canvas.height = Math.round(H * dpr);
       canvas.style.width = `${W}px`;
@@ -109,7 +109,8 @@ export function AurumThread() {
       t += 0.016;
       const nowVel = scrollY - lastY;
       lastY = scrollY;
-      vel = vel * 0.82 + nowVel * 0.18;
+      // Critically-damped smoothing keeps the velocity trail calm instead of jittery.
+      vel += (nowVel - vel) * 0.12;
       tension = Math.min(1, tension + Math.min(0.5, Math.abs(nowVel) * 0.0016));
       tension *= 0.94;
 
@@ -203,12 +204,24 @@ export function AurumThread() {
         ctx.fill();
       }
 
+      if (document.hidden) return;
       raf = requestAnimationFrame(draw);
     };
 
+    const onVisibility = () => {
+      if (document.hidden) {
+        cancelAnimationFrame(raf);
+        raf = 0;
+      } else if (raf === 0) {
+        raf = requestAnimationFrame(draw);
+      }
+    };
+
     raf = requestAnimationFrame(draw);
+    document.addEventListener("visibilitychange", onVisibility);
     return () => {
       cancelAnimationFrame(raf);
+      document.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener("resize", resize);
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("mousemove", onMouse);
