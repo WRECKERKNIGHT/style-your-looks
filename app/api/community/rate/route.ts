@@ -27,9 +27,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid post ID" }, { status: 400 });
     }
 
-    // Reject out-of-range scores instead of silently clamping them.
+    // Reject out-of-range scores instead of silently clamping them. Require a
+    // real number — coerce never accepts booleans/strings (JSON true -> 1).
     const rawScore = body.score;
-    const score = typeof rawScore === "number" ? rawScore : Number(rawScore);
+    const score = typeof rawScore === "number" ? rawScore : NaN;
     if (!Number.isInteger(score) || score < 1 || score > 10) {
       return NextResponse.json(
         { error: "Score must be an integer between 1 and 10" },
@@ -130,7 +131,20 @@ export async function POST(request: Request) {
       target_post_id: postId,
     });
 
-    return NextResponse.json({ success: true, message: "Rating submitted" });
+    // Return the recomputed averages so the client can render the real values
+    // instead of guessing with optimistic math (which is wrong on re-rate).
+    const { data: refreshed } = await supabase
+      .from("community_posts")
+      .select("avg_rating, rating_count")
+      .eq("id", postId)
+      .single();
+
+    return NextResponse.json({
+      success: true,
+      message: "Rating submitted",
+      avgRating: Number(refreshed?.avg_rating ?? 0),
+      ratingCount: Number(refreshed?.rating_count ?? 0),
+    });
   } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }

@@ -16,8 +16,7 @@ interface Comment {
   createdAt: string;
 }
 
-interface PostDetail {
-  id: string;
+interface PostDetail {  id: string;
   title: string;
   description: string;
   category: string;
@@ -85,6 +84,25 @@ export default function CommunityPostPage() {
           userName: name,
           avatar: name.split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase(),
         });
+
+        const commentRes = await fetch(`/api/community/comments?postId=${encodeURIComponent(String(raw.id))}`, { signal });
+        if (signal?.aborted) return;
+        const commentData = await commentRes.json().catch(() => null);
+        if (signal?.aborted) return;
+        if (commentData && Array.isArray(commentData.comments)) {
+          setComments(
+            commentData.comments.map((c: { id: string; text: string; rating: number | null; createdAt: string; user?: { full_name?: string } }) => {
+              const cname = c.user?.full_name || "Member";
+              return {
+                id: String(c.id),
+                user: cname,
+                text: String(c.text),
+                rating: Number(c.rating ?? 0),
+                createdAt: c.createdAt ? timeAgo(String(c.createdAt)) : "recently",
+              };
+            })
+          );
+        }
       } catch {
         if (!signal?.aborted) setNotFound(true);
       } finally {
@@ -103,16 +121,12 @@ export default function CommunityPostPage() {
   const submit = async () => {
     if (submitting || !post) return;
     const text = comment.trim();
-    if (!text) {
-      addToast("Write a comment first", "error");
-      return;
-    }
     setSubmitting(true);
     try {
       const res = await fetch("/api/community/rate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ postId: post.id, score: myRating, comment: text }),
+        body: JSON.stringify({ postId: post.id, score: myRating, comment: text || undefined }),
       });
       const data = await res.json().catch(() => null);
       if (res.status === 401) {
@@ -124,23 +138,25 @@ export default function CommunityPostPage() {
         addToast(data?.error || "Could not submit rating", "error");
         return;
       }
-      setComments((prev) => [
-        ...prev,
-        { id: Date.now().toString(), user: "You", text, rating: myRating, createdAt: "just now" },
-      ]);
+      if (text) {
+        setComments((prev) => [
+          ...prev,
+          { id: Date.now().toString(), user: "You", text, rating: myRating, createdAt: "just now" },
+        ]);
+      }
+      // Use the server-recomputed averages (accurate even when re-rating).
       setPost((p) =>
         p
           ? {
               ...p,
-              avgRating:
-                (p.avgRating * p.ratingCount + myRating) / (p.ratingCount + 1),
-              ratingCount: p.ratingCount + 1,
+              avgRating: Number(data?.avgRating ?? p.avgRating),
+              ratingCount: Number(data?.ratingCount ?? p.ratingCount),
             }
           : p
       );
       setComment("");
       setMyRating(5);
-      addToast("Rating submitted", "success");
+      addToast(text ? "Rating + comment submitted" : "Rating submitted", "success");
     } catch {
       addToast("Network error. Try again.", "error");
     } finally {
@@ -256,7 +272,7 @@ export default function CommunityPostPage() {
         <div className="flex gap-3">
           <input
             type="text"
-            placeholder="Write a comment..."
+            placeholder="Write a comment (optional)..."
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && submit()}
@@ -264,12 +280,15 @@ export default function CommunityPostPage() {
           />
           <button
             onClick={submit}
-            disabled={submitting || !comment.trim()}
+            disabled={submitting}
             className="px-5 py-3 bg-[var(--accent-aurum)] text-white hover:opacity-90 transition-opacity disabled:opacity-40"
           >
             {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
           </button>
         </div>
+        <p className="text-[0.65rem] text-[var(--text-muted)] font-body">
+          Rating alone works — a comment is optional.
+        </p>
       </motion.div>
 
       <div className="space-y-4">
