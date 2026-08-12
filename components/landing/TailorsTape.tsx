@@ -32,6 +32,7 @@ export function TailorsTape() {
       canvas.width = Math.round(W * dpr);
       canvas.height = Math.round(H * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      schedule();
     };
 
     const onScroll = () => {
@@ -41,9 +42,11 @@ export function TailorsTape() {
         document.documentElement.scrollHeight - window.innerHeight
       );
       progress = Math.min(1, Math.max(0, scrollY / max));
+      schedule();
     };
 
     const draw = () => {
+      raf = 0;
       ctx.clearRect(0, 0, W, H);
 
       const start = Math.floor(scrollY / SPACING);
@@ -108,20 +111,28 @@ export function TailorsTape() {
       ctx.fill();
 
       if (readout) readout.textContent = `${Math.round(progress * 100)}%`;
+    };
 
+    const schedule = () => {
+      if (raf !== 0) return;
       raf = requestAnimationFrame(draw);
+    };
+
+    const onVisibility = () => {
+      if (!document.hidden) schedule();
     };
 
     resize();
     onScroll();
     window.addEventListener("resize", resize);
     window.addEventListener("scroll", onScroll, { passive: true });
-    raf = requestAnimationFrame(draw);
+    document.addEventListener("visibilitychange", onVisibility);
 
     return () => {
-      cancelAnimationFrame(raf);
+      if (raf) cancelAnimationFrame(raf);
       window.removeEventListener("resize", resize);
       window.removeEventListener("scroll", onScroll);
+      document.removeEventListener("visibilitychange", onVisibility);
     };
   }, [reduced]);
 
