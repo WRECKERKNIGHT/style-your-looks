@@ -26,17 +26,15 @@ export async function middleware(request: NextRequest) {
 
   const isAuthPath = AUTH_PATHS.some((route) => path.startsWith(route));
 
-  // Fail closed: if Supabase is not configured, auth cannot be verified, so
-  // protected pages must NOT be reachable. Treat every request as anonymous.
+  // The app's core analysis runs on-device, so a Supabase outage (or an
+  // unconfigured project) should NOT present as a logout. Fail soft: let
+  // dashboard requests through — every server API still enforces its own
+  // auth and availability checks, so nothing protected is exposed.
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!supabaseUrl || !supabaseAnonKey) {
-    if (path.startsWith("/dashboard")) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/login";
-      url.searchParams.set("next", path);
-      url.searchParams.set("error", "AUTH_NOT_CONFIGURED");
-      return NextResponse.redirect(url);
+    if (isAuthPath) {
+      return NextResponse.next({ request });
     }
     return NextResponse.next({ request });
   }
@@ -68,17 +66,22 @@ export async function middleware(request: NextRequest) {
     },
   });
 
-  let user;
+  let user: { id: string } | null = null;
+  let unreachable = false;
   try {
-    const {
-      data: { user: resolvedUser },
-    } = await supabase.auth.getUser();
-    user = resolvedUser;
+    const result = await supabase.auth.getUser();
+    user = result.data.user;
+    // A network failure resolves with an error and a null user rather than
+    // throwing — that is the outage case we must not treat as logged out.
+    unreachable = !result.data.user && Boolean(result.error);
   } catch {
-    user = null;
+    unreachable = true;
   }
 
   if (path.startsWith("/dashboard") && !user) {
+    if (unreachable) {
+      return supabaseResponse;
+    }
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("next", path);
