@@ -39,6 +39,11 @@ const securityHeaders = [
   },
 ];
 
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+const supabaseHost = supabaseUrl
+  ? supabaseUrl.replace(/^https?:\/\//, "").split("/")[0]
+  : "";
+
 const nextConfig = {
   reactStrictMode: true,
   compress: true,
@@ -47,13 +52,15 @@ const nextConfig = {
   images: {
     // Only proxy images served from this project's Supabase storage bucket.
     // A wildcard hostname here would turn the optimizer into an open proxy.
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "ujgrjatrthhqrzasssuh.supabase.co",
-        pathname: "/storage/v1/**",
-      },
-    ],
+    remotePatterns: supabaseHost
+      ? [
+          {
+            protocol: "https",
+            hostname: supabaseHost,
+            pathname: "/storage/v1/**",
+          },
+        ]
+      : [],
     formats: ["image/avif", "image/webp"],
     minimumCacheTTL: 60 * 60 * 24,
   },
