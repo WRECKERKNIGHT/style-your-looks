@@ -12,7 +12,8 @@ import { CalibrationModal, type CalibrationProfile } from "@/components/analysis
 import { FaceView3D } from "@/components/analysis/FaceView3D";
 import { DemoCarousel } from "@/components/demo/DemoCarousel";
 import { DemoBadge } from "@/components/demo/DemoBadge";
-import { DEMO_FACE_PHOTO, buildDemoFaceResult, generateDemoLandmarks, isDemoPhoto } from "@/lib/demo/demo-analysis";
+import { DEMO_PEOPLE, buildDemoFaceResult, generateDemoLandmarks, isDemoPhoto } from "@/lib/demo/demo-analysis";
+import type { DemoPerson } from "@/lib/demo/demo-analysis";
 import { detectFaceLandmarksOnly } from "@/lib/ml/face-analyzer";
 import { useAnalysisStore } from "@/store/analysis-store";
 import { useMediaPipe, AnalysisCancelledError } from "@/hooks/useMediaPipe";
@@ -263,30 +264,30 @@ export default function FaceAnalysisPage() {
     setError(null);
   }, []);
 
-  const runDemo = useCallback(async () => {
+  const runDemo = useCallback(async (person: DemoPerson) => {
     useAnalysisStore.getState().reset();
     useAnalysisStore.getState().setSource("demo");
     useAnalysisStore.getState().setIsAnalyzing(true);
-    setPhotos([DEMO_FACE_PHOTO]);
-    setPhoto(DEMO_FACE_PHOTO, "face");
+    setPhotos([person.facePhoto]);
+    setPhoto(person.facePhoto, "face");
     setError(null);
     setRejectedPhotos([]);
-    setProcessingPreview({ image: DEMO_FACE_PHOTO, landmarks: [] });
+    setProcessingPreview({ image: person.facePhoto, landmarks: [] });
     try {
-      await new Promise((r) => setTimeout(r, 1100));
+      await new Promise((r) => setTimeout(r, 900));
       const img = new Image();
-      img.src = DEMO_FACE_PHOTO;
+      img.src = person.facePhoto;
       await new Promise((r) => { img.onload = r; });
-      let landmarks: number[][] = generateDemoLandmarks();
+      let landmarks: number[][] = generateDemoLandmarks(person.id.length);
       try {
         landmarks = await detectFaceLandmarksOnly(img);
       } catch {
         // Real detection unavailable — fall back to the synthetic demo mesh.
       }
-      setProcessingPreview({ image: DEMO_FACE_PHOTO, landmarks });
-      await new Promise((r) => setTimeout(r, 1100));
+      setProcessingPreview({ image: person.facePhoto, landmarks });
+      await new Promise((r) => setTimeout(r, 900));
       setProcessingPreview(null);
-      setFaceResult(buildDemoFaceResult(landmarks));
+      setFaceResult(buildDemoFaceResult(person, landmarks));
       markAnalyzed();
     } finally {
       useAnalysisStore.getState().setIsAnalyzing(false);
@@ -559,16 +560,16 @@ export default function FaceAnalysisPage() {
             )}
 
             <DemoCarousel
-              slides={[
-                {
-                  photo: DEMO_FACE_PHOTO,
-                  title: "Run the full FaceIQ scan on a sample photo.",
-                  detail:
-                    "Watch the live 478-point mesh track the face — then see golden-ratio scoring and a shareable result card. No camera or upload required.",
-                  onRun: runDemo,
-                  detect: detectFaceLandmarksOnly,
-                },
-              ]}
+              slides={DEMO_PEOPLE.map((person) => ({
+                photo: person.facePhoto,
+                personName: person.name,
+                personTagline: person.tagline,
+                title: `Run the full FaceIQ scan on ${person.name}'s sample photo.`,
+                detail:
+                  "Watch the live 478-point mesh track the face — then see golden-ratio scoring and a shareable result card unique to this person. No camera or upload required.",
+                onRun: () => runDemo(person),
+                detect: detectFaceLandmarksOnly,
+              }))}
             />
 
             {photos.length > 0 && (

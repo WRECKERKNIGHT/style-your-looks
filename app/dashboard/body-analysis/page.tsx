@@ -9,7 +9,8 @@ import { motion } from "framer-motion";
 import { Layers, AlertCircle, Shirt, Droplets, Ruler, TrendingUp, Activity, Share2 } from "lucide-react";
 import { DemoCarousel } from "@/components/demo/DemoCarousel";
 import { DemoBadge } from "@/components/demo/DemoBadge";
-import { DEMO_BODY_PHOTO, buildDemoBodyResult, isDemoPhoto } from "@/lib/demo/demo-analysis";
+import { DEMO_PEOPLE, buildDemoBodyResult, isDemoPhoto } from "@/lib/demo/demo-analysis";
+import type { DemoPerson } from "@/lib/demo/demo-analysis";
 import { detectPoseOnly } from "@/lib/ml/body-analyzer";
 import { ScrollParallax, ScrollBlur, SectionScrollProgress } from "@/components/shared/ScrollEffects";
 import { ShareCardModal, type ShareCardData } from "@/components/shared/ShareCardModal";
@@ -137,13 +138,13 @@ export default function BodyAnalysisPage() {
     [setFullBodyImage, analyzeBodyFromImage]
   );
 
-  const runDemo = useCallback(async () => {
+  const runDemo = useCallback(async (person: DemoPerson) => {
     useAnalysisStore.getState().reset();
     useAnalysisStore.getState().setSource("demo");
-    setFullBodyImage(DEMO_BODY_PHOTO);
+    setFullBodyImage(person.bodyPhoto);
     setError(null);
-    await new Promise((r) => setTimeout(r, 1500));
-    const { result, recommendations } = buildDemoBodyResult();
+    await new Promise((r) => setTimeout(r, 1300));
+    const { result, recommendations } = buildDemoBodyResult(person);
     setBodyResult(result);
     setOutfitRecommendations(recommendations);
   }, [setFullBodyImage, setBodyResult, setOutfitRecommendations]);
@@ -202,16 +203,16 @@ export default function BodyAnalysisPage() {
             />
 
             <DemoCarousel
-              slides={[
-                {
-                  photo: DEMO_BODY_PHOTO,
-                  title: "Run a full body-type, proportion and undertone scan on a sample.",
-                  detail:
-                    "Watch the pose skeleton lock onto the silhouette — then see shoulder–waist–hip ratios and curated outfit recommendations.",
-                  onRun: runDemo,
-                  detect: detectPoseOnly,
-                },
-              ]}
+              slides={DEMO_PEOPLE.map((person) => ({
+                photo: person.bodyPhoto,
+                personName: person.name,
+                personTagline: person.tagline,
+                title: `Run a full body-type, proportion and undertone scan on ${person.name}.`,
+                detail:
+                  "Watch the pose skeleton lock onto the silhouette — then see shoulder–waist–hip ratios and curated outfit recommendations for this person.",
+                onRun: () => runDemo(person),
+                detect: detectPoseOnly,
+              }))}
             />
           </div>
 

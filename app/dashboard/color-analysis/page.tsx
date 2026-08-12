@@ -10,7 +10,8 @@ import { ProcessingOverlay } from "@/components/analysis/ProcessingOverlay";
 import { motion } from "framer-motion";
 import { DemoCarousel } from "@/components/demo/DemoCarousel";
 import { DemoBadge } from "@/components/demo/DemoBadge";
-import { DEMO_SKIN_PHOTO, buildDemoColorResult, isDemoPhoto } from "@/lib/demo/demo-analysis";
+import { DEMO_PEOPLE, buildDemoColorResult, isDemoPhoto } from "@/lib/demo/demo-analysis";
+import type { DemoPerson } from "@/lib/demo/demo-analysis";
 import { ScrollParallax, ScrollBlur, SectionScrollProgress } from "@/components/shared/ScrollEffects";
 import { ShareCardModal, type ShareCardData } from "@/components/shared/ShareCardModal";
 
@@ -428,13 +429,13 @@ export default function ColorAnalysisPage() {
     [setUploadedImage, analyzeFaceFromImage, setColorAnalysis]
   );
 
-  const runDemo = useCallback(async () => {
+  const runDemo = useCallback(async (person: DemoPerson) => {
     useAnalysisStore.getState().reset();
     useAnalysisStore.getState().setSource("demo");
-    setUploadedImage(DEMO_SKIN_PHOTO);
+    setUploadedImage(person.skinPhoto);
     setError(null);
-    await new Promise((r) => setTimeout(r, 1400));
-    setColorAnalysis(buildDemoColorResult());
+    await new Promise((r) => setTimeout(r, 1200));
+    setColorAnalysis(buildDemoColorResult(person));
   }, [setUploadedImage, setColorAnalysis]);
 
   const shareData = useMemo<ShareCardData | null>(() => {
@@ -557,16 +558,16 @@ export default function ColorAnalysisPage() {
             />
 
             <DemoCarousel
-              slides={[
-                {
-                  photo: DEMO_SKIN_PHOTO,
-                  title: "Discover a full seasonal palette on a sample photo.",
-                  detail:
-                    "Watch the live pixel sampler pull your skin tone while the sweep moves — then see seasonal type, best metals and drapes.",
-                  onRun: runDemo,
-                  scanMode: "swatch",
-                },
-              ]}
+              slides={DEMO_PEOPLE.map((person) => ({
+                photo: person.skinPhoto,
+                personName: person.name,
+                personTagline: person.tagline,
+                title: `Discover a full seasonal palette for ${person.name}.`,
+                detail:
+                  "Watch the live pixel sampler pull this person's skin tone while the sweep moves — then see seasonal type, best metals and drapes.",
+                onRun: () => runDemo(person),
+                scanMode: "swatch",
+              }))}
             />
           </div>
 
