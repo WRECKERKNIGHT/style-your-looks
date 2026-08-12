@@ -9,6 +9,7 @@ import {
   Loader2,
   ScanLine,
   Fingerprint,
+  UserRound,
 } from "lucide-react";
 
 export interface DemoSlide {
@@ -18,6 +19,8 @@ export interface DemoSlide {
   onRun: () => Promise<void>;
   detect?: (img: HTMLImageElement) => Promise<number[][]>;
   scanMode?: "auto" | "swatch";
+  personName?: string;
+  personTagline?: string;
 }
 
 interface DemoCarouselProps {
@@ -33,6 +36,14 @@ const POSE_CONNECTIONS: [number, number][] = [
 
 const FACE_MESH = "#cbaa72";
 const POSE_COLOR = "#e7c58f";
+
+/** Render device pixels at most at this scale — beyond it the extra pixels buy no visual clarity. */
+const DPR_CAP = 1.5;
+
+function smoothStep(t: number) {
+  const x = Math.max(0, Math.min(1, t));
+  return x * x * (3 - 2 * x);
+}
 
 function drawContain(
   ctx: CanvasRenderingContext2D,
@@ -57,9 +68,13 @@ export function DemoCarousel({ slides, autoplayMs = 5000 }: DemoCarouselProps) {
   const [swatch, setSwatch] = useState<string | null>(null);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const imgRef = useRef<HTMLImageElement | null>(null);
+  const wrapRef = useRef<HTMLDivElement | null>(null);
   const rafRef = useRef<number>(0);
   const cacheRef = useRef(new Map<string, number[][]>());
+  const inViewRef = useRef(true);
+  const spriteRef = useRef<HTMLCanvasElement | null>(null);
+  const spriteDimsRef = useRef("");
+  const wakeRef = useRef<(() => void) | null>(null);
 
   const slide = slides[index];
   const photo = slide.photo;
@@ -103,10 +118,58 @@ export function DemoCarousel({ slides, autoplayMs = 5000 }: DemoCarouselProps) {
     let image: HTMLImageElement | null = null;
     let landmarks: number[][] = [];
     let started = false;
+    let lastDrawKey = "";
+    let lastSwatch = "";
+
+    const kick = () => {
+      if (disposed || rafRef.current !== 0) return;
+      rafRef.current = requestAnimationFrame(loop);
+    };
+    wakeRef.current = kick;
+    const onVisibility = () => {
+      if (document.hidden) {
+        if (rafRef.current) {
+          cancelAnimationFrame(rafRef.current);
+          rafRef.current = 0;
+        }
+      } else if (inViewRef.current) {
+        kick();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+
+    /** Bake the (static) 478-point mesh into a sprite once, then composite it each frame. */
+    const buildSprite = (dw: number, dh: number, dpr: number) => {
+      if (!landmarks.length || mode.current === "skeleton" || mode.current === "swatch") {
+        spriteRef.current = null;
+        return;
+      }
+      const key = `${dw}x${dh}@${dpr}:${landmarks.length}`;
+      if (spriteRef.current && spriteDimsRef.current === key) return;
+      const sprite = document.createElement("canvas");
+      sprite.width = Math.max(1, Math.round(dw * dpr));
+      sprite.height = Math.max(1, Math.round(dh * dpr));
+      const sctx = sprite.getContext("2d");
+      if (!sctx) return;
+      sctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      sctx.fillStyle = FACE_MESH;
+      for (let i = 0; i < landmarks.length; i += 2) {
+        const p = landmarks[i];
+        const twinkle = 0.45 + 0.4 * Math.abs(Math.sin(i * 0.35 + p[0] * 40));
+        sctx.globalAlpha = Math.max(0.25, Math.min(1, twinkle));
+        sctx.beginPath();
+        sctx.arc(p[0] * dw, p[1] * dh, 1.35, 0, Math.PI * 2);
+        sctx.fill();
+      }
+      sctx.globalAlpha = 1;
+      spriteRef.current = sprite;
+      spriteDimsRef.current = key;
+    };
 
     setSwatch(null);
     setScanState("detecting");
     mode.current = isSwatch ? "swatch" : "mesh";
+    spriteRef.current = null;
 
     const img = new Image();
     img.crossOrigin = "anonymous";
@@ -137,24 +200,31 @@ export function DemoCarousel({ slides, autoplayMs = 5000 }: DemoCarouselProps) {
     img.src = photo;
 
     const loop = (t: number) => {
+      rafRef.current = 0;
       if (disposed) return;
+      if (!inViewRef.current || document.hidden) {
+        return;
+      }
       const rect = canvas.parentElement?.getBoundingClientRect();
       if (rect) {
-        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const dpr = Math.min(window.devicePixelRatio || 1, DPR_CAP);
         const w = rect.width;
         const h = rect.height;
         if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
           canvas.width = Math.round(w * dpr);
           canvas.height = Math.round(h * dpr);
+          spriteRef.current = null;
         }
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         ctx.clearRect(0, 0, w, h);
 
         if (image) {
           const { dx, dy, dw, dh } = drawContain(ctx, image, w, h);
+          const drawKey = `${w}x${h}@${dpr}`;
 
           if (isSwatch) {
-            const sweep = dy + ((t / 14) % 1) * dh;
+            const progress = (t / 16) % 1;
+            const sweep = dy + smoothStep(progress) * dh;
             const grad = ctx.createLinearGradient(0, sweep - 60, 0, sweep + 60);
             grad.addColorStop(0, "rgba(203,170,114,0)");
             grad.addColorStop(0.5, "rgba(203,170,114,0.35)");
@@ -174,10 +244,14 @@ export function DemoCarousel({ slides, autoplayMs = 5000 }: DemoCarouselProps) {
             }
             if (n) {
               const col = `rgb(${Math.round(r / n)},${Math.round(g / n)},${Math.round(b / n)})`;
-              setSwatch(col);
+              if (col !== lastSwatch) {
+                lastSwatch = col;
+                setSwatch(col);
+              }
             }
           } else {
-            const sweep = dy + ((t / 16) % 1) * dh;
+            const progress = (t / 16) % 1;
+            const sweep = dy + smoothStep(progress) * dh;
             const grad = ctx.createLinearGradient(0, sweep - 70, 0, sweep + 70);
             grad.addColorStop(0, "rgba(231,197,143,0)");
             grad.addColorStop(0.5, "rgba(231,197,143,0.28)");
@@ -186,7 +260,6 @@ export function DemoCarousel({ slides, autoplayMs = 5000 }: DemoCarouselProps) {
             ctx.fillRect(dx, sweep - 70, dw, 140);
 
             if (started && landmarks.length) {
-              const pulse = 0.5 + 0.5 * Math.sin(t / 180);
               if (mode.current === "skeleton") {
                 ctx.strokeStyle = POSE_COLOR;
                 ctx.lineWidth = 1.6;
@@ -204,19 +277,21 @@ export function DemoCarousel({ slides, autoplayMs = 5000 }: DemoCarouselProps) {
                 ctx.fillStyle = POSE_COLOR;
                 for (const p of landmarks) {
                   ctx.beginPath();
-                  ctx.arc(dx + p[0] * dw, dy + p[1] * dh, 2.4 + pulse, 0, Math.PI * 2);
+                  ctx.arc(dx + p[0] * dw, dy + p[1] * dh, 2.4, 0, Math.PI * 2);
                   ctx.fill();
                 }
               } else {
-                ctx.fillStyle = FACE_MESH;
-                for (let i = 0; i < landmarks.length; i += 2) {
-                  const p = landmarks[i];
-                  ctx.globalAlpha = 0.5 + 0.4 * Math.sin(t / 150 + i * 0.05);
-                  ctx.beginPath();
-                  ctx.arc(dx + p[0] * dw, dy + p[1] * dh, 1.3 + pulse, 0, Math.PI * 2);
-                  ctx.fill();
+                if (drawKey !== lastDrawKey) {
+                  buildSprite(dw, dh, dpr);
+                  lastDrawKey = drawKey;
                 }
-                ctx.globalAlpha = 1;
+                const sprite = spriteRef.current;
+                if (sprite) {
+                  const pulse = 0.55 + 0.45 * Math.sin(t / 220);
+                  ctx.globalAlpha = Math.max(0.35, Math.min(1, pulse));
+                  ctx.drawImage(sprite, dx, dy, dw, dh);
+                  ctx.globalAlpha = 1;
+                }
               }
             }
           }
@@ -224,17 +299,36 @@ export function DemoCarousel({ slides, autoplayMs = 5000 }: DemoCarouselProps) {
       }
       rafRef.current = requestAnimationFrame(loop);
     };
+
     rafRef.current = requestAnimationFrame(loop);
 
     return () => {
       disposed = true;
+      wakeRef.current = null;
       cancelAnimationFrame(rafRef.current);
+      rafRef.current = 0;
+      document.removeEventListener("visibilitychange", onVisibility);
       img.src = "";
     };
   }, [index, photo, detect, isSwatch]);
 
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        inViewRef.current = entry.isIntersecting;
+        if (entry.isIntersecting) wakeRef.current?.();
+      },
+      { threshold: 0.05 }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
   return (
     <div
+      ref={wrapRef}
       className="mt-4 border border-dashed border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)] bg-[color-mix(in_srgb,var(--accent-aurum)_4%,transparent)] p-4 sm:p-5"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
@@ -281,8 +375,17 @@ export function DemoCarousel({ slides, autoplayMs = 5000 }: DemoCarouselProps) {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.3 }}
+              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
             >
+              {slide.personName && (
+                <span className="inline-flex items-center gap-1.5 mt-3 type-mono text-[0.55rem] tracking-[0.22em] uppercase px-2.5 py-1 border border-[color-mix(in_srgb,var(--accent-aurum)_35%,transparent)] text-[var(--accent-aurum)] bg-[color-mix(in_srgb,var(--accent-aurum)_6%,transparent)]">
+                  <UserRound className="w-3 h-3" />
+                  {slide.personName}
+                  {slide.personTagline ? (
+                    <span className="text-[var(--text-muted)]">· {slide.personTagline}</span>
+                  ) : null}
+                </span>
+              )}
               <p className="text-sm font-body text-[var(--text-primary)] mt-2 font-semibold">
                 {slide.title}
               </p>
@@ -305,6 +408,7 @@ export function DemoCarousel({ slides, autoplayMs = 5000 }: DemoCarouselProps) {
                 <button
                   key={s.photo}
                   aria-label={`Show sample ${i + 1}`}
+                  title={s.personName}
                   onClick={() => goTo(i)}
                   className={`h-1.5 rounded-full transition-all ${
                     i === index
