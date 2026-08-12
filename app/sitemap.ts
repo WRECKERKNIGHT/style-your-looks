@@ -1,7 +1,8 @@
 import { MetadataRoute } from "next";
+import { siteUrl } from "@/lib/site-url";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = "https://zervey.vercel.app";
+  const baseUrl = siteUrl();
 
   const staticPages = [
     { url: baseUrl, priority: 1, frequency: "monthly" as const },

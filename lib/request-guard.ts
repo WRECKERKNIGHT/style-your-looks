@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { siteOrigin } from "@/lib/site-url";
 
 // Same-origin check for state-changing requests. All our APIs accept JSON
 // bodies, so cross-origin form posts can't match anyway — this is defense in
@@ -10,16 +11,10 @@ export function assertSameOrigin(request: Request): NextResponse | null {
   // Non-browser clients (curl, server-to-server) omit both headers entirely.
   if (!origin && !referer) return null;
 
-  const allowed =
-    origin ?? new URL(referer as string).origin;
+  const allowed = origin ?? new URL(referer as string).origin;
+  const site = siteOrigin();
 
-  const siteOrigin = process.env.NEXT_PUBLIC_SITE_URL
-    ? new URL(process.env.NEXT_PUBLIC_SITE_URL).origin
-    : request.url
-      ? new URL(request.url).origin
-      : null;
-
-  if (!siteOrigin || allowed !== siteOrigin) {
+  if (allowed !== site) {
     return NextResponse.json({ error: "Invalid request origin" }, { status: 403 });
   }
 

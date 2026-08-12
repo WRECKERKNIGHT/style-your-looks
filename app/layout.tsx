@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { siteUrl } from "@/lib/site-url";
 import { SmoothScroll } from "@/components/providers/SmoothScroll";
 import { ToastProvider } from "@/components/shared/Toast";
 import { ThemeInitializer } from "@/components/shared/ThemeInitializer";
@@ -11,7 +12,7 @@ import ClientDecorations from "@/components/shared/ClientDecorations";
 import { CursorGlow } from "@/components/shared/CursorGlow";
 import { ScrollProgressBar } from "@/components/landing/ScrollProgressBar";
 
-const baseUrl = "https://zervey.vercel.app";
+const baseUrl = siteUrl();
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
