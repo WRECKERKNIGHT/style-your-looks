@@ -217,9 +217,9 @@ export default function ProfilePage() {
                 <span>XP</span>
                 <span>{xp} / {rank.next}</span>
               </div>
-              <div className="h-1.5 bg-[var(--bg-tertiary)] overflow-hidden">
+              <div className="h-1.5 bg-[var(--bg-tertiary)] rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-[var(--accent-nexus)] to-[var(--accent-aurum)] transition-all duration-700"
+                  className="h-full bg-gradient-to-r from-[var(--accent-nexus)] to-[var(--accent-aurum)] rounded-full transition-all duration-700"
                   style={{ width: `${Math.min(100, (xp / rank.next) * 100)}%` }}
                 />
               </div>
@@ -275,8 +275,8 @@ export default function ProfilePage() {
           <motion.div variants={fadeUp} className="glass-card p-6">
             <h3 className="type-label text-[var(--text-primary)] mb-4">PRIVACY</h3>
             <div className="space-y-3">
-              <div className="flex items-start gap-3 p-3 border border-[var(--border-primary)] bg-[var(--bg-tertiary)]">
-                <div className="w-8 h-8 shrink-0 flex items-center justify-center border border-[var(--accent-aurum)] text-[var(--accent-aurum)]">
+              <div className="flex items-start gap-3 p-3 border border-[var(--border-primary)] bg-[var(--bg-tertiary)] rounded-[var(--radius-sm)]">
+                <div className="w-8 h-8 shrink-0 flex items-center justify-center border border-[var(--accent-aurum)] text-[var(--accent-aurum)] rounded-full">
                   <ScanFace className="w-4 h-4" />
                 </div>
                 <div>
@@ -287,8 +287,8 @@ export default function ProfilePage() {
                   </p>
                 </div>
               </div>
-              <div className="flex items-start gap-3 p-3 border border-[var(--border-primary)] bg-[var(--bg-tertiary)]">
-                <div className="w-8 h-8 shrink-0 flex items-center justify-center border border-[var(--accent-aurum)] text-[var(--accent-aurum)]">
+              <div className="flex items-start gap-3 p-3 border border-[var(--border-primary)] bg-[var(--bg-tertiary)] rounded-[var(--radius-sm)]">
+                <div className="w-8 h-8 shrink-0 flex items-center justify-center border border-[var(--accent-aurum)] text-[var(--accent-aurum)] rounded-full">
                   <Settings className="w-4 h-4" />
                 </div>
                 <div>
@@ -307,7 +307,7 @@ export default function ProfilePage() {
             <div className="flex flex-wrap gap-2">
               {["Classic", "Minimalist", "Neutral Palette", "Structured Silhouettes", "Sustainable", "Quality Over Quantity"].map((pref) => (
                 <span key={pref}
-                  className="px-3 py-1.5 border border-[var(--border-primary)] card-nexus text-xs text-[var(--text-primary)] hover:border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)] transition-all">{pref}</span>
+                  className="px-3.5 py-1.5 border border-[var(--border-primary)] card-nexus text-xs text-[var(--text-primary)] hover:border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)] transition-all rounded-full">{pref}</span>
               ))}
             </div>
           </motion.div>
