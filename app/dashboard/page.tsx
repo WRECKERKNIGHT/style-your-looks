@@ -217,8 +217,11 @@ export default function DashboardHome() {
   const hasAnalysis = !!faceResult;
   const overallScore = faceResult ? faceResult.overallScore : null;
   const tips = hasAnalysis ? getPersonalizedTips(faceResult, bodyResult) : onboardingTips;
+  // Keep the pager index valid whenever the tip list changes size/content.
+  const safeTipIndex = tips.length > 0 ? tipIndex % tips.length : 0;
 
   useEffect(() => {
+    if (tips.length === 0) return;
     const interval = setInterval(() => {
       setTipIndex((prev) => (prev + 1) % tips.length);
     }, 6000);
@@ -349,14 +352,14 @@ export default function DashboardHome() {
             </div>
             <AnimatePresence mode="wait">
               <motion.p
-                key={tipIndex}
+                key={safeTipIndex}
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -12 }}
                 transition={{ duration: 0.4 }}
                 className="text-sm text-[var(--text-primary)] font-body leading-relaxed min-h-[3rem]"
               >
-                {tips[tipIndex]}
+                {tips[safeTipIndex]}
               </motion.p>
             </AnimatePresence>
             <div className="flex gap-1 mt-4">
@@ -365,14 +368,14 @@ export default function DashboardHome() {
                   key={i}
                   onClick={() => setTipIndex(i)}
                   className={`h-1 rounded-full transition-all duration-300 ${
-                    i === Math.min(tipIndex, 4)
+                    i === Math.min(safeTipIndex, 4)
                       ? "w-5 bg-[var(--accent-honey)]"
                       : "w-1.5 bg-[color-mix(in_srgb,var(--accent-caramel)_30%,transparent)] hover:bg-[color-mix(in_srgb,var(--accent-caramel)_50%,transparent)]"
                   }`}
                   aria-label={`Tip ${i + 1}`}
                 />
               ))}
-              <span className="type-mono text-[var(--accent-mocha)] ml-auto">{(tipIndex % tips.length) + 1}/{tips.length}</span>
+              <span className="type-mono text-[var(--accent-mocha)] ml-auto">{safeTipIndex + 1}/{tips.length}</span>
             </div>
           </motion.div>
         </ScrollReveal>
