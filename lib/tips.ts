@@ -27,31 +27,32 @@ const UNDERTONE_TIPS: Record<string, string> = {
   olive: "Olive undertones shine in muted earth tones. High-saturation neons tend to fight your natural depth.",
 };
 
-const LOW_METRIC_TIPS: Record<string, (v: number) => string> = {
-  symmetry: () =>
-    "Your asymmetry is a feature, not a flaw — hairstyles with deliberate part lines reframe it as character.",
-  jawline: () =>
-    "Structured collars and higher necklines anchor the jaw. Crew necks can visually shorten it.",
-  skinClarity: () =>
-    "Your skin clarity benefits from morning light — schedule your next scan before noon for the best read.",
-  eyeSpacing: () =>
-    "Your eye spacing favors wider lapels. Double-breasted jackets will balance your proportions.",
-  proportions: () =>
-    "Vertical lines elongate the frame. Pinstripes and monochrome head-to-toe looks are your lever.",
-  foreheadBalance: () =>
-    "Textured fringe softens the forehead line and brings the eye back to your strongest feature.",
-  lipFullness: () =>
-    "Deeper lip tones read cleanly in photos. Matte formulations keep the focus on your natural line.",
-  cheekboneDefinition: () =>
-    "Side-swept hair or a subtle temple shadow draws the eye toward your cheekbone structure.",
-};
-
 const GROOMING_TIPS: Record<string, string> = {
   beard: "Your grooming report flagged beard maintenance — keep the neckline sharpened to hold jaw definition.",
   mustache: "Trim the mustache over the lip line to keep the smile area open and the jaw read clean.",
   hair: "Your grooming report recommends cutting the crown a half-inch shorter to tighten the silhouette.",
   skin: "Your grooming report suggests a mattifying layer on the T-zone — glossy finishes soften definition.",
   "skin care": "Your grooming report prioritizes moisture balance — apply serums before the morning scan window.",
+};
+
+// Breakdown labels produced by lib/ml/scoring.ts, mapped to tip factories.
+const LOW_METRIC_TIP_FACTORIES: Record<string, (v: number) => string> = {
+  symmetry: () =>
+    "Your asymmetry is a feature, not a flaw — hairstyles with deliberate part lines reframe it as character.",
+  jawline: () =>
+    "Structured collars and higher necklines anchor the jaw. Crew necks can visually shorten it.",
+  "skin clarity": () =>
+    "Your skin clarity benefits from morning light — schedule your next scan before noon for the best read.",
+  "eye spacing": () =>
+    "Your eye spacing favors wider lapels. Double-breasted jackets will balance your proportions.",
+  proportions: () =>
+    "Vertical lines elongate the frame. Pinstripes and monochrome head-to-toe looks are your lever.",
+  "forehead balance": () =>
+    "Textured fringe softens the forehead line and brings the eye back to your strongest feature.",
+  "lip fullness": () =>
+    "Deeper lip tones read cleanly in photos. Matte formulations keep the focus on your natural line.",
+  "cheekbone definition": () =>
+    "Side-swept hair or a subtle temple shadow draws the eye toward your cheekbone structure.",
 };
 
 export function getPersonalizedTips(
@@ -68,15 +69,15 @@ export function getPersonalizedTips(
   const undertoneTip = UNDERTONE_TIPS[face.undertone?.toLowerCase() ?? ""];
   if (undertoneTip) tips.push(undertoneTip);
 
-  const weakest = [...face.breakdown]
+  const weakest = [...(face.breakdown ?? [])]
     .sort((a, b) => a.score - b.score)
     .slice(0, 3);
   for (const metric of weakest) {
-    const factory = LOW_METRIC_TIPS[metric.label];
+    const factory = LOW_METRIC_TIP_FACTORIES[metric.label];
     if (factory) tips.push(factory(metric.score));
   }
 
-  for (const suggestion of face.groomingSuggestions.slice(0, 3)) {
+  for (const suggestion of (face.groomingSuggestions ?? []).slice(0, 3)) {
     const key = suggestion.toLowerCase();
     for (const [tag, tip] of Object.entries(GROOMING_TIPS)) {
       if (key.includes(tag)) {
@@ -93,5 +94,8 @@ export function getPersonalizedTips(
   }
 
   const unique = Array.from(new Set(tips));
+  // Never return an empty list — callers page through this array and an empty
+  // one would render NaN pagers and undefined bodies.
+  if (unique.length === 0) return onboardingTips;
   return unique.slice(0, 8);
 }
