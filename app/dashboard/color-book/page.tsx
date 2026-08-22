@@ -42,7 +42,7 @@ function ComboCard({ combo, onOpen }: { combo: OutfitCombo; onOpen: () => void }
   return (
     <button
       onClick={onOpen}
-      className="group w-full text-left border border-[var(--border-primary)] bg-[var(--bg-tertiary)] p-4 transition-all hover:border-[var(--accent-aurum)]/50 hover:shadow-aurum"
+      className="group w-full text-left border border-[var(--border-primary)] bg-[var(--bg-tertiary)] p-4 rounded-[var(--radius-md)] transition-all hover:border-[var(--accent-aurum)]/50 hover:shadow-aurum"
     >
       <div className="flex items-baseline justify-between gap-2 mb-1">
         <span className="text-sm font-body font-bold text-[var(--text-primary)] tracking-wide group-hover:text-[var(--accent-aurum)] transition-colors">
@@ -75,7 +75,7 @@ function SeasonFilter({
           active === "all"
             ? "border-[var(--accent-aurum)] text-[var(--accent-aurum)] bg-aurum-500/[0.07]"
             : "border-[var(--border-primary)] text-[var(--text-muted)] hover:text-[var(--text-primary)]"
-        }`}
+        } rounded-full`}
       >
         All 四季
       </button>
@@ -87,7 +87,7 @@ function SeasonFilter({
             active === s.id
               ? "border-[var(--accent-aurum)] text-[var(--accent-aurum)] bg-aurum-500/[0.07]"
               : "border-[var(--border-primary)] text-[var(--text-muted)] hover:text-[var(--text-primary)]"
-          }`}
+          } rounded-full`}
         >
           {s.label} {s.kanji}
         </button>
@@ -208,7 +208,7 @@ function ComboModal({ combo, onClose }: { combo: OutfitCombo | null; onClose: ()
           exit={{ opacity: 0, scale: 0.95, y: 16 }}
           transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
           onClick={(e) => e.stopPropagation()}
-          className="w-full max-w-lg max-h-[85vh] flex flex-col border border-[var(--border-primary)] bg-[var(--bg-primary)] shadow-nexus-xl"
+          className="w-full max-w-lg max-h-[85vh] flex flex-col border border-[var(--border-primary)] bg-[var(--bg-primary)] shadow-nexus-xl rounded-[var(--radius-xl)]"
         >
           <div className="flex items-start justify-between px-6 py-5 border-b border-[var(--border-primary)]">
             <div>
