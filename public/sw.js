@@ -1,4 +1,4 @@
-const CACHE = "zervey-v4";
+const CACHE = "zervey-v5";
 const STATIC_ASSETS = [
   "/",
   "/manifest.json",
@@ -64,10 +64,16 @@ self.addEventListener("fetch", (event) => {
 
   if (!isSameOrigin) return;
 
+  // Self-hosted ML engine assets (MediaPipe WASM + task models) are immutable
+  // binaries: serve them cache-first so analysis engines start instantly and
+  // keep working offline once fetched.
+  const isMlAsset =
+    url.pathname.startsWith("/mediapipe/") || url.pathname.startsWith("/models/");
+
   const isImage = request.destination === "image" || CACHE_ONLY_IMAGES.test(url.pathname);
   const isStatic = CACHE_FIRST.includes(request.destination);
 
-  if (isImage || isStatic) {
+  if (isMlAsset || isImage || isStatic) {
     event.respondWith(
       caches.match(request).then((cached) => {
         if (cached) return cached;
