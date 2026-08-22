@@ -1,0 +1,8 @@
+# Binary ML assets — never convert line endings
+*.task binary
+*.tflite binary
+*.wasm binary
+public/mediapipe/wasm/* binary
+
+# Normalize everything else
+* text=auto
