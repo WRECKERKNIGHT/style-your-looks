@@ -65,6 +65,7 @@ MediaPipe. Photos never leave the browser.
 | **FaceIQ** | 478-landmark mesh, golden-ratio scoring, face-shape detection (temples/cheekbones/jaw anchors), pose-aware symmetry engine, symmetry split, 3D face view, holographic laser-scan VFX, head-pose + axis readout |
 | **Body Analysis** | Body typing (mesomorph/ectomorph/endomorph), shoulder–waist–hip ratios, fit recommendations |
 | **Color Analysis** | Skin-tone scale, undertone, seasonal palette (color season detection) |
+| **Color Book** | Japanese book of colour combinations (色見本帖): 43 traditional dentōshoku colours with kanji/romaji/hex swatches and curated outfit recipes in two mirrored volumes — Men (紳士篇) and Women (淑女篇) — presented as a 50/50 split-screen book with season filters (春夏秋冬), detail modals and copyable palettes |
 | **Style DNA** | Trend lines from your saved analysis history |
 | **Virtual Try-On** | Face-mapped hair, glasses and glow overlays on your own photo |
 | **Hair Preview** | Preview hairstyles against your face |
@@ -113,8 +114,14 @@ browser ──► MediaPipe (face/body landmarks, segmentation)
 Key modules:
 
 - `lib/ml/*` — on-device analysis engines (face, body, color, try-on, quality gates)
+- `lib/ml/engine-assets.ts` — local-first resolution of MediaPipe WASM + task models
+  (`public/mediapipe/wasm`, `public/models`) with CDN fallback; `npm run build`
+  verifies the assets via `scripts/verify-assets.mjs`, and the service worker
+  serves them cache-first for offline use
 - `lib/ml/face-geometry.ts` — pose-aware symmetry axis (pupil midpoint → chin tip),
   mirror-based symmetry scoring, structural landmark chains, face-shape classification
+- `lib/data/japanese-colors.ts` + `lib/data/japanese-color-book.ts` — dentōshoku
+  colour dataset and men's/women's outfit combinations behind the Color Book
 - `lib/three/*` — parametric 3D geometry (avatar, garments, hair, glasses, studio)
 - `lib/demo/demo-analysis.ts` — shared demo fixtures + demo-media constants
 - `lib/history.ts` — local history with demo-entry filtering
@@ -150,7 +157,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
 | -------------- | -------------------------------- |
 | `npm run dev`  | Start the dev server             |
 | `npm run lint` | Run ESLint                       |
-| `npm run build`| Production build                 |
+| `npm run build`| Production build (verifies self-hosted ML assets first) |
 | `npm start`    | Serve a production build         |
 
 ## Screenshots
