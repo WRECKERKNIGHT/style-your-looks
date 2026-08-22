@@ -137,7 +137,9 @@ function StatCounter({ value, label, icon: Icon }: { value: string; label: strin
       variants={itemAnim}
       className="glass-card p-6 text-center"
     >
-      <Icon className="w-6 h-6 text-[var(--accent-nexus)] mx-auto mb-2" />
+      <span className="w-11 h-11 mx-auto mb-3 rounded-full bg-[color-mix(in_srgb,var(--accent-nexus)_10%,transparent)] border border-[color-mix(in_srgb,var(--accent-nexus)_25%,transparent)] flex items-center justify-center">
+        <Icon className="w-5 h-5 text-[var(--accent-nexus)]" />
+      </span>
       <div className="text-3xl font-bold text-[var(--text-primary)] font-display">{value}</div>
       <div className="text-sm text-[var(--text-muted)] font-body mt-1">{label}</div>
     </motion.div>
