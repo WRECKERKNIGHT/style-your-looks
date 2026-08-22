@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { ImageUploader } from "@/components/shared/ImageUploader";
 import { useAnalysisStore } from "@/store/analysis-store";
 import { useMediaPipe, AnalysisCancelledError } from "@/hooks/useMediaPipe";
-import { analyzeColorSeason, getSeasonEmoji, getColorHarmonyScore } from "@/lib/ml/color-analysis";
+import { analyzeColorSeason, getColorHarmonyScore } from "@/lib/ml/color-analysis";
 import { MONK_SCALE } from "@/lib/ml/skin-tone";
 import { ProcessingOverlay } from "@/components/analysis/ProcessingOverlay";
 import { motion } from "framer-motion";

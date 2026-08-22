@@ -20,6 +20,8 @@ interface HistoryRow {
   route: string;
   label: string;
   date: string;
+  /** Numeric epoch ms — locale date strings are not reliably parseable for sorting. */
+  timestamp: number;
   score?: number;
   result?: string;
   thumbnail?: string | null;
@@ -36,48 +38,37 @@ const fadeUp = {
 };
 
 function toRow(entry: AnalysisEntry): HistoryRow {
+  const base = { id: entry.id, label: entry.label, date: entry.date, timestamp: entry.timestamp ?? (Date.parse(entry.date) || 0), thumbnail: entry.thumbnailUrl };
   if (entry.faceResult) {
     return {
-      id: entry.id,
+      ...base,
       type: "face",
       route: "/dashboard/face-analysis",
-      label: entry.label,
-      date: entry.date,
       score: entry.faceResult.overallScore,
       result: entry.faceResult.facialShape,
-      thumbnail: entry.thumbnailUrl,
     };
   }
   if (entry.bodyResult) {
     return {
-      id: entry.id,
+      ...base,
       type: "body",
       route: "/dashboard/body-analysis",
-      label: entry.label,
-      date: entry.date,
       score: entry.bodyResult.bodyProportionScore ?? undefined,
       result: entry.bodyResult.bodyType,
-      thumbnail: entry.thumbnailUrl,
     };
   }
   if (entry.colorAnalysis) {
     return {
-      id: entry.id,
+      ...base,
       type: "color",
       route: "/dashboard/color-analysis",
-      label: entry.label,
-      date: entry.date,
       result: entry.colorAnalysis.seasonalType,
-      thumbnail: entry.thumbnailUrl,
     };
   }
   return {
-    id: entry.id,
+    ...base,
     type: "analysis",
     route: "/dashboard/face-analysis",
-    label: entry.label,
-    date: entry.date,
-    thumbnail: entry.thumbnailUrl,
   };
 }
 
@@ -118,9 +109,9 @@ export default function HistoryPage() {
   const filtered = rows
     .filter((h) => !h.demo)
     .filter((h) => filter === "all" || h.type === filter)
-    .sort((a, b) => sortOrder === "newest"
-      ? new Date(b.date).getTime() - new Date(a.date).getTime()
-      : new Date(a.date).getTime() - new Date(b.date).getTime());
+    .sort((a, b) =>
+      sortOrder === "newest" ? b.timestamp - a.timestamp : a.timestamp - b.timestamp
+    );
 
   // Progress aggregates real analyses only — demo previews never count.
   const realRows = rows.filter((h) => !h.demo);

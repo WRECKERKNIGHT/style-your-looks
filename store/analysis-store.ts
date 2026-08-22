@@ -168,8 +168,6 @@ interface AnalysisState {
   setColorAnalysis: (analysis: ColorAnalysisResult | null) => void;
   setUploadedImage: (image: string | null) => void;
   setFullBodyImage: (image: string | null) => void;
-  /** Best available photo for face-based tools: the full-body shot falls back to the face upload. */
-  readonly currentPhoto: string | null;
   setIsAnalyzing: (val: boolean) => void;
   setAnalysisProgress: (val: number) => void;
   setProcessingPreview: (preview: { image: string; landmarks: number[][] } | null) => void;
@@ -205,9 +203,6 @@ export const useAnalysisStore = create<AnalysisState>((set, get) => ({
   lastSavedEntry: null,
   pipelineRev: 0,
   photoDirty: false,
-  get currentPhoto() {
-    return get().fullBodyImage ?? get().uploadedImage;
-  },
 
   setFaceResult: (result) => set({ faceResult: result }),
   setBodyResult: (result) => set({ bodyResult: result }),
@@ -234,8 +229,7 @@ export const useAnalysisStore = create<AnalysisState>((set, get) => ({
 
   markAnalyzed: () => set({ photoDirty: false }),
 
-  saveCurrentAnalysis: (label?: string) => {
-    const state = get();
+  saveCurrentAnalysis: (label?: string) => {    const state = get();
     if (state.source === "demo") {
       return null;
     }
@@ -285,3 +279,10 @@ export const useAnalysisStore = create<AnalysisState>((set, get) => ({
       photoDirty: false,
     })),
 }));
+
+/** Best available photo for face-based tools: full-body shot falls back to face upload.
+ *  Use as a zustand selector — a getter property on the state object would be
+ *  baked stale by zustand v5's Object.assign-based setState. */
+export function selectCurrentPhoto(state: AnalysisState): string | null {
+  return state.fullBodyImage ?? state.uploadedImage;
+}
