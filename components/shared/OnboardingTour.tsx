@@ -46,6 +46,9 @@ export function OnboardingTour() {
   useEffect(() => {
     const done = localStorage.getItem(STORAGE_KEY);
     if (!done) {
+      // Persist "seen" immediately when the tour opens — otherwise closing the
+      // tab mid-tour replays it on every visit.
+      localStorage.setItem(STORAGE_KEY, "true");
       const timer = setTimeout(() => setOpen(true), 800);
       return () => clearTimeout(timer);
     }
@@ -77,7 +80,7 @@ export function OnboardingTour() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[9998] flex items-center justify-center p-6"
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-6"
         >
           <div className="fixed inset-0 bg-nexus-800/50 dark:bg-black/70 backdrop-blur-sm" onClick={handleDismiss} />
           <motion.div

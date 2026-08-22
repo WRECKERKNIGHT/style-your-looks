@@ -13,12 +13,29 @@ const TAGLINES = [
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
+// Show the cinematic intro once per browser session — repeat navigations and
+// refreshes skip straight to the app instead of blocking for ~2.7s again.
+const SEEN_KEY = "zervey_intro_shown_session";
+
 export function LoadingScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [progress, setProgress] = useState(0);
   const [tagline, setTagline] = useState(0);
 
   useEffect(() => {
+    let skipped = false;
+    try {
+      if (sessionStorage.getItem(SEEN_KEY)) {
+        setIsLoading(false);
+        skipped = true;
+      } else {
+        sessionStorage.setItem(SEEN_KEY, "1");
+      }
+    } catch {
+      // Storage unavailable (private mode) — keep normal behaviour.
+    }
+    if (skipped) return;
+
     let frame: number;
     let done: ReturnType<typeof setTimeout>;
     const start = performance.now();
