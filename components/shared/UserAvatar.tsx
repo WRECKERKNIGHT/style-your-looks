@@ -27,6 +27,14 @@ export function UserAvatar({ compact = false }: { compact?: boolean }) {
       if (active) syncAvatar();
     });
     const supabase = createClient();
+    if (!supabase) {
+      // Supabase not configured — stay in signed-out local mode.
+      setChecked(true);
+      return () => {
+        active = false;
+        unsub();
+      };
+    }
     supabase.auth
       .getUser()
       .then(({ data }) => {
