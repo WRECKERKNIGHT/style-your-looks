@@ -144,18 +144,18 @@ export default function HistoryPage() {
       <ScrollBlur blur={0} minOpacity={0.95}>
       <motion.div variants={fadeUp} initial="hidden" animate="show" className="flex flex-wrap gap-2 items-center">
         <select value={filter} onChange={e => setFilter(e.target.value)}
-          className="px-3 py-2 border border-[var(--border-primary)] bg-[var(--bg-tertiary)] text-[var(--text-primary)] text-xs type-mono">
+          className="px-4 py-2 border border-[var(--border-primary)] bg-[var(--bg-tertiary)] text-[var(--text-primary)] text-xs type-mono rounded-full cursor-pointer">
           <option value="all">ALL TYPES</option>
           {types.map(t => <option key={t} value={t}>{t.toUpperCase()}</option>)}
         </select>
 
         <button onClick={() => setSortOrder(s => s === "newest" ? "oldest" : "newest")}
-          className="px-3 py-2 border border-[var(--border-primary)] text-[var(--text-muted)] text-xs type-mono hover:border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)] card-nexus">
+          className="px-4 py-2 border border-[var(--border-primary)] text-[var(--text-muted)] text-xs type-mono hover:border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)] card-nexus rounded-full">
           {sortOrder === "newest" ? "NEWEST" : "OLDEST"}
         </button>
 
         <button onClick={clearHistoryAll} disabled={rows.length === 0}
-          className="px-3 py-2 border border-[var(--border-primary)] text-red-400 text-xs type-mono hover:border-red-400/40 ml-auto flex items-center gap-1 disabled:opacity-30">
+          className="px-4 py-2 border border-[var(--border-primary)] text-red-400 text-xs type-mono hover:border-red-400/40 ml-auto flex items-center gap-1 disabled:opacity-30 rounded-full">
           <Trash2 className="w-3 h-3" /> CLEAR
         </button>
       </motion.div>
@@ -200,7 +200,7 @@ export default function HistoryPage() {
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <Link href={entry.route}
-                  className="p-2 border border-[var(--border-primary)] hover:border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)]">
+                  className="p-2 border border-[var(--border-primary)] rounded-full hover:border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)] transition-colors">
                   <Eye className="w-3.5 h-3.5 text-[var(--text-muted)]" />
                 </Link>
                 <button onClick={() => {
@@ -208,7 +208,7 @@ export default function HistoryPage() {
                   reload();
                   addToast("Entry removed", "success");
                 }}
-                  className="p-2 border border-[var(--border-primary)] hover:border-red-400/40">
+                  className="p-2 border border-[var(--border-primary)] rounded-full hover:border-red-400/40 transition-colors">
                   <Trash2 className="w-3.5 h-3.5 text-red-400" />
                 </button>
               </div>
@@ -242,8 +242,8 @@ export default function HistoryPage() {
                     <span className={trend >= 0 ? "text-green-400" : "text-red-400"}>
                       {trend >= 0 ? "+" : ""}{trend}
                     </span>
-                    <div className="w-16 h-1 bg-[var(--bg-tertiary)] overflow-hidden">
-                      <div className="h-full bg-gradient-to-r from-[var(--accent-nexus)] to-[var(--accent-aurum)]" style={{ width: `${latest}%` }} />
+                    <div className="w-16 h-1.5 bg-[var(--bg-tertiary)] rounded-full overflow-hidden">
+                      <div className="h-full bg-gradient-to-r from-[var(--accent-nexus)] to-[var(--accent-aurum)] rounded-full" style={{ width: `${latest}%` }} />
                     </div>
                   </div>
                 </div>
