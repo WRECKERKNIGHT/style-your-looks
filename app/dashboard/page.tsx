@@ -260,7 +260,7 @@ export default function DashboardHome() {
       {/* Style Score Overview / Onboarding */}
       <ScrollBlur blur={0} minOpacity={0.85}>
         <ScrollReveal>
-          <div className="relative overflow-hidden rounded-sm bg-[var(--bg-secondary)] border border-[var(--border-primary)] shadow-paper-lg p-8">
+          <div className="relative overflow-hidden rounded-[var(--radius-xl)] bg-[var(--bg-secondary)] border border-[var(--border-primary)] shadow-paper-lg p-8">
           <div className="absolute inset-0 bg-gradient-to-br from-[color-mix(in_srgb,var(--accent-caramel)_12%,transparent)] via-transparent to-[color-mix(in_srgb,var(--accent-honey)_8%,transparent)] pointer-events-none" />
           {hasAnalysis && faceResult ? (
             <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-8 items-center">
@@ -343,7 +343,7 @@ export default function DashboardHome() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-            className="relative overflow-hidden rounded-sm bg-[var(--bg-secondary)] border border-[var(--border-primary)] shadow-paper p-6"
+            className="relative overflow-hidden rounded-[var(--radius-lg)] bg-[var(--bg-secondary)] border border-[var(--border-primary)] shadow-paper p-6"
           >
             <div className="flex items-center gap-2 mb-4">
               <Lightbulb className="w-4 h-4 text-[var(--accent-honey)]" />
