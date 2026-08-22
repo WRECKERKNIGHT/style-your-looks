@@ -74,10 +74,10 @@ export default function DashboardLayout({
   return (
     <div className="min-h-screen bg-[var(--bg-primary)]">
       {/* Mobile top bar */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-[color-mix(in_srgb,var(--bg-secondary)_95%,transparent)] backdrop-blur-xl border-b border-[var(--border-primary)] z-50 flex items-center px-4">
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-[color-mix(in_srgb,var(--bg-secondary)_95%,transparent)] backdrop-blur-xl border-b border-[var(--border-primary)] rounded-b-[var(--radius-lg)] z-50 flex items-center px-4 shadow-paper">
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="p-2 hover:bg-[var(--bg-tertiary)] rounded-lg transition-colors"
+          className="p-2 hover:bg-[var(--bg-tertiary)] rounded-full transition-colors"
         >
           {sidebarOpen ? (
             <X className="w-5 h-5 text-[var(--text-primary)]" />
