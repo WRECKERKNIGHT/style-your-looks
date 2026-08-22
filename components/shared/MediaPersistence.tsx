@@ -27,14 +27,38 @@ function buildSnapshot(): MediaSnapshot {
 
 function applySnapshot(snap: MediaSnapshot) {
   const s = useAnalysisStore.getState();
+  // Validate restored results: legacy snapshots may predate newer required
+  // fields (e.g. breakdown/percentile). Rejecting malformed data beats
+  // crashing every page that renders it.
+  const faceOk =
+    !!snap.faceResult &&
+    Array.isArray(snap.faceResult.breakdown) &&
+    !!snap.faceResult.percentile &&
+    Array.isArray(snap.faceResult.landmarks) &&
+    typeof snap.faceResult.overallScore === "number";
+  const bodyOk =
+    !snap.bodyResult ||
+    (typeof snap.bodyResult.bodyType === "string" && typeof snap.bodyResult.undertone === "string");
+
+  const faceResult = faceOk ? snap.faceResult : null;
+  const bodyResult = bodyOk ? snap.bodyResult : null;
+
   s.setUploadedImage(snap.uploadedImage ?? null);
   s.setFullBodyImage(snap.fullBodyImage ?? null);
   if (snap.source) s.setSource(snap.source);
   if (snap.genderProfile) s.setGenderProfile(snap.genderProfile);
-  if (snap.faceResult) s.setFaceResult(snap.faceResult);
-  if (snap.bodyResult) s.setBodyResult(snap.bodyResult);
-  if (snap.colorAnalysis) s.setColorAnalysis(snap.colorAnalysis);
-  if (snap.outfitRecommendations) s.setOutfitRecommendations(snap.outfitRecommendations);
+  if (faceResult) s.setFaceResult(faceResult);
+  if (bodyResult) s.setBodyResult(bodyResult);
+  if (
+    snap.colorAnalysis &&
+    Array.isArray(snap.colorAnalysis.bestColors) &&
+    typeof snap.colorAnalysis.subType === "string"
+  ) {
+    s.setColorAnalysis(snap.colorAnalysis);
+  }
+  if (Array.isArray(snap.outfitRecommendations)) {
+    s.setOutfitRecommendations(snap.outfitRecommendations);
+  }
 }
 
 export function MediaPersistence() {
