@@ -1,9 +1,5 @@
 import { ImageSegmenter, FilesetResolver } from "@mediapipe/tasks-vision";
-
-const WASM_BASE =
-  "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.18/wasm";
-const MODEL_URL =
-  "https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_multiclass_256x256/float32/latest/selfie_multiclass_256x256.tflite";
+import { resolveModelUrl, resolveWasmBase, MODEL_SOURCES } from "./engine-assets";
 
 export enum PersonCategory {
   Background = 0,
@@ -18,9 +14,12 @@ let segmenter: ImageSegmenter | null = null;
 let initPromise: Promise<ImageSegmenter> | null = null;
 
 async function createSegmenter(delegate: "GPU" | "CPU"): Promise<ImageSegmenter> {
-  const vision = await FilesetResolver.forVisionTasks(WASM_BASE);
+  const [vision, modelUrl] = await Promise.all([
+    resolveWasmBase().then((base) => FilesetResolver.forVisionTasks(base)),
+    resolveModelUrl(MODEL_SOURCES.selfieMulticlass),
+  ]);
   return ImageSegmenter.createFromOptions(vision, {
-    baseOptions: { modelAssetPath: MODEL_URL, delegate },
+    baseOptions: { modelAssetPath: modelUrl, delegate },
     runningMode: "IMAGE",
     outputCategoryMask: true,
     outputConfidenceMasks: false,
@@ -32,17 +31,19 @@ export async function initializeSegmenter(): Promise<ImageSegmenter> {
   if (initPromise) return initPromise;
 
   initPromise = (async () => {
-    try {
-      segmenter = await createSegmenter("GPU");
-    } catch (err) {
-      console.warn("GPU delegate unavailable — falling back to CPU:", err);
-      segmenter = await createSegmenter("CPU");
+    let lastErr: unknown;
+    for (const delegate of ["GPU", "CPU"] as const) {
+      try {
+        segmenter = await createSegmenter(delegate);
+        return segmenter;
+      } catch (err) {
+        lastErr = err;
+        console.warn(`Image segmenter ${delegate} delegate failed — trying next fallback:`, err);
+      }
     }
-    return segmenter;
-  })().catch((err) => {
     initPromise = null;
-    throw err;
-  });
+    throw lastErr instanceof Error ? lastErr : new Error("Failed to initialise image segmenter");
+  })();
 
   return initPromise;
 }

@@ -1,19 +1,19 @@
 import { FaceLandmarker, FilesetResolver, type FaceLandmarkerResult } from "@mediapipe/tasks-vision";
 import { prepareCanvas } from "./preprocessing";
+import { resolveModelUrl, resolveWasmBase, MODEL_SOURCES } from "./engine-assets";
 import { calculateSymmetryScore, calculateFaceShape, calculateSymmetryAxis } from "./face-geometry";
-
-const WASM_BASE = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.18/wasm";
-const MODEL_URL =
-  "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task";
 
 let faceLandmarker: FaceLandmarker | null = null;
 let landmarkerInitPromise: Promise<FaceLandmarker> | null = null;
 
 async function createLandmarker(delegate: "GPU" | "CPU"): Promise<FaceLandmarker> {
-  const vision = await FilesetResolver.forVisionTasks(WASM_BASE);
+  const [vision, modelUrl] = await Promise.all([
+    resolveWasmBase().then((base) => FilesetResolver.forVisionTasks(base)),
+    resolveModelUrl(MODEL_SOURCES.faceLandmarker),
+  ]);
   return FaceLandmarker.createFromOptions(vision, {
     baseOptions: {
-      modelAssetPath: MODEL_URL,
+      modelAssetPath: modelUrl,
       delegate,
     },
     runningMode: "IMAGE",
@@ -28,13 +28,18 @@ export async function initializeFaceLandmarker(): Promise<FaceLandmarker> {
   if (landmarkerInitPromise) return landmarkerInitPromise;
 
   landmarkerInitPromise = (async () => {
-    try {
-      faceLandmarker = await createLandmarker("GPU");
-    } catch (err) {
-      console.warn("GPU delegate unavailable — falling back to CPU:", err);
-      faceLandmarker = await createLandmarker("CPU");
+    let lastErr: unknown;
+    for (const delegate of ["GPU", "CPU"] as const) {
+      try {
+        faceLandmarker = await createLandmarker(delegate);
+        return faceLandmarker;
+      } catch (err) {
+        lastErr = err;
+        console.warn(`Face landmarker ${delegate} delegate failed — trying next fallback:`, err);
+      }
     }
-    return faceLandmarker;
+    landmarkerInitPromise = null;
+    throw lastErr instanceof Error ? lastErr : new Error("Failed to initialise face landmarker");
   })();
 
   return landmarkerInitPromise;

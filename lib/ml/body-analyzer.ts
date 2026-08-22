@@ -3,11 +3,7 @@ import {
   FilesetResolver,
   type PoseLandmarkerResult,
 } from "@mediapipe/tasks-vision";
-
-const WASM_BASE =
-  "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.18/wasm";
-const MODEL_URL =
-  "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_heavy/float16/1/pose_landmarker_heavy.task";
+import { resolveModelUrl, resolveWasmBase, MODEL_SOURCES } from "./engine-assets";
 
 let poseLandmarker: PoseLandmarker | null = null;
 let poseInitPromise: Promise<PoseLandmarker> | null = null;
@@ -15,10 +11,13 @@ let poseInitPromise: Promise<PoseLandmarker> | null = null;
 async function createPoseLandmarker(
   delegate: "GPU" | "CPU"
 ): Promise<PoseLandmarker> {
-  const vision = await FilesetResolver.forVisionTasks(WASM_BASE);
+  const [vision, modelUrl] = await Promise.all([
+    resolveWasmBase().then((base) => FilesetResolver.forVisionTasks(base)),
+    resolveModelUrl(MODEL_SOURCES.poseLandmarker),
+  ]);
   return PoseLandmarker.createFromOptions(vision, {
     baseOptions: {
-      modelAssetPath: MODEL_URL,
+      modelAssetPath: modelUrl,
       delegate,
     },
     runningMode: "IMAGE",
@@ -31,17 +30,19 @@ export function initializePoseLandmarker(): Promise<PoseLandmarker> {
   if (poseInitPromise) return poseInitPromise;
 
   poseInitPromise = (async () => {
-    try {
-      poseLandmarker = await createPoseLandmarker("GPU");
-    } catch (err) {
-      console.warn("GPU delegate unavailable — falling back to CPU:", err);
-      poseLandmarker = await createPoseLandmarker("CPU");
+    let lastErr: unknown;
+    for (const delegate of ["GPU", "CPU"] as const) {
+      try {
+        poseLandmarker = await createPoseLandmarker(delegate);
+        return poseLandmarker;
+      } catch (err) {
+        lastErr = err;
+        console.warn(`Pose landmarker ${delegate} delegate failed — trying next fallback:`, err);
+      }
     }
-    return poseLandmarker;
-  })().catch((err) => {
     poseInitPromise = null;
-    throw err;
-  });
+    throw lastErr instanceof Error ? lastErr : new Error("Failed to initialise pose landmarker");
+  })();
 
   return poseInitPromise;
 }
