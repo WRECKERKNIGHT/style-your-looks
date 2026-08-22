@@ -24,11 +24,31 @@ interface ToastStore {
   removeToast: (id: string) => void;
 }
 
+const MAX_TOASTS = 3;
+const DEDUPE_WINDOW_MS = 2500;
+
+let lastMessage = "";
+let lastMessageAt = 0;
+
 export const useToastStore = create<ToastStore>((set) => ({
   toasts: [],
   addToast: (message, type = "info", action) => {
+    const now = Date.now();
+    // Suppress identical messages fired in rapid succession (double-clicks,
+    // StrictMode re-invocations, repeated handler calls) so popups never stack.
+    if (message === lastMessage && now - lastMessageAt < DEDUPE_WINDOW_MS) {
+      return "";
+    }
+    lastMessage = message;
+    lastMessageAt = now;
+
     const id = Math.random().toString(36).slice(2);
-    set((state) => ({ toasts: [...state.toasts, { id, message, type, action }] }));
+    set((state) => {
+      // Keep the newest toasts only; older ones are dropped instead of
+      // stacking into a scrolling pile on screen.
+      const next = [...state.toasts, { id, message, type, action }];
+      return { toasts: next.slice(Math.max(0, next.length - MAX_TOASTS)) };
+    });
     setTimeout(() => {
       set((state) => ({
         toasts: state.toasts.filter((t) => t.id !== id),
