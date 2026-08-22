@@ -228,17 +228,15 @@ export default function FaceAnalysisPage() {
 
   const handleImageUpload = useCallback(
     (imageData: string) => {
-      setPhotos((prev) => {
-        if (prev.length >= MAX_PHOTOS) {
-          addToast(`Maximum ${MAX_PHOTOS} photos`, "error");
-          return prev;
-        }
-        return [...prev, imageData];
-      });
+      if (photos.length >= MAX_PHOTOS) {
+        addToast(`Maximum ${MAX_PHOTOS} photos`, "error");
+        return;
+      }
+      setPhotos((prev) => (prev.length >= MAX_PHOTOS ? prev : [...prev, imageData]));
       setError(null);
       setRejectedPhotos([]);
     },
-    [addToast]
+    [addToast, photos.length]
   );
 
   const handleWebcamCapture = useCallback(async () => {

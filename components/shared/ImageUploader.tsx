@@ -111,7 +111,6 @@ export function ImageUploader({
           const optimized = await downscaleDataUrl(result);
           setPreview(optimized);
           onImageUpload?.(optimized);
-          addToast("Image loaded successfully", "success");
         } catch (err) {
           addToast(err instanceof Error ? err.message : "Could not load the image", "error");
         }
