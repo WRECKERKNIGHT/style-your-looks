@@ -275,7 +275,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
-  padding: 1rem 2.5rem;
+  padding: 0.95rem 2.25rem;
   font-family: "Fraunces", ui-serif, Georgia, serif;
   font-weight: 600;
   font-size: 0.95rem;
@@ -283,6 +283,7 @@ body {
   background: linear-gradient(120deg, #6F4A30, #8A5F3D);
   color: #FBF7F0;
   border: 1px solid #573A27;
+  border-radius: var(--radius-pill);
   box-shadow: 0 8px 24px -8px rgba(87, 58, 39, 0.45);
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
@@ -325,7 +326,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
-  padding: 1rem 2.5rem;
+  padding: 0.95rem 2.25rem;
   font-family: "Fraunces", ui-serif, Georgia, serif;
   font-weight: 600;
   font-size: 0.95rem;
@@ -333,6 +334,7 @@ body {
   background: color-mix(in srgb, var(--bg-primary) 40%, transparent);
   color: var(--text-primary);
   border: 1.5px solid var(--accent-mocha);
+  border-radius: var(--radius-pill);
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
 }
@@ -367,12 +369,13 @@ body {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.9rem 2rem;
+  padding: 0.85rem 1.9rem;
   font-family: "Fraunces", ui-serif, Georgia, serif;
   font-weight: 500;
   font-size: 0.9rem;
   color: var(--text-secondary);
   border: 1px solid transparent;
+  border-radius: var(--radius-pill);
   transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
