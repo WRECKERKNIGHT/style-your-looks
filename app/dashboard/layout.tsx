@@ -92,10 +92,12 @@ export default function DashboardLayout({
         <UserAvatar compact />
       </div>
 
-      {/* Sidebar */}
+      {/* Sidebar — floats as a rounded rail on desktop */}
       <aside
         className={cn(
           "fixed top-0 left-0 bottom-0 w-64 bg-[var(--bg-secondary)] border-r border-[var(--border-primary)] z-40 transition-transform duration-300 flex flex-col",
+          "lg:top-4 lg:left-4 lg:bottom-4 lg:right-auto lg:border lg:border-[var(--border-primary)] lg:rounded-[var(--radius-xl)] lg:shadow-paper-lg lg:overflow-hidden",
+          "rounded-r-[var(--radius-lg)]",
           "lg:translate-x-0",
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
@@ -125,10 +127,10 @@ export default function DashboardLayout({
                 href={item.href}
                 onClick={() => setSidebarOpen(false)}
                 className={cn(
-                  "flex items-center gap-3 px-4 py-3 text-xs font-body font-semibold tracking-wider transition-all border-l-2 rounded-r-sm",
+                  "flex items-center gap-3 px-4 py-3 text-xs font-body font-semibold tracking-wider transition-all rounded-[var(--radius-sm)]",
                   isActive
-                    ? "bg-gradient-to-r from-aurum-400/15 to-transparent text-[var(--accent-mocha)] border-aurum-400"
-                    : "text-[var(--text-muted)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)] border-transparent"
+                    ? "bg-gradient-to-r from-aurum-400/15 to-transparent text-[var(--accent-mocha)] shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--accent-caramel)_28%,transparent)]"
+                    : "text-[var(--text-muted)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]"
                 )}
               >
                 <item.icon className="w-[18px] h-[18px]" />
@@ -165,8 +167,8 @@ export default function DashboardLayout({
       )}
 
       {/* Main content */}
-      <div className="lg:ml-64 pt-16 lg:pt-0 min-h-screen">
-        <div className="p-6 lg:p-10 max-w-7xl mx-auto w-full">
+      <div className="lg:ml-[17rem] pt-16 lg:pt-4 lg:pr-4 lg:pb-4 min-h-screen">
+        <div className="p-6 lg:p-8 max-w-7xl mx-auto w-full">
           <PageTransition>{children}</PageTransition>
         </div>
       </div>
