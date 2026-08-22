@@ -12,10 +12,12 @@ interface ModalProps {
 
 export function Modal({ open, onClose, children, label }: ModalProps) {
   const panelRef = useRef<HTMLDivElement>(null);
+  const lastFocused = useRef<Element | null>(null);
 
   useEffect(() => {
     if (!open) return;
 
+    lastFocused.current = document.activeElement;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     };
@@ -26,6 +28,9 @@ export function Modal({ open, onClose, children, label }: ModalProps) {
     return () => {
       window.removeEventListener("keydown", onKey);
       document.body.style.overflow = prevOverflow;
+      if (lastFocused.current instanceof HTMLElement) {
+        lastFocused.current.focus();
+      }
     };
   }, [open, onClose]);
 
@@ -49,7 +54,7 @@ export function Modal({ open, onClose, children, label }: ModalProps) {
           <motion.div
             ref={panelRef}
             data-lenis-prevent
-            className="relative w-full max-w-3xl max-h-[85vh] overflow-y-auto rounded-lg border border-[var(--border-primary)] bg-[var(--bg-primary)] shadow-paper-lg"
+            className="relative w-full max-w-3xl max-h-[85vh] overflow-y-auto rounded-[var(--radius-xl)] border border-[var(--border-primary)] bg-[var(--bg-primary)] shadow-paper-lg"
             initial={{ opacity: 0, y: 32, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 24, scale: 0.97 }}
