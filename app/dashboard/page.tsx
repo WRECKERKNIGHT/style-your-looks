@@ -25,6 +25,7 @@ import {
   Lightbulb,
   RotateCw,
   Activity,
+  BookOpen,
 } from "lucide-react";
 import { useAnalysisStore } from "@/store/analysis-store";
 import { getHistory, isDemoEntry } from "@/lib/history";
@@ -74,8 +75,15 @@ const quickActions = [
   {
     href: "/dashboard/color-analysis",
     label: "TONE STUDIO",
-    description: "Seasonal type. Best palettes. Harmony tester.",
-    icon: Palette,
+    description: "Seasonal color palette from your skin tone and undertone.",
+    icon: Droplets,
+    accent: "nexus",
+  },
+  {
+    href: "/dashboard/color-book",
+    label: "COLOR BOOK",
+    description: "Japanese book of outfit colour combinations — men's & women's volumes.",
+    icon: BookOpen,
     accent: "aurum",
   },
   {

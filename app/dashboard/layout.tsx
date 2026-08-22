@@ -24,6 +24,7 @@ import {
   Glasses,
   ClipboardList,
   Boxes,
+  BookOpen,
 } from "lucide-react";
 import { useState } from "react";
 import dynamic from "next/dynamic";
@@ -48,6 +49,7 @@ const navItems = [
   { href: "/dashboard/body-analysis", label: "BODY + TONE", icon: Layers },
   { href: "/dashboard/style-dna", label: "STYLE DNA", icon: Dna },
   { href: "/dashboard/color-analysis", label: "TONE STUDIO", icon: Droplets },
+  { href: "/dashboard/color-book", label: "COLOR BOOK", icon: BookOpen },
   { href: "/dashboard/3d-studio", label: "3D STUDIO", icon: Boxes },
   { href: "/dashboard/virtual-tryon", label: "TRY-ON", icon: Shirt },
   { href: "/dashboard/mannequin", label: "OUTFIT LAB", icon: Palette },

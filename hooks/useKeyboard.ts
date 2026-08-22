@@ -17,6 +17,7 @@ const DEFAULT_COMMANDS: Command[] = [
   { id: "face-analysis", label: "Face IQ Analysis", shortcut: "G F", href: "/dashboard/face-analysis", category: "Navigation" },
   { id: "body-analysis", label: "Body & Tone", shortcut: "G B", href: "/dashboard/body-analysis", category: "Navigation" },
   { id: "color-analysis", label: "Tone Studio", shortcut: "G C", href: "/dashboard/color-analysis", category: "Navigation" },
+  { id: "color-book", label: "Japanese Color Book", shortcut: "G J", href: "/dashboard/color-book", category: "Navigation" },
   { id: "grooming", label: "Grooming Studio", shortcut: "G G", href: "/dashboard/grooming", category: "Navigation" },
   { id: "tryon", label: "Virtual Try-On", shortcut: "G T", href: "/dashboard/virtual-tryon", category: "Navigation" },
   { id: "community", label: "Community Feed", shortcut: "G M", href: "/dashboard/community", category: "Navigation" },
