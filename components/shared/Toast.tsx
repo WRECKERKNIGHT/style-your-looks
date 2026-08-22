@@ -76,7 +76,11 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   return (
     <>
       {children}
-      <div className="fixed bottom-6 right-6 z-[9996] flex flex-col gap-2 pointer-events-none">
+      <div
+        className="fixed bottom-6 right-6 z-[9996] flex flex-col gap-2 pointer-events-none"
+        role="status"
+        aria-live="polite"
+      >
         <AnimatePresence mode="popLayout">
           {toasts.map((toast) => {
             const config = typeConfig[toast.type];
@@ -89,7 +93,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                 animate={{ opacity: 1, x: 0, scale: 1 }}
                 exit={{ opacity: 0, x: 80, scale: 0.95, transition: { duration: 0.15 } }}
                 transition={{ type: "spring", stiffness: 300, damping: 28 }}
-                className={`pointer-events-auto flex items-center gap-3 px-4 py-3.5 border ${config.border} ${config.bg} ${config.darkBg} backdrop-blur-md shadow-nexus-lg cursor-pointer max-w-sm rounded-sm dark:bg-cosmic-surface`}
+                className={`pointer-events-auto flex items-center gap-3 px-4 py-3 border ${config.border} ${config.bg} ${config.darkBg} backdrop-blur-md shadow-nexus-lg cursor-pointer max-w-sm rounded-[var(--radius-lg)] dark:bg-cosmic-surface`}
                 onClick={() => removeToast(toast.id)}
               >
                 <Icon className={`w-4 h-4 shrink-0 ${
