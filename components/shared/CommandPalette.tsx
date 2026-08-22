@@ -63,7 +63,7 @@ export function CommandPalette() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y: -10 }}
             transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-            className="relative w-full max-w-lg bg-light-surface dark:bg-cosmic-surface border border-light-border dark:border-cosmic-border rounded-sm shadow-nexus-xl overflow-hidden"
+            className="relative w-full max-w-lg bg-light-surface dark:bg-cosmic-surface border border-light-border dark:border-cosmic-border rounded-[var(--radius-lg)] shadow-nexus-xl overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-3 px-5 py-4 border-b border-light-border dark:border-cosmic-border">
@@ -77,7 +77,7 @@ export function CommandPalette() {
                 onKeyDown={handleKeyDown}
                 className="flex-1 bg-transparent text-sm text-nexus-800 dark:text-white placeholder:text-nexus-400/50 dark:placeholder:text-cosmic-muted/50 font-body outline-none"
               />
-              <kbd className="hidden sm:inline-flex text-[0.6rem] font-mono text-nexus-400 dark:text-cosmic-muted bg-light-base dark:bg-cosmic-elevated px-2 py-0.5 border border-light-border dark:border-cosmic-border rounded-sm">
+              <kbd className="hidden sm:inline-flex text-[0.6rem] font-mono text-nexus-400 dark:text-cosmic-muted bg-light-base dark:bg-cosmic-elevated px-2 py-0.5 border border-light-border dark:border-cosmic-border rounded-full">
                 ESC
               </kbd>
             </div>
@@ -97,7 +97,7 @@ export function CommandPalette() {
                           key={cmd.id}
                           onClick={() => executeCommand(cmd)}
                           onMouseEnter={() => setSelectedIndex(globalIndex)}
-                          className={`w-full flex items-center gap-3 px-3 py-2.5 text-left rounded-sm transition-colors ${
+                          className={`w-full flex items-center gap-3 px-3 py-2.5 text-left rounded-[var(--radius-sm)] transition-colors ${
                             globalIndex === selectedIndex
                               ? "bg-nexus-400/10 text-nexus-800 dark:text-white"
                               : "text-nexus-400 dark:text-cosmic-muted hover:bg-light-base dark:hover:bg-cosmic-elevated"
@@ -105,7 +105,7 @@ export function CommandPalette() {
                         >
                           <ArrowRight className="w-3.5 h-3.5 text-aurum-500 flex-shrink-0" />
                           <span className="flex-1 text-sm font-body">{cmd.label}</span>
-                          <kbd className="text-[0.55rem] font-mono text-nexus-400 dark:text-cosmic-muted bg-light-base dark:bg-cosmic-elevated px-1.5 py-0.5 border border-light-border dark:border-cosmic-border rounded-sm">
+                          <kbd className="text-[0.55rem] font-mono text-nexus-400 dark:text-cosmic-muted bg-light-base dark:bg-cosmic-elevated px-1.5 py-0.5 border border-light-border dark:border-cosmic-border rounded-full">
                             {cmd.shortcut}
                           </kbd>
                         </button>
