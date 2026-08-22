@@ -67,17 +67,19 @@ export default function ProfilePage() {
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => {
-      if (data.user) {
-        const meta = data.user.user_metadata ?? {};
-        setUser({
-          email: data.user.email,
-          name: meta.full_name ?? meta.name ?? data.user.email,
-          avatarUrl: meta.avatar_url ?? meta.picture ?? null,
-          createdAt: data.user.created_at,
-        });
-      }
-    });
+    if (supabase) {
+      supabase.auth.getUser().then(({ data }) => {
+        if (data.user) {
+          const meta = data.user.user_metadata ?? {};
+          setUser({
+            email: data.user.email,
+            name: meta.full_name ?? meta.name ?? data.user.email,
+            avatarUrl: meta.avatar_url ?? meta.picture ?? null,
+            createdAt: data.user.created_at,
+          });
+        }
+      });
+    }
 
     const history = getHistory().filter((e) => !isDemoEntry(e));
     setAnalysisCount(history.length);
@@ -119,7 +121,7 @@ export default function ProfilePage() {
   async function handleSignOut() {
     setSigningOut(true);
     const supabase = createClient();
-    await supabase.auth.signOut();
+    if (supabase) await supabase.auth.signOut();
     router.push("/");
     router.refresh();
   }

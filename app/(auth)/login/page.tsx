@@ -41,6 +41,10 @@ export default function LoginPage() {
     setError(null);
     try {
       const supabase = createClient();
+      if (!supabase) {
+        setError("Email service is not configured on this deployment.");
+        return;
+      }
       const { error: resendError } = await supabase.auth.resend({
         type: "signup",
         email,
@@ -65,6 +69,10 @@ export default function LoginPage() {
 
     try {
       const supabase = createClient();
+      if (!supabase) {
+        setError("Sign-in is not configured on this deployment. Add Supabase keys to enable it.");
+        return;
+      }
       const { error } = await supabase.auth.signInWithPassword({ email, password });
 
       if (error) {
@@ -87,6 +95,10 @@ export default function LoginPage() {
 
     try {
       const supabase = createClient();
+      if (!supabase) {
+        setError("Sign-in is not configured on this deployment. Add Supabase keys to enable it.");
+        return;
+      }
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
