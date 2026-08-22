@@ -423,10 +423,12 @@ export default function DashboardHome() {
                     className="card-nexus group block p-7 h-full"
                   >
                     <div className="flex items-start justify-between mb-4">
-                      <div className={`w-11 h-11 ${colors.bg} border ${colors.border} flex items-center justify-center transition-transform duration-300 group-hover:scale-110`}>
+                      <div className={`w-11 h-11 rounded-[var(--radius-md)] ${colors.bg} border ${colors.border} flex items-center justify-center transition-transform duration-300 group-hover:scale-110`}>
                         <action.icon className={`w-5 h-5 ${colors.text}`} />
                       </div>
-                      <ArrowRight className="w-4 h-4 text-[var(--text-muted)] group-hover:text-[var(--accent-aurum)] group-hover:translate-x-1 transition-all" />
+                      <span className="w-8 h-8 rounded-full border border-transparent flex items-center justify-center group-hover:border-[color-mix(in_srgb,var(--accent-caramel)_35%,transparent)] group-hover:bg-[color-mix(in_srgb,var(--accent-caramel)_8%,transparent)] transition-all">
+                        <ArrowRight className="w-4 h-4 text-[var(--text-muted)] group-hover:text-[var(--accent-aurum)] group-hover:translate-x-0.5 transition-all" />
+                      </span>
                     </div>
                     <h3 className="type-label text-[var(--text-primary)] mb-1.5">
                       {action.label}
