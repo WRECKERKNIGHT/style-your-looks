@@ -11,33 +11,31 @@ interface UseWebcamReturn {
   captureFrame: () => HTMLCanvasElement | null;
 }
 
+function describeWebcamError(err: unknown): string {
+  const name = err instanceof DOMException ? err.name : "";
+  switch (name) {
+    case "NotAllowedError":
+    case "SecurityError":
+      return "camera permission was denied. Allow camera access in your browser settings and try again.";
+    case "NotFoundError":
+      return "no camera was found. Connect a webcam or upload a photo instead.";
+    case "NotReadableError":
+    case "TrackStartError":
+      return "the camera is already in use by another app. Close it and try again.";
+    case "OverconstrainedError":
+      return "the camera does not support the requested video mode.";
+    default:
+      return err instanceof Error && err.message
+        ? err.message
+        : "we could not access the camera on this device.";
+  }
+}
+
 export function useWebcam(): UseWebcamReturn {
   const videoRef = useRef<HTMLVideoElement>(null!);
   const streamRef = useRef<MediaStream | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const startWebcam = useCallback(async () => {
-    try {
-      setError(null);
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          width: { ideal: 640 },
-          height: { ideal: 480 },
-          facingMode: "user",
-        },
-      });
-      streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-        setIsStreaming(true);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to access webcam");
-      setIsStreaming(false);
-    }
-  }, []);
 
   const stopWebcam = useCallback(() => {
     if (streamRef.current) {
@@ -49,6 +47,65 @@ export function useWebcam(): UseWebcamReturn {
     }
     setIsStreaming(false);
   }, []);
+
+  const startWebcam = useCallback(async () => {
+    setError(null);
+    if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
+      setError(
+        "this browser or context does not support camera access. Use a photo upload instead."
+      );
+      return;
+    }
+
+    // Always release a previous stream first so we never leak the camera when
+    // re-acquiring (e.g. after a play() rejection).
+    stopWebcam();
+
+    let stream: MediaStream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          width: { ideal: 640 },
+          height: { ideal: 480 },
+          facingMode: "user",
+        },
+      });
+    } catch (err) {
+      setIsStreaming(false);
+      setError(describeWebcamError(err));
+      return;
+    }
+
+    streamRef.current = stream;
+
+    const video = videoRef.current;
+    if (!video) {
+      // The <video> element is not mounted yet — release immediately rather
+      // than keeping a live stream nobody can see.
+      stream.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+      return;
+    }
+
+    // Stop gracefully if the user revokes permission or unplugs the camera.
+    stream.getTracks().forEach((track) => {
+      track.addEventListener("ended", () => {
+        if (streamRef.current === stream) stopWebcam();
+      });
+    });
+
+    video.srcObject = stream;
+    try {
+      await video.play();
+      setIsStreaming(true);
+    } catch {
+      stream.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+      video.srcObject = null;
+      setIsStreaming(false);
+      setError("the browser blocked video playback. Click the page and try again.");
+    }
+  }, [stopWebcam]);
 
   const captureFrame = useCallback((): HTMLCanvasElement | null => {
     if (!videoRef.current || !isStreaming) return null;
