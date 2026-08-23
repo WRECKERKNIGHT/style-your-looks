@@ -17,6 +17,12 @@ const REQUIRED_MODELS = [
   { file: "selfie_multiclass_256x256.tflite", minBytes: 10 * 1024 * 1024 },
 ];
 
+// The rigged studio mannequin — a truncated GLB fails to parse at runtime,
+// so guard it the same way as the ML weights.
+const REQUIRED_MANNEQUIN = [
+  { file: path.join("mannequin", "cesium-man.glb"), minBytes: 300 * 1024 },
+];
+
 let failed = false;
 
 async function check(dir, file, minBytes = 0) {
@@ -41,6 +47,8 @@ console.log("Verifying self-hosted ML engine assets...\n");
 
 for (const file of REQUIRED_WASM) await check(WASM_DIR, file);
 for (const { file, minBytes } of REQUIRED_MODELS) await check(MODELS_DIR, file, minBytes);
+console.log("");
+for (const { file, minBytes } of REQUIRED_MANNEQUIN) await check(MODELS_DIR, file, minBytes);
 
 if (failed) {
   console.error(
