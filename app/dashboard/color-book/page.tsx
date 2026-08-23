@@ -274,7 +274,7 @@ function ComboModal({ combo, onClose }: { combo: OutfitCombo | null; onClose: ()
                   return (
                     <li key={garment} className="flex items-center gap-3">
                       <span
-                        className="w-9 h-9 rounded-sm border border-[color-mix(in_srgb,var(--border-primary)_60%,transparent)] shrink-0"
+                        className="w-9 h-9 rounded-[var(--radius-xs)] border border-[color-mix(in_srgb,var(--border-primary)_60%,transparent)] shrink-0"
                         style={{ backgroundColor: c.hex }}
                       />
                       <div className="min-w-0">
@@ -383,7 +383,7 @@ export default function ColorBookPage() {
           {JAPANESE_COLORS.map((c) => (
             <div
               key={c.id}
-              className="group relative aspect-square rounded-sm border border-[color-mix(in_srgb,var(--border-primary)_50%,transparent)] overflow-hidden"
+              className="group relative aspect-square rounded-[var(--radius-sm)] border border-[color-mix(in_srgb,var(--border-primary)_50%,transparent)] overflow-hidden"
               style={{ backgroundColor: c.hex }}
               title={`${c.name} · ${c.kanji}`}
             >
