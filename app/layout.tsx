@@ -86,10 +86,6 @@ export default function RootLayout({
         <meta name="google-site-verification" content="D-ErFCv48rC-Nd_oYBDtFwe1DB0uwtPr54MA0OVVUl0" />
         <link rel="apple-touch-icon" href="/icon-192.png" />
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#F6F0E5" media="(prefers-color-scheme: light)" />
-        <meta name="theme-color" content="#241812" media="(prefers-color-scheme: dark)" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <JsonLd />
       </head>
       <body className="antialiased">
