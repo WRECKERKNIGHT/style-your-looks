@@ -412,12 +412,8 @@ export default function DashboardHome() {
       {/* AI Insights */}
       <AIInsights faceResult={faceResult} />
 
-      <ScrollProgress />
-
       {/* Style Timeline */}
       <StyleTimeline />
-
-      <ScrollProgress />
 
       {/* Quick Actions */}
       <ScrollReveal stagger staggerChildren={0.06}>
@@ -452,8 +448,6 @@ export default function DashboardHome() {
           })}
         </div>
       </ScrollReveal>
-
-      <ScrollProgress />
 
       <ScrollReveal>
         <div className="glass-card p-10">
