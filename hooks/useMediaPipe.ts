@@ -3,6 +3,7 @@
 import { useCallback, useRef, useEffect } from "react";
 import { analyzeFace } from "@/lib/ml/face-analyzer";
 import { preprocessImage, quickQualityGate, prepareCanvas } from "@/lib/ml/preprocessing";
+import { useToastStore } from "@/components/shared/Toast";
 import { analyzeBody, extractBodyMeasurements, classifyBodyType } from "@/lib/ml/body-analyzer";
 import { analyzeSkinTone, analyzeSkinToneFromImage } from "@/lib/ml/skin-tone";
 import { estimateAgeFromFace } from "@/lib/ml/age-estimator";
@@ -210,7 +211,16 @@ export function useMediaPipe() {
           throw new Error("Could not load the photo. Try re-uploading it.");
         }
 
-        const { canvas } = preprocessImage(imageElement);
+        const pre = preprocessImage(imageElement);
+        const canvas = pre.canvas;
+        if (pre.gammaApplied !== null) {
+          // Tell the user the engine corrected their lighting instead of
+          // silently scoring a dark photo — builds trust in the numbers.
+          useToastStore.getState().addToast(
+            "Low light detected — auto-corrected before analysis for a cleaner read",
+            "info"
+          );
+        }
         const ctx = canvas.getContext("2d")!;
 
         const gate = quickQualityGate(canvas);
