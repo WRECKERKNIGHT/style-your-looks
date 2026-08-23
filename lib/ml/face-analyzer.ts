@@ -119,14 +119,17 @@ function promotePrimaryFace(result: FaceLandmarkerResult): FaceLandmarkerResult 
   const order = faces.map((_, i) => i).sort((a, b) => areaOf(faces[b]) - areaOf(faces[a]));
   if (order[0] === 0) return result;
 
-  const reorder = <T,>(arr: T[] | undefined): T[] | undefined =>
-    arr ? order.map((i) => arr[i]) : arr;
+  const reorder = <T,>(arr: T[]): T[] => order.map((i) => arr[i]);
 
   return {
     ...result,
-    faceLandmarks: reorder(faces)!,
-    faceBlendshapes: reorder(result.faceBlendshapes),
-    facialTransformationMatrixes: reorder(result.facialTransformationMatrixes),
+    faceLandmarks: reorder(faces),
+    faceBlendshapes: result.faceBlendshapes
+      ? reorder(result.faceBlendshapes)
+      : result.faceBlendshapes,
+    facialTransformationMatrixes: result.facialTransformationMatrixes
+      ? reorder(result.facialTransformationMatrixes)
+      : result.facialTransformationMatrixes,
   };
 }
 
