@@ -1,9 +1,23 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import { Boxes } from "lucide-react";
-import StyleStudio from "@/components/three/StyleStudio";
 import { ScrollParallax, ScrollBlur, SectionScrollProgress } from "@/components/shared/ScrollEffects";
+
+// three.js is ~600KB of JS — keep it out of the dashboard's shared chunks and
+// only fetch it when the studio page itself is opened.
+const StyleStudio = dynamic(() => import("@/components/three/StyleStudio"), {
+  ssr: false,
+  loading: () => (
+    <div className="glass-card p-10 flex flex-col items-center justify-center gap-4 min-h-[60vh]">
+      <span className="spinner" />
+      <p className="type-mono text-[var(--text-muted)] tracking-widest uppercase">
+        Waking up the studio…
+      </p>
+    </div>
+  ),
+});
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
