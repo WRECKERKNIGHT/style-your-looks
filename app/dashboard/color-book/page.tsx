@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BookOpen, X, Copy, Check, Sparkles } from "lucide-react";
 import { SectionScrollProgress } from "@/components/shared/ScrollEffects";
@@ -192,13 +192,39 @@ function BookPanel({
 function ComboModal({ combo, onClose }: { combo: OutfitCombo | null; onClose: () => void }) {
   const { addToast } = useToast();
   const [copied, setCopied] = useState(false);
+  const sheetRef = useRef<HTMLDivElement>(null);
 
-  // Escape closes the sheet and focus returns to the card that opened it.
+  // Escape closes the sheet, Tab is trapped inside it (dialog semantics), and
+  // focus returns to the card that opened the sheet on dismiss.
   useEffect(() => {
     if (!combo) return;
     const opener = document.activeElement as HTMLElement | null;
+    const sheet = sheetRef.current;
+
+    // Initial focus lands inside the dialog for screen-reader users.
+    sheet?.querySelector<HTMLElement>("[data-autofocus]")?.focus();
+
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") {
+        onClose();
+        return;
+      }
+      if (e.key !== "Tab" || !sheet) return;
+      const focusables = Array.from(
+        sheet.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        )
+      ).filter((el) => !el.hasAttribute("disabled"));
+      if (focusables.length === 0) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => {
@@ -233,6 +259,10 @@ function ComboModal({ combo, onClose }: { combo: OutfitCombo | null; onClose: ()
         onClick={onClose}
       >
         <motion.div
+          ref={sheetRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${combo.name} combination details`}
           initial={{ opacity: 0, scale: 0.95, y: 16 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 16 }}
@@ -254,7 +284,8 @@ function ComboModal({ combo, onClose }: { combo: OutfitCombo | null; onClose: ()
             </div>
             <button
               onClick={onClose}
-              className="p-2 border border-[var(--border-primary)] text-[var(--text-primary)] transition-colors hover:text-aurum-500"
+              data-autofocus
+              className="p-2 border border-[var(--border-primary)] rounded-full text-[var(--text-primary)] transition-colors hover:text-aurum-500"
               aria-label="Close combination"
             >
               <X className="w-4 h-4" />
@@ -262,6 +293,9 @@ function ComboModal({ combo, onClose }: { combo: OutfitCombo | null; onClose: ()
           </div>
 
           <div data-lenis-prevent className="flex-1 overflow-y-auto p-6 space-y-5">
+            <div className="rounded-[var(--radius-md)] overflow-hidden border border-[var(--border-primary)] aspect-[4/3]">
+              <OutfitIllustration combo={combo} />
+            </div>
             <div className="flex overflow-hidden border border-[var(--border-primary)] h-20">
               {combo.items.map(({ garment, colorId }) => {
                 const c = getColor(colorId);
