@@ -153,7 +153,7 @@ export default function LoginPage() {
               { val: "0", label: "SERVERS" },
               { val: "FREE", label: "FOREVER" },
             ].map((s) => (
-              <div key={s.label} className="border border-light-border dark:border-cosmic-border p-3 rounded-sm bg-light-surface/50 dark:bg-cosmic-surface/50 backdrop-blur-sm">
+              <div key={s.label} className="border border-light-border dark:border-cosmic-border p-3 rounded-[var(--radius-md)] bg-light-surface/50 dark:bg-cosmic-surface/50 backdrop-blur-sm">
                 <div className="text-lg font-body font-bold text-aurum-500">{s.val}</div>
                 <div className="text-[0.5rem] font-mono text-nexus-400 dark:text-cosmic-muted tracking-widest">{s.label}</div>
               </div>
@@ -193,13 +193,13 @@ export default function LoginPage() {
             />
           )}
           {error && !isGoogleBlockError(error) && (
-            <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 text-xs font-body mb-2 rounded-sm">
+            <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 text-xs font-body mb-2 rounded-[var(--radius-sm)]">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span className="flex-1">{error}</span>
             </div>
           )}
           {resent && (
-            <div className="flex items-center gap-2 p-3 bg-aurum-500/10 border border-aurum-500/30 text-aurum-600 dark:text-aurum-400 text-xs font-body mb-2 rounded-sm">
+            <div className="flex items-center gap-2 p-3 bg-aurum-500/10 border border-aurum-500/30 text-aurum-600 dark:text-aurum-400 text-xs font-body mb-2 rounded-[var(--radius-sm)]">
               <Send className="w-4 h-4 shrink-0" />
               Confirmation email resent. Check your inbox and spam folder.
             </div>
@@ -209,7 +209,7 @@ export default function LoginPage() {
               type="button"
               onClick={handleResend}
               disabled={resending}
-              className="w-full py-2.5 mb-2 bg-aurum-500/10 border border-aurum-500/40 text-aurum-600 dark:text-aurum-400 font-mono text-xs tracking-widest hover:bg-aurum-500/20 transition-colors disabled:opacity-50 rounded-sm"
+              className="w-full py-2.5 mb-2 bg-aurum-500/10 border border-aurum-500/40 text-aurum-600 dark:text-aurum-400 font-mono text-xs tracking-widest hover:bg-aurum-500/20 transition-colors disabled:opacity-50 rounded-full"
             >
               {resending ? (
                 <Loader2 className="w-4 h-4 animate-spin mx-auto" />
@@ -230,7 +230,7 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="w-full pl-10 pr-4 py-3 bg-light-surface dark:bg-cosmic-surface border border-light-border dark:border-cosmic-border text-sm text-nexus-800 dark:text-white placeholder:text-nexus-400/50 dark:placeholder:text-cosmic-muted/50 focus:outline-none focus:border-aurum-500 transition-colors font-body rounded-sm"
+                  className="w-full pl-10 pr-4 py-3 bg-light-surface dark:bg-cosmic-surface border border-light-border dark:border-cosmic-border text-sm text-nexus-800 dark:text-white placeholder:text-nexus-400/50 dark:placeholder:text-cosmic-muted/50 focus:outline-none focus:border-aurum-500 transition-colors font-body rounded-[var(--radius-md)]"
                 />
               </div>
             </div>
@@ -246,7 +246,7 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   minLength={6}
-                  className="w-full pl-10 pr-10 py-3 bg-light-surface dark:bg-cosmic-surface border border-light-border dark:border-cosmic-border text-sm text-nexus-800 dark:text-white placeholder:text-nexus-400/50 dark:placeholder:text-cosmic-muted/50 focus:outline-none focus:border-aurum-500 transition-colors font-body rounded-sm"
+                  className="w-full pl-10 pr-10 py-3 bg-light-surface dark:bg-cosmic-surface border border-light-border dark:border-cosmic-border text-sm text-nexus-800 dark:text-white placeholder:text-nexus-400/50 dark:placeholder:text-cosmic-muted/50 focus:outline-none focus:border-aurum-500 transition-colors font-body rounded-[var(--radius-md)]"
                 />
                 <button
                   type="button"
@@ -275,7 +275,7 @@ export default function LoginPage() {
           <button
             onClick={handleGoogleLogin}
             disabled={googleLoading || loading}
-            className="w-full py-3 bg-light-surface dark:bg-cosmic-surface border border-light-border dark:border-cosmic-border text-nexus-800 dark:text-white font-mono text-sm hover:border-aurum-500 transition-colors disabled:opacity-50 rounded-sm flex items-center justify-center gap-3"
+            className="w-full py-3 bg-light-surface dark:bg-cosmic-surface border border-light-border dark:border-cosmic-border text-nexus-800 dark:text-white font-mono text-sm hover:border-aurum-500 transition-colors disabled:opacity-50 rounded-full flex items-center justify-center gap-3"
           >
             {googleLoading ? (
               <Loader2 className="w-4 h-4 animate-spin" />
