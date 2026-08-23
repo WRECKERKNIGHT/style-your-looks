@@ -114,6 +114,7 @@ function SeasonFilter({
 
 interface PanelProps {
   side: "left" | "right";
+  panelId: string;
   volumeLabel: string;
   kanji: string;
   romaji: string;
@@ -128,6 +129,7 @@ interface PanelProps {
  */
 function BookPanel({
   side,
+  panelId,
   volumeLabel,
   kanji,
   romaji,
@@ -143,8 +145,9 @@ function BookPanel({
 
   return (
     <section
+      id={panelId}
       aria-label={`${volumeLabel} combinations`}
-      className="flex flex-col lg:flex-row min-h-[60vh] border-y lg:border-y-0 border-[var(--border-primary)]"
+      className="flex flex-col lg:flex-row min-h-[60vh] border-y lg:border-y-0 border-[var(--border-primary)] scroll-mt-24"
       style={{ background: `linear-gradient(180deg, ${tint}, transparent 30%)` }}
     >
       {/* Spine / cover column */}
@@ -394,11 +397,66 @@ export default function ColorBookPage() {
         <SeasonFilter active={seasonFilter} onChange={setSeasonFilter} />
       </motion.div>
 
+      {/* How to read the book — three steps, so the page explains itself */}
+      <motion.ol
+        variants={fadeUp}
+        initial="hidden"
+        animate="show"
+        className="grid grid-cols-1 sm:grid-cols-3 gap-3"
+        aria-label="How to use the colour book"
+      >
+        {[
+          {
+            step: "01",
+            title: "Pick a season",
+            body: "Filter both volumes to the same seasonal chapter — spring sakura pairings, winter inks.",
+          },
+          {
+            step: "02",
+            title: "Compare volumes",
+            body: "Men's and women's recipes mirror each other using the same traditional colour logic.",
+          },
+          {
+            step: "03",
+            title: "Open a combo",
+            body: "Each spread shows the outfit preview plus exact hex codes you can copy for shopping.",
+          },
+        ].map((s) => (
+          <li
+            key={s.step}
+            className="glass-card p-4 flex gap-3 items-start rounded-[var(--radius-md)]"
+          >
+            <span className="type-mono text-[0.6rem] text-[var(--accent-aurum)] tracking-widest mt-0.5 shrink-0">
+              {s.step}
+            </span>
+            <div>
+              <p className="text-sm font-body font-semibold text-[var(--text-primary)]">{s.title}</p>
+              <p className="text-xs font-body text-[var(--text-muted)] leading-relaxed mt-1">
+                {s.body}
+              </p>
+            </div>
+          </li>
+        ))}
+      </motion.ol>
+
+      {/* Mobile volume jump links — the split stacks on small screens */}
+      <motion.div variants={fadeUp} initial="hidden" animate="show" className="flex gap-2 lg:hidden">
+        {[
+          { href: "#volume-men", label: "MEN 紳" },
+          { href: "#volume-women", label: "WOMEN 淑" },
+        ].map((v) => (
+          <a key={v.href} href={v.href} className="btn-outline flex-1 justify-center py-2 text-xs">
+            {v.label}
+          </a>
+        ))}
+      </motion.div>
+
       {/* 50/50 split screen — two volumes of the book side by side */}
       <motion.div variants={fadeUp} initial="hidden" animate="show">
         <div className="grid grid-cols-1 lg:grid-cols-2 border border-[var(--border-primary)] bg-[var(--bg-secondary)] shadow-paper-lg overflow-hidden">
           <BookPanel
             side="left"
+            panelId="volume-men"
             volumeLabel="Volume I · Men"
             kanji="紳"
             romaji="shinshi-hen"
@@ -409,6 +467,7 @@ export default function ColorBookPage() {
           <div className="hidden lg:block w-px bg-[var(--border-primary)]" aria-hidden />
           <BookPanel
             side="right"
+            panelId="volume-women"
             volumeLabel="Volume II · Women"
             kanji="淑"
             romaji="shukujo-hen"
