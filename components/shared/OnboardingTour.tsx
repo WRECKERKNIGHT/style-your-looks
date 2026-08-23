@@ -93,7 +93,8 @@ export function OnboardingTour() {
           >
             <button
               onClick={handleDismiss}
-              className="absolute top-4 right-4 text-nexus-400/40 hover:text-nexus-400 dark:text-cosmic-muted/40 dark:hover:text-cosmic-muted transition-colors"
+              aria-label="Skip the tour"
+              className="absolute top-4 right-4 text-nexus-400/40 hover:text-nexus-400 dark:text-cosmic-muted/40 dark:hover:text-cosmic-muted transition-colors rounded-full p-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-aurum)]"
             >
               <X className="w-4 h-4" />
             </button>
