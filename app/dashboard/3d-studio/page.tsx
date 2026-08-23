@@ -1,9 +1,11 @@
 "use client";
 
+import { useEffect } from "react";
 import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import { Boxes } from "lucide-react";
 import { ScrollParallax, ScrollBlur, SectionScrollProgress } from "@/components/shared/ScrollEffects";
+import { MANNEQUIN_URL } from "@/lib/three/mannequin";
 
 // three.js is ~600KB of JS — keep it out of the dashboard's shared chunks and
 // only fetch it when the studio page itself is opened.
@@ -25,6 +27,12 @@ const fadeUp = {
 };
 
 export default function StudioPage() {
+  // Start streaming the mannequin GLB immediately — it downloads in parallel
+  // with the studio JS chunk instead of serialised after mount.
+  useEffect(() => {
+    if ("fetch" in window) void fetch(MANNEQUIN_URL, { priority: "low" }).catch(() => {});
+  }, []);
+
   return (
     <div className="space-y-8">
       <SectionScrollProgress />
@@ -38,7 +46,8 @@ export default function StudioPage() {
             </h1>
           </div>
           <p className="text-[var(--text-muted)] font-body type-subhead max-w-xl">
-            Build your virtual twin in true 3D — body, hair, frames and outfit. Free, private, runs in your browser.
+            Pose a fully rigged mannequin in true 3D or dial in your measurements on the fit form —
+            private, offline-capable, runs in your browser.
           </p>
         </motion.div>
       </ScrollParallax>
