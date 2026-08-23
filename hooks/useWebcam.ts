@@ -65,8 +65,12 @@ export function useWebcam(): UseWebcamReturn {
     try {
       stream = await navigator.mediaDevices.getUserMedia({
         video: {
-          width: { ideal: 640 },
-          height: { ideal: 480 },
+          // 1280x720 gives the landmark models ~4x the pixel data of the old
+          // 640x480 request — measurably sharper symmetry/skin metrics on
+          // webcam captures. Browsers still fall back gracefully on cameras
+          // that cannot reach these ideals.
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
           facingMode: "user",
         },
       });
