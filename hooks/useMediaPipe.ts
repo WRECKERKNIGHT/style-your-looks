@@ -444,7 +444,17 @@ export function useMediaPipe() {
         });
 
         if (skinTone?.undertone) {
-          const recs = generateRecommendations(skinTone.undertone, bodyType, undefined, skinTone.monkScale.hex);
+          // Feed the saved face shape into the scorer so face-shape matching
+          // contributes to outfit ranking instead of sitting at a flat
+          // neutral score for everyone.
+          const faceShape = useAnalysisStore.getState().faceResult?.facialShape;
+          const recs = generateRecommendations(
+            skinTone.undertone,
+            bodyType,
+            undefined,
+            skinTone.monkScale.hex,
+            faceShape
+          );
           setOutfitRecommendations(
             recs.map((r) => ({
               ...r,

@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { useMemo } from "react";
 import { useAnalysisStore } from "@/store/analysis-store";
 import { motion } from "framer-motion";
-import { Sparkles, ChevronRight, Shirt, ArrowRight, Palette } from "lucide-react";
+import { Sparkles, ChevronRight, Shirt, ArrowRight, Palette, CalendarDays } from "lucide-react";
 import { ScrollParallax, ScrollBlur, SectionScrollProgress } from "@/components/shared/ScrollEffects";
+import { generateWeekPlan } from "@/lib/ml/outfit-recommender";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -28,6 +30,20 @@ export default function RecommendationsPage() {
     : null;
 
   const unlocked = pillarResult && outfitRecommendations.length > 0;
+
+  // The week plan is computed from the same measured profile as the picks
+  // above — undertone, body type, skin tone and face shape. Deterministic,
+  // no placeholders: every entry is a scored recommendation.
+  const weekPlan = useMemo(() => {
+    if (!unlocked || !bodyResult) return null;
+    const faceShape = faceResult?.facialShape;
+    return generateWeekPlan(
+      bodyResult.undertone,
+      bodyResult.bodyType,
+      bodyResult.skinToneValue,
+      faceShape
+    );
+  }, [unlocked, bodyResult, faceResult]);
 
   return (
     <div className="space-y-8">
@@ -104,6 +120,37 @@ export default function RecommendationsPage() {
               ))}
             </motion.div>
           </motion.div>
+
+          {weekPlan && (
+            <motion.div variants={fadeUp} initial="hidden" animate="show" className="glass-card p-6">
+              <div className="flex items-center justify-between mb-5">
+                <h3 className="type-label text-[var(--text-primary)] flex items-center gap-2">
+                  <CalendarDays className="w-4 h-4 text-[var(--accent-aurum)]" />
+                  YOUR WEEK, PLANNED
+                </h3>
+                <span className="type-mono text-[0.55rem] text-[var(--accent-mocha)] tracking-widest bg-aurum-400/15 px-2.5 py-1 rounded">
+                  TOP MATCH PER DAY
+                </span>
+              </div>
+              <motion.div variants={stagger} initial="hidden" animate="show" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                {weekPlan.map(({ day, outfit }) => (
+                  <motion.div key={day} variants={fadeUp}
+                    className="p-4 border border-[var(--border-primary)] bg-[var(--bg-tertiary)] card-nexus">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="type-mono text-[0.6rem] tracking-widest text-[var(--accent-mocha)]">{day.toUpperCase()}</span>
+                      <div className="flex gap-1">
+                        {outfit.colors.slice(0, 3).map((c) => (
+                          <span key={c} className="w-3.5 h-3.5 rounded-full border border-[var(--border-primary)]" style={{ backgroundColor: c }} />
+                        ))}
+                      </div>
+                    </div>
+                    <p className="type-body text-sm text-[var(--text-primary)] leading-snug">{outfit.name}</p>
+                    <p className="text-xs text-[var(--text-muted)] mt-1 line-clamp-2">{outfit.keyPieces.join(" · ")}</p>
+                  </motion.div>
+                ))}
+              </motion.div>
+            </motion.div>
+          )}
 
           <motion.div variants={fadeUp} initial="hidden" animate="show" className="glass-card p-6">
             <h3 className="type-label text-[var(--text-primary)] mb-3">ANALYSIS SUMMARY</h3>
