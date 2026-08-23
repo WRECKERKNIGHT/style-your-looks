@@ -63,7 +63,7 @@ export function UserAvatar({ compact = false }: { compact?: boolean }) {
     <Link
       href="/dashboard/profile"
       aria-label="Open profile"
-      className={`flex items-center gap-3 p-1.5 rounded-sm hover:bg-[var(--bg-tertiary)] transition-colors group ${
+      className={`flex items-center gap-3 p-1.5 rounded-full hover:bg-[var(--bg-tertiary)] transition-colors group ${
         compact ? "ml-auto" : ""
       }`}
     >
