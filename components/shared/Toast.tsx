@@ -114,6 +114,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                   </button>
                 )}
                 <button
+                  aria-label="Dismiss notification"
                   className="text-nexus-400/30 hover:text-nexus-400/60 dark:text-cosmic-muted/30 dark:hover:text-cosmic-muted/60 transition-colors shrink-0"
                   onClick={(e) => {
                     e.stopPropagation();
