@@ -48,6 +48,24 @@ ZERVEY (formerly AuraStyle) is a privacy-first style analysis platform. It perfo
 detection, virtual try-on, and outfit recommendations — entirely **on-device** via
 MediaPipe. Photos never leave the browser.
 
+## Design language
+
+The dashboard follows a **soft curvature system** driven by `--radius-*` tokens in
+`app/globals.css` (8px chips → 12px rows → 16px fields → 22px cards → 28px panels →
+999px pills). Shared primitives — `.glass-card`, `.card-nexus`, `.btn-*`,
+`.craft-input`, `.skeleton`, modals, toasts — all inherit it, so no surface should
+ship with hard corners again. The sidebar floats as a rounded rail on desktop and
+collapses into a curved drawer on mobile.
+
+Accessibility built in: a global `:focus-visible` caramel ring, `aria-live` toast
+announcements, Escape-to-close dialogs with focus restoration, labelled icon-only
+buttons, and `prefers-reduced-motion` support across tilts, parallax, score
+count-ups and carousels.
+
+Keyboard shortcuts: `Ctrl/Cmd+K` opens the command palette; `G` then a key jumps
+between modules (`G D` dashboard, `G F` Face IQ, `G J` Color Book, …). Chords are
+suppressed while typing.
+
 ## Tech stack
 
 - **Next.js 14 (App Router)** + React 18 + TypeScript
