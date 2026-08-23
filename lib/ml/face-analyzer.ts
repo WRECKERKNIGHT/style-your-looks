@@ -18,6 +18,11 @@ async function createLandmarker(delegate: "GPU" | "CPU"): Promise<FaceLandmarker
     },
     runningMode: "IMAGE",
     numFaces: 5,
+    // Lowered from the 0.5 defaults: real-world selfies in uneven lighting were
+    // silently dropping faces entirely, which users experienced as the engine
+    // "not detecting" them.
+    minFaceDetectionConfidence: 0.35,
+    minFacePresenceConfidence: 0.35,
     outputFaceBlendshapes: true,
     outputFacialTransformationMatrixes: true,
   });
@@ -43,6 +48,86 @@ export async function initializeFaceLandmarker(): Promise<FaceLandmarker> {
   })();
 
   return landmarkerInitPromise;
+}
+
+/**
+ * Tear down the cached landmarker instance. Used when inference starts failing
+ * mid-session (GPU context lost, WASM memory pressure) so the next call
+ * rebuilds a fresh engine instead of retrying against a dead instance.
+ */
+export function resetFaceEngine(): void {
+  try {
+    faceLandmarker?.close();
+  } catch {
+    // close() can throw if the underlying context is already gone — ignore.
+  }
+  faceLandmarker = null;
+  landmarkerInitPromise = null;
+}
+
+/**
+ * Run detect() with self-healing: if inference throws after the engine was
+ * working (the classic "engine disconnected" symptom), rebuild once on CPU and
+ * retry instead of surfacing a dead session to the user.
+ */
+async function runDetection(
+  source: HTMLCanvasElement,
+  initFallbackReason?: unknown
+): Promise<FaceLandmarkerResult> {
+  const landmarker = await initializeFaceLandmarker();
+  try {
+    return landmarker.detect(source);
+  } catch (err) {
+    console.warn(
+      "Face engine stopped responding — rebuilding a fresh instance:",
+      err ?? initFallbackReason
+    );
+    resetFaceEngine();
+    try {
+      faceLandmarker = await createLandmarker("CPU");
+      landmarkerInitPromise = null;
+      return faceLandmarker.detect(source);
+    } catch (rebuildErr) {
+      resetFaceEngine();
+      throw rebuildErr instanceof Error ? rebuildErr : new Error(String(rebuildErr));
+    }
+  }
+}
+
+/**
+ * Multi-person photos were scored against whichever face MediaPipe listed
+ * first (often the smallest/background one). Re-rank detected faces so the
+ * most prominent one — largest landmark bounding box — is always index 0,
+ * keeping every downstream scorer aligned across landmarks, blendshapes and
+ * transform matrices.
+ */
+function promotePrimaryFace(result: FaceLandmarkerResult): FaceLandmarkerResult {
+  const faces = result.faceLandmarks;
+  if (!faces || faces.length < 2) return result;
+
+  const areaOf = (lm: { x: number; y: number }[]): number => {
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (const p of lm) {
+      if (p.x < minX) minX = p.x;
+      if (p.y < minY) minY = p.y;
+      if (p.x > maxX) maxX = p.x;
+      if (p.y > maxY) maxY = p.y;
+    }
+    return Math.max(0, maxX - minX) * Math.max(0, maxY - minY);
+  };
+
+  const order = faces.map((_, i) => i).sort((a, b) => areaOf(faces[b]) - areaOf(faces[a]));
+  if (order[0] === 0) return result;
+
+  const reorder = <T,>(arr: T[] | undefined): T[] | undefined =>
+    arr ? order.map((i) => arr[i]) : arr;
+
+  return {
+    ...result,
+    faceLandmarks: reorder(faces)!,
+    faceBlendshapes: reorder(result.faceBlendshapes),
+    facialTransformationMatrixes: reorder(result.facialTransformationMatrixes),
+  };
 }
 
 export { prepareCanvas };
@@ -360,9 +445,8 @@ export async function analyzeFace(
 ): Promise<FaceLandmarkerResult> {
   onProgress?.(10);
 
-  let landmarker: FaceLandmarker;
   try {
-    landmarker = await initializeFaceLandmarker();
+    await initializeFaceLandmarker();
   } catch (err) {
     console.error("MediaPipe init error:", err);
     throw new Error(
@@ -382,7 +466,7 @@ export async function analyzeFace(
   }
 
   try {
-    const result = landmarker.detect(source);
+    const result = promotePrimaryFace(await runDetection(source));
     onProgress?.(100);
     return result;
   } catch (err) {
@@ -401,8 +485,7 @@ export async function analyzeFace(
 export async function detectFaceLandmarksOnly(
   imageSource: HTMLImageElement | HTMLCanvasElement
 ): Promise<number[][]> {
-  const landmarker = await initializeFaceLandmarker();
   const source = prepareCanvas(imageSource);
-  const result = landmarker.detect(source);
+  const result = promotePrimaryFace(await runDetection(source));
   return result.faceLandmarks?.[0]?.map((l) => [l.x, l.y, l.z]) || [];
 }
