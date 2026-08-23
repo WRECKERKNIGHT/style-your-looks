@@ -36,9 +36,14 @@ export default function RecommendationsPage() {
   // no placeholders: every entry is a scored recommendation.
   const weekPlan = useMemo(() => {
     if (!unlocked || !bodyResult) return null;
+    // Undertone is stored loosely typed; normalise to the recommender's
+    // union so unknown strings fall back to Neutral instead of erroring.
+    const raw = bodyResult.undertone;
+    const undertone: "Warm" | "Cool" | "Neutral" =
+      raw === "Warm" || raw === "Cool" ? raw : "Neutral";
     const faceShape = faceResult?.facialShape;
     return generateWeekPlan(
-      bodyResult.undertone,
+      undertone,
       bodyResult.bodyType,
       bodyResult.skinToneValue,
       faceShape

@@ -255,9 +255,15 @@ export default function DashboardHome() {
     const start = () => {
       void import("@/lib/ml/warmup").then((m) => m.warmupEngines());
     };
-    if ("requestIdleCallback" in window) {
-      const id = window.requestIdleCallback(start, { timeout: 4000 });
-      return () => window.cancelIdleCallback(id);
+    // requestIdleCallback is not in every DOM lib/target — feature-detect
+    // through an optional-typed alias and fall back to a timeout.
+    const idleWindow = window as Window & {
+      requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+      cancelIdleCallback?: (id: number) => void;
+    };
+    if (typeof idleWindow.requestIdleCallback === "function" && idleWindow.cancelIdleCallback) {
+      const id = idleWindow.requestIdleCallback(start, { timeout: 4000 });
+      return () => idleWindow.cancelIdleCallback?.(id);
     }
     const t = window.setTimeout(start, 1500);
     return () => window.clearTimeout(t);
