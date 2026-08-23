@@ -80,17 +80,17 @@ suppressed while typing.
 
 | Area | What it does |
 | --- | --- |
-| **FaceIQ** | 478-landmark mesh, golden-ratio scoring, face-shape detection (temples/cheekbones/jaw anchors), pose-aware symmetry engine, symmetry split, 3D face view, holographic laser-scan VFX, head-pose + axis readout |
+| **FaceIQ** | 478-landmark mesh, golden-ratio scoring, face-shape detection (temples/cheekbones/jaw anchors), pose-aware symmetry engine, symmetry split, 3D face view, holographic laser-scan VFX, head-pose + axis readout. Engine hardening: primary-face promotion for group photos, CPU-fallback recovery when inference dies mid-session, lowered detection thresholds, idle-time engine warm-up and gamma-corrected inputs |
 | **Body Analysis** | Body typing (mesomorph/ectomorph/endomorph), shoulder–waist–hip ratios, fit recommendations |
 | **Color Analysis** | Skin-tone scale, undertone, seasonal palette (color season detection) |
-| **Color Book** | Japanese book of colour combinations (色見本帖): 43 traditional dentōshoku colours with kanji/romaji/hex swatches and curated outfit recipes in two mirrored volumes — Men (紳士篇) and Women (淑女篇) — presented as a 50/50 split-screen book with season filters (春夏秋冬), detail modals and copyable palettes |
+| **Color Book** | Japanese book of colour combinations (色見本帖): 43 traditional dentōshoku colours with kanji/romaji/hex swatches and curated outfit recipes in two mirrored volumes — Men (紳士篇) and Women (淑女篇). Each recipe renders as an SVG flat-lay illustration filled with the exact palette hexes; cards carry season badges, the detail sheet shows preview + hexes with a copyable palette, and Tab is trapped inside the dialog |
 | **Style DNA** | Trend lines from your saved analysis history |
 | **Virtual Try-On** | Face-mapped hair, glasses and glow overlays on your own photo |
 | **Hair Preview** | Preview hairstyles against your face |
-| **Grooming** | Facial-hair style suggestions |
-| **3D Studio** | Fully parametric virtual twin — body sliders, 15 hairstyles, 9 glasses frames, 14 garment items; render or export a preview PNG |
+| **Grooming** | Facial-hair style suggestions scored against your detected face shape — seeded from your saved Face IQ scan even before you upload a photo |
+| **3D Studio** | Two modes: **Real Mannequin** — a locally served rigged glTF human with skeleton walk animation, turntable, camera presets and PNG capture (precached by the service worker for offline use); **Parametric Fit Form** — body sliders, 15 hairstyles, 9 glasses frames, 14 garment items. Both share the same lit stage and export previews |
 | **Mannequin / Outfit Lab** | Outfit silhouettes and color-stack previews |
-| **Recommendations** | Personalized outfit recommendations from analysis results |
+| **Recommendations** | Personalized outfit picks scored from undertone, body type, skin tone **and face shape**, plus a deterministic week plan (top match per day) generated from the same measured profile |
 | **Community** | Feed, members and tags (sample showcase data) |
 
 ## Demo mode isolation
