@@ -140,7 +140,10 @@ function MannequinStage() {
 
     lastFrameRef.current = performance.now();
     const loop = (now: number) => {
-      const dt = (now - lastFrameRef.current) / 1000;
+      // Clamp dt: requestAnimationFrame pauses in hidden tabs, so without a
+      // cap the walk clip would fast-forward through every hidden second the
+      // moment the user returns.
+      const dt = Math.min((now - lastFrameRef.current) / 1000, 0.1);
       lastFrameRef.current = now;
       handleRef.current?.update(playingRef.current ? dt : 0);
       studio.controls.update();
