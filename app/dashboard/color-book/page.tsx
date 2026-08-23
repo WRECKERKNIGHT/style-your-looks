@@ -17,6 +17,7 @@ import {
   type OutfitCombo,
 } from "@/lib/data/japanese-color-book";
 import { useToast } from "@/components/shared/Toast";
+import { OutfitIllustration } from "@/components/color-book/OutfitIllustration";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -39,21 +40,36 @@ function SwatchStrip({ combo }: { combo: OutfitCombo }) {
 }
 
 function ComboCard({ combo, onOpen }: { combo: OutfitCombo; onOpen: () => void }) {
+  const season = SEASONS.find((s) => s.id === combo.season);
   return (
     <button
       onClick={onOpen}
-      className="group w-full text-left border border-[var(--border-primary)] bg-[var(--bg-tertiary)] p-4 rounded-[var(--radius-md)] transition-all hover:border-[var(--accent-aurum)]/50 hover:shadow-aurum"
+      className="group w-full text-left border border-[var(--border-primary)] bg-[var(--bg-secondary)] rounded-[var(--radius-md)] overflow-hidden transition-all hover:border-[var(--accent-aurum)]/50 hover:shadow-aurum"
     >
-      <div className="flex items-baseline justify-between gap-2 mb-1">
-        <span className="text-sm font-body font-bold text-[var(--text-primary)] tracking-wide group-hover:text-[var(--accent-aurum)] transition-colors">
-          {combo.name}
-        </span>
-        <span className="font-display text-lg text-[var(--accent-mocha)] shrink-0">{combo.kanji}</span>
+      <div className="aspect-[4/3] border-b border-[var(--border-primary)] overflow-hidden">
+        <div className="w-full h-full transition-transform duration-500 ease-out group-hover:scale-[1.03]">
+          <OutfitIllustration combo={combo} />
+        </div>
       </div>
-      <p className="type-mono text-[0.55rem] text-[var(--text-muted)] tracking-widest uppercase mb-3">
-        {combo.romaji} &middot; {combo.occasion}
-      </p>
-      <SwatchStrip combo={combo} />
+      <div className="p-4">
+        <div className="flex items-baseline justify-between gap-2 mb-1">
+          <span className="text-sm font-body font-bold text-[var(--text-primary)] tracking-wide group-hover:text-[var(--accent-aurum)] transition-colors">
+            {combo.name}
+          </span>
+          <span className="font-display text-lg text-[var(--accent-mocha)] shrink-0">{combo.kanji}</span>
+        </div>
+        <div className="flex items-center gap-2 mb-3 flex-wrap">
+          <span className="type-mono text-[0.5rem] tracking-widest uppercase text-[var(--text-muted)]">
+            {combo.romaji}
+          </span>
+          {season && (
+            <span className="type-mono text-[0.5rem] tracking-widest uppercase px-1.5 py-0.5 rounded-full border border-[var(--border-primary)] text-[var(--accent-mocha)]">
+              {season.label} {season.kanji}
+            </span>
+          )}
+        </div>
+        <SwatchStrip combo={combo} />
+      </div>
     </button>
   );
 }
