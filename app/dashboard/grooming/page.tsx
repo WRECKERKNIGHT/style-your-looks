@@ -4,7 +4,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { ImageUploader } from "@/components/shared/ImageUploader";
 import { useAnalysisStore } from "@/store/analysis-store";
 import { BEARD_STYLES, MUSTACHE_STYLES } from "@/lib/constants";
-import { initializeFaceLandmarker } from "@/lib/ml/face-analyzer";
+import { analyzeFace } from "@/lib/ml/face-analyzer";
 import { drawFacialHair, detectHairColor, scoreGroomingStyles, type GroomingScore } from "@/lib/ml/facial-hair";
 import { calculateFaceShape } from "@/lib/ml/face-geometry";
 import { motion } from "framer-motion";
@@ -36,6 +36,9 @@ export default function GroomingPage() {
   const [groomingScores, setGroomingScores] = useState<GroomingScore[]>([]);
   const [faceShape, setFaceShape] = useState<string | null>(null);
   const [analysisComplete, setAnalysisComplete] = useState(false);
+  // Where the current face shape came from — drives the badge copy so users
+  // know whether advice is from this photo or their saved profile.
+  const [shapeSource, setShapeSource] = useState<"photo" | "profile" | null>(null);
 
   const analyzePhoto = useCallback(async (imageData: string) => {
     setIsAnalyzing(true);
@@ -44,8 +47,9 @@ export default function GroomingPage() {
       const img = new Image();
       img.onload = async () => {
         try {
-          const landmarker = await initializeFaceLandmarker();
-          const result = landmarker.detect(img);
+          // Hardened engine path: preprocessing, primary-face promotion and
+          // CPU-fallback recovery all apply here too.
+          const result = await analyzeFace(img);
           setFaceResult(result);
           const canvas = document.createElement("canvas");
           canvas.width = img.naturalWidth;
@@ -59,6 +63,7 @@ export default function GroomingPage() {
             ? calculateFaceShape(lm.map((l) => [l.x, l.y, l.z]))
             : useAnalysisStore.getState().faceResult?.facialShape;
           setFaceShape(shape ?? null);
+          setShapeSource(lm ? "photo" : "profile");
           const scores = scoreGroomingStyles(shape);
           setGroomingScores(scores);
         } finally {
@@ -83,6 +88,18 @@ export default function GroomingPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPhoto, faceResult]);
+
+  // No photo yet? Seed recommendations from the user's saved Face IQ profile
+  // so the studio is immediately useful instead of an empty upload prompt.
+  useEffect(() => {
+    if (currentPhoto || faceShape) return;
+    const savedShape = useAnalysisStore.getState().faceResult?.facialShape;
+    if (!savedShape) return;
+    setFaceShape(savedShape);
+    setShapeSource("profile");
+    setGroomingScores(scoreGroomingStyles(savedShape));
+    setAnalysisComplete(true);
+  }, [currentPhoto, faceShape]);
 
   useEffect(() => {
     if (!faceResult || !currentPhoto || !canvasRef.current) return;
@@ -163,7 +180,10 @@ export default function GroomingPage() {
                 <h3 className="type-heading text-[var(--text-primary)] tracking-tight">RECOMMENDED FOR YOUR FACE</h3>
                 {faceShape && (
                   <span className="inline-flex items-center px-2.5 py-1 border border-[var(--border-primary)] bg-[var(--bg-tertiary)] text-[0.6rem] font-mono tracking-widest text-[var(--text-muted)]">
-                    {faceShape.toUpperCase()} FACE · DETECTED FROM THIS PHOTO
+                    {faceShape.toUpperCase()} FACE ·{" "}
+                    {shapeSource === "photo"
+                      ? "DETECTED FROM THIS PHOTO"
+                      : "FROM YOUR SAVED FACE IQ SCAN"}
                   </span>
                 )}
               </div>
