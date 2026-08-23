@@ -27,6 +27,10 @@ export function getSourceSize(
  * Draw the source onto a downscaled canvas (max dimension 1600px).
  * Prevents oversized phone photos from blowing up canvas memory, slowing
  * getImageData, or exceeding canvas limits in the browser.
+ *
+ * Sources that are already canvases within the size budget (e.g. the
+ * preprocessed output of preprocessImage) are returned untouched instead of
+ * being re-drawn through a second full-size canvas copy.
  */
 export function prepareCanvas(
   source: HTMLImageElement | HTMLVideoElement | HTMLCanvasElement,
@@ -34,6 +38,10 @@ export function prepareCanvas(
 ): HTMLCanvasElement {
   const { width: sw, height: sh } = getSourceSize(source);
   if (!sw || !sh) throw new Error("Could not read the photo dimensions.");
+
+  if (source instanceof HTMLCanvasElement && Math.max(sw, sh) <= maxDim) {
+    return source;
+  }
 
   const scale = Math.min(1, maxDim / Math.max(sw, sh));
   const canvas = document.createElement("canvas");
