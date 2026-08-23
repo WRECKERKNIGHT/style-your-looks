@@ -174,7 +174,7 @@ export function ImageUploader({
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onClick={() => inputRef.current?.click()}
-            className={`relative cursor-pointer border-2 border-dashed transition-all duration-500 ${aspectRatioClasses[aspectRatio]} min-h-[320px] flex flex-col items-center justify-center gap-5 p-10 ${
+            className={`relative cursor-pointer border-2 border-dashed transition-all duration-500 ${aspectRatioClasses[aspectRatio]} min-h-[320px] flex flex-col items-center justify-center gap-5 p-10 rounded-[var(--radius-xl)] ${
               dragOver
                 ? "border-aurum-500 bg-aurum-500/[0.04] shadow-aurum"
                 : "border-light-border/30 dark:border-cosmic-border/30 bg-light-base/30 dark:bg-cosmic-base/30 backdrop-blur-sm hover:border-aurum-500/40 hover:bg-light-surface/50 dark:hover:bg-cosmic-surface/50"
@@ -185,7 +185,7 @@ export function ImageUploader({
           >
             <motion.div
               animate={dragOver ? { scale: 1.1, rotate: -5 } : { scale: 1, rotate: 0 }}
-              className="w-20 h-20 border border-light-border/20 dark:border-cosmic-border/20 bg-light-surface/50 dark:bg-cosmic-surface/50 backdrop-blur-sm flex items-center justify-center rounded-sm"
+              className="w-20 h-20 border border-light-border/20 dark:border-cosmic-border/20 bg-light-surface/50 dark:bg-cosmic-surface/50 backdrop-blur-sm flex items-center justify-center rounded-full"
             >
               <Upload className="w-8 h-8 text-aurum-500/60" />
             </motion.div>
@@ -244,7 +244,7 @@ export function ImageUploader({
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.96 }}
-            className="relative overflow-hidden border border-light-border/20 dark:border-cosmic-border/20 bg-light-surface/50 dark:bg-cosmic-surface/50 backdrop-blur-sm rounded-sm card-nexus"
+            className="relative overflow-hidden border border-light-border/20 dark:border-cosmic-border/20 bg-light-surface/50 dark:bg-cosmic-surface/50 backdrop-blur-sm rounded-[var(--radius-lg)] card-nexus"
           >
             <div
               className={`relative ${isZoomed ? "cursor-zoom-out" : "cursor-zoom-in"} ${aspectRatioClasses[aspectRatio]}`}
@@ -263,7 +263,7 @@ export function ImageUploader({
             <div className="absolute top-3 right-3 flex gap-2">
               <button
                 onClick={() => setIsZoomed(!isZoomed)}
-                className="w-8 h-8 bg-light-surface/80 dark:bg-cosmic-surface/80 backdrop-blur-sm border border-light-border/20 dark:border-cosmic-border/20 flex items-center justify-center hover:bg-light-surface dark:hover:bg-cosmic-surface transition-colors rounded-sm"
+                className="w-8 h-8 bg-light-surface/80 dark:bg-cosmic-surface/80 backdrop-blur-sm border border-light-border/20 dark:border-cosmic-border/20 flex items-center justify-center hover:bg-light-surface dark:hover:bg-cosmic-surface transition-colors rounded-full"
               >
                 {isZoomed ? (
                   <Maximize2 className="w-3.5 h-3.5 text-nexus-400/60 dark:text-cosmic-muted/60" />
@@ -273,7 +273,7 @@ export function ImageUploader({
               </button>
               <button
                 onClick={handleClear}
-                className="w-8 h-8 bg-light-surface/80 dark:bg-cosmic-surface/80 backdrop-blur-sm border border-light-border/20 dark:border-cosmic-border/20 flex items-center justify-center hover:bg-light-surface dark:hover:bg-cosmic-surface transition-colors rounded-sm"
+                className="w-8 h-8 bg-light-surface/80 dark:bg-cosmic-surface/80 backdrop-blur-sm border border-light-border/20 dark:border-cosmic-border/20 flex items-center justify-center hover:bg-light-surface dark:hover:bg-cosmic-surface transition-colors rounded-full"
               >
                 <X className="w-3.5 h-3.5 text-nexus-400/60 dark:text-cosmic-muted/60" />
               </button>
