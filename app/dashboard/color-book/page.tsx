@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BookOpen, X, Copy, Check, Sparkles } from "lucide-react";
 import { SectionScrollProgress } from "@/components/shared/ScrollEffects";
@@ -176,6 +176,20 @@ function BookPanel({
 function ComboModal({ combo, onClose }: { combo: OutfitCombo | null; onClose: () => void }) {
   const { addToast } = useToast();
   const [copied, setCopied] = useState(false);
+
+  // Escape closes the sheet and focus returns to the card that opened it.
+  useEffect(() => {
+    if (!combo) return;
+    const opener = document.activeElement as HTMLElement | null;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      opener?.focus?.();
+    };
+  }, [combo, onClose]);
 
   if (!combo) return null;
 
