@@ -31,7 +31,7 @@ export default function Error({
             <RefreshCw className="w-4 h-4" />
             TRY AGAIN
           </button>
-          <Link href="/" className="inline-flex items-center gap-2 px-6 py-3 bg-cream dark:bg-dark-surface text-espresso dark:text-dark-text font-body text-sm tracking-wider uppercase border border-tan dark:border-dark-border hover:bg-tan/10 transition-colors rounded-sm">
+          <Link href="/" className="inline-flex items-center gap-2 px-6 py-3 bg-cream dark:bg-dark-surface text-espresso dark:text-dark-text font-body text-sm tracking-wider uppercase border border-tan dark:border-dark-border hover:bg-tan/10 transition-colors rounded-[var(--radius-xs)]">
             <Home className="w-4 h-4" />
             GO HOME
           </Link>

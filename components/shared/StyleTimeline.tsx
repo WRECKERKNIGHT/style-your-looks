@@ -131,7 +131,7 @@ export function StyleTimeline() {
       initial={{ opacity: 0, y: 20 }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      className="relative overflow-hidden rounded-sm bg-[var(--bg-secondary)] border border-[var(--border-primary)] shadow-paper p-6"
+      className="relative overflow-hidden rounded-[var(--radius-xs)] bg-[var(--bg-secondary)] border border-[var(--border-primary)] shadow-paper p-6"
     >
       <div className="flex items-center gap-2 mb-8">
         <Calendar className="w-4 h-4 text-[var(--accent-caramel)]" />
@@ -143,7 +143,7 @@ export function StyleTimeline() {
 
       {entries.length === 0 ? (
         <div className="flex flex-col items-center text-center py-10">
-          <div className="w-12 h-12 rounded-sm border border-[var(--border-primary)] bg-[color-mix(in_srgb,var(--accent-caramel)_6%,transparent)] flex items-center justify-center mb-4">
+          <div className="w-12 h-12 rounded-[var(--radius-xs)] border border-[var(--border-primary)] bg-[color-mix(in_srgb,var(--accent-caramel)_6%,transparent)] flex items-center justify-center mb-4">
             <History className="w-5 h-5 text-[var(--accent-caramel)]" />
           </div>
           <h3 className="type-label text-[var(--text-primary)] mb-2">NO SAVED ANALYSES YET</h3>

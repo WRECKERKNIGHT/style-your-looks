@@ -138,7 +138,7 @@ export function ActionPlan() {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.15 }}
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      className="bg-light-surface dark:bg-cosmic-surface border border-aurum-500/25 rounded-sm card-nexus p-6"
+      className="bg-light-surface dark:bg-cosmic-surface border border-aurum-500/25 rounded-[var(--radius-xs)] card-nexus p-6"
     >
       <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
         <div>
@@ -174,7 +174,7 @@ export function ActionPlan() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {columns.map((col) => (
-          <div key={col.title} className="bg-light-base dark:bg-cosmic-elevated border border-[var(--border-primary)] rounded-sm p-4">
+          <div key={col.title} className="bg-light-base dark:bg-cosmic-elevated border border-[var(--border-primary)] rounded-[var(--radius-xs)] p-4">
             <div className="flex items-center gap-2 mb-4">
               <col.icon className="w-4 h-4 text-[var(--accent-aurum)]" />
               <span className="text-xs font-bold text-[var(--text-primary)] font-body tracking-wider uppercase">

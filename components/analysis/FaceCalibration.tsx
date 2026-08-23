@@ -43,7 +43,7 @@ export function FaceCalibration({ onBegin }: { onBegin: () => void }) {
         variants={fadeUp}
         initial="hidden"
         animate="show"
-        className="relative overflow-hidden rounded-sm bg-[var(--bg-secondary)] border border-[var(--border-primary)] shadow-paper-lg p-8 md:p-12"
+        className="relative overflow-hidden rounded-[var(--radius-xs)] bg-[var(--bg-secondary)] border border-[var(--border-primary)] shadow-paper-lg p-8 md:p-12"
       >
         <div className="absolute inset-0 grid-bg opacity-30 pointer-events-none" />
         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-aurum-400/60 to-transparent" />

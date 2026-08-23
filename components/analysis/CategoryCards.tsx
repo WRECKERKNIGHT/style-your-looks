@@ -64,7 +64,7 @@ export function CategoryCards() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.2 }}
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className="bg-light-surface dark:bg-cosmic-surface border border-aurum-500/25 rounded-sm card-nexus p-6"
+        className="bg-light-surface dark:bg-cosmic-surface border border-aurum-500/25 rounded-[var(--radius-xs)] card-nexus p-6"
       >
         <div className="flex items-center gap-2 mb-4">
           <Sparkles className="w-5 h-5 text-aurum-500" />
@@ -96,7 +96,7 @@ export function CategoryCards() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.2 }}
         transition={{ duration: 0.5, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
-        className="bg-light-surface dark:bg-cosmic-surface border border-[var(--border-primary)] rounded-sm card-nexus p-6"
+        className="bg-light-surface dark:bg-cosmic-surface border border-[var(--border-primary)] rounded-[var(--radius-xs)] card-nexus p-6"
       >
         <div className="flex items-center gap-2 mb-4">
           <TrendingUp className="w-5 h-5 text-nexus-400" />
@@ -128,7 +128,7 @@ export function CategoryCards() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.2 }}
         transition={{ duration: 0.5, delay: 0.16, ease: [0.16, 1, 0.3, 1] }}
-        className="bg-gradient-to-br from-aurum-500/[0.08] to-transparent border border-aurum-500/30 rounded-sm card-nexus p-6"
+        className="bg-gradient-to-br from-aurum-500/[0.08] to-transparent border border-aurum-500/30 rounded-[var(--radius-xs)] card-nexus p-6"
       >
         <div className="flex items-center gap-2 mb-4">
           <Wand2 className="w-5 h-5 text-aurum-500" />

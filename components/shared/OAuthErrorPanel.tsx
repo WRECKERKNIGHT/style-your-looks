@@ -68,7 +68,7 @@ export function OAuthErrorPanel({
   };
 
   return (
-    <div className="p-4 mb-4 rounded-sm bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800/60">
+    <div className="p-4 mb-4 rounded-[var(--radius-xs)] bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800/60">
       <div className="flex items-start gap-3">
         <AlertTriangle className="w-5 h-5 text-red-500 dark:text-red-400 shrink-0 mt-0.5" />
         <div className="flex-1 min-w-0">
@@ -105,7 +105,7 @@ export function OAuthErrorPanel({
         <button
           type="button"
           onClick={() => window.open("https://console.cloud.google.com/apis/credentials", "_blank", "noopener")}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-red-300 dark:border-red-700/60 text-red-600 dark:text-red-400 text-[0.65rem] font-mono tracking-wider hover:bg-red-100 dark:hover:bg-red-950/40 transition-colors rounded-sm"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-red-300 dark:border-red-700/60 text-red-600 dark:text-red-400 text-[0.65rem] font-mono tracking-wider hover:bg-red-100 dark:hover:bg-red-950/40 transition-colors rounded-[var(--radius-xs)]"
         >
           <ExternalLink className="w-3 h-3" />
           OPEN GOOGLE CONSOLE
@@ -113,7 +113,7 @@ export function OAuthErrorPanel({
         <button
           type="button"
           onClick={copyRedirect}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-red-300 dark:border-red-700/60 text-red-600 dark:text-red-400 text-[0.65rem] font-mono tracking-wider hover:bg-red-100 dark:hover:bg-red-950/40 transition-colors rounded-sm"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-red-300 dark:border-red-700/60 text-red-600 dark:text-red-400 text-[0.65rem] font-mono tracking-wider hover:bg-red-100 dark:hover:bg-red-950/40 transition-colors rounded-[var(--radius-xs)]"
         >
           <ClipboardList className="w-3 h-3" />
           {copied ? "COPIED" : "COPY CALLBACK URL"}
@@ -123,7 +123,7 @@ export function OAuthErrorPanel({
             type="button"
             onClick={onRetry}
             disabled={retrying}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-500 text-white text-[0.65rem] font-mono tracking-wider hover:bg-red-600 transition-colors disabled:opacity-50 rounded-sm"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-500 text-white text-[0.65rem] font-mono tracking-wider hover:bg-red-600 transition-colors disabled:opacity-50 rounded-[var(--radius-xs)]"
           >
             <RefreshCw className={`w-3 h-3 ${retrying ? "animate-spin" : ""}`} />
             {retrying ? "RETRYING…" : "TRY AGAIN"}
@@ -147,7 +147,7 @@ export function OAuthErrorPanel({
 
 export function OAuthStatusBadge() {
   return (
-    <div className="flex items-center gap-2 p-2 mb-2 rounded-sm bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60">
+    <div className="flex items-center gap-2 p-2 mb-2 rounded-[var(--radius-xs)] bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60">
       <ShieldCheck className="w-4 h-4 text-emerald-500 dark:text-emerald-400 shrink-0" />
       <span className="text-[0.65rem] font-mono text-emerald-700 dark:text-emerald-300 tracking-wider uppercase">
         OAuth configured

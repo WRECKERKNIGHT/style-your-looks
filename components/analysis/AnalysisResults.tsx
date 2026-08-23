@@ -54,7 +54,7 @@ function CollapsibleSection({
 
   return (
     <ScrollReveal>
-      <div className="bg-light-surface dark:bg-cosmic-surface border border-light-border dark:border-cosmic-border rounded-sm overflow-hidden card-nexus">
+      <div className="bg-light-surface dark:bg-cosmic-surface border border-light-border dark:border-cosmic-border rounded-[var(--radius-xs)] overflow-hidden card-nexus">
         <button
           onClick={() => setOpen(!open)}
           className="w-full p-6 text-left hover:bg-light-base/30 dark:hover:bg-cosmic-elevated/30 transition-colors"
@@ -102,7 +102,7 @@ function PercentileBar({ label, percentile }: { label: string; percentile: numbe
     percentile >= 50 ? "#8A5F3D" :
     "#6F4A30";
   return (
-    <div className="flex items-center gap-4 bg-light-base dark:bg-cosmic-elevated p-4 border border-light-border dark:border-cosmic-border rounded-sm">
+    <div className="flex items-center gap-4 bg-light-base dark:bg-cosmic-elevated p-4 border border-light-border dark:border-cosmic-border rounded-[var(--radius-xs)]">
       <span className="text-sm font-body text-nexus-800 dark:text-white min-w-[140px]">{label}</span>
       <div className="flex-1 h-3 bg-light-border dark:bg-cosmic-border rounded-full overflow-hidden">
         <motion.div
@@ -136,7 +136,7 @@ export function AnalysisResults() {
       <CategoryCards />
 
       <ScrollReveal>
-        <div className="bg-light-surface dark:bg-cosmic-surface p-10 border border-light-border dark:border-cosmic-border rounded-sm card-nexus">
+        <div className="bg-light-surface dark:bg-cosmic-surface p-10 border border-light-border dark:border-cosmic-border rounded-[var(--radius-xs)] card-nexus">
           <div className="flex flex-col md:flex-row items-center gap-10">
             <ScoreGauge score={faceResult.overallScore} size="lg" label="Overall FaceIQ" />
             <div className="flex-1 space-y-5">
@@ -153,7 +153,7 @@ export function AnalysisResults() {
                 />
               </div>
 
-              <div className="bg-light-base dark:bg-cosmic-elevated p-5 border border-light-border dark:border-cosmic-border rounded-sm">
+              <div className="bg-light-base dark:bg-cosmic-elevated p-5 border border-light-border dark:border-cosmic-border rounded-[var(--radius-xs)]">
                 <span className="text-aurum-500 font-body font-bold text-sm tracking-widest uppercase">
                   {faceResult.overallRating}
                 </span>
@@ -162,7 +162,7 @@ export function AnalysisResults() {
                 </p>
               </div>
 
-              <div className="bg-nexus-400/10 p-5 border border-aurum-500/20 rounded-sm">
+              <div className="bg-nexus-400/10 p-5 border border-aurum-500/20 rounded-[var(--radius-xs)]">
                 <div className="flex items-center gap-2 mb-2">
                   <Percent className="w-5 h-5 text-aurum-500" />
                   <span className="text-sm font-body font-bold text-aurum-500 tracking-wider">SCORE INDEX</span>
@@ -188,7 +188,7 @@ export function AnalysisResults() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ delay: 0.15 + i * 0.1, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                    className="bg-light-base dark:bg-cosmic-elevated p-4 border border-light-border dark:border-cosmic-border rounded-sm"
+                    className="bg-light-base dark:bg-cosmic-elevated p-4 border border-light-border dark:border-cosmic-border rounded-[var(--radius-xs)]"
                   >
                     <item.icon className="w-4 h-4 text-aurum-500 mb-1.5" />
                     <span className="text-nexus-400 dark:text-cosmic-muted text-xs font-body tracking-wider uppercase">{item.label}</span>
@@ -233,7 +233,7 @@ export function AnalysisResults() {
                         title={`${level.label} (Level ${level.id})`}
                       >
                         <div
-                          className="h-9 rounded-sm border transition-all duration-300"
+                          className="h-9 rounded-[var(--radius-xs)] border transition-all duration-300"
                           style={{
                             background: level.hex,
                             borderColor: detected ? "var(--color-aurum, #C9A227)" : "rgba(255,255,255,0.15)",
@@ -297,7 +297,7 @@ export function AnalysisResults() {
           Detected live from 478-point facial blendshapes during analysis.
         </p>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          <div className="bg-light-base dark:bg-cosmic-elevated p-5 border border-aurum-500/20 rounded-sm relative overflow-hidden">
+          <div className="bg-light-base dark:bg-cosmic-elevated p-5 border border-aurum-500/20 rounded-[var(--radius-xs)] relative overflow-hidden">
             <span className="absolute top-3 right-3 flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-aurum-500 animate-pulse" />
               <span className="text-[0.55rem] font-mono text-aurum-500 tracking-widest">LIVE</span>
@@ -323,7 +323,7 @@ export function AnalysisResults() {
             { label: "Brow Raise", value: faceResult.blendshapes.browRaise, color: "bg-aurum-600" },
             { label: "Mouth Openness", value: faceResult.blendshapes.mouthOpenness, color: "bg-nexus-500" },
           ].map((item, i) => (
-            <div key={item.label} className="bg-light-base dark:bg-cosmic-elevated p-5 border border-light-border dark:border-cosmic-border rounded-sm">
+            <div key={item.label} className="bg-light-base dark:bg-cosmic-elevated p-5 border border-light-border dark:border-cosmic-border rounded-[var(--radius-xs)]">
               <span className="text-xs font-body text-nexus-400 dark:text-cosmic-muted tracking-wider uppercase">{item.label}</span>
               <p className="font-body font-bold text-nexus-800 dark:text-white text-xl mt-1">{Math.round(item.value * 100)}%</p>
               <div className="h-2 bg-light-border dark:bg-cosmic-border rounded-full mt-2 overflow-hidden">
@@ -337,7 +337,7 @@ export function AnalysisResults() {
               </div>
             </div>
           ))}
-          <div className="bg-light-base dark:bg-cosmic-elevated p-5 border border-light-border dark:border-cosmic-border rounded-sm">
+          <div className="bg-light-base dark:bg-cosmic-elevated p-5 border border-light-border dark:border-cosmic-border rounded-[var(--radius-xs)]">
             <span className="text-xs font-body text-nexus-400 dark:text-cosmic-muted tracking-wider uppercase">Head Tilt</span>
             <p className="font-body font-bold text-nexus-800 dark:text-white text-xl mt-1">{faceResult.blendshapes.headTilt}deg</p>
             <span className="text-xs text-nexus-400 dark:text-cosmic-muted font-mono">pose correction applied</span>
@@ -398,7 +398,7 @@ export function AnalysisResults() {
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                className="flex justify-between items-center bg-light-base dark:bg-cosmic-elevated p-4 border border-light-border dark:border-cosmic-border rounded-sm"
+                className="flex justify-between items-center bg-light-base dark:bg-cosmic-elevated p-4 border border-light-border dark:border-cosmic-border rounded-[var(--radius-xs)]"
               >
                 <span className="text-sm font-body text-nexus-800 dark:text-white">{item.label}</span>
                 <span className="font-body font-bold text-aurum-500">
@@ -428,7 +428,7 @@ export function AnalysisResults() {
             { label: "Cross-Photo Consistency", value: faceResult.consistencyScore, hint: "/10", decimals: 1 },
             { label: "Analysis Confidence", value: faceResult.analysisConfidence, hint: "%", decimals: 0 },
           ].map((item) => (
-            <div key={item.label} className="bg-light-base dark:bg-cosmic-elevated p-5 border border-light-border dark:border-cosmic-border rounded-sm">
+            <div key={item.label} className="bg-light-base dark:bg-cosmic-elevated p-5 border border-light-border dark:border-cosmic-border rounded-[var(--radius-xs)]">
               <span className="text-xs font-body text-nexus-400 dark:text-cosmic-muted tracking-wider uppercase">{item.label}</span>
               <div className="flex items-baseline gap-1 mt-1">
                 <AnimatedCounter
@@ -457,7 +457,7 @@ export function AnalysisResults() {
             Lower spread means more reliable scoring for that feature.
           </p>
         )}
-        <div className="mt-5 bg-aurum-500/5 border border-aurum-500/20 p-4 rounded-sm">
+        <div className="mt-5 bg-aurum-500/5 border border-aurum-500/20 p-4 rounded-[var(--radius-xs)]">
           <p className="text-xs text-nexus-400 dark:text-cosmic-muted font-body leading-relaxed">
             Scores are estimates from 2D geometry and are sensitive to pose, lens distortion, and lighting.
             They describe facial proportions for styling guidance — not a measure of worth.
@@ -499,7 +499,7 @@ export function AnalysisResults() {
             ].map((check) => {
               const status = check.ok ? "pass" : check.warn ? "warn" : "fail";
               return (
-                <div key={check.label} className="flex items-center gap-4 bg-light-base dark:bg-cosmic-elevated p-4 border border-light-border dark:border-cosmic-border rounded-sm">
+                <div key={check.label} className="flex items-center gap-4 bg-light-base dark:bg-cosmic-elevated p-4 border border-light-border dark:border-cosmic-border rounded-[var(--radius-xs)]">
                   <div
                     className={`w-8 h-8 rounded-full flex items-center justify-center border shrink-0 ${
                       status === "pass"
@@ -522,7 +522,7 @@ export function AnalysisResults() {
                     <p className="text-xs font-mono text-nexus-400 dark:text-cosmic-muted mt-0.5">{check.value}</p>
                   </div>
                   <span
-                    className={`shrink-0 text-[0.6rem] font-mono tracking-widest px-2 py-0.5 rounded-sm border ${
+                    className={`shrink-0 text-[0.6rem] font-mono tracking-widest px-2 py-0.5 rounded-[var(--radius-xs)] border ${
                       status === "pass"
                         ? "text-emerald-500 border-emerald-500/30"
                         : status === "warn"
@@ -571,7 +571,7 @@ export function AnalysisResults() {
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
               {faceResult.faceShapeDetails.characteristics.map((c, i) => (
-                <div key={i} className="flex items-center gap-2 text-sm text-nexus-800 dark:text-white font-body bg-light-base dark:bg-cosmic-elevated p-3 border border-light-border dark:border-cosmic-border rounded-sm">
+                <div key={i} className="flex items-center gap-2 text-sm text-nexus-800 dark:text-white font-body bg-light-base dark:bg-cosmic-elevated p-3 border border-light-border dark:border-cosmic-border rounded-[var(--radius-xs)]">
                   <div className="w-1.5 h-1.5 bg-aurum-500 rounded-full flex-shrink-0" />
                   {c}
                 </div>
@@ -580,7 +580,7 @@ export function AnalysisResults() {
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-light-base dark:bg-cosmic-elevated p-5 border border-light-border dark:border-cosmic-border rounded-sm">
+          <div className="bg-light-base dark:bg-cosmic-elevated p-5 border border-light-border dark:border-cosmic-border rounded-[var(--radius-xs)]">
             <h4 className="text-xs font-body font-bold text-aurum-500 tracking-wider mb-3">IDEAL HAIRSTYLES</h4>
             <ul className="space-y-2">
               {faceResult.faceShapeDetails.idealHairstyles.map((h, i) => (
@@ -591,7 +591,7 @@ export function AnalysisResults() {
               ))}
             </ul>
           </div>
-          <div className="bg-light-base dark:bg-cosmic-elevated p-5 border border-light-border dark:border-cosmic-border rounded-sm">
+          <div className="bg-light-base dark:bg-cosmic-elevated p-5 border border-light-border dark:border-cosmic-border rounded-[var(--radius-xs)]">
             <h4 className="text-xs font-body font-bold text-aurum-600 tracking-wider mb-3">IDEAL GLASSES</h4>
             <ul className="space-y-2">
               {faceResult.faceShapeDetails.idealGlasses.map((g, i) => (
@@ -639,7 +639,7 @@ export function AnalysisResults() {
             />
           </div>
           <div className="lg:col-span-2 space-y-4">
-            <div className="bg-light-base dark:bg-cosmic-elevated p-5 border border-aurum-500/20 rounded-sm">
+            <div className="bg-light-base dark:bg-cosmic-elevated p-5 border border-aurum-500/20 rounded-[var(--radius-xs)]">
               <div className="flex items-center gap-2 mb-3">
                 <Award className="w-5 h-5 text-aurum-500" />
                 <span className="text-xs font-body font-bold text-aurum-500 tracking-wider">SIGNATURE STRENGTHS</span>
@@ -659,7 +659,7 @@ export function AnalysisResults() {
                   ))}
               </div>
             </div>
-            <div className="bg-light-base dark:bg-cosmic-elevated p-5 border border-light-border dark:border-cosmic-border rounded-sm">
+            <div className="bg-light-base dark:bg-cosmic-elevated p-5 border border-light-border dark:border-cosmic-border rounded-[var(--radius-xs)]">
               <div className="flex items-center gap-2 mb-3">
                 <Target className="w-5 h-5 text-nexus-400" />
                 <span className="text-xs font-body font-bold text-nexus-400 tracking-wider">FOCUS AREAS</span>
@@ -704,14 +704,14 @@ export function AnalysisResults() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.08, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                className="bg-light-base dark:bg-cosmic-elevated p-5 border border-light-border dark:border-cosmic-border rounded-sm card-nexus"
+                className="bg-light-base dark:bg-cosmic-elevated p-5 border border-light-border dark:border-cosmic-border rounded-[var(--radius-xs)] card-nexus"
               >
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-xs font-body font-bold text-nexus-800 dark:text-white tracking-wider uppercase truncate">
                     {m.label}
                   </span>
                   <span
-                    className={`shrink-0 text-[0.6rem] font-mono tracking-widest px-2 py-0.5 rounded-sm ${
+                    className={`shrink-0 text-[0.6rem] font-mono tracking-widest px-2 py-0.5 rounded-[var(--radius-xs)] ${
                       m.score >= 70
                         ? "bg-aurum-500 text-white"
                         : m.score >= 50
@@ -762,7 +762,7 @@ export function AnalysisResults() {
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.12, duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-                className={`flex items-start gap-4 p-5 rounded-sm border ${
+                className={`flex items-start gap-4 p-5 rounded-[var(--radius-xs)] border ${
                   i === 0
                     ? "bg-aurum-500/[0.06] border-aurum-500/30 card-nexus"
                     : "bg-light-base dark:bg-cosmic-elevated border-aurum-500/20"
@@ -778,7 +778,7 @@ export function AnalysisResults() {
                 <div>
                   <p className="text-base text-nexus-800 dark:text-white font-body leading-relaxed">{strength}</p>
                   {i === 0 && (
-                    <span className="inline-block mt-2 px-2 py-0.5 bg-aurum-500 text-white text-[0.6rem] font-mono tracking-widest rounded-sm">
+                    <span className="inline-block mt-2 px-2 py-0.5 bg-aurum-500 text-white text-[0.6rem] font-mono tracking-widest rounded-[var(--radius-xs)]">
                       SIGNATURE TRAIT
                     </span>
                   )}
@@ -799,7 +799,7 @@ export function AnalysisResults() {
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.12, duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-                className="flex items-start gap-4 bg-light-base dark:bg-cosmic-elevated p-5 border border-light-border dark:border-cosmic-border rounded-sm card-nexus"
+                className="flex items-start gap-4 bg-light-base dark:bg-cosmic-elevated p-5 border border-light-border dark:border-cosmic-border rounded-[var(--radius-xs)] card-nexus"
               >
                 <div className="w-8 h-8 bg-nexus-500/15 flex items-center justify-center flex-shrink-0 mt-0.5 rounded-full border border-nexus-500/30">
                   <span className="text-sm font-body font-bold text-nexus-400">{i + 1}</span>
@@ -834,7 +834,7 @@ export function AnalysisResults() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.08, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-              className="flex items-start gap-4 bg-light-base dark:bg-cosmic-elevated p-5 border border-light-border dark:border-cosmic-border rounded-sm card-nexus"
+              className="flex items-start gap-4 bg-light-base dark:bg-cosmic-elevated p-5 border border-light-border dark:border-cosmic-border rounded-[var(--radius-xs)] card-nexus"
             >
               <div className="w-8 h-8 bg-aurum-500/15 flex items-center justify-center flex-shrink-0 mt-0.5 rounded-full border border-aurum-500/30">
                 <Scissors className="w-4 h-4 text-aurum-500" />
@@ -858,7 +858,7 @@ export function AnalysisResults() {
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {topMetrics.map((m, i) => (
-              <div key={m.key} className="flex items-center gap-3 bg-light-base dark:bg-cosmic-elevated p-3 border border-light-border dark:border-cosmic-border rounded-sm">
+              <div key={m.key} className="flex items-center gap-3 bg-light-base dark:bg-cosmic-elevated p-3 border border-light-border dark:border-cosmic-border rounded-[var(--radius-xs)]">
                 <span className="flex-1 text-nexus-800 dark:text-white font-body truncate">{m.label}</span>
                 <div className="flex-1 h-1.5 bg-light-border dark:bg-cosmic-border rounded-full overflow-hidden">
                   <motion.div

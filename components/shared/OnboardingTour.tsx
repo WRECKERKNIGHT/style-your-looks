@@ -89,7 +89,7 @@ export function OnboardingTour() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.97 }}
             transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-            className="relative w-full max-w-md bg-light-surface dark:bg-cosmic-surface border border-light-border dark:border-cosmic-border rounded-sm shadow-nexus-xl p-8"
+            className="relative w-full max-w-md bg-light-surface dark:bg-cosmic-surface border border-light-border dark:border-cosmic-border rounded-[var(--radius-xs)] shadow-nexus-xl p-8"
           >
             <button
               onClick={handleDismiss}
@@ -124,7 +124,7 @@ export function OnboardingTour() {
               {step > 0 && (
                 <button
                   onClick={handlePrev}
-                  className="flex items-center gap-2 px-5 py-2.5 bg-light-base dark:bg-cosmic-elevated text-nexus-800 dark:text-white text-sm font-body tracking-wider uppercase border border-light-border dark:border-cosmic-border rounded-sm hover:bg-light-border/10 transition-colors"
+                  className="flex items-center gap-2 px-5 py-2.5 bg-light-base dark:bg-cosmic-elevated text-nexus-800 dark:text-white text-sm font-body tracking-wider uppercase border border-light-border dark:border-cosmic-border rounded-[var(--radius-xs)] hover:bg-light-border/10 transition-colors"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
                   BACK
@@ -132,7 +132,7 @@ export function OnboardingTour() {
               )}
               <button
                 onClick={handleNext}
-                className={`flex items-center gap-2 px-6 py-2.5 text-sm font-body tracking-wider uppercase rounded-sm transition-colors btn-nexus ml-auto`}
+                className={`flex items-center gap-2 px-6 py-2.5 text-sm font-body tracking-wider uppercase rounded-[var(--radius-xs)] transition-colors btn-nexus ml-auto`}
               >
                 {step === steps.length - 1 ? "GET STARTED" : "NEXT"}
                 {step < steps.length - 1 && <ArrowRight className="w-3.5 h-3.5" />}
