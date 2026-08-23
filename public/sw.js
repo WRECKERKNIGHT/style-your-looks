@@ -1,4 +1,4 @@
-const CACHE = "zervey-v5";
+const CACHE = "zervey-v6";
 const STATIC_ASSETS = [
   "/",
   "/manifest.json",
@@ -8,6 +8,10 @@ const STATIC_ASSETS = [
   "/icon-192.png",
   "/icon-512.png",
   "/zervey-logo.svg",
+  // Rigged studio mannequin — precached so the 3D Studio works offline.
+  // (ML weights under /models/ and /mediapipe/ are already cache-first at
+  // request time; the GLB is small enough to pull on install.)
+  "/models/mannequin/cesium-man.glb",
 ];
 
 // Scripts and styles are served network-first (see below) so a new
