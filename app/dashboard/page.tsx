@@ -249,6 +249,20 @@ export default function DashboardHome() {
     setAnalysesDone(getHistory().filter((e) => !isDemoEntry(e)).length);
   }, [faceResult, bodyResult]);
 
+  // Warm the detection engines while the user reads the page so the first
+  // scan starts inference immediately instead of downloading/initialising WASM.
+  useEffect(() => {
+    const start = () => {
+      void import("@/lib/ml/warmup").then((m) => m.warmupEngines());
+    };
+    if ("requestIdleCallback" in window) {
+      const id = window.requestIdleCallback(start, { timeout: 4000 });
+      return () => window.cancelIdleCallback(id);
+    }
+    const t = window.setTimeout(start, 1500);
+    return () => window.clearTimeout(t);
+  }, []);
+
   return (
     <div className="space-y-16">
       <SectionScrollProgress className="mb-2" />
