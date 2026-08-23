@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, type ReactNode } from "react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 
 interface TiltCardProps {
   children: ReactNode;
@@ -17,9 +17,11 @@ export function TiltCard({
   glowColor = "rgba(200, 150, 62, 0.16)",
 }: TiltCardProps) {
   const ref = useRef<HTMLDivElement>(null);
+  const reduce = useReducedMotion();
   const [pose, setPose] = useState({ rotateX: 0, rotateY: 0, glowX: 50, glowY: 50 });
 
   const handleMove = (e: React.MouseEvent) => {
+    if (reduce) return;
     const el = ref.current;
     if (!el) return;
     const rect = el.getBoundingClientRect();
