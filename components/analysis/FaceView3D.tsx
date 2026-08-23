@@ -281,24 +281,24 @@ export function FaceView3D({
   return (
     <div
       ref={wrapRef}
-      className={`relative overflow-hidden rounded-sm bg-[var(--bg-secondary)] border border-[var(--border-primary)] ${className || ""}`}
+      className={`relative overflow-hidden rounded-[var(--radius-xs)] bg-[var(--bg-secondary)] border border-[var(--border-primary)] ${className || ""}`}
     >
       <canvas ref={canvasRef} className="block w-full touch-none" />
       {ready ? (
         <>
-          <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-sm bg-black/45 backdrop-blur-sm border border-[var(--border-primary)]">
+          <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-[var(--radius-xs)] bg-black/45 backdrop-blur-sm border border-[var(--border-primary)]">
             <Box className="w-3 h-3 text-[var(--accent-aurum)]" />
             <span className="text-[0.55rem] font-mono tracking-[0.25em] text-[var(--accent-aurum)] uppercase">
               3D Face Mesh
             </span>
           </div>
-          <div className="absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1 rounded-sm bg-black/45 backdrop-blur-sm border border-[var(--border-primary)]">
+          <div className="absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1 rounded-[var(--radius-xs)] bg-black/45 backdrop-blur-sm border border-[var(--border-primary)]">
             <Rotate3d className="w-3 h-3 text-[var(--accent-mocha)]" />
             <span className="text-[0.5rem] font-mono tracking-widest text-[var(--accent-mocha)] uppercase">
               Drag to rotate
             </span>
           </div>
-          <div className="absolute bottom-3 right-3 flex items-center gap-1.5 px-2.5 py-1 rounded-sm bg-black/45 backdrop-blur-sm border border-[var(--border-primary)]">
+          <div className="absolute bottom-3 right-3 flex items-center gap-1.5 px-2.5 py-1 rounded-[var(--radius-xs)] bg-black/45 backdrop-blur-sm border border-[var(--border-primary)]">
             <Maximize2 className="w-3 h-3 text-[var(--text-muted)]" />
             <span className="text-[0.5rem] font-mono tracking-widest text-[var(--text-muted)] uppercase">
               478 pts

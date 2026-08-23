@@ -19,7 +19,7 @@ export default function NotFound() {
             <Home className="w-4 h-4" />
             RETURN HOME
           </Link>
-          <Link href="/dashboard" className="inline-flex items-center gap-2 px-6 py-3 bg-cream dark:bg-dark-surface text-espresso dark:text-dark-text font-body text-sm tracking-wider uppercase border border-tan dark:border-dark-border hover:bg-tan/10 transition-colors rounded-sm">
+          <Link href="/dashboard" className="inline-flex items-center gap-2 px-6 py-3 bg-cream dark:bg-dark-surface text-espresso dark:text-dark-text font-body text-sm tracking-wider uppercase border border-tan dark:border-dark-border hover:bg-tan/10 transition-colors rounded-[var(--radius-xs)]">
             <ArrowLeft className="w-4 h-4" />
             DASHBOARD
           </Link>

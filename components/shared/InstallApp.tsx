@@ -60,7 +60,7 @@ export function InstallApp() {
   if (installed) return null;
 
   return (
-    <div className="border border-[color-mix(in_srgb,var(--accent-caramel)_35%,transparent)] dark:border-[color-mix(in_srgb,var(--accent-caramel)_20%,transparent)] bg-[var(--bg-tertiary)]/60 dark:bg-[var(--bg-tertiary)]/40 rounded-sm p-3">
+    <div className="border border-[color-mix(in_srgb,var(--accent-caramel)_35%,transparent)] dark:border-[color-mix(in_srgb,var(--accent-caramel)_20%,transparent)] bg-[var(--bg-tertiary)]/60 dark:bg-[var(--bg-tertiary)]/40 rounded-[var(--radius-xs)] p-3">
       {promptEvent ? (
         <button
           onClick={install}

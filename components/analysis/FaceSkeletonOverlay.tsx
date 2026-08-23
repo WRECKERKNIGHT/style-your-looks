@@ -538,7 +538,7 @@ export function FaceSkeletonOverlay({
 
       {shapeLabel && (
         <div
-          className="absolute bottom-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-sm border bg-black/45 backdrop-blur-sm"
+          className="absolute bottom-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-[var(--radius-xs)] border bg-black/45 backdrop-blur-sm"
           style={{ borderColor: "rgba(200,150,62,0.5)" }}
         >
           <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: COLORS.oval }} />
@@ -580,7 +580,7 @@ export function FaceSkeletonOverlay({
 
       {measurements?.fwhr !== undefined && (
         <div
-          className="absolute top-4 right-4 px-3 py-1.5 rounded-sm border bg-black/45 backdrop-blur-sm"
+          className="absolute top-4 right-4 px-3 py-1.5 rounded-[var(--radius-xs)] border bg-black/45 backdrop-blur-sm"
           style={{ borderColor: "rgba(232,200,138,0.45)" }}
         >
           <span className="text-[0.6rem] font-mono tracking-widest text-[#E8C88A]">

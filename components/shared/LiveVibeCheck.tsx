@@ -58,7 +58,7 @@ export function LiveVibeCheck({ score, metrics }: { score?: number; metrics?: nu
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      className="relative overflow-hidden rounded-sm bg-[var(--bg-secondary)] border border-[var(--border-primary)] shadow-paper"
+      className="relative overflow-hidden rounded-[var(--radius-xs)] bg-[var(--bg-secondary)] border border-[var(--border-primary)] shadow-paper"
     >
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[color-mix(in_srgb,var(--accent-caramel)_6%,transparent)] to-transparent pointer-events-none" />
 

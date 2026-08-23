@@ -181,7 +181,7 @@ export function ProcessingOverlay({
                 />
 
                 <div
-                  className="absolute bottom-3 left-3 flex items-center gap-2 px-3 py-1.5 rounded-sm border bg-black/50 backdrop-blur-sm"
+                  className="absolute bottom-3 left-3 flex items-center gap-2 px-3 py-1.5 rounded-[var(--radius-xs)] border bg-black/50 backdrop-blur-sm"
                   style={{ borderColor: "rgba(200,150,62,0.5)" }}
                 >
                   <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: "#E8C88A" }} />

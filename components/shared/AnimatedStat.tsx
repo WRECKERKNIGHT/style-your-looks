@@ -36,7 +36,7 @@ export function AnimatedStat({ value, label, suffix = "", decimals = 0, color = 
       initial={{ opacity: 0, y: 20 }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.6 }}
-      className="bg-light-surface dark:bg-cosmic-surface p-6 border border-light-border dark:border-cosmic-border rounded-sm text-center card-nexus"
+      className="bg-light-surface dark:bg-cosmic-surface p-6 border border-light-border dark:border-cosmic-border rounded-[var(--radius-xs)] text-center card-nexus"
     >
       <div className={`text-3xl font-body font-bold ${color} mb-1`}>
         {display.toFixed(decimals)}{suffix}

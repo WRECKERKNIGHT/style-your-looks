@@ -85,7 +85,7 @@ export function AIInsights({ faceResult }: { faceResult: FaceAnalysisResult | nu
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-      className="relative overflow-hidden rounded-sm bg-[var(--bg-secondary)] border border-[var(--border-primary)] shadow-paper"
+      className="relative overflow-hidden rounded-[var(--radius-xs)] bg-[var(--bg-secondary)] border border-[var(--border-primary)] shadow-paper"
     >
       <div className="absolute inset-0 scan-line pointer-events-none" />
 
@@ -93,7 +93,7 @@ export function AIInsights({ faceResult }: { faceResult: FaceAnalysisResult | nu
         <div className="relative p-6">
           <div className="flex items-start gap-4">
             <div className="relative shrink-0">
-              <div className="w-12 h-12 rounded-sm bg-gradient-to-br from-[color-mix(in_srgb,var(--accent-caramel)_25%,transparent)] to-[color-mix(in_srgb,var(--accent-aurum)_10%,transparent)] border border-[color-mix(in_srgb,var(--accent-caramel)_35%,transparent)] flex items-center justify-center">
+              <div className="w-12 h-12 rounded-[var(--radius-xs)] bg-gradient-to-br from-[color-mix(in_srgb,var(--accent-caramel)_25%,transparent)] to-[color-mix(in_srgb,var(--accent-aurum)_10%,transparent)] border border-[color-mix(in_srgb,var(--accent-caramel)_35%,transparent)] flex items-center justify-center">
                 <Brain className="w-6 h-6 text-[var(--accent-caramel)]" />
               </div>
             </div>
@@ -120,7 +120,7 @@ export function AIInsights({ faceResult }: { faceResult: FaceAnalysisResult | nu
         <div className="relative p-6">
           <div className="flex items-start gap-4">
             <div className="relative shrink-0">
-              <div className="w-12 h-12 rounded-sm bg-gradient-to-br from-[color-mix(in_srgb,var(--accent-caramel)_25%,transparent)] to-[color-mix(in_srgb,var(--accent-aurum)_10%,transparent)] border border-[color-mix(in_srgb,var(--accent-caramel)_35%,transparent)] flex items-center justify-center">
+              <div className="w-12 h-12 rounded-[var(--radius-xs)] bg-gradient-to-br from-[color-mix(in_srgb,var(--accent-caramel)_25%,transparent)] to-[color-mix(in_srgb,var(--accent-aurum)_10%,transparent)] border border-[color-mix(in_srgb,var(--accent-caramel)_35%,transparent)] flex items-center justify-center">
                 <Brain className="w-6 h-6 text-[var(--accent-caramel)]" />
               </div>
               <motion.div

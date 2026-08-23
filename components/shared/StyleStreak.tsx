@@ -126,7 +126,7 @@ export function StyleStreak() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      className="relative overflow-hidden rounded-sm bg-[var(--bg-secondary)] border border-[var(--border-primary)] shadow-paper p-6"
+      className="relative overflow-hidden rounded-[var(--radius-xs)] bg-[var(--bg-secondary)] border border-[var(--border-primary)] shadow-paper p-6"
     >
       <div className="absolute inset-0 bg-gradient-to-br from-[color-mix(in_srgb,var(--accent-honey)_8%,transparent)] via-transparent to-[color-mix(in_srgb,var(--accent-nexus)_12%,transparent)] pointer-events-none" />
 
@@ -178,7 +178,7 @@ export function StyleStreak() {
         })}
       </div>
 
-      <div className="rounded-sm border border-[color-mix(in_srgb,var(--accent-honey)_25%,transparent)] bg-[color-mix(in_srgb,var(--accent-honey)_6%,transparent)] p-4">
+      <div className="rounded-[var(--radius-xs)] border border-[color-mix(in_srgb,var(--accent-honey)_25%,transparent)] bg-[color-mix(in_srgb,var(--accent-honey)_6%,transparent)] p-4">
         <div className="flex items-center gap-2 mb-1.5">
           <Crown className="w-3.5 h-3.5 text-[var(--accent-honey)]" />
           <span className="type-label text-[var(--accent-mocha)]">DAILY CHALLENGE</span>

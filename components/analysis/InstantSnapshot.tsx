@@ -26,7 +26,7 @@ export function InstantSnapshot() {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      className="bg-light-surface dark:bg-cosmic-surface border border-light-border dark:border-cosmic-border rounded-sm card-nexus overflow-hidden"
+      className="bg-light-surface dark:bg-cosmic-surface border border-light-border dark:border-cosmic-border rounded-[var(--radius-xs)] card-nexus overflow-hidden"
     >
       <div className="px-6 py-3 border-b border-light-border dark:border-cosmic-border flex items-center gap-2">
         <Sparkles className="w-4 h-4 text-aurum-500" />

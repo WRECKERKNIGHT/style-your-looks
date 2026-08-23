@@ -47,7 +47,7 @@ export function AIScanner({ title, active, progress, done, compact = false }: AI
       initial={{ opacity: 0, scale: 0.92 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      className="relative overflow-hidden rounded-sm bg-[var(--bg-secondary)] border border-[var(--border-primary)] shadow-paper"
+      className="relative overflow-hidden rounded-[var(--radius-xs)] bg-[var(--bg-secondary)] border border-[var(--border-primary)] shadow-paper"
     >
       <div className={compact ? "p-5 flex flex-col items-center gap-4" : "p-8 flex flex-col items-center gap-6"}>
         {/* Scanner frame */}

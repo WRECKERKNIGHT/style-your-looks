@@ -121,7 +121,7 @@ export function CalibrationModal({ open, onClose, onComplete }: CalibrationModal
                 <button
                   onClick={onClose}
                   aria-label="Close calibration"
-                  className="w-9 h-9 rounded-sm border border-[var(--border-primary)] flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:border-aurum-500/50 transition-colors"
+                  className="w-9 h-9 rounded-[var(--radius-xs)] border border-[var(--border-primary)] flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:border-aurum-500/50 transition-colors"
                 >
                   <X className="w-4 h-4" />
                 </button>

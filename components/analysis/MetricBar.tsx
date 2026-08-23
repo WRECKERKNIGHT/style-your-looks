@@ -65,7 +65,7 @@ export function MetricBar({
       {(value || spread !== undefined) && (
         <div className="flex items-center gap-3">
           {value && (
-            <span className="inline-block px-2 py-0.5 bg-aurum-500/10 border border-aurum-500/25 text-aurum-500 text-xs font-mono rounded-sm">
+            <span className="inline-block px-2 py-0.5 bg-aurum-500/10 border border-aurum-500/25 text-aurum-500 text-xs font-mono rounded-[var(--radius-xs)]">
               {value}
             </span>
           )}
