@@ -103,7 +103,7 @@ export default function SignupPage() {
           animate={{ opacity: 1, scale: 1 }}
           className="text-center max-w-sm"
         >
-          <div className="w-16 h-16 bg-aurum-600/20 flex items-center justify-center mx-auto mb-6 rounded-sm">
+          <div className="w-16 h-16 bg-aurum-600/20 flex items-center justify-center mx-auto mb-6 rounded-full">
             <CheckCircle2 className="w-8 h-8 text-aurum-600" />
           </div>
           <h1 className="text-2xl font-body font-bold text-nexus-800 dark:text-white tracking-tight mb-2">CHECK YOUR EMAIL.</h1>
@@ -158,7 +158,7 @@ export default function SignupPage() {
               { val: "15+", label: "BEARD STYLES" },
               { val: "100%", label: "ON-DEVICE" },
             ].map((s) => (
-              <div key={s.label} className="border border-light-border dark:border-cosmic-border p-3 rounded-sm bg-light-surface/50 dark:bg-cosmic-surface/50 backdrop-blur-sm">
+              <div key={s.label} className="border border-light-border dark:border-cosmic-border p-3 rounded-[var(--radius-md)] bg-light-surface/50 dark:bg-cosmic-surface/50 backdrop-blur-sm">
                 <div className="text-lg font-body font-bold text-nexus-400">{s.val}</div>
                 <div className="text-[0.5rem] font-mono text-nexus-400 dark:text-cosmic-muted tracking-widest">{s.label}</div>
               </div>
@@ -198,7 +198,7 @@ export default function SignupPage() {
             />
           )}
           {error && !isGoogleBlockError(error) && (
-            <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 text-xs font-body mb-4 rounded-sm">
+            <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 text-xs font-body mb-4 rounded-[var(--radius-sm)]">
               <AlertCircle className="w-4 h-4 shrink-0" />
               {error}
             </div>
@@ -215,7 +215,7 @@ export default function SignupPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
-                  className="w-full pl-10 pr-4 py-3 bg-light-surface dark:bg-cosmic-surface border border-light-border dark:border-cosmic-border text-sm text-nexus-800 dark:text-white placeholder:text-nexus-400/50 dark:placeholder:text-cosmic-muted/50 focus:outline-none focus:border-aurum-500 transition-colors font-body rounded-sm"
+                  className="w-full pl-10 pr-4 py-3 bg-light-surface dark:bg-cosmic-surface border border-light-border dark:border-cosmic-border text-sm text-nexus-800 dark:text-white placeholder:text-nexus-400/50 dark:placeholder:text-cosmic-muted/50 focus:outline-none focus:border-aurum-500 transition-colors font-body rounded-[var(--radius-md)]"
                 />
               </div>
             </div>
@@ -230,7 +230,7 @@ export default function SignupPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="w-full pl-10 pr-4 py-3 bg-light-surface dark:bg-cosmic-surface border border-light-border dark:border-cosmic-border text-sm text-nexus-800 dark:text-white placeholder:text-nexus-400/50 dark:placeholder:text-cosmic-muted/50 focus:outline-none focus:border-aurum-500 transition-colors font-body rounded-sm"
+                  className="w-full pl-10 pr-4 py-3 bg-light-surface dark:bg-cosmic-surface border border-light-border dark:border-cosmic-border text-sm text-nexus-800 dark:text-white placeholder:text-nexus-400/50 dark:placeholder:text-cosmic-muted/50 focus:outline-none focus:border-aurum-500 transition-colors font-body rounded-[var(--radius-md)]"
                 />
               </div>
             </div>
@@ -246,7 +246,7 @@ export default function SignupPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   minLength={8}
-                  className="w-full pl-10 pr-10 py-3 bg-light-surface dark:bg-cosmic-surface border border-light-border dark:border-cosmic-border text-sm text-nexus-800 dark:text-white placeholder:text-nexus-400/50 dark:placeholder:text-cosmic-muted/50 focus:outline-none focus:border-aurum-500 transition-colors font-body rounded-sm"
+                  className="w-full pl-10 pr-10 py-3 bg-light-surface dark:bg-cosmic-surface border border-light-border dark:border-cosmic-border text-sm text-nexus-800 dark:text-white placeholder:text-nexus-400/50 dark:placeholder:text-cosmic-muted/50 focus:outline-none focus:border-aurum-500 transition-colors font-body rounded-[var(--radius-md)]"
                 />
                 <button
                   type="button"
@@ -275,7 +275,7 @@ export default function SignupPage() {
           <button
             onClick={handleGoogleSignup}
             disabled={googleLoading || loading}
-            className="w-full py-3 bg-light-surface dark:bg-cosmic-surface border border-light-border dark:border-cosmic-border text-nexus-800 dark:text-white font-mono text-sm hover:border-aurum-500 transition-colors disabled:opacity-50 rounded-sm flex items-center justify-center gap-3"
+            className="w-full py-3 bg-light-surface dark:bg-cosmic-surface border border-light-border dark:border-cosmic-border text-nexus-800 dark:text-white font-mono text-sm hover:border-aurum-500 transition-colors disabled:opacity-50 rounded-full flex items-center justify-center gap-3"
           >
             {googleLoading ? (
               <Loader2 className="w-4 h-4 animate-spin" />
