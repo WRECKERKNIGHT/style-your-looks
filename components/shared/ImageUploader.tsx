@@ -263,6 +263,7 @@ export function ImageUploader({
             <div className="absolute top-3 right-3 flex gap-2">
               <button
                 onClick={() => setIsZoomed(!isZoomed)}
+                aria-label={isZoomed ? "Shrink the photo preview" : "Enlarge the photo preview"}
                 className="w-8 h-8 bg-light-surface/80 dark:bg-cosmic-surface/80 backdrop-blur-sm border border-light-border/20 dark:border-cosmic-border/20 flex items-center justify-center hover:bg-light-surface dark:hover:bg-cosmic-surface transition-colors rounded-full"
               >
                 {isZoomed ? (
@@ -273,6 +274,7 @@ export function ImageUploader({
               </button>
               <button
                 onClick={handleClear}
+                aria-label="Remove the selected photo"
                 className="w-8 h-8 bg-light-surface/80 dark:bg-cosmic-surface/80 backdrop-blur-sm border border-light-border/20 dark:border-cosmic-border/20 flex items-center justify-center hover:bg-light-surface dark:hover:bg-cosmic-surface transition-colors rounded-full"
               >
                 <X className="w-3.5 h-3.5 text-nexus-400/60 dark:text-cosmic-muted/60" />
