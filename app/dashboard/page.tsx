@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
-import { motion, useInView, AnimatePresence } from "framer-motion";
+import { motion, useInView, useReducedMotion, AnimatePresence } from "framer-motion";
 import { ScrollReveal, ScrollRevealItem, ScrollProgress } from "@/components/shared/ScrollReveal";
 import { ScrollParallax, ScrollBlur, SectionScrollProgress } from "@/components/shared/ScrollEffects";
 import { TiltCard } from "@/components/shared/TiltCard";
@@ -149,6 +149,7 @@ function StatCounter({ value, label, icon: Icon }: { value: string; label: strin
 function ProgressRing({ score, label, size = 120 }: { score: number; label: string; size?: number }) {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true });
+  const reduceMotion = useReducedMotion();
   const [animatedScore, setAnimatedScore] = useState(0);
   const strokeWidth = size * 0.08;
   const radius = (size - strokeWidth) / 2;
@@ -157,6 +158,11 @@ function ProgressRing({ score, label, size = 120 }: { score: number; label: stri
 
   useEffect(() => {
     if (!inView) return;
+    // Reduced motion: show the final value immediately, no count-up.
+    if (reduceMotion) {
+      setAnimatedScore(score);
+      return;
+    }
     const duration = 1500;
     const start = Date.now();
     const animate = () => {
@@ -167,7 +173,7 @@ function ProgressRing({ score, label, size = 120 }: { score: number; label: stri
       if (progress < 1) requestAnimationFrame(animate);
     };
     requestAnimationFrame(animate);
-  }, [inView, score]);
+  }, [inView, score, reduceMotion]);
 
   return (
     <motion.div
@@ -221,6 +227,7 @@ function ProgressRing({ score, label, size = 120 }: { score: number; label: stri
 
 export default function DashboardHome() {
   const { faceResult, bodyResult } = useAnalysisStore();
+  const reduceMotion = useReducedMotion();
   const [tipIndex, setTipIndex] = useState(0);
   const [analysesDone, setAnalysesDone] = useState(0);
 
@@ -231,12 +238,12 @@ export default function DashboardHome() {
   const safeTipIndex = tips.length > 0 ? tipIndex % tips.length : 0;
 
   useEffect(() => {
-    if (tips.length === 0) return;
+    if (tips.length === 0 || reduceMotion) return;
     const interval = setInterval(() => {
       setTipIndex((prev) => (prev + 1) % tips.length);
     }, 6000);
     return () => clearInterval(interval);
-  }, [tips.length]);
+  }, [tips.length, reduceMotion]);
 
   useEffect(() => {
     setAnalysesDone(getHistory().filter((e) => !isDemoEntry(e)).length);
