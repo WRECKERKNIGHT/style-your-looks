@@ -45,6 +45,7 @@ export function useKeyboard() {
   );
 
   useEffect(() => {
+    let chordPending = false;
     const handler = (e: KeyboardEvent) => {
       const isCmdK = (e.metaKey || e.ctrlKey) && e.key === "k";
       if (isCmdK) {
@@ -52,10 +53,48 @@ export function useKeyboard() {
         togglePalette();
         return;
       }
+
+      // G-chord navigation (G then D/F/B/...) — but never while the user is
+      // typing in a field, otherwise every word starting with 'g' would teleport.
+      const target = e.target as HTMLElement | null;
+      const isTypingContext =
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.tagName === "SELECT" ||
+          target.isContentEditable);
+      if (isTypingContext || paletteOpen || e.metaKey || e.ctrlKey || e.altKey) return;
+
+      if (e.key === "g" || e.key === "G") {
+        chordPending = true;
+        setTimeout(() => {
+          chordPending = false;
+        }, 1200);
+        return;
+      }
+      if (chordPending) {
+        chordPending = false;
+        const map: Record<string, string> = {
+          d: "/dashboard",
+          f: "/dashboard/face-analysis",
+          b: "/dashboard/body-analysis",
+          c: "/dashboard/color-analysis",
+          j: "/dashboard/color-book",
+          t: "/dashboard/virtual-tryon",
+          p: "/dashboard/profile",
+          h: "/dashboard/history",
+          m: "/dashboard/community",
+        };
+        const href = map[e.key.toLowerCase()];
+        if (href) {
+          e.preventDefault();
+          router.push(href);
+        }
+      }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [togglePalette]);
+  }, [togglePalette, router, paletteOpen]);
 
   return { paletteOpen, setPaletteOpen, togglePalette, commands, executeCommand };
 }
