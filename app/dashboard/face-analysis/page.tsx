@@ -39,6 +39,7 @@ function DiagnosticStrip({
   photoQuality,
   consistency,
   confidence,
+  headYaw,
   headRoll,
   headPitch,
   axisAngle,
@@ -47,6 +48,7 @@ function DiagnosticStrip({
   photoQuality: number;
   consistency: number;
   confidence: number;
+  headYaw?: number;
   headRoll?: number;
   headPitch?: number;
   axisAngle?: number;
@@ -78,6 +80,7 @@ function DiagnosticStrip({
   })();
 
   const poseOff =
+    (typeof headYaw === "number" && Math.abs(headYaw) > 15) ||
     (typeof headRoll === "number" && Math.abs(headRoll) > 15) ||
     (typeof headPitch === "number" && Math.abs(headPitch) > 15);
 
@@ -85,6 +88,11 @@ function DiagnosticStrip({
     { label: "PHOTO QUALITY", value: `${photoQuality.toFixed(1)}/10`, warn: photoQuality < 5 },
     { label: "CROSS-PHOTO CONSISTENCY", value: `${consistency.toFixed(1)}/10`, warn: consistency < 5 },
     { label: "CONFIDENCE", value: `${confidence}%`, warn: confidence < 60 },
+    {
+      label: "HEAD YAW",
+      value: typeof headYaw === "number" ? `${headYaw > 0 ? "+" : ""}${headYaw.toFixed(1)}°` : "—",
+      warn: typeof headYaw === "number" && Math.abs(headYaw) > 15,
+    },
     {
       label: "HEAD ROLL",
       value: typeof headRoll === "number" ? `${headRoll > 0 ? "+" : ""}${headRoll.toFixed(1)}°` : "—",
@@ -928,6 +936,7 @@ export default function FaceAnalysisPage() {
                 photoQuality={faceResult.photoQualityScore}
                 consistency={faceResult.consistencyScore}
                 confidence={faceResult.analysisConfidence}
+                headYaw={faceResult.qualityGate?.headYaw}
                 headRoll={faceResult.qualityGate?.headRoll}
                 headPitch={faceResult.qualityGate?.headPitch}
                 axisAngle={faceResult.symmetryAxis?.angleDeg}

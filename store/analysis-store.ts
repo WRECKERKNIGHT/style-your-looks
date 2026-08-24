@@ -38,6 +38,7 @@ export interface PhotoQualityGate {
   brightness: number;
   sharpness: number;
   faceSizeRatio: number;
+  headYaw: number;
   headRoll: number;
   headPitch: number;
   issues: string[];

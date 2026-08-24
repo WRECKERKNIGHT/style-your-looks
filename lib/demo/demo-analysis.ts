@@ -534,6 +534,7 @@ export function buildDemoFaceResult(
       brightness: 0.7 + (person.id.length % 3) * 0.03,
       sharpness: 0.8 + (person.id.length % 4) * 0.02,
       faceSizeRatio: 0.38 + (person.id.length % 3) * 0.03,
+      headYaw: (person.id.length % 3) - 1,
       headRoll: 1,
       headPitch: 2,
       issues: [],

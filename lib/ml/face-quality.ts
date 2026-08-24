@@ -5,6 +5,7 @@ export interface PhotoQualityReport {
   brightness: number;
   sharpness: number;
   faceSizeRatio: number;
+  headYaw: number;
   headRoll: number;
   headPitch: number;
   usable: boolean;
@@ -86,14 +87,25 @@ function faceBoundingBox(result: FaceLandmarkerResult): { minX: number; minY: nu
   return { minX, minY, maxX, maxY };
 }
 
-function headPose(result: FaceLandmarkerResult): { roll: number; pitch: number } {
+/**
+ * Full 3-axis head pose from the MediaPipe facial transformation matrix.
+ * The 4×4 transform is stored column-major, so rotation element R[row][col]
+ * lives at data[col * stride + row]. Decomposing R = Rz(yaw)·Ry(pitch)·Rx(roll):
+ *   yaw   = atan2(R10, R00)   pitch = asin(-R20)   roll = atan2(R21, R22)
+ * Yaw (head turned left/right) is the pose axis that silently distorts every
+ * bilateral width metric, so it must be measured — not folded into "roll".
+ */
+function headPose(result: FaceLandmarkerResult): { yaw: number; pitch: number; roll: number } {
   const matrix = result.facialTransformationMatrixes?.[0];
-  if (!matrix || !matrix.data) return { roll: 0, pitch: 0 };
-  const cols = matrix.columns || 3;
+  if (!matrix || !matrix.data) return { yaw: 0, pitch: 0, roll: 0 };
+  const s = matrix.columns || 4;
   const m = matrix.data;
-  const roll = Math.atan2(m[1], m[0]) * (180 / Math.PI);
-  const pitch = Math.asin(-m[2]) * (180 / Math.PI);
-  return { roll, pitch };
+  const clamp1 = (v: number) => Math.max(-1, Math.min(1, v));
+  const yaw = Math.atan2(m[1], m[0]) * (180 / Math.PI);
+  const pitch = Math.asin(clamp1(-m[2])) * (180 / Math.PI);
+  const roll = Math.atan2(m[s + 2], m[s * 2 + 2]) * (180 / Math.PI);
+  const safe = (v: number) => (Number.isFinite(v) ? v : 0);
+  return { yaw: safe(yaw), pitch: safe(pitch), roll: safe(roll) };
 }
 
 export function assessPhotoQuality(
@@ -110,6 +122,7 @@ export function assessPhotoQuality(
       brightness: 0,
       sharpness: 0,
       faceSizeRatio: 0,
+      headYaw: 0,
       headRoll: 0,
       headPitch: 0,
       usable: false,
@@ -157,8 +170,18 @@ export function assessPhotoQuality(
   }
 
   const pose = headPose(result);
+
+  // Yaw is the most damaging off-frontal axis: it compresses one side of the
+  // face, which reads as fake "asymmetry" and skewed fifths/FWHR. Reject hard
+  // turns, warn on moderate ones.
+  if (Math.abs(pose.yaw) > 25) {
+    issues.push("Head is turned too far to the side — look straight at the camera");
+  } else if (Math.abs(pose.yaw) > 15) {
+    warnings.push("Head slightly turned — a frontal pose gives the most accurate read");
+  }
+
   if (Math.abs(pose.roll) > 18) {
-    warnings.push("Face is tilted — symmetry results are less accurate. Hold your head straight.");
+    warnings.push("Face is tilted — hold your head straight for the sharpest results");
   } else if (Math.abs(pose.roll) > 10) {
     warnings.push("Slight head tilt detected — try to face the camera directly");
   }
@@ -169,7 +192,16 @@ export function assessPhotoQuality(
   }
 
   const usable = issues.length === 0;
-  const base = 0.5 * brightness.score + 0.3 * sharpness.score + 0.2 * sizeScore;
+
+  // Pose contributes directly to capture quality so that confidence and
+  // best-photo selection prefer genuinely frontal frames.
+  const yawDev = Math.min(1, Math.abs(pose.yaw) / 25);
+  const pitchDev = Math.min(1, Math.abs(pose.pitch) / 32);
+  const rollDev = Math.min(1, Math.abs(pose.roll) / 18);
+  const poseScore = Math.max(0, 10 - (yawDev * 4 + pitchDev * 3 + rollDev * 3));
+
+  const base =
+    0.45 * brightness.score + 0.27 * sharpness.score + 0.16 * sizeScore + 0.12 * poseScore;
   const score = Math.max(0, Math.min(10, Math.round((base - issues.length * 1.2) * 10) / 10));
 
   return {
@@ -177,10 +209,25 @@ export function assessPhotoQuality(
     brightness: Math.round(brightness.score * 10) / 10,
     sharpness: sharpness.score,
     faceSizeRatio: Math.round(faceSizeRatio * 100) / 100,
+    headYaw: Math.round(pose.yaw * 10) / 10,
     headRoll: Math.round(pose.roll * 10) / 10,
     headPitch: Math.round(pose.pitch * 10) / 10,
     usable,
     issues,
     warnings,
   };
+}
+
+/**
+ * How frontal the capture was, 0–10. Used to weight analysis confidence: a
+ * perfectly lit photo taken with the head turned 25° still deserves a
+ * confidence penalty, because bilateral geometry is unreliable off-axis.
+ */
+export function frontalityScore(
+  q: Pick<PhotoQualityReport, "headYaw" | "headPitch" | "headRoll">
+): number {
+  const yawDev = Math.min(1, Math.abs(q.headYaw) / 25);
+  const pitchDev = Math.min(1, Math.abs(q.headPitch) / 32);
+  const rollDev = Math.min(1, Math.abs(q.headRoll) / 18);
+  return Math.max(0, 10 - (yawDev * 4 + pitchDev * 3 + rollDev * 3));
 }

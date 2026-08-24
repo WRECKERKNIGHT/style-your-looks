@@ -159,6 +159,7 @@ function buildStoreFaceResult(
           brightness: quality.brightness,
           sharpness: quality.sharpness,
           faceSizeRatio: quality.faceSizeRatio,
+          headYaw: quality.headYaw,
           headRoll: quality.headRoll,
           headPitch: quality.headPitch,
           issues: quality.issues,
