@@ -40,28 +40,24 @@ function applyHairColor(
   color: HairColor,
   landmarks?: number[][],
   hairMask?: HTMLCanvasElement | null
-) {
+): "masked" | "landmarks" | "unavailable" {
   if (hairMask) {
     const layer = document.createElement("canvas");
     layer.width = displayWidth;
     layer.height = displayHeight;
     const lctx = layer.getContext("2d");
-    if (!lctx) return;
+    if (!lctx) return "unavailable";
     lctx.fillStyle = color.overlay;
     lctx.fillRect(0, 0, displayWidth, displayHeight);
     lctx.globalCompositeOperation = "destination-in";
     lctx.drawImage(hairMask, 0, 0, displayWidth, displayHeight);
     ctx.drawImage(layer, 0, 0);
-    return;
+    return "masked";
   }
+  if (!landmarks || landmarks.length <= 152) return "unavailable";
   ctx.save();
-  let topY: number, bottomY: number, leftX: number, rightX: number, centerX: number;
-  if (landmarks && landmarks.length > 152) {
-    const region = hairRegion(landmarks, displayWidth, displayHeight);
-    topY = region.topY; bottomY = region.bottomY; leftX = region.leftX; rightX = region.rightX; centerX = region.centerX;
-  } else {
-    topY = displayHeight * 0.05; bottomY = displayHeight * 0.32; leftX = displayWidth * 0.15; rightX = displayWidth * 0.85; centerX = displayWidth * 0.5;
-  }
+  const region = hairRegion(landmarks, displayWidth, displayHeight);
+  const topY = region.topY, bottomY = region.bottomY, leftX = region.leftX, rightX = region.rightX, centerX = region.centerX;
   ctx.beginPath();
   ctx.moveTo(leftX, bottomY);
   ctx.quadraticCurveTo(leftX + (centerX - leftX) * 0.4, topY, centerX, topY);
@@ -76,6 +72,7 @@ function applyHairColor(
   ctx.fillStyle = color.overlay;
   ctx.fill();
   ctx.restore();
+  return "landmarks";
 }
 
 const fadeUp = {
@@ -93,6 +90,7 @@ export default function HairPreviewPage() {
   const [selectedColor, setSelectedColor] = useState<HairColor | null>(null);
   const [intensity, setIntensity] = useState(0.7);
   const [hairSeg, setHairSeg] = useState<PersonSegmentation | null>(null);
+  const [regionStatus, setRegionStatus] = useState<"ok" | "unavailable">("ok");
 
   useEffect(() => {
     let cancelled = false;
@@ -146,11 +144,14 @@ export default function HairPreviewPage() {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, displayWidth, displayHeight);
     ctx.drawImage(img, 0, 0, displayWidth, displayHeight);
+    let regionUnavailable = false;
     if (selectedColor) {
       ctx.globalAlpha = intensity;
-      applyHairColor(ctx, displayWidth, displayHeight, selectedColor, faceResult?.landmarks, hairSeg?.hairMask);
+      const mode = applyHairColor(ctx, displayWidth, displayHeight, selectedColor, faceResult?.landmarks, hairSeg?.hairMask);
       ctx.globalAlpha = 1;
+      regionUnavailable = mode === "unavailable";
     }
+    setRegionStatus(regionUnavailable ? "unavailable" : "ok");
   }, [selectedColor, intensity, faceResult, hairSeg, loadedImg]);
 
   useEffect(() => { renderCanvas(); }, [renderCanvas]);
@@ -202,6 +203,17 @@ export default function HairPreviewPage() {
               </div>
             )}
           </div>
+
+          {selectedColor && regionStatus === "unavailable" && (
+            <div className="glass-card p-4 border-[color-mix(in_srgb,var(--accent-aurum)_35%,transparent)]">
+              <p className="type-mono text-[0.6rem] tracking-widest text-[var(--accent-aurum)]">
+                HAIR REGION COULD NOT BE MAPPED ON THIS PHOTO
+              </p>
+              <p className="text-sm text-[var(--text-muted)] font-body mt-1">
+                Run a Face IQ scan first, or upload a clear front-facing photo — hair coloring needs a detected hair region and is skipped otherwise.
+              </p>
+            </div>
+          )}
 
           <div className="glass-card p-6">
             <h3 className="type-label text-[var(--text-primary)] mb-4">SELECT HAIR COLOR</h3>
