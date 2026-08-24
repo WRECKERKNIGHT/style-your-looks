@@ -25,6 +25,7 @@ import {
   ClipboardList,
   Boxes,
   BookOpen,
+  TrendingUp,
 } from "lucide-react";
 import { useState } from "react";
 import dynamic from "next/dynamic";
@@ -44,6 +45,7 @@ const navItems = [
   { href: "/dashboard", label: "HOME", icon: Home },
   { href: "/dashboard/face-analysis", label: "FACE IQ", icon: ScanFace },
   { href: "/dashboard/pillar-analysis", label: "4 PILLARS", icon: Target },
+  { href: "/dashboard/future-you", label: "FUTURE YOU", icon: TrendingUp },
   { href: "/dashboard/skin-health", label: "SKIN HEALTH", icon: Droplets },
   { href: "/dashboard/face-comparison", label: "COMPARE", icon: GitCompareArrows },
   { href: "/dashboard/body-analysis", label: "BODY + TONE", icon: Layers },
