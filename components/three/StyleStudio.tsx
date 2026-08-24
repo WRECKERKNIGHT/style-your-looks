@@ -18,7 +18,8 @@ import type { GarmentOptions } from '@/lib/three/garments';
 import type { GlassesOptions } from '@/lib/three/glasses';
 import type { HairStyleId } from '@/lib/three/hair';
 import type { BeardStyleId } from '@/lib/three/beard';
-import { PersonStanding, Boxes } from 'lucide-react';
+import { useAnalysisStore } from '@/store/analysis-store';
+import { PersonStanding, Boxes, ScanLine } from 'lucide-react';
 import StudioControls from './StudioControls';
 
 type StudioMode = 'mannequin' | 'parametric';
@@ -308,7 +309,11 @@ function ParametricStage() {
   const studioRef = useRef<StudioScene | null>(null);
   const rafRef = useRef<number>(0);
 
+  const bodyResult = useAnalysisStore((s) => s.bodyResult);
+  const genderProfile = useAnalysisStore((s) => s.faceResult?.genderProfile);
+
   const [body, setBody] = useState<BodyParams>(DEFAULT_BODY);
+  const [prefilledFromScan, setPrefilledFromScan] = useState(false);
   const [skinTone, setSkinTone] = useState('#C99B6E');
   const [garment, setGarment] = useState<GarmentOptions | null>({
     kind: 'tshirt',
@@ -327,6 +332,34 @@ function ParametricStage() {
   const patchBody = useCallback((patch: Partial<BodyParams>) => {
     setBody((prev) => ({ ...prev, ...patch }));
   }, []);
+
+  // Pre-fill the fit form from the user's measured pose ratios — once, so
+  // manual adjustments afterwards always win.
+  useEffect(() => {
+    if (prefilledFromScan || !bodyResult) return;
+    const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
+    setBody((prev) => {
+      const next = { ...prev };
+      if (
+        bodyResult.shoulderToWaistRatio !== undefined &&
+        Number.isFinite(bodyResult.shoulderToWaistRatio)
+      ) {
+        // ratio ~1.0 (straight) .. 1.5+ (very broad) → shoulders 0..1
+        next.shoulders = clamp01((bodyResult.shoulderToWaistRatio - 1.0) / 0.5);
+      }
+      if (
+        bodyResult.waistToHipRatio !== undefined &&
+        Number.isFinite(bodyResult.waistToHipRatio)
+      ) {
+        // ratio ~1.05 (straight) .. 0.7 (slim) → slimness 0..1
+        next.waist = clamp01((1.05 - bodyResult.waistToHipRatio) / 0.4);
+      }
+      if (genderProfile === 'masculine') next.gender = 'male';
+      else if (genderProfile === 'feminine') next.gender = 'female';
+      return next;
+    });
+    setPrefilledFromScan(true);
+  }, [prefilledFromScan, bodyResult, genderProfile]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -426,6 +459,11 @@ function ParametricStage() {
         <div ref={containerRef} className="glass-card overflow-hidden" style={{ height: 640 }} />
       </div>
       <div className="lg:col-span-3">
+        {prefilledFromScan && (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 mb-3 rounded-full border border-[color-mix(in_srgb,var(--accent-aurum)_35%,transparent)] bg-[color-mix(in_srgb,var(--accent-aurum)_8%,transparent)] type-mono text-[0.55rem] tracking-widest text-[var(--accent-aurum)]">
+            <ScanLine className="w-3 h-3" /> FIT FORM PRE-FILLED FROM YOUR BODY SCAN
+          </span>
+        )}
         <StudioControls
           body={body}
           onBody={patchBody}
