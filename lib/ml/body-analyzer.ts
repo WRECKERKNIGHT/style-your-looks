@@ -3,7 +3,7 @@ import {
   FilesetResolver,
   type PoseLandmarkerResult,
 } from "@mediapipe/tasks-vision";
-import { resolveModelUrl, resolveWasmBase, MODEL_SOURCES } from "./engine-assets";
+import { resolveModelUrl, resolveWasmBase, invalidateAssetResolution, MODEL_SOURCES } from "./engine-assets";
 
 let poseLandmarker: PoseLandmarker | null = null;
 let poseInitPromise: Promise<PoseLandmarker> | null = null;
@@ -146,13 +146,49 @@ export async function analyzeBody(
   onProgress?: (progress: number) => void
 ): Promise<PoseLandmarkerResult> {
   onProgress?.(10);
-  const landmarker = await initializePoseLandmarker();
+  let landmarker: PoseLandmarker;
+  try {
+    landmarker = await initializePoseLandmarker();
+  } catch (firstErr) {
+    // Self-heal: fresh engine + re-probed assets, mirroring analyzeFace.
+    console.warn("Pose init failed — retrying with clean asset resolution:", firstErr);
+    resetPoseEngine();
+    try {
+      landmarker = await initializePoseLandmarker();
+    } catch (err) {
+      throw err instanceof Error ? err : new Error(String(err));
+    }
+  }
   onProgress?.(30);
 
-  const result = landmarker.detect(imageSource);
+  let result: PoseLandmarkerResult;
+  try {
+    result = landmarker.detect(imageSource);
+  } catch (err) {
+    console.warn("Pose detection failed mid-run — rebuilding on CPU:", err);
+    resetPoseEngine();
+    const rebuilt = await createPoseLandmarker("CPU");
+    poseLandmarker = rebuilt;
+    result = rebuilt.detect(imageSource);
+  }
   onProgress?.(100);
 
   return result;
+}
+
+/**
+ * Tear down the cached pose landmarker so the next call rebuilds fresh —
+ * used by self-heal paths when init or inference starts failing.
+ */
+export function resetPoseEngine(): void {
+  try {
+    poseLandmarker?.close();
+  } catch {
+    // context may already be gone
+  }
+  poseLandmarker = null;
+  poseInitPromise = null;
+  invalidateAssetResolution();
 }
 
 export async function detectPoseOnly(

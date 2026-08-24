@@ -1,5 +1,5 @@
 import { ImageSegmenter, FilesetResolver } from "@mediapipe/tasks-vision";
-import { resolveModelUrl, resolveWasmBase, MODEL_SOURCES } from "./engine-assets";
+import { resolveModelUrl, resolveWasmBase, invalidateAssetResolution, MODEL_SOURCES } from "./engine-assets";
 
 export enum PersonCategory {
   Background = 0,
@@ -75,7 +75,35 @@ function maskCanvas(categories: Uint8Array, width: number, height: number, keep:
 export async function segmentPerson(
   imageSource: HTMLImageElement | HTMLCanvasElement
 ): Promise<PersonSegmentation> {
-  const seg = await initializeSegmenter();
+  let seg: ImageSegmenter;
+  try {
+    seg = await initializeSegmenter();
+  } catch (firstErr) {
+    // Self-heal: rebuild from a clean slate (fresh engine + re-probed assets).
+    console.warn("Segmenter init failed — retrying with clean asset resolution:", firstErr);
+    resetSegmenterEngine();
+    try {
+      seg = await initializeSegmenter();
+    } catch (err) {
+      throw err instanceof Error ? err : new Error(String(err));
+    }
+  }
+  try {
+    return runSegmentation(seg, imageSource);
+  } catch (err) {
+    // Mid-session death (GPU context lost): one CPU rebuild + retry.
+    console.warn("Segmentation failed mid-run — rebuilding on CPU:", err);
+    resetSegmenterEngine();
+    const rebuilt = await createSegmenter("CPU");
+    segmenter = rebuilt;
+    return runSegmentation(rebuilt, imageSource);
+  }
+}
+
+function runSegmentation(
+  seg: ImageSegmenter,
+  imageSource: HTMLImageElement | HTMLCanvasElement
+): PersonSegmentation {
   const result = seg.segment(imageSource);
   const mask = result.categoryMask;
   try {
@@ -97,4 +125,19 @@ export async function segmentPerson(
   } finally {
     result.close();
   }
+}
+
+/**
+ * Tear down the cached segmenter so the next call rebuilds fresh — used by
+ * self-heal paths when inference starts failing mid-session.
+ */
+export function resetSegmenterEngine(): void {
+  try {
+    segmenter?.close();
+  } catch {
+    // context may already be gone
+  }
+  segmenter = null;
+  initPromise = null;
+  invalidateAssetResolution();
 }
