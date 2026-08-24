@@ -166,11 +166,11 @@ export default function BodyAnalysisPage() {
         { label: "Symmetry", value: `${bodyResult.bodySymmetry?.toFixed(1) ?? "—"}/10` },
       ],
       scoreLabel: "BODY PROPORTION SCORE",
-      score: `${bodyResult.bodyProportionScore?.toFixed(1) ?? "8.4"}`,
-      scoreSuffix: "/10",
+      score: bodyResult.bodyProportionScore !== undefined ? bodyResult.bodyProportionScore.toFixed(1) : "—",
+      scoreSuffix: bodyResult.bodyProportionScore !== undefined ? "/10" : "",
       footer: "zervey.app · computed on-device",
       fileName: `zervey-body-${bodyResult.bodyType.toLowerCase().replace(/\s+/g, "-")}.png`,
-      shareText: `My ZERVEY body analysis: ${bodyResult.bodyType} type · ${bodyResult.undertone} undertone · proportion score ${bodyResult.bodyProportionScore?.toFixed(1)}/10`,
+      shareText: `My ZERVEY body analysis: ${bodyResult.bodyType} type · ${bodyResult.undertone} undertone${bodyResult.bodyProportionScore !== undefined ? ` · proportion score ${bodyResult.bodyProportionScore.toFixed(1)}/10` : ""}`,
       demo: isDemoPhoto(fullBodyImage),
     };
   }, [bodyResult, fullBodyImage]);
