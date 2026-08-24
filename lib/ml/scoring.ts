@@ -19,6 +19,7 @@ import {
   getMidfaceRatioScore,
 } from "./face-analyzer";
 import type { PhotoQualityReport } from "./face-quality";
+import { frontalityScore } from "./face-quality";
 
 export interface FacialMetric {
   label: string;
@@ -869,8 +870,13 @@ export function mergeFaceScores(
   });
   const avgCv = mean(cvList);
   const consistencyScore = samples.length === 1 ? 7 : Math.max(1, Math.min(10, 10 - avgCv * 14));
+
+  // Confidence = capture quality + cross-photo agreement + how frontal the
+  // best captures were. A turned head makes bilateral numbers unreliable even
+  // when the photo is crisp and bright — confidence has to say so.
+  const frontality = mean(samples.map((s) => frontalityScore(s.quality)));
   const analysisConfidence = Math.round(
-    (consistencyScore * 0.6 + photoQuality * 0.4) * 10
+    (consistencyScore * 0.45 + photoQuality * 0.35 + frontality * 0.2) * 10
   );
 
   const bestSample = [...samples].sort((a, b) => b.quality.score - a.quality.score)[0];
