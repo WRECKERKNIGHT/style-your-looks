@@ -4,8 +4,18 @@ export interface PillarScore {
   name: string;
   score: number;
   rating: string;
+  /** Realistic ceiling if the weakest sub-metrics were improved. */
+  potential: number;
   metrics: { label: string; score: number; weight: number }[];
   description: string;
+}
+
+export interface IdentityProfile {
+  /** Position on the masculine↔feminine styling spectrum, 0–100. */
+  spectrum: number;
+  spectrumLabel: string;
+  archetype: string;
+  archetypeTagline: string;
 }
 
 export interface ImprovementItem {
@@ -24,6 +34,7 @@ export interface PillarAnalysis {
   pillars: PillarScore[];
   improvements: ImprovementItem[];
   projection: { current: number; potential: number; months: number };
+  identity: IdentityProfile;
 }
 
 function scoreToRating(score: number): string {
@@ -36,62 +47,160 @@ function scoreToRating(score: number): string {
   return "Needs Work";
 }
 
+/**
+ * A pillar's realistic ceiling: lift the two weakest sub-metrics by a
+ * fraction of their headroom. Bounded and honest — grooming can move
+ * soft-tissue presentation, not bone.
+ */
+function potentialOf(score: number, metrics: { score: number }[]): number {
+  const sorted = [...metrics].sort((a, b) => a.score - b.score).slice(0, 2);
+  const headroom = sorted.reduce((acc, m) => acc + (10 - m.score), 0);
+  return Math.min(10, Math.round((score + headroom * 0.3) * 10) / 10);
+}
+
+function buildPillar(
+  name: string,
+  description: string,
+  metrics: { label: string; score: number; weight: number }[]
+): PillarScore {
+  const totalWeight = metrics.reduce((a, m) => a + m.weight, 0) || 1;
+  const score =
+    Math.round(
+      (metrics.reduce((acc, m) => acc + m.score * m.weight, 0) / totalWeight) * 10
+    ) / 10;
+  return {
+    name,
+    description,
+    score,
+    rating: scoreToRating(score),
+    potential: potentialOf(score, metrics),
+    metrics,
+  };
+}
+
+function deriveIdentity(faceResult: FaceScoreResult): IdentityProfile {
+  // Structural markers associated with masculine presentation (FWHR, jaw
+  // dominance) vs feminine presentation (lip fullness, positive canthal tilt,
+  // eye spacing). Blended with the user's chosen analysis profile so the
+  // spectrum reflects both geometry and self-identification.
+  const masculineSide =
+    ((faceResult.fwhr - 1.7) / 0.6) * 0.3 +          // wider, squarer faces
+    ((faceResult.jawline - 5) / 5) * 0.25 +           // jaw strength
+    ((faceResult.cheekboneDefinition - 5) / 5) * 0.15;
+  const feminineSide =
+    ((faceResult.lipFullness - 5) / 5) * 0.15 +
+    ((faceResult.canthalTilt - 5) / 5) * 0.1 +
+    ((faceResult.eyeSpacing - 5) / 5) * 0.05;
+
+  let spectrum = 50 + (masculineSide - feminineSide) * 50;
+  spectrum = Math.max(0, Math.min(100, Math.round(spectrum)));
+  const spectrumLabel =
+    spectrum >= 70 ? "Strongly Masculine"
+    : spectrum >= 58 ? "Masculine Lean"
+    : spectrum > 42 ? "Balanced Androgynous"
+    : spectrum > 30 ? "Feminine Lean"
+    : "Strongly Feminine";
+
+  const { styleProfile, facialShape, symmetry, jawline, cheekboneDefinition } = faceResult;
+  let archetype = "The Classic";
+  let archetypeTagline = "Timeless proportions that never argue with a trend.";
+  switch (styleProfile) {
+    case "Rugged Elegance":
+    case "Bold Masculine":
+      archetype = "The Hero";
+      archetypeTagline = "Strong jaw, high structure — presence without saying a word.";
+      break;
+    case "Editorial Sharp":
+    case "Angular Maverick":
+      archetype = "The Sharp";
+      archetypeTagline = "Angles that photograph like architecture.";
+      break;
+    case "Strong Structured":
+      archetype = "The Model";
+      archetypeTagline = "Editorial bone structure built for strong silhouettes.";
+      break;
+    case "Classic Handsome":
+    case "Versatile Classic":
+      archetype = symmetry >= 8 ? "The Scholar" : "The Classic";
+      archetypeTagline = archetype === "The Scholar"
+        ? "Balanced, considered features — quiet-intelligence appeal."
+        : "Timeless proportions that never argue with a trend.";
+      break;
+    case "Romantic Lead":
+      archetype = "The Romantic";
+      archetypeTagline = "Soft contrast and warmth — leading-role charm.";
+      break;
+    default:
+      archetype = facialShape === "Oval" && jawline < 7 && cheekboneDefinition < 7
+        ? "The Boy-Next-Door"
+        : "The Classic";
+      archetypeTagline = archetype === "The Boy-Next-Door"
+        ? "Approachable, easy symmetry — the face people trust instantly."
+        : "Timeless proportions that never argue with a trend.";
+  }
+
+  return { spectrum, spectrumLabel, archetype, archetypeTagline };
+}
+
 export function calculatePillarAnalysis(faceResult: FaceScoreResult): PillarAnalysis {
-  const harmony: PillarScore = {
-    name: "Harmony",
-    score: Math.round(((faceResult.goldenRatio + faceResult.symmetry + faceResult.proportions + faceResult.facialHarmony + faceResult.foreheadBalance) / 5) * 10) / 10,
-    rating: "",
-    metrics: [
-      { label: "Golden Ratio", score: faceResult.goldenRatio, weight: 0.25 },
-      { label: "Symmetry", score: faceResult.symmetry, weight: 0.25 },
-      { label: "Proportions", score: faceResult.proportions, weight: 0.2 },
-      { label: "Facial Harmony", score: faceResult.facialHarmony, weight: 0.15 },
-      { label: "Forehead Balance", score: faceResult.foreheadBalance, weight: 0.15 },
-    ],
-    description: "Measures the proportional balance and mathematical harmony of your facial features.",
-  };
-  harmony.rating = scoreToRating(harmony.score);
+  const identity = deriveIdentity(faceResult);
 
-  const angularity: PillarScore = {
-    name: "Angularity",
-    score: Math.round(((faceResult.jawline + faceResult.cheekboneDefinition + faceResult.noseProfile) / 3) * 10) / 10,
-    rating: "",
-    metrics: [
-      { label: "Jawline Definition", score: faceResult.jawline, weight: 0.45 },
-      { label: "Cheekbone Definition", score: faceResult.cheekboneDefinition, weight: 0.35 },
-      { label: "Nose Profile", score: faceResult.noseProfile, weight: 0.2 },
-    ],
-    description: "Evaluates jawline sharpness, bone structure definition, and angular features.",
-  };
-  angularity.rating = scoreToRating(angularity.score);
+  const harmony = buildPillar(
+    "Harmony",
+    "Feature balance: how evenly your features sit across the face — bilateral asymmetry, facial thirds, and overall proportionality against classical canons.",
+    [
+      { label: "Feature Balance", score: faceResult.proportions, weight: 0.2 },
+      { label: "Left/Right Asymmetry", score: faceResult.symmetry, weight: 0.3 },
+      { label: "Facial Thirds", score: faceResult.foreheadBalance, weight: 0.2 },
+      { label: "Proportionality", score: (faceResult.goldenRatio + faceResult.horizontalFifths) / 2, weight: 0.3 },
+    ]
+  );
 
-  const dimorphism: PillarScore = {
-    name: "Dimorphism",
-    score: Math.round(((faceResult.lipFullness + faceResult.eyeSpacing + faceResult.overallScore * 0.3) / 2.3) * 10) / 10,
-    rating: "",
-    metrics: [
-      { label: "Lip Proportion", score: faceResult.lipFullness, weight: 0.35 },
-      { label: "Eye Spacing", score: faceResult.eyeSpacing, weight: 0.35 },
-      { label: "Facial Shape", score: faceResult.overallScore * 0.9, weight: 0.3 },
-    ],
-    description: "Assesses gender-specific facial traits and feature prominence.",
-  };
-  dimorphism.rating = scoreToRating(dimorphism.score);
+  const structure = buildPillar(
+    "Structure",
+    "The architectural layer: cheekbone prominence, jaw definition, chin balance and facial width relative to height.",
+    [
+      { label: "Cheekbones", score: faceResult.cheekboneDefinition, weight: 0.28 },
+      { label: "Jaw", score: faceResult.jawline, weight: 0.32 },
+      { label: "Chin Balance", score: faceResult.noseChinRatio, weight: 0.15 },
+      { label: "Midface", score: faceResult.midfaceRatio, weight: 0.1 },
+      { label: "Facial Width", score: faceResult.fwhr, weight: 0.15 },
+    ]
+  );
 
-  const health: PillarScore = {
-    name: "Health",
-    score: faceResult.skinClarity,
-    rating: "",
-    metrics: [
-      { label: "Skin Clarity", score: faceResult.skinClarity, weight: 0.6 },
-      { label: "Blendshape Vitality", score: Math.round((faceResult.blendshapes.smileIntensity * 8 + 2) * 10) / 10, weight: 0.4 },
-    ],
-    description: "Indicates skin health, texture quality, and overall vitality indicators.",
-  };
-  health.rating = scoreToRating(health.score);
+  const vital = buildPillar(
+    "Vitality",
+    "Surface signals of health and rest: skin clarity and evenness, plus expression energy around the eyes and mouth.",
+    [
+      { label: "Skin Clarity", score: faceResult.skinClarity, weight: 0.45 },
+      { label: "Skin Evenness", score: faceResult.skinClarity, weight: 0.2 },
+      {
+        label: "Eye Energy",
+        score: Math.round((faceResult.blendshapes.eyeOpenness * 8 + 2) * 10) / 10,
+        weight: 0.2,
+      },
+      {
+        label: "Expression Vitality",
+        score: Math.round((faceResult.blendshapes.smileIntensity * 8 + 2) * 10) / 10,
+        weight: 0.15,
+      },
+    ]
+  );
 
-  const pillars = [harmony, angularity, dimorphism, health];
-  const overall = Math.round(pillars.reduce((sum, p) => sum + p.score, 0) / pillars.length * 10) / 10;
+  const identityPillar = buildPillar(
+    "Identity",
+    "Where you sit on the masculine↔feminine spectrum and which facial archetype your geometry projects.",
+    [
+      { label: "Spectrum Position", score: 10 - Math.abs(identity.spectrum - 50) / 5, weight: 0.4 },
+      { label: "Lip Character", score: faceResult.lipFullness, weight: 0.2 },
+      { label: "Eye Character", score: faceResult.canthalTilt, weight: 0.2 },
+      { label: "Eye Spacing", score: faceResult.eyeSpacing, weight: 0.2 },
+    ]
+  );
+
+  const pillars = [harmony, structure, identityPillar, vital];
+  const overall =
+    Math.round((pillars.reduce((sum, p) => sum + p.score, 0) / pillars.length) * 10) / 10;
 
   const improvements: ImprovementItem[] = [];
 
@@ -104,7 +213,7 @@ export function calculatePillarAnalysis(faceResult: FaceScoreResult): PillarAnal
       category: "skincare",
       effort: "easy",
       timeframe: "8 weeks",
-      pillar: "Health",
+      pillar: "Vitality",
     });
   }
 
@@ -117,7 +226,7 @@ export function calculatePillarAnalysis(faceResult: FaceScoreResult): PillarAnal
       category: "fitness",
       effort: "moderate",
       timeframe: "3-6 months",
-      pillar: "Angularity",
+      pillar: "Structure",
     });
   }
 
@@ -143,7 +252,7 @@ export function calculatePillarAnalysis(faceResult: FaceScoreResult): PillarAnal
       category: "grooming",
       effort: "easy",
       timeframe: "2-4 weeks",
-      pillar: "Angularity",
+      pillar: "Structure",
     });
   }
 
@@ -156,7 +265,7 @@ export function calculatePillarAnalysis(faceResult: FaceScoreResult): PillarAnal
       category: "skincare",
       effort: "moderate",
       timeframe: "12 weeks",
-      pillar: "Health",
+      pillar: "Vitality",
     });
   }
 
@@ -168,7 +277,7 @@ export function calculatePillarAnalysis(faceResult: FaceScoreResult): PillarAnal
     category: "style",
     effort: "easy",
     timeframe: "Immediate",
-    pillar: "Harmony",
+    pillar: "Identity",
   });
 
   if (faceResult.foreheadBalance < 6.5) {
@@ -187,12 +296,12 @@ export function calculatePillarAnalysis(faceResult: FaceScoreResult): PillarAnal
   improvements.push({
     id: "posture-confidence",
     title: "Posture & Confidence Training",
-      description: "Good posture (shoulders back, chin level) can improve how your jawline and facial structure appear. Practice chin tucks and neck stretches daily.",
+    description: "Good posture (shoulders back, chin level) can improve how your jawline and facial structure appear. Practice chin tucks and neck stretches daily.",
     impact: "low",
     category: "fitness",
     effort: "easy",
     timeframe: "4 weeks",
-    pillar: "Angularity",
+    pillar: "Structure",
   });
 
   improvements.sort((a, b) => {
@@ -200,7 +309,8 @@ export function calculatePillarAnalysis(faceResult: FaceScoreResult): PillarAnal
     return impactOrder[a.impact] - impactOrder[b.impact];
   });
 
-  const potentialGain = improvements.filter((i) => i.impact === "high").length * 0.5 +
+  const potentialGain =
+    improvements.filter((i) => i.impact === "high").length * 0.5 +
     improvements.filter((i) => i.impact === "medium").length * 0.25;
   const potential = Math.min(10, overall + potentialGain);
 
@@ -213,5 +323,6 @@ export function calculatePillarAnalysis(faceResult: FaceScoreResult): PillarAnal
       potential: Math.round(potential * 10) / 10,
       months: 6,
     },
+    identity,
   };
 }

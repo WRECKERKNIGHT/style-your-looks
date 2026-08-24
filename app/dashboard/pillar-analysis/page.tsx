@@ -13,8 +13,9 @@ const impactBg: Record<string, string> = { high: "bg-[color-mix(in_srgb,var(--ac
 const effortLabels: Record<string, string> = { easy: "Quick Win", moderate: "Moderate Effort", significant: "Major Change" };
 const categoryIcons: Record<string, any> = { grooming: Scissors, skincare: Droplets, style: Shirt, fitness: Dumbbell, "non-surgical": Zap };
 
-function PillarCard({ pillar, index }: { pillar: { name: string; score: number; rating: string; description: string; metrics: { label: string; score: number }[] }; index: number }) {
+function PillarCard({ pillar, index }: { pillar: { name: string; score: number; rating: string; potential: number; description: string; metrics: { label: string; score: number }[] }; index: number }) {
   const [expanded, setExpanded] = useState(false);
+  const headroom = Math.max(0, Math.round((pillar.potential - pillar.score) * 10) / 10);
 
   return (
     <ScrollReveal>
@@ -36,6 +37,11 @@ function PillarCard({ pillar, index }: { pillar: { name: string; score: number; 
               </div>
             </div>
             <div className="flex items-center gap-4">
+              {headroom > 0 && (
+                <span className="hidden sm:inline-flex type-mono text-[0.55rem] tracking-widest px-2 py-1 rounded-[var(--radius-xs)] border border-[color-mix(in_srgb,var(--accent-aurum)_30%,transparent)] text-[var(--accent-aurum)] bg-[color-mix(in_srgb,var(--accent-aurum)_8%,transparent)]">
+                  +{headroom.toFixed(1)} POSSIBLE
+                </span>
+              )}
               <span className="text-3xl font-display font-bold text-gradient-aurum">{pillar.score}</span>
               <motion.div
                 animate={{ rotate: expanded ? 180 : 0 }}
@@ -108,11 +114,11 @@ export default function PillarAnalysisPage() {
     return (
       <div className="space-y-8">
         <ScrollReveal>
-          <span className="section-number">EST. MMXXIV // PILLARS</span>
+          <span className="section-number">EST. MMXXIV // BEAUTY FRAMEWORK</span>
           <div className="flex items-center gap-3 mt-3 mb-2">
             <Target className="w-7 h-7 text-[var(--accent-aurum)]" />
             <h1 className="type-display text-[var(--text-primary)] tracking-tight">
-              4-PILLAR <span className="text-gradient-aurum">ANALYSIS.</span>
+              BEAUTY <span className="text-gradient-aurum">FRAMEWORK.</span>
             </h1>
           </div>
         </ScrollReveal>
@@ -120,7 +126,7 @@ export default function PillarAnalysisPage() {
           <div className="glass-card p-12 text-center">
             <Target className="w-16 h-16 text-[color-mix(in_srgb,var(--accent-aurum)_30%,transparent)] mx-auto mb-4" />
             <h2 className="type-heading text-[var(--text-primary)] mb-2">NO ANALYSIS YET</h2>
-            <p className="text-[var(--text-muted)] font-body mb-6">Complete a face analysis first to unlock your 4-pillar breakdown.</p>
+            <p className="text-[var(--text-muted)] font-body mb-6">Complete a face analysis first to unlock your Beauty Framework breakdown.</p>
             <Link href="/dashboard/face-analysis" className="btn-nexus inline-flex">
               START FACE ANALYSIS <ArrowRight className="w-4 h-4 ml-2" />
             </Link>
@@ -133,37 +139,52 @@ export default function PillarAnalysisPage() {
   return (
     <div className="space-y-10">
       <ScrollReveal>
-        <span className="section-number">EST. MMXXIV // PILLARS</span>
+        <span className="section-number">EST. MMXXIV // BEAUTY FRAMEWORK</span>
         <div className="flex items-center gap-3 mt-3 mb-2">
           <Target className="w-7 h-7 text-[var(--accent-aurum)]" />
           <h1 className="type-display text-[var(--text-primary)] tracking-tight">
-            4-PILLAR <span className="text-gradient-aurum">ANALYSIS.</span>
+            BEAUTY <span className="text-gradient-aurum">FRAMEWORK.</span>
           </h1>
         </div>
         <p className="text-[var(--text-muted)] font-body type-subhead max-w-xl">
-          Your face scored across four structural dimensions. Inspired by clinical facial analysis methodologies.
+          Four pillars — Harmony, Structure, Identity, Vitality. Each one expands into the exact measurements behind your score.
         </p>
       </ScrollReveal>
 
       <ScrollProgress />
 
+      <ScrollProgress />
+
       <ScrollReveal>
-        <div className="glass-card p-10 text-center">
-          <p className="type-label text-[var(--text-muted)] mb-2">OVERALL PILLAR SCORE</p>
-          <div className="type-massive text-gradient-aurum mb-2">{analysis.overall}</div>
-          <p className="text-sm text-[var(--text-muted)] font-body mb-8">out of 10</p>
-          <div className="grid grid-cols-3 gap-6 max-w-md mx-auto">
-            <div className="bg-[var(--bg-tertiary)] p-4 border border-[var(--border-primary)]">
-              <p className="type-label text-[var(--text-muted)] mb-1">CURRENT</p>
-              <p className="text-2xl font-display font-bold text-[var(--text-primary)]">{analysis.projection.current}</p>
+        <div className="glass-card p-8">
+          <div className="flex flex-col md:flex-row md:items-center gap-8">
+            <div className="flex-1">
+              <p className="type-label text-[var(--text-muted)] mb-2">YOUR FACIAL ARCHETYPE</p>
+              <h2 className="type-heading text-gradient-aurum tracking-tight mb-1">{analysis.identity.archetype}</h2>
+              <p className="text-sm text-[var(--text-muted)] font-body italic">“{analysis.identity.archetypeTagline}”</p>
             </div>
-            <div className="bg-[color-mix(in_srgb,var(--accent-aurum)_10%,transparent)] p-4 border border-[color-mix(in_srgb,var(--accent-aurum)_25%,transparent)]">
-              <p className="type-label text-[var(--accent-aurum)] mb-1">POTENTIAL</p>
-              <p className="text-2xl font-display font-bold text-[var(--accent-aurum)]">{analysis.projection.potential}</p>
-            </div>
-            <div className="bg-[var(--bg-tertiary)] p-4 border border-[var(--border-primary)]">
-              <p className="type-label text-[var(--text-muted)] mb-1">TIMELINE</p>
-              <p className="text-2xl font-display font-bold text-[var(--text-primary)]">{analysis.projection.months}<span className="text-sm text-[var(--text-muted)]">mo</span></p>
+            <div className="flex-1 w-full">
+              <div className="flex items-center justify-between mb-2">
+                <span className="type-mono text-[0.55rem] tracking-widest text-[var(--text-muted)]">MASCULINE</span>
+                <span className="type-mono text-[0.55rem] tracking-widest text-[var(--text-muted)]">{analysis.identity.spectrumLabel.toUpperCase()}</span>
+                <span className="type-mono text-[0.55rem] tracking-widest text-[var(--text-muted)]">FEMININE</span>
+              </div>
+              <div className="relative h-3 bg-[var(--bg-tertiary)] rounded-full overflow-hidden border border-[var(--border-primary)]">
+                <motion.div
+                  initial={{ width: 0 }}
+                  whileInView={{ width: `${100 - analysis.identity.spectrum}%` }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+                  className="absolute inset-y-0 left-0 bg-gradient-to-r from-[var(--accent-nexus)] to-[var(--accent-aurum)]"
+                />
+                <div
+                  className="absolute inset-y-0 w-0.5 bg-[var(--text-primary)]"
+                  style={{ left: `${100 - analysis.identity.spectrum}%` }}
+                />
+              </div>
+              <p className="type-mono text-[0.5rem] text-[var(--text-muted)] tracking-widest mt-2 text-right">
+                GEOMETRY-DERIVED SPECTRUM · {analysis.identity.spectrum}/100 MASCULINE LEAN
+              </p>
             </div>
           </div>
         </div>
@@ -171,8 +192,26 @@ export default function PillarAnalysisPage() {
 
       <ScrollProgress />
 
+      <ScrollProgress />
+
       <div>
         <ScrollReveal>
+          <div className="glass-card p-6 mb-8 flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-6">
+              <div>
+                <p className="type-label text-[var(--text-muted)]">FRAMEWORK SCORE</p>
+                <p className="text-3xl font-display font-bold text-gradient-aurum">{analysis.overall}<span className="text-sm text-[var(--text-muted)] font-body">/10</span></p>
+              </div>
+              <div className="h-10 w-px bg-[var(--border-primary)]" />
+              <div>
+                <p className="type-label text-[var(--text-muted)]">6-MONTH POTENTIAL</p>
+                <p className="text-xl font-display font-bold text-[var(--text-primary)]">{analysis.projection.potential}</p>
+              </div>
+            </div>
+            <p className="type-mono text-[0.55rem] tracking-widest text-[var(--text-muted)] max-w-xs">
+              POTENTIAL ASSUMES HIGH-IMPACT ROADMAP ITEMS BELOW ARE COMPLETED CONSISTENTLY.
+            </p>
+          </div>
           <div className="flex items-center gap-3 mb-6">
             <Sparkles className="w-6 h-6 text-[var(--accent-aurum)]" />
             <h2 className="type-heading text-[var(--text-primary)] tracking-tight">
@@ -180,8 +219,7 @@ export default function PillarAnalysisPage() {
             </h2>
           </div>
           <p className="text-[var(--text-muted)] font-body mb-6">Tap any pillar to expand the detailed breakdown.</p>
-        </ScrollReveal>
-        <div className="space-y-4">
+        </ScrollReveal>        <div className="space-y-4">
           {analysis.pillars.map((pillar, i) => (
             <PillarCard key={pillar.name} pillar={pillar} index={i} />
           ))}
