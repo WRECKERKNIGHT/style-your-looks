@@ -181,6 +181,9 @@ export default function FaceAnalysisPage() {
   const [shareCommunityOpen, setShareCommunityOpen] = useState(false);
   const imageRef = useRef<HTMLImageElement>(null);
   const [imageDims, setImageDims] = useState<{ w: number; h: number; aspect?: number } | null>(null);
+  // A dead photo source must never render the browser's broken-image glyph —
+  // swap in a branded placeholder instead.
+  const [photoBroken, setPhotoBroken] = useState(false);
 
   // Demo previews are session-local: they must be forgotten the moment the
   // user leaves this page, so they never persist across tabs or come back on
@@ -194,6 +197,10 @@ export default function FaceAnalysisPage() {
       }
     };
   }, []);
+
+  useEffect(() => {
+    setPhotoBroken(false);
+  }, [uploadedImage]);
 
   const buildReport = useCallback(() => {
     if (!faceResult) return "";
@@ -842,21 +849,31 @@ export default function FaceAnalysisPage() {
               animate="show"
               className="glass-card overflow-hidden relative"
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                ref={imageRef}
-                src={uploadedImage}
-                alt="Analysed face"
-                onLoad={(e) => {
-                  const el = e.currentTarget;
-                  setImageDims({
-                    w: el.clientWidth,
-                    h: el.clientHeight,
-                    aspect: el.naturalWidth > 0 ? el.naturalWidth / el.naturalHeight : undefined,
-                  });
-                }}
-                className="w-full max-h-[480px] object-cover"
-              />
+              {photoBroken ? (
+                <div className="w-full max-h-[480px] aspect-[4/3] flex flex-col items-center justify-center gap-3 bg-[var(--bg-tertiary)]">
+                  <ScanFace className="w-10 h-10 text-[var(--accent-aurum)]" />
+                  <p className="type-mono text-[0.6rem] tracking-widest text-[var(--text-muted)]">
+                    PHOTO UNAVAILABLE — RUN A NEW SCAN
+                  </p>
+                </div>
+              ) : (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                  ref={imageRef}
+                  src={uploadedImage}
+                  alt="Analysed face"
+                  onError={() => setPhotoBroken(true)}
+                  onLoad={(e) => {
+                    const el = e.currentTarget;
+                    setImageDims({
+                      w: el.clientWidth,
+                      h: el.clientHeight,
+                      aspect: el.naturalWidth > 0 ? el.naturalWidth / el.naturalHeight : undefined,
+                    });
+                  }}
+                  className="w-full max-h-[480px] object-cover"
+                />
+              )}
               <motion.div
                 className="absolute inset-x-0 h-24 pointer-events-none"
                 style={{

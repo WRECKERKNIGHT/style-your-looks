@@ -19,24 +19,27 @@ const securityHeaders = [
     key: "X-DNS-Prefetch-Control",
     value: "on",
   },
-  {
-    key: "Content-Security-Policy",
-    value: [
-      "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net",
-      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-      "font-src 'self' https://fonts.gstatic.com data:",
-      "img-src 'self' data: blob: https:",
-      "media-src 'self' blob: data:",
-      "connect-src 'self' https://*.supabase.co https://**.supabase.co https://cdn.jsdelivr.net https://storage.googleapis.com",
-      "worker-src 'self' blob:",
-      "frame-ancestors 'none'",
-      "base-uri 'self'",
-      "form-action 'self'",
-      "object-src 'none'",
-      "manifest-src 'self'",
-    ].join("; "),
-  },
+    {
+      key: "Content-Security-Policy",
+      value: [
+        "default-src 'self'",
+        // 'wasm-unsafe-eval' is required for WebAssembly compilation — without
+        // it the MediaPipe engines (face/pose/segmentation) cannot instantiate
+        // and every analysis reports "unable to load".
+        "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://cdn.jsdelivr.net",
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+        "font-src 'self' https://fonts.gstatic.com data:",
+        "img-src 'self' data: blob: https:",
+        "media-src 'self' blob: data:",
+        "connect-src 'self' https://*.supabase.co https://**.supabase.co https://cdn.jsdelivr.net https://storage.googleapis.com",
+        "worker-src 'self' blob:",
+        "frame-ancestors 'none'",
+        "base-uri 'self'",
+        "form-action 'self'",
+        "object-src 'none'",
+        "manifest-src 'self'",
+      ].join("; "),
+    },
 ];
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";

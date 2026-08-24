@@ -472,13 +472,31 @@ export async function analyzeFace(
 ): Promise<FaceLandmarkerResult> {
   onProgress?.(10);
 
-  try {
+  const initEngine = async (): Promise<void> => {
     await initializeFaceLandmarker();
-  } catch (err) {
-    console.error("MediaPipe init error:", err);
-    throw new Error(
-      "Could not load the face-detection engine. Check your connection and try again."
-    );
+  };
+
+  try {
+    await initEngine();
+  } catch (firstErr) {
+    console.error("MediaPipe init error:", firstErr);
+    // One self-heal retry: a poisoned cached instance or half-fetched asset
+    // recovers on a clean rebuild without the user ever seeing an error.
+    resetFaceEngine();
+    try {
+      await initEngine();
+    } catch (err) {
+      console.error("MediaPipe retry failed:", err);
+      const detail = `${err ?? ""}`;
+      if (/wasm|CompileError|WebAssembly/i.test(detail)) {
+        throw new Error(
+          "This browser could not start the WebAssembly vision engine. Update your browser (Chrome/Samsung Internet/Edge) and try again."
+        );
+      }
+      throw new Error(
+        "Could not load the face-detection engine. Check your connection and try again."
+      );
+    }
   }
   onProgress?.(30);
 
