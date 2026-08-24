@@ -504,7 +504,7 @@ function generateReport(face: any, body: any, color: any) {
       <text x="40" y="145" font-family="Arial, sans-serif" font-size="10" fill="#C9B18C">${face.facialShape} Shape · ${face.styleProfile} · ${face.overallRating}</text>
       ${faceMetrics.map((m, i) => `
         <text x="40" y="${barY + i * 32}" font-family="Arial, sans-serif" font-size="10" fill="#C9B18C">${m.label}</text>
-        <rect x="130" y="${barY + i * 32 - 10}" width="${(m.score / 10) * barMaxW}" height="${barH}" rx="3" fill="${m.score >= 7 ? 'var(--accent-nexus)' : m.score >= 5 ? 'var(--accent-aurum)' : '#A13B2F'}"/>
+        <rect x="130" y="${barY + i * 32 - 10}" width="${(m.score / 10) * barMaxW}" height="${barH}" rx="3" fill="${m.score >= 7 ? '#B98B56' : m.score >= 5 ? '#C8963E' : '#A13B2F'}"/>
         <text x="${135 + (m.score / 10) * barMaxW}" y="${barY + i * 32}" font-family="monospace" font-size="10" fill="#F3EAD9" font-weight="bold">${m.score.toFixed(1)}</text>
       `).join("")}
     ` : ""}
