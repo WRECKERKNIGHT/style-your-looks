@@ -1,6 +1,6 @@
 import { FaceLandmarker, FilesetResolver, type FaceLandmarkerResult } from "@mediapipe/tasks-vision";
 import { prepareCanvas } from "./preprocessing";
-import { resolveModelUrl, resolveWasmBase, MODEL_SOURCES } from "./engine-assets";
+import { resolveModelUrl, resolveWasmBase, invalidateAssetResolution, MODEL_SOURCES } from "./engine-assets";
 import { calculateSymmetryScore, calculateFaceShape, calculateSymmetryAxis, createUprightAccessor } from "./face-geometry";
 import { idealScore } from "./scoring-curves";
 
@@ -64,6 +64,32 @@ export function resetFaceEngine(): void {
   }
   faceLandmarker = null;
   landmarkerInitPromise = null;
+  // Forget pinned asset URLs too — a self-heal that replays a poisoned
+  // CDN/local decision is not a heal at all.
+  invalidateAssetResolution();
+}
+
+/**
+ * Map a raw engine failure to an honest, actionable user message.
+ * Distinguishes offline, extension-blocked CDNs and old browsers instead of
+ * blaming "the connection" for everything.
+ */
+export function describeEngineError(err: unknown): string {
+  const detail = `${err ?? ""}`;
+  const msg = err instanceof Error ? err.message : detail;
+  if (/wasm|CompileError|WebAssembly/i.test(detail)) {
+    return "This browser could not start the WebAssembly vision engine. Update your browser (Chrome/Samsung Internet/Edge) and try again.";
+  }
+  if (/ERR_INTERNET_DISCONNECTED|NetworkError|network/i.test(detail)) {
+    return "You appear to be offline. Reconnect and try again — analysis needs to download its vision model once.";
+  }
+  if (/ERR_BLOCKED_BY_CLIENT|blocked/i.test(detail)) {
+    return "A browser extension (ad-blocker/privacy shield) blocked the vision engine download. Pause it for this site and retry.";
+  }
+  if (/fetch|Failed to fetch|AbortError|timeout/i.test(msg)) {
+    return "The vision engine download timed out. Check your connection and try again.";
+  }
+  return "Could not load the face-detection engine. Check your connection and try again.";
 }
 
 /**
@@ -487,15 +513,7 @@ export async function analyzeFace(
       await initEngine();
     } catch (err) {
       console.error("MediaPipe retry failed:", err);
-      const detail = `${err ?? ""}`;
-      if (/wasm|CompileError|WebAssembly/i.test(detail)) {
-        throw new Error(
-          "This browser could not start the WebAssembly vision engine. Update your browser (Chrome/Samsung Internet/Edge) and try again."
-        );
-      }
-      throw new Error(
-        "Could not load the face-detection engine. Check your connection and try again."
-      );
+      throw new Error(describeEngineError(err));
     }
   }
   onProgress?.(30);
