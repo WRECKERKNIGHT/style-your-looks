@@ -2,10 +2,9 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import Link from "next/link";
-import { ImageUploader } from "@/components/shared/ImageUploader";
 import { useAnalysisStore } from "@/store/analysis-store";
 import { motion } from "framer-motion";
-import { Shirt, Undo2, Redo2, Download, ArrowRight, RotateCcw } from "lucide-react";
+import { Shirt, Undo2, Redo2, Download, ArrowRight, RotateCcw, Boxes, ScanLine } from "lucide-react";
 import { useToast } from "@/components/shared/Toast";
 import { ScrollParallax, ScrollBlur, SectionScrollProgress } from "@/components/shared/ScrollEffects";
 
@@ -72,15 +71,15 @@ function drawMannequin(ctx: CanvasRenderingContext2D, w: number, h: number, pose
     ctx.stroke();
   }
 
-  function drawGarmentOnBody(g: Garment, index: number) {
+  function drawGarmentOnBody(g: Garment) {
     ctx.save();
-    const baseY = 20 + index * 8;
+    const baseY = 20;
 
     if (g.type === "top" || g.type === "outerwear") {
       const isOuter = g.type === "outerwear";
       const w2 = (isOuter ? shoulders + 8 : shoulders) * cp;
       const wMid = waist * cp;
-      const endY = 160;
+      const endY = isOuter ? 175 : 160;
       ctx.beginPath();
       ctx.moveTo(-w2, baseY);
       ctx.quadraticCurveTo(-w2, 60, -wMid, endY);
@@ -131,7 +130,7 @@ function drawMannequin(ctx: CanvasRenderingContext2D, w: number, h: number, pose
   }
 
   drawBody();
-  garments.forEach((g, i) => drawGarmentOnBody(g, i));
+  garments.forEach((g) => drawGarmentOnBody(g));
   ctx.restore();
 }
 
@@ -151,11 +150,36 @@ const fadeUp = {
 export default function MannequinPage() {
   const { addToast } = useToast();
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const bodyResult = useAnalysisStore((s) => s.bodyResult);
   const [pose, setPose] = useState<MannequinPose>("front");
   const [bodyType, setBodyType] = useState<BodyType>("hourglass");
+  const [fromScan, setFromScan] = useState(false);
   const [garments, setGarments] = useState<Garment[]>([]);
   const [undoStack, setUndoStack] = useState<Garment[][]>([]);
   const [redoStack, setRedoStack] = useState<Garment[][]>([]);
+
+  // Auto-select the measured body type from the user's real pose scan —
+  // only on first load, so manual picks afterwards always win.
+  useEffect(() => {
+    const measured = bodyResult?.bodyType;
+    if (!measured) return;
+    const map: Record<string, BodyType> = {
+      "Hourglass": "hourglass",
+      "Rectangle": "rectangle",
+      "Triangle": "triangle",
+      "Inverted Triangle": "inverted-triangle",
+      "Round": "oval",
+      "Mesomorph": "rectangle",
+      "Endomorph": "oval",
+      "Ectomorph": "rectangle",
+    };
+    const mapped = map[measured];
+    if (mapped) {
+      setBodyType(mapped);
+      setFromScan(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bodyResult?.bodyType]);
 
   const renderCanvas = useCallback(() => {
     const canvas = canvasRef.current;
@@ -229,8 +253,24 @@ export default function MannequinPage() {
           </h1>
         </div>
         <p className="text-[var(--text-muted)] font-body type-subhead max-w-xl">
-          Build outfits on a virtual model.
+          Layer garments on a stylized 2D preview, shaped to your measured body type.
         </p>
+        <div className="flex flex-wrap items-center gap-2 mt-3">
+          {fromScan && (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-[color-mix(in_srgb,var(--accent-aurum)_35%,transparent)] bg-[color-mix(in_srgb,var(--accent-aurum)_8%,transparent)] type-mono text-[0.55rem] tracking-widest text-[var(--accent-aurum)]">
+              <ScanLine className="w-3 h-3" /> BODY TYPE FROM YOUR SCAN
+            </span>
+          )}
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-[var(--border-primary)] type-mono text-[0.55rem] tracking-widest text-[var(--text-muted)]">
+            STYLIZED 2D PREVIEW
+          </span>
+          <Link
+            href="/dashboard/3d-studio"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-[color-mix(in_srgb,var(--accent-nexus)_40%,transparent)] type-mono text-[0.55rem] tracking-widest text-[var(--accent-nexus)] hover:bg-[color-mix(in_srgb,var(--accent-nexus)_10%,transparent)] transition-colors"
+          >
+            <Boxes className="w-3 h-3" /> TRUE 3D STUDIO
+          </Link>
+        </div>
       </motion.div>
       </ScrollParallax>
 
