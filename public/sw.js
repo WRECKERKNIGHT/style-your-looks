@@ -1,4 +1,4 @@
-const CACHE = "zervey-v6";
+const CACHE = "zervey-v7";
 const STATIC_ASSETS = [
   "/",
   "/manifest.json",
