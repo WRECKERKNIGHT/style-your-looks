@@ -46,15 +46,32 @@ function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
 
 async function urlExists(url: string): Promise<boolean> {
   if (typeof window === "undefined") return false;
-  try {
-    const res = await withTimeout(fetch(url, { method: "HEAD", cache: "no-store" }), 5000);
-    return res.ok;
-  } catch {
-    return false;
+  // Two attempts: a single dropped packet / slow edge must not flip the whole
+  // session onto third-party CDNs that adblockers commonly block.
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const res = await withTimeout(fetch(url, { method: "HEAD", cache: "no-store" }), 4000);
+      return res.ok;
+    } catch {
+      if (attempt === 0) await new Promise((r) => setTimeout(r, 600));
+    }
   }
+  return false;
 }
 
 let wasmBasePromise: Promise<string> | null = null;
+const modelUrlCache = new Map<string, Promise<string>>();
+
+/**
+ * Forget every resolved asset decision so the next resolution re-probes from
+ * scratch. Must be called alongside resetFaceEngine() during self-heal
+ * retries — otherwise one bad probe (offline blip, dev restart, SW hiccup)
+ * pins a broken URL for the lifetime of the tab.
+ */
+export function invalidateAssetResolution(): void {
+  wasmBasePromise = null;
+  modelUrlCache.clear();
+}
 
 /**
  * Resolve the MediaPipe WASM fileset base URL. Prefers the copy bundled with
@@ -72,8 +89,6 @@ export function resolveWasmBase(): Promise<string> {
   }
   return wasmBasePromise;
 }
-
-const modelUrlCache = new Map<string, Promise<string>>();
 
 /**
  * Resolve a model asset URL, preferring the bundled copy under /public/models
