@@ -8,6 +8,8 @@ export interface VtonRequest {
   photo: HTMLImageElement | HTMLCanvasElement;
   garment: HTMLImageElement | HTMLCanvasElement;
   type: GarmentType;
+  /** Optional stage-aware progress (0–100) for live UI. */
+  onProgress?: (pct: number) => void;
 }
 
 export interface VtonResult {
@@ -197,15 +199,18 @@ function scaleImage(
 }
 
 export async function runVton(req: VtonRequest): Promise<VtonResult> {
-  const { photo, garment, type } = req;
+  const { photo, garment, type, onProgress } = req;
   const base = scaleImage(photo);
   const canvas = base.canvas;
   const w = canvas.width;
   const h = canvas.height;
   const ctx = canvas.getContext("2d")!;
+  onProgress?.(15);
 
   const pose = await detectPoseOnly(canvas);
+  onProgress?.(35);
   const seg = await segmentPerson(canvas);
+  onProgress?.(55);
 
   if (maskCoverage(seg.personMask) < 0.01) {
     throw new Error("No person detected in this photo — upload a full-body shot.");
@@ -255,6 +260,7 @@ export async function runVton(req: VtonRequest): Promise<VtonResult> {
   }
 
   const garmentCv = scaleImage(garment);
+  onProgress?.(65);
   const gw = garmentCv.canvas.width;
   const gh = garmentCv.canvas.height;
 
@@ -276,6 +282,7 @@ export async function runVton(req: VtonRequest): Promise<VtonResult> {
   } catch {
     warp = flatWarp(garmentCv.canvas, quad, w, h);
   }
+  onProgress?.(80);
 
   const torsoPath = (g: CanvasRenderingContext2D) => {
     g.beginPath();
@@ -350,8 +357,11 @@ export async function runVton(req: VtonRequest): Promise<VtonResult> {
   fctx.filter = `brightness(${brightness})`;
   fctx.drawImage(warpClip, 0, 0);
   fctx.restore();
+  onProgress?.(95);
 
   const shoulderPx = ls && rs ? Math.hypot(rs[0] - ls[0], rs[1] - ls[1]) : w * 0.3;
+  // Rough anthropometric estimate assuming a ~170 cm subject — disclosed as
+  // such in the UI rather than presented as a tailor's measurement.
   const shoulderCm = Math.round((shoulderPx / h) * 170);
   const { size, reason } = fitFromShoulder(shoulderCm);
 
