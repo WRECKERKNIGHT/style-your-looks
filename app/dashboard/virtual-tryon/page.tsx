@@ -42,6 +42,7 @@ export default function VirtualTryOnPage() {
   const [garmentMeta, setGarmentMeta] = useState<{ name: string; credit: string } | null>(null);
   const [isLoadingProduct, setIsLoadingProduct] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [stageProgress, setStageProgress] = useState(0);
   const [result, setResult] = useState<VtonResult | null>(null);
   const [layer, setLayer] = useState<VtonLayer>("final");
 
@@ -107,8 +108,14 @@ export default function VirtualTryOnPage() {
     const img = loadedImg;
     if (!img || !garmentCanvas) return;
     setIsProcessing(true);
+    setStageProgress(0);
     try {
-      const res = await runVton({ photo: img, garment: garmentCanvas, type: garmentType });
+      const res = await runVton({
+        photo: img,
+        garment: garmentCanvas,
+        type: garmentType,
+        onProgress: setStageProgress,
+      });
       setResult(res);
       setLayer("final");
       addToast("Try-on complete — first run may take a few seconds", "success");
@@ -191,11 +198,11 @@ export default function VirtualTryOnPage() {
             <canvas ref={canvasRef} className="w-full" />
 
             {isProcessing && (
-              <div className="absolute inset-0 glass-card backdrop-blur-sm flex items-center justify-center z-10 p-6">
+              <div className="absolute inset-0 glass-card backdrop-blur-sm flex flex-col items-center justify-center z-10 p-6">
                 <AIScanner
                   compact
                   active
-                  progress={70}
+                  progress={stageProgress}
                   done={false}
                   title="WARPING GARMENT"
                 />
@@ -235,7 +242,7 @@ export default function VirtualTryOnPage() {
                     <span className="type-mono text-xl text-[var(--accent-aurum)] font-bold">{result.fitSuggestion}</span>
                   </div>
                   <div className="flex items-center justify-between p-4 bg-[var(--bg-tertiary)] border border-[var(--border-primary)]">
-                    <span className="text-sm text-[var(--text-muted)] font-body">Shoulder estimate</span>
+                    <span className="text-sm text-[var(--text-muted)] font-body">Shoulder estimate <span className="type-mono text-[0.5rem] tracking-widest">(assumes ~170 CM SUBJECT)</span></span>
                     <span className="type-mono text-sm text-[var(--text-primary)]">{result.shoulderCm} CM</span>
                   </div>
                   <p className="text-sm text-[var(--text-muted)] font-body leading-relaxed pt-2">{result.fitReason}</p>

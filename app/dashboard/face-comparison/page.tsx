@@ -25,7 +25,7 @@ const FEATURE_GROUPS: { name: string; indices: number[] }[] = [
   { name: "Eye Alignment", indices: [33, 7, 163, 144, 145, 153, 154, 155, 133, 173, 157, 158, 159, 160, 161, 246, 263, 249, 390, 373, 374, 380, 381, 382, 398, 384, 385, 386, 387, 388, 466] },
   { name: "Nose Profile", indices: [168, 6, 197, 195, 5, 4, 1, 19, 94, 2, 98, 97, 326, 327, 49, 279, 220, 437] },
   { name: "Lip Symmetry", indices: [0, 39, 40, 185, 61, 146, 91, 181, 84, 17, 314, 405, 321, 375, 291, 409, 270, 269, 267, 78, 95, 88, 178, 87, 14, 317, 402, 318, 324, 308, 415, 310, 311, 312, 13, 82, 81, 80, 191] },
-  { name: "Jawline", indices: [127, 132, 234, 128, 129, 130, 131, 152, 356, 358, 359, 361, 368, 367, 366, 364, 365, 312, 206, 216, 210, 213, 213] },
+  { name: "Jawline", indices: [127, 132, 234, 128, 129, 130, 131, 152, 356, 358, 359, 361, 368, 367, 366, 364, 365, 312, 206, 216, 210, 213] },
   { name: "Forehead", indices: [9, 70, 63, 105, 66, 107, 336, 296, 334, 293, 108, 69, 67, 109, 10] },
   { name: "Overall Harmony", indices: [1, 33, 133, 263, 362, 61, 291, 152, 234, 454, 2, 10, 9, 13] },
 ];
@@ -37,8 +37,20 @@ async function detectLandmarks(dataUrl: string): Promise<number[][]> {
     img.onerror = () => reject(new Error("Could not load the image"));
     img.src = dataUrl;
   });
+  // Downscale to the same MAX_SIDE the main pipeline uses — full-resolution
+  // phone photos made detect() slow and memory-hungry for no accuracy gain.
+  const MAX_SIDE = 1024;
+  const scale = Math.min(1, MAX_SIDE / Math.max(img.naturalWidth, img.naturalHeight));
+  let source: HTMLImageElement | HTMLCanvasElement = img;
+  if (scale < 1) {
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(img.naturalWidth * scale);
+    canvas.height = Math.round(img.naturalHeight * scale);
+    canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
+    source = canvas;
+  }
   const landmarker = await initializeFaceLandmarker();
-  const result = landmarker.detect(img);
+  const result = landmarker.detect(source);
   const lm = result.faceLandmarks?.[0];
   if (!lm) throw new Error("No face detected in one of the photos. Use front-facing, well-lit photos.");
   return lm.map((p) => [p.x, p.y, p.z ?? 0]);
