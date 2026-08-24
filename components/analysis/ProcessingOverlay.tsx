@@ -129,6 +129,20 @@ export function ProcessingOverlay({
 
             {showPhoto && (
               <div className="relative overflow-hidden border border-[var(--border-primary)] bg-black/40 mb-8">
+                {/* AI grid fades in behind the subject while scanning */}
+                <motion.div
+                  className="pointer-events-none absolute inset-0 z-[1]"
+                  style={{
+                    backgroundImage:
+                      "linear-gradient(rgba(232,200,138,0.16) 1px, transparent 1px), linear-gradient(90deg, rgba(232,200,138,0.16) 1px, transparent 1px)",
+                    backgroundSize: "34px 34px",
+                    maskImage: "radial-gradient(75% 75% at 50% 45%, black 30%, transparent 100%)",
+                    WebkitMaskImage: "radial-gradient(75% 75% at 50% 45%, black 30%, transparent 100%)",
+                  }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: [0, 0.5, 0.22] }}
+                  transition={{ duration: 2.4, times: [0, 0.35, 1], ease: "easeOut" }}
+                />
                 <motion.div
                   key={`zoom-${previewImage}`}
                   initial={{ scale: 1.06 }}
@@ -146,16 +160,30 @@ export function ProcessingOverlay({
                   />
 
                   {previewDims && preview!.landmarks.length > 0 && (
-                    <FaceSkeletonOverlay
-                      key={previewImage}
-                      landmarks={preview!.landmarks}
-                      width={previewDims.w}
-                      height={previewDims.h}
-                      imageAspect={previewDims.aspect}
-                      facialShape={liveMetrics.shape}
-                      measurements={liveMetrics.measurements}
-                      animate
-                    />
+                    <>
+                      <FaceSkeletonOverlay
+                        key={previewImage}
+                        landmarks={preview!.landmarks}
+                        width={previewDims.w}
+                        height={previewDims.h}
+                        imageAspect={previewDims.aspect}
+                        facialShape={liveMetrics.shape}
+                        measurements={liveMetrics.measurements}
+                        animate
+                      />
+                      {/* one-shot lock pulse the moment the face locks */}
+                      <motion.div
+                        key={`lock-${previewImage}`}
+                        className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full z-[3]"
+                        initial={{ width: 40, height: 40, opacity: 0.9 }}
+                        animate={{ width: 320, height: 320, opacity: 0 }}
+                        transition={{ duration: 1.1, ease: "easeOut" }}
+                        style={{
+                          border: "2px solid rgba(232,200,138,0.85)",
+                          boxShadow: "0 0 34px rgba(232,200,138,0.5), inset 0 0 22px rgba(232,200,138,0.35)",
+                        }}
+                      />
+                    </>
                   )}
 
                   {previewDims && preview!.landmarks.length === 0 && (
