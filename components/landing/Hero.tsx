@@ -11,7 +11,7 @@ import { StatementMarquee } from "./StatementMarquee";
 import { MannequinSection } from "./MannequinSection";
 import { CommunitySection } from "./CommunitySection";
 import { TestimonialsSection } from "./TestimonialsSection";
-import { FaqSection } from "./FaqSection";
+import { FaqSection, FaqJsonLd } from "./FaqSection";
 import { CtaSection } from "./CtaSection";
 import { Footer } from "./Footer";
 
@@ -53,6 +53,7 @@ export function Hero() {
       <CommunitySection />
       <TestimonialsSection />
       <FaqSection />
+      <FaqJsonLd />
       <CtaSection />
       <Footer />
     </div>

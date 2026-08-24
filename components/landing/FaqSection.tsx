@@ -38,6 +38,28 @@ const faqs = [
   },
 ];
 
+/**
+ * FAQPage structured data so search engines can render these Q&As as rich
+ * results. Mirrors the visible FAQ exactly — Google penalizes mismatches.
+ */
+export function FaqJsonLd() {
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map(({ q, a }) => ({
+      "@type": "Question",
+      name: q,
+      acceptedAnswer: { "@type": "Answer", text: a },
+    })),
+  };
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+    />
+  );
+}
+
 export function FaqSection() {
   const [open, setOpen] = useState<number | null>(0);
 
