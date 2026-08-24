@@ -492,9 +492,15 @@ export function AnalysisResults() {
               },
               {
                 label: "Head Pose",
-                ok: Math.abs(faceResult.qualityGate.headRoll) < 15 && Math.abs(faceResult.qualityGate.headPitch) < 20,
-                warn: false,
-                value: `roll ${faceResult.qualityGate.headRoll.toFixed(1)}° · pitch ${faceResult.qualityGate.headPitch.toFixed(1)}°`,
+                ok:
+                  Math.abs(faceResult.qualityGate.headYaw) < 15 &&
+                  Math.abs(faceResult.qualityGate.headRoll) < 15 &&
+                  Math.abs(faceResult.qualityGate.headPitch) < 20,
+                warn:
+                  (Math.abs(faceResult.qualityGate.headYaw) >= 15 && Math.abs(faceResult.qualityGate.headYaw) <= 25) ||
+                  (Math.abs(faceResult.qualityGate.headRoll) >= 15 && Math.abs(faceResult.qualityGate.headRoll) <= 18) ||
+                  (Math.abs(faceResult.qualityGate.headPitch) >= 20 && Math.abs(faceResult.qualityGate.headPitch) <= 22),
+                value: `yaw ${faceResult.qualityGate.headYaw.toFixed(1)}° · roll ${faceResult.qualityGate.headRoll.toFixed(1)}° · pitch ${faceResult.qualityGate.headPitch.toFixed(1)}°`,
               },
             ].map((check) => {
               const status = check.ok ? "pass" : check.warn ? "warn" : "fail";
