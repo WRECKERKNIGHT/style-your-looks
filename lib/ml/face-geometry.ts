@@ -115,6 +115,54 @@ function axisSide(axis: SymmetryAxis, q: Point2D): number {
   return ux * (q.y - axis.a.y) - uy * (q.x - axis.a.x);
 }
 
+export interface UprightAccessor {
+  /** Landmark i rotated into the upright frame (null if missing). */
+  pt(i: number): Point2D | null;
+  /** Axis tilt that measurements were corrected by, in degrees. */
+  correctedByDeg: number;
+}
+
+/**
+ * Returns an accessor that reads landmarks rotated into the canonical upright
+ * frame — the pupil-midpoint → chin axis is vertical, exactly how clinical
+ * anthropometry is taken against a plumb line. Widths measured as |Δx| and
+ * heights as |Δy| then stop shrinking by cos(tilt) when the head is rolled,
+ * so bilateral metrics stay truthful without rejecting slightly tilted
+ * photos. Rotation is a no-op for perfectly frontal captures.
+ */
+export function createUprightAccessor(landmarks: LandmarkList): UprightAccessor {
+  const fallback = (i: number) => getPoint(landmarks, i);
+  const axis = calculateSymmetryAxis(landmarks);
+  if (!axis || Math.abs(axis.angleDeg) < 0.05) {
+    return { pt: fallback, correctedByDeg: 0 };
+  }
+
+  const theta = (-axis.angleDeg * Math.PI) / 180;
+  const cos = Math.cos(theta);
+  const sin = Math.sin(theta);
+  const cache = new Map<number, Point2D | null>();
+
+  return {
+    correctedByDeg: Math.round(axis.angleDeg * 10) / 10,
+    pt(i: number) {
+      const cached = cache.get(i);
+      if (cached !== undefined) return cached;
+      const p = getPoint(landmarks, i);
+      let out: Point2D | null = null;
+      if (p) {
+        const dx = p.x - axis.a.x;
+        const dy = p.y - axis.a.y;
+        out = {
+          x: axis.a.x + dx * cos - dy * sin,
+          y: axis.a.y + dx * sin + dy * cos,
+        };
+      }
+      cache.set(i, out);
+      return out;
+    },
+  };
+}
+
 /** Position of Q projected onto the axis (0 at pupil midpoint, length at chin). */
 function axisOffset(axis: SymmetryAxis, q: Point2D): number {
   const ux = (axis.b.x - axis.a.x) / axis.length;
@@ -191,14 +239,15 @@ export function buildStructuralChains(landmarks: LandmarkList): StructuralChains
  * Returns Round, Square, Heart, Diamond, Oblong, Triangle or Oval.
  */
 export function calculateFaceShape(landmarks: LandmarkList): string {
-  const fw = getPoint(landmarks, 108);
-  const fw2 = getPoint(landmarks, 337);
-  const c1 = getPoint(landmarks, 234);
-  const c2 = getPoint(landmarks, 454);
-  const j1 = getPoint(landmarks, 172);
-  const j2 = getPoint(landmarks, 397);
-  const top = getPoint(landmarks, 10);
-  const chin = getPoint(landmarks, 152);
+  const U = createUprightAccessor(landmarks);
+  const fw = U.pt(108);
+  const fw2 = U.pt(337);
+  const c1 = U.pt(234);
+  const c2 = U.pt(454);
+  const j1 = U.pt(172);
+  const j2 = U.pt(397);
+  const top = U.pt(10);
+  const chin = U.pt(152);
   if (!fw || !fw2 || !c1 || !c2 || !j1 || !j2 || !top || !chin) return "Oval";
 
   const foreheadWidth = Math.abs(fw.x - fw2.x);

@@ -1,4 +1,5 @@
 import type { FaceLandmarkerResult } from "@mediapipe/tasks-vision";
+import { createUprightAccessor } from "./face-geometry";
 import {
   getFaceSymmetry,
   getFaceSymmetryAxis,
@@ -148,15 +149,18 @@ function getGoldenRatio(result: FaceLandmarkerResult): number {
   const landmarks = result.faceLandmarks?.[0];
   if (!landmarks || landmarks.length < 468) return 5;
 
-  const leftEye = landmarks[33];
-  const rightEye = landmarks[263];
-  const noseTip = landmarks[1];
-  const chin = landmarks[152];
-  const leftMouth = landmarks[61];
-  const rightMouth = landmarks[291];
+  const U = createUprightAccessor(landmarks);
+  const leftEye = U.pt(33);
+  const rightEye = U.pt(263);
+  const chin = U.pt(152);
+  const top = U.pt(10);
+  const leftMouth = U.pt(61);
+  const rightMouth = U.pt(291);
+  if (!leftEye || !rightEye || !chin || !top || !leftMouth || !rightMouth) return 5;
 
   const faceWidth = Math.abs(rightEye.x - leftEye.x);
-  const faceLength = Math.abs(chin.y - landmarks[10].y);
+  const faceLength = Math.hypot(chin.x - top.x, chin.y - top.y);
+  if (faceWidth === 0 || faceLength === 0) return 5;
   const widthToLength = faceWidth / faceLength;
 
   const mouthWidth = Math.abs(rightMouth.x - leftMouth.x);
@@ -174,13 +178,17 @@ function getLipFullness(result: FaceLandmarkerResult): number {
   const landmarks = result.faceLandmarks?.[0];
   if (!landmarks || landmarks.length < 468) return 5;
 
-  const upperLip = landmarks[13];
-  const lowerLip = landmarks[14];
-  const mouthTop = landmarks[0];
-  const mouthBottom = landmarks[17];
+  // Vertical measurement — upright frame keeps it honest under head tilt.
+  const U = createUprightAccessor(landmarks);
+  const upperLip = U.pt(13);
+  const lowerLip = U.pt(14);
+  const mouthTop = U.pt(0);
+  const mouthBottom = U.pt(17);
+  if (!upperLip || !lowerLip || !mouthTop || !mouthBottom) return 5;
 
   const lipHeight = Math.abs(lowerLip.y - upperLip.y);
   const mouthHeight = Math.abs(mouthBottom.y - mouthTop.y);
+  if (mouthHeight === 0) return 5;
   const ratio = lipHeight / mouthHeight;
 
   const idealRatio = 0.55;
@@ -193,9 +201,16 @@ function getNoseProfile(result: FaceLandmarkerResult): number {
   const landmarks = result.faceLandmarks?.[0];
   if (!landmarks || landmarks.length < 478) return 5;
 
-  const noseWidth = Math.abs(landmarks[458].x - landmarks[468].x);
-  const faceWidth = Math.abs(landmarks[234].x - landmarks[454].x);
-  if (faceWidth === 0) return 5;
+  const U = createUprightAccessor(landmarks);
+  const ln = U.pt(458);
+  const rn = U.pt(468);
+  const lc = U.pt(234);
+  const rc = U.pt(454);
+  if (!ln || !rn || !lc || !rc) return 5;
+
+  const noseWidth = Math.abs(rn.x - ln.x);
+  const faceWidth = Math.abs(rc.x - lc.x);
+  if (faceWidth === 0 || noseWidth === 0) return 5;
   const noseToFace = noseWidth / faceWidth;
 
   const idealNoseRatio = 0.28;
@@ -208,16 +223,19 @@ function getForeheadBalance(result: FaceLandmarkerResult): number {
   const landmarks = result.faceLandmarks?.[0];
   if (!landmarks || landmarks.length < 468) return 5;
 
-  const hairline = landmarks[10];
-  const browLine = landmarks[9];
-  const noseBase = landmarks[2];
-  const chin = landmarks[152];
+  const U = createUprightAccessor(landmarks);
+  const hairline = U.pt(10);
+  const browLine = U.pt(9);
+  const noseBase = U.pt(2);
+  const chin = U.pt(152);
+  if (!hairline || !browLine || !noseBase || !chin) return 5;
 
   const upperThird = Math.abs(browLine.y - hairline.y);
   const middleThird = Math.abs(noseBase.y - browLine.y);
   const lowerThird = Math.abs(chin.y - noseBase.y);
 
   const avg = (upperThird + middleThird + lowerThird) / 3;
+  if (avg === 0) return 5;
   const deviation =
     (Math.abs(upperThird - avg) + Math.abs(middleThird - avg) + Math.abs(lowerThird - avg)) /
     (avg * 3);
@@ -230,13 +248,16 @@ function getCheekboneDefinition(result: FaceLandmarkerResult): number {
   const landmarks = result.faceLandmarks?.[0];
   if (!landmarks || landmarks.length < 468) return 5;
 
-  const leftCheek = landmarks[234];
-  const rightCheek = landmarks[454];
-  const leftJaw = landmarks[172];
-  const rightJaw = landmarks[397];
+  const U = createUprightAccessor(landmarks);
+  const leftCheek = U.pt(234);
+  const rightCheek = U.pt(454);
+  const leftJaw = U.pt(172);
+  const rightJaw = U.pt(397);
+  if (!leftCheek || !rightCheek || !leftJaw || !rightJaw) return 5;
 
   const cheekWidth = Math.abs(rightCheek.x - leftCheek.x);
   const jawWidth = Math.abs(rightJaw.x - leftJaw.x);
+  if (jawWidth === 0 || cheekWidth === 0) return 5;
   const cheekToJaw = cheekWidth / jawWidth;
 
   const score =
