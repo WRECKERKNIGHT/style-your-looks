@@ -18,11 +18,34 @@ import {
 } from "@/lib/data/japanese-color-book";
 import { useToast } from "@/components/shared/Toast";
 import { OutfitIllustration } from "@/components/color-book/OutfitIllustration";
+import { COMBO_PHOTOS } from "@/lib/data/color-book-photos";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
   show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
 };
+
+/**
+ * Real stock photography per outfit with the hand-drawn illustration as an
+ * offline/error fallback. Photos set the mood; the swatch chips carry the
+ * exact traditional hex values.
+ */
+function ComboPhotoView({ combo }: { combo: OutfitCombo }) {
+  const [broken, setBroken] = useState(false);
+  const photo = COMBO_PHOTOS[combo.id];
+  useEffect(() => setBroken(false), [combo.id]);
+  if (!photo || broken) return <OutfitIllustration combo={combo} />;
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={photo.url}
+      alt={photo.alt}
+      loading="lazy"
+      onError={() => setBroken(true)}
+      className="w-full h-full object-cover"
+    />
+  );
+}
 
 function SwatchStrip({ combo }: { combo: OutfitCombo }) {
   return (
@@ -48,7 +71,7 @@ function ComboCard({ combo, onOpen }: { combo: OutfitCombo; onOpen: () => void }
     >
       <div className="aspect-[4/3] border-b border-[var(--border-primary)] overflow-hidden">
         <div className="w-full h-full transition-transform duration-500 ease-out group-hover:scale-[1.03]">
-          <OutfitIllustration combo={combo} />
+          <ComboPhotoView combo={combo} />
         </div>
       </div>
       <div className="p-4">
@@ -297,7 +320,7 @@ function ComboModal({ combo, onClose }: { combo: OutfitCombo | null; onClose: ()
 
           <div data-lenis-prevent className="flex-1 overflow-y-auto p-6 space-y-5">
             <div className="rounded-[var(--radius-md)] overflow-hidden border border-[var(--border-primary)] aspect-[4/3]">
-              <OutfitIllustration combo={combo} />
+              <ComboPhotoView combo={combo} />
             </div>
             <div className="flex overflow-hidden border border-[var(--border-primary)] h-20">
               {combo.items.map(({ garment, colorId }) => {
