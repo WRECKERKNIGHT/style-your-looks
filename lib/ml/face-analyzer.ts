@@ -2,6 +2,7 @@ import { FaceLandmarker, FilesetResolver, type FaceLandmarkerResult } from "@med
 import { prepareCanvas } from "./preprocessing";
 import { resolveModelUrl, resolveWasmBase, MODEL_SOURCES } from "./engine-assets";
 import { calculateSymmetryScore, calculateFaceShape, calculateSymmetryAxis, createUprightAccessor } from "./face-geometry";
+import { idealScore } from "./scoring-curves";
 
 let faceLandmarker: FaceLandmarker | null = null;
 let landmarkerInitPromise: Promise<FaceLandmarker> | null = null;
@@ -170,8 +171,7 @@ export function getFaceProportions(result: FaceLandmarkerResult): number {
     Math.abs(middleThird - idealRatio) +
     Math.abs(lowerThird - idealRatio);
 
-  const score = Math.max(0, 10 - deviation * 20);
-  return Math.min(10, score);
+  return idealScore(deviation, 0, 0.09);
 }
 
 export function getJawlineScore(result: FaceLandmarkerResult): number {
@@ -219,11 +219,8 @@ export function getEyeSpacingScore(result: FaceLandmarkerResult): number {
 
   const ratio = eyeGap / eyeWidth;
 
-  const idealRatio = 1.0;
-  const deviation = Math.abs(ratio - idealRatio);
-
-  const score = Math.max(0, 10 - deviation * 15);
-  return Math.min(10, score);
+  // Ideal spacing ≈ one eye-width; σ calibrated to typical population spread.
+  return idealScore(ratio, 1.0, 0.28);
 }
 
 function dist2(ax: number, ay: number, bx: number, by: number): number {
@@ -245,9 +242,8 @@ export function getFwhrScore(result: FaceLandmarkerResult): number {
   if (bizygomaticWidth === 0 || browToLip === 0) return 5;
 
   const fwhr = bizygomaticWidth / browToLip;
-  const ideal = 1.95;
-  const score = 10 - Math.abs(fwhr - ideal) * 12;
-  return Math.max(2, Math.min(10, score));
+  // Researched attractive centre ≈ 1.95; σ ≈ half the real FWHR spread.
+  return idealScore(fwhr, 1.95, 0.22);
 }
 
 /** Raw FWHR value (for display) — 1.8–2.1 is the researched attractive range. */
@@ -286,9 +282,8 @@ export function getCanthalTiltScore(result: FaceLandmarkerResult): number {
   const rightTilt = tilt(362, 263);
   const avgTilt = (leftTilt + rightTilt) / 2 - U.correctedByDeg;
 
-  const ideal = 5;
-  const score = 10 - Math.abs(avgTilt - ideal) * 1.2;
-  return Math.max(2, Math.min(10, score));
+  // Positive tilt reads alert/attractive; population mode ≈ +5°.
+  return idealScore(avgTilt, 5, 4.5);
 }
 
 /** Raw canthal tilt in degrees (display value), roll-corrected. */
@@ -338,8 +333,7 @@ export function getHorizontalFifthsScore(result: FaceLandmarkerResult): number {
     deviation += Math.abs(f - ideal) / ideal;
   }
 
-  const score = 10 - deviation * 9;
-  return Math.max(2, Math.min(10, score));
+  return idealScore(deviation, 0, 0.3);
 }
 
 /** Eye width to nose width ratio (golden ideal ~1.618). */
@@ -357,9 +351,7 @@ export function getEyeNoseRatioScore(result: FaceLandmarkerResult): number {
   if (eyeWidth === 0 || noseWidth === 0) return 5;
 
   const ratio = eyeWidth / noseWidth;
-  const ideal = 1.618;
-  const score = 10 - Math.abs(ratio - ideal) * 6;
-  return Math.max(2, Math.min(10, score));
+  return idealScore(ratio, 1.618, 0.38);
 }
 
 /** Raw eye/nose ratio for display. */
@@ -392,9 +384,7 @@ export function getNoseChinRatioScore(result: FaceLandmarkerResult): number {
   if (noseLength === 0 || faceLength === 0) return 5;
 
   const ratio = noseLength / faceLength;
-  const ideal = 0.3;
-  const score = 10 - Math.abs(ratio - ideal) * 35;
-  return Math.max(2, Math.min(10, score));
+  return idealScore(ratio, 0.3, 0.06);
 }
 
 /** Midface ratio — glabella-to-subnasale over subnasale-to-menton, ideal ~1.0. */
@@ -411,9 +401,7 @@ export function getMidfaceRatioScore(result: FaceLandmarkerResult): number {
   if (upper === 0 || lower === 0) return 5;
 
   const ratio = upper / lower;
-  const ideal = 1.0;
-  const score = 10 - Math.abs(ratio - ideal) * 15;
-  return Math.max(2, Math.min(10, score));
+  return idealScore(ratio, 1.0, 0.14);
 }
 
 export function getSkinClarity(

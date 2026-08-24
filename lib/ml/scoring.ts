@@ -1,5 +1,6 @@
 import type { FaceLandmarkerResult } from "@mediapipe/tasks-vision";
 import { createUprightAccessor } from "./face-geometry";
+import { idealScore } from "./scoring-curves";
 import {
   getFaceSymmetry,
   getFaceSymmetryAxis,
@@ -167,11 +168,10 @@ function getGoldenRatio(result: FaceLandmarkerResult): number {
   const mouthToFaceWidth = mouthWidth / faceWidth;
 
   const idealRatio = 0.618;
-  const deviation1 = Math.abs(widthToLength - idealRatio);
-  const deviation2 = Math.abs(mouthToFaceWidth - 0.6);
-
-  const score = 10 - (deviation1 * 15 + deviation2 * 8);
-  return Math.max(1, Math.min(10, score));
+  // φ adherence blends width-to-length (heavily) with mouth-to-width.
+  const wtl = idealScore(widthToLength, idealRatio, 0.08, 1, 10);
+  const mtw = idealScore(mouthToFaceWidth, 0.6, 0.07, 1, 10);
+  return Math.max(1, Math.min(10, Math.round((wtl * 0.65 + mtw * 0.35) * 100) / 100));
 }
 
 function getLipFullness(result: FaceLandmarkerResult): number {
@@ -192,9 +192,7 @@ function getLipFullness(result: FaceLandmarkerResult): number {
   const ratio = lipHeight / mouthHeight;
 
   const idealRatio = 0.55;
-  const deviation = Math.abs(ratio - idealRatio);
-  const score = 10 - deviation * 20;
-  return Math.max(2, Math.min(9.5, score));
+  return idealScore(ratio, idealRatio, 0.15, 2, 9.5);
 }
 
 function getNoseProfile(result: FaceLandmarkerResult): number {
@@ -214,9 +212,7 @@ function getNoseProfile(result: FaceLandmarkerResult): number {
   const noseToFace = noseWidth / faceWidth;
 
   const idealNoseRatio = 0.28;
-  const deviation = Math.abs(noseToFace - idealNoseRatio);
-  const score = 10 - deviation * 18;
-  return Math.max(2, Math.min(9.5, score));
+  return idealScore(noseToFace, idealNoseRatio, 0.05, 2, 9.5);
 }
 
 function getForeheadBalance(result: FaceLandmarkerResult): number {
@@ -240,8 +236,7 @@ function getForeheadBalance(result: FaceLandmarkerResult): number {
     (Math.abs(upperThird - avg) + Math.abs(middleThird - avg) + Math.abs(lowerThird - avg)) /
     (avg * 3);
 
-  const score = 10 - deviation * 25;
-  return Math.max(2, Math.min(10, score));
+  return idealScore(deviation, 0, 0.055, 2, 10);
 }
 
 function getCheekboneDefinition(result: FaceLandmarkerResult): number {
@@ -260,13 +255,8 @@ function getCheekboneDefinition(result: FaceLandmarkerResult): number {
   if (jawWidth === 0 || cheekWidth === 0) return 5;
   const cheekToJaw = cheekWidth / jawWidth;
 
-  const score =
-    cheekToJaw > 1.05
-      ? 8 + (cheekToJaw - 1.05) * 30
-      : cheekToJaw > 0.95
-      ? 6 + (cheekToJaw - 0.95) * 20
-      : 4 + cheekToJaw * 2;
-  return Math.max(2, Math.min(9.5, score));
+  // High cheek-to-jaw ratios read angular/editorial; mode ≈ 1.07.
+  return idealScore(cheekToJaw, 1.07, 0.09, 2, 9.5);
 }
 
 function analyzeBlendshapes(result: FaceLandmarkerResult): BlendshapeAnalysis {
