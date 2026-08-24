@@ -4,11 +4,11 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { ImageUploader } from "@/components/shared/ImageUploader";
 import { useAnalysisStore } from "@/store/analysis-store";
 import { BEARD_STYLES, MUSTACHE_STYLES } from "@/lib/constants";
-import { analyzeFace } from "@/lib/ml/face-analyzer";
+import { analyzeFace, describeEngineError } from "@/lib/ml/face-analyzer";
 import { drawFacialHair, detectHairColor, scoreGroomingStyles, type GroomingScore } from "@/lib/ml/facial-hair";
 import { calculateFaceShape } from "@/lib/ml/face-geometry";
 import { motion } from "framer-motion";
-import { Scissors, Check, Star, Sparkles } from "lucide-react";
+import { Scissors, Check, Star, Sparkles, AlertTriangle } from "lucide-react";
 import { ScrollParallax, ScrollBlur, SectionScrollProgress } from "@/components/shared/ScrollEffects";
 
 const fadeUp = {
@@ -39,41 +39,50 @@ export default function GroomingPage() {
   // Where the current face shape came from — drives the badge copy so users
   // know whether advice is from this photo or their saved profile.
   const [shapeSource, setShapeSource] = useState<"photo" | "profile" | null>(null);
+  // Engine failures were silently swallowed (spinner cleared, UI said "no
+  // face"), hiding offline/blocked-CDN causes. Surface them honestly.
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
 
   const analyzePhoto = useCallback(async (imageData: string) => {
     setIsAnalyzing(true);
     setAnalysisComplete(false);
-    try {
-      const img = new Image();
-      img.onload = async () => {
-        try {
-          // Hardened engine path: preprocessing, primary-face promotion and
-          // CPU-fallback recovery all apply here too.
-          const result = await analyzeFace(img);
-          setFaceResult(result);
-          const canvas = document.createElement("canvas");
-          canvas.width = img.naturalWidth;
-          canvas.height = img.naturalHeight;
-          const ctx = canvas.getContext("2d")!;
-          ctx.drawImage(img, 0, 0);
-          const color = detectHairColor(canvas, result);
-          setHairColor(color);
-          const lm = result.faceLandmarks?.[0];
-          const shape = lm
-            ? calculateFaceShape(lm.map((l) => [l.x, l.y, l.z]))
-            : useAnalysisStore.getState().faceResult?.facialShape;
-          setFaceShape(shape ?? null);
-          setShapeSource(lm ? "photo" : "profile");
-          const scores = scoreGroomingStyles(shape);
-          setGroomingScores(scores);
-        } finally {
-          setAnalysisComplete(true);
-          setIsAnalyzing(false);
-        }
-      };
-      img.onerror = () => { setAnalysisComplete(true); setIsAnalyzing(false); };
-      img.src = imageData;
-    } catch { setAnalysisComplete(true); setIsAnalyzing(false); }
+    setAnalysisError(null);
+    const img = new Image();
+    img.onload = async () => {
+      try {
+        // Hardened engine path: preprocessing, primary-face promotion and
+        // CPU-fallback recovery all apply here too.
+        const result = await analyzeFace(img);
+        setFaceResult(result);
+        const canvas = document.createElement("canvas");
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        const ctx = canvas.getContext("2d")!;
+        ctx.drawImage(img, 0, 0);
+        const color = detectHairColor(canvas, result);
+        setHairColor(color);
+        const lm = result.faceLandmarks?.[0];
+        const shape = lm
+          ? calculateFaceShape(lm.map((l) => [l.x, l.y, l.z]))
+          : useAnalysisStore.getState().faceResult?.facialShape;
+        setFaceShape(shape ?? null);
+        setShapeSource(lm ? "photo" : "profile");
+        const scores = scoreGroomingStyles(shape);
+        setGroomingScores(scores);
+      } catch (err) {
+        console.error("Grooming analysis failed:", err);
+        setAnalysisError(describeEngineError(err));
+      } finally {
+        setAnalysisComplete(true);
+        setIsAnalyzing(false);
+      }
+    };
+    img.onerror = () => {
+      setAnalysisError("Could not read that photo. Try a clear JPEG or PNG.");
+      setAnalysisComplete(true);
+      setIsAnalyzing(false);
+    };
+    img.src = imageData;
   }, []);
 
   const handleImageUpload = useCallback((imageData: string) => {
@@ -120,6 +129,22 @@ export default function GroomingPage() {
     };
     img.src = currentPhoto;
   }, [faceResult, currentPhoto, selectedBeardStyle, selectedMustacheStyle, hairColor]);
+
+  // When detection failed, still show the uploaded photo in the preview panel
+  // instead of a blank canvas.
+  useEffect(() => {
+    if (faceResult || isAnalyzing || !analysisComplete || !currentPhoto || !canvasRef.current) return;
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    const img = new Image();
+    img.onload = () => {
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      ctx.drawImage(img, 0, 0);
+    };
+    img.src = currentPhoto;
+  }, [faceResult, currentPhoto, analysisComplete, isAnalyzing]);
 
   return (
     <div className="space-y-8">
@@ -240,7 +265,17 @@ export default function GroomingPage() {
             </div>
           )}
 
-          {analysisComplete && groomingScores.length === 0 && (
+          {analysisError && (
+            <div className="glass-card p-5 mb-6 border-[color-mix(in_srgb,#A13B2F_45%,transparent)]">
+              <div className="flex items-center gap-3 mb-1">
+                <AlertTriangle className="w-5 h-5 text-[#C05B4D]" />
+                <h3 className="type-heading text-[var(--text-primary)] tracking-tight">ANALYSIS ENGINE ERROR</h3>
+              </div>
+              <p className="text-sm text-[var(--text-muted)] font-body leading-relaxed">{analysisError}</p>
+            </div>
+          )}
+
+          {analysisComplete && !analysisError && groomingScores.length === 0 && (
             <div className="glass-card p-8">
               <div className="flex items-center gap-3 mb-3">
                 <Sparkles className="w-5 h-5 text-[var(--accent-aurum)]" />
