@@ -35,6 +35,7 @@ import {
   Check,
   X,
   ShieldCheck,
+  Gauge,
 } from "lucide-react";
 
 function CollapsibleSection({
@@ -260,6 +261,67 @@ export function AnalysisResults() {
           </div>
         </div>
       </ScrollReveal>
+
+      <ScrollProgress />
+
+      <CollapsibleSection
+        icon={Gauge}
+        title="FACEIQ OVERVIEW"
+        defaultOpen
+        badge={`${faceResult.overallScore.toFixed(1)}/10`}
+      >
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          {[
+            { label: "Proportions", value: faceResult.proportions, suffix: "", decimals: 1, hint: "/10" },
+            { label: "Golden Ratio", value: faceResult.goldenRatio, suffix: "", decimals: 1, hint: "/10" },
+            { label: "Eye Spacing", value: faceResult.eyeSpacing, suffix: "", decimals: 1, hint: "/10" },
+            { label: "Nose Harmony", value: faceResult.noseProfile, suffix: "", decimals: 1, hint: "/10" },
+            { label: "Jaw Strength", value: faceResult.jawline, suffix: "", decimals: 1, hint: "/10" },
+            { label: "Facial Thirds", value: faceResult.foreheadBalance, suffix: "", decimals: 1, hint: "/10" },
+            { label: "Harmony", value: faceResult.facialHarmony, suffix: "", decimals: 1, hint: "/10" },
+            { label: "Age Perception", value: faceResult.ageEstimation ?? 25, suffix: "", decimals: 0, hint: "yrs" },
+            {
+              label: "M/F Balance",
+              value: faceResult.genderProfile === "masculine"
+                ? Math.round((faceResult.fwhr / 2.4) * 100)
+                : faceResult.genderProfile === "feminine"
+                ? Math.round((faceResult.canthalTilt / 10) * 100)
+                : 50,
+              suffix: "",
+              decimals: 0,
+              hint: `% ${faceResult.genderProfile === "neutral" ? "balanced" : faceResult.genderProfile}`,
+            },
+            { label: "Canthal Tilt", value: faceResult.rawCanthalTilt, suffix: "°", decimals: 1, hint: "" },
+          ].map((stat, i) => (
+            <motion.div
+              key={stat.label}
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.06, duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+              className="bg-light-base dark:bg-cosmic-elevated p-4 border border-light-border dark:border-cosmic-border rounded-[var(--radius-xs)] hover:border-aurum-500/40 transition-colors"
+            >
+              <span className="text-[0.55rem] font-mono tracking-widest text-nexus-400/70 dark:text-cosmic-muted/70 uppercase">
+                {stat.label}
+              </span>
+              <div className="flex items-baseline gap-1 mt-1">
+                <AnimatedCounter
+                  target={stat.value}
+                  decimals={stat.decimals}
+                  duration={1.4}
+                  className="text-xl font-display font-bold text-nexus-800 dark:text-white"
+                />
+                {stat.hint && (
+                  <span className="text-[0.6rem] font-mono text-aurum-500">{stat.hint}</span>
+                )}
+              </div>
+            </motion.div>
+          ))}
+        </div>
+        <p className="mt-4 text-[0.6rem] font-mono tracking-wider text-nexus-400/60 dark:text-cosmic-muted/60">
+          QUICK READ OF EVERY CORE MEASUREMENT — FULL BREAKDOWN WITH TIPS IN THE SECTIONS BELOW.
+        </p>
+      </CollapsibleSection>
 
       <ScrollProgress />
 
