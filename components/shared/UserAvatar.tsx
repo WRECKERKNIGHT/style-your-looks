@@ -16,6 +16,7 @@ export function UserAvatar({ compact = false }: { compact?: boolean }) {
   const [user, setUser] = useState<SessionUser | null>(null);
   const [localAvatar, setLocalAvatar] = useState<string | null>(null);
   const [checked, setChecked] = useState(false);
+  const [imgBroken, setImgBroken] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -56,8 +57,12 @@ export function UserAvatar({ compact = false }: { compact?: boolean }) {
     };
   }, []);
 
+  useEffect(() => {
+    setImgBroken(false);
+  }, [localAvatar, user?.avatarUrl]);
+
   const initial = (user?.name?.[0] ?? user?.email?.[0] ?? "Z").toUpperCase();
-  const avatarSrc = localAvatar ?? user?.avatarUrl ?? null;
+  const avatarSrc = (!imgBroken && localAvatar) || (!imgBroken && user?.avatarUrl) || null;
 
   return (
     <Link
@@ -76,6 +81,9 @@ export function UserAvatar({ compact = false }: { compact?: boolean }) {
             sizes="36px"
             referrerPolicy="no-referrer"
             className="object-cover"
+            onError={() => {
+              if (!avatarSrc.startsWith("data:")) setImgBroken(true);
+            }}
           />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-[var(--accent-nexus)] to-[var(--accent-aurum)] flex items-center justify-center">

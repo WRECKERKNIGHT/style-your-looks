@@ -371,17 +371,18 @@ export function drawFacialHair(
 
   if (!path) return;
 
-  ctx.save();
-  ctx.globalAlpha = opacity;
-  ctx.fillStyle = color;
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 0.003 * canvasWidth;
-  ctx.lineJoin = "round";
-  ctx.lineCap = "round";
+  // --- Step 1: Parse the base color and compute variants ---
+  const rgb = hexToRgb(color);
+  if (!rgb) return;
+  const darkerColor = `rgb(${Math.round(rgb.r * 0.7)},${Math.round(rgb.g * 0.7)},${Math.round(rgb.b * 0.7)})`;
+  const lighterColor = `rgb(${Math.min(255, Math.round(rgb.r * 1.15))},${Math.min(255, Math.round(rgb.g * 1.15))},${Math.min(255, Math.round(rgb.b * 1.15))})`;
 
-  const subs = path.paths && path.paths.length > 0 ? path.paths : [path];
+  // --- Step 2: Sample lighting from the face region ---
+  const lightDir = sampleLightDirection(ctx, landmarks, canvasWidth, canvasHeight);
 
-  const tracePath = (p: BeardPath) => {
+  // --- Step 3: Build the path for clipping ---
+  const buildPath = (p: BeardPath) => {
+    ctx.beginPath();
     const points = p.points;
     if (points.length === 0) return;
     ctx.moveTo(points[0].x * canvasWidth, points[0].y * canvasHeight);
@@ -403,17 +404,60 @@ export function drawFacialHair(
     ctx.closePath();
   };
 
-  ctx.beginPath();
-  for (const p of subs) tracePath(p);
-  if (path.stipple) ctx.globalAlpha = opacity * 0.3;
-  ctx.fill();
+  const subs = path.paths && path.paths.length > 0 ? path.paths : [path];
 
+  // --- Step 4: Render shadow underneath for depth ---
+  ctx.save();
+  ctx.globalAlpha = opacity * 0.12;
+  ctx.shadowColor = "rgba(0,0,0,0.6)";
+  ctx.shadowBlur = 10;
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 3;
+  ctx.fillStyle = "black";
+  for (const p of subs) buildPath(p);
+  ctx.fill();
+  ctx.restore();
+
+  // --- Step 5: Feathered base fill with edge blur ---
+  ctx.save();
+  ctx.globalAlpha = opacity * 0.85;
+  ctx.shadowColor = color;
+  ctx.shadowBlur = 4;
+  ctx.fillStyle = color;
+  ctx.globalCompositeOperation = "multiply";
+  for (const p of subs) buildPath(p);
+  ctx.fill();
+  ctx.restore();
+
+  // --- Step 6: Lighting gradient overlay ---
+  ctx.save();
+  ctx.globalAlpha = opacity * 0.25;
+  ctx.globalCompositeOperation = "soft-light";
+  for (const p of subs) {
+    buildPath(p);
+    const pts = p.points;
+    if (pts.length < 2) continue;
+    let minX = 1, maxX = 0, minY = 1, maxY = 0;
+    for (const pt of pts) {
+      minX = Math.min(minX, pt.x);
+      maxX = Math.max(maxX, pt.x);
+      minY = Math.min(minY, pt.y);
+      maxY = Math.max(maxY, pt.y);
+    }
+    const gx1 = minX * canvasWidth + (lightDir.x > 0 ? 0 : (maxX - minX) * canvasWidth);
+    const gx2 = minX * canvasWidth + (lightDir.x > 0 ? (maxX - minX) * canvasWidth : 0);
+    const grad = ctx.createLinearGradient(gx1, minY * canvasHeight, gx2, maxY * canvasHeight);
+    grad.addColorStop(0, lighterColor);
+    grad.addColorStop(1, darkerColor);
+    ctx.fillStyle = grad;
+    ctx.fill();
+  }
+  ctx.restore();
+
+  // --- Step 7: Hair strand texture ---
   if (path.stipple) {
-    const count = path.stippleCount ?? 3200;
-    let minX = 1;
-    let maxX = 0;
-    let minY = 1;
-    let maxY = 0;
+    const count = path.stippleCount ?? 4000;
+    let minX = 1, maxX = 0, minY = 1, maxY = 0;
     for (const p of subs) {
       for (const pt of p.points) {
         minX = Math.min(minX, pt.x);
@@ -434,23 +478,142 @@ export function drawFacialHair(
       return ((s ^ (s >>> 14)) >>> 0) / 4294967296;
     };
 
-    const dotRadius = Math.max(0.0011 * canvasWidth, 1.2);
+    // Clip to beard shape
+    ctx.save();
     ctx.beginPath();
-    for (const p of subs) tracePath(p);
+    for (const p of subs) buildPath(p);
     ctx.clip();
-    ctx.fillStyle = color;
-    ctx.globalAlpha = opacity * 0.95;
+
+    // Draw individual hair strands
+    ctx.globalAlpha = opacity * 0.7;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = Math.max(0.8, canvasWidth * 0.001);
+    ctx.lineCap = "round";
     for (let i = 0; i < count; i++) {
+      const sx = minX * canvasWidth + rnd() * w;
+      const sy = minY * canvasHeight + rnd() * h;
+      const angle = (rnd() - 0.5) * 0.8 + Math.PI * 0.5; // mostly downward
+      const len = 2 + rnd() * 5;
+      const ex = sx + Math.cos(angle) * len;
+      const ey = sy + Math.sin(angle) * len;
+
+      // Vary color per strand
+      const variation = 0.75 + rnd() * 0.5;
+      ctx.strokeStyle = `rgb(${Math.min(255, Math.round(rgb.r * variation))},${Math.min(255, Math.round(rgb.g * variation))},${Math.min(255, Math.round(rgb.b * variation))})`;
+
+      ctx.beginPath();
+      ctx.moveTo(sx, sy);
+      ctx.lineTo(ex, ey);
+      ctx.stroke();
+    }
+
+    // Stipple dots for stubble density
+    ctx.globalAlpha = opacity * 0.4;
+    ctx.fillStyle = darkerColor;
+    const dotCount = Math.round(count * 0.3);
+    for (let i = 0; i < dotCount; i++) {
       const dx = minX * canvasWidth + rnd() * w;
       const dy = minY * canvasHeight + rnd() * h;
-      const r = dotRadius * (0.6 + rnd() * 0.9);
+      const r = 0.6 + rnd() * 1.2;
       ctx.beginPath();
       ctx.arc(dx, dy, r, 0, Math.PI * 2);
       ctx.fill();
     }
+
+    ctx.restore();
+  } else {
+    // For non-stubble styles, add a subtle hair-direction texture
+    ctx.save();
+    ctx.beginPath();
+    for (const p of subs) buildPath(p);
+    ctx.clip();
+
+    let minX = 1, maxX = 0, minY = 1, maxY = 0;
+    for (const p of subs) {
+      for (const pt of p.points) {
+        minX = Math.min(minX, pt.x);
+        maxX = Math.max(maxX, pt.x);
+        minY = Math.min(minY, pt.y);
+        maxY = Math.max(maxY, pt.y);
+      }
+    }
+
+    let seed = 0;
+    for (const c of style) seed = (seed * 31 + c.charCodeAt(0)) >>> 0;
+    let s = seed || 1;
+    const rnd = () => {
+      s = Math.imul(s ^ (s >>> 15), s | 1) >>> 0;
+      s = (s + 0x6d2b79f5) >>> 0;
+      return ((s ^ (s >>> 14)) >>> 0) / 4294967296;
+    };
+
+    // Fine hair lines for fuller styles
+    ctx.globalAlpha = opacity * 0.2;
+    ctx.strokeStyle = darkerColor;
+    ctx.lineWidth = 0.6;
+    const strandCount = 1200;
+    const w = Math.max(0.001, maxX - minX) * canvasWidth;
+    const h = Math.max(0.001, maxY - minY) * canvasHeight;
+    for (let i = 0; i < strandCount; i++) {
+      const sx = minX * canvasWidth + rnd() * w;
+      const sy = minY * canvasHeight + rnd() * h;
+      const angle = (rnd() - 0.5) * 0.6 + Math.PI * 0.4;
+      const len = 3 + rnd() * 7;
+      ctx.beginPath();
+      ctx.moveTo(sx, sy);
+      ctx.lineTo(sx + Math.cos(angle) * len, sy + Math.sin(angle) * len);
+      ctx.stroke();
+    }
+
+    ctx.restore();
   }
 
+  // --- Step 8: Edge feather pass (soft outer glow to blend with skin) ---
+  ctx.save();
+  ctx.globalAlpha = opacity * 0.15;
+  ctx.shadowColor = color;
+  ctx.shadowBlur = 6;
+  ctx.fillStyle = color;
+  ctx.globalCompositeOperation = "source-over";
+  for (const p of subs) buildPath(p);
+  ctx.fill();
   ctx.restore();
+}
+
+function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
+  const m = hex.match(/^#?([\da-f]{2})([\da-f]{2})([\da-f]{2})$/i);
+  if (!m) return null;
+  return { r: parseInt(m[1], 16), g: parseInt(m[2], 16), b: parseInt(m[3], 16) };
+}
+
+function sampleLightDirection(
+  ctx: CanvasRenderingContext2D,
+  landmarks: { x: number; y: number; z: number }[],
+  w: number,
+  h: number
+): { x: number; y: number } {
+  // Sample brightness on left vs right cheek to estimate light direction
+  const leftCheek = landmarks[234];
+  const rightCheek = landmarks[454];
+  if (!leftCheek || !rightCheek) return { x: 0.5, y: -0.3 };
+
+  const sampleBrightness = (lm: { x: number; y: number }) => {
+    try {
+      const px = ctx.getImageData(
+        Math.floor(lm.x * w),
+        Math.floor(lm.y * h),
+        1, 1
+      ).data;
+      return (px[0] + px[1] + px[2]) / 3;
+    } catch {
+      return 128;
+    }
+  };
+
+  const leftB = sampleBrightness(leftCheek);
+  const rightB = sampleBrightness(rightCheek);
+  const dx = (rightB - leftB) / 255;
+  return { x: dx, y: -0.3 };
 }
 
 export function detectHairColor(
@@ -517,6 +680,8 @@ const BEARD_FACE_SHAPES: Record<string, Record<string, number>> = {
   "anchor": { Oval: 9, Round: 9, Square: 7, Oblong: 8, Diamond: 8, Triangle: 8, "Inverted Triangle": 9, Heart: 9, Rectangle: 7 },
   "balbo": { Oval: 9, Round: 8, Square: 8, Oblong: 7, Diamond: 8, Triangle: 8, "Inverted Triangle": 8, Heart: 8, Rectangle: 8 },
   "mutton-chops": { Oval: 6, Round: 6, Square: 7, Oblong: 6, Diamond: 5, Triangle: 6, "Inverted Triangle": 6, Heart: 6, Rectangle: 7 },
+  "friendly-mutton-chops": { Oval: 6, Round: 7, Square: 7, Oblong: 5, Diamond: 6, Triangle: 7, "Inverted Triangle": 7, Heart: 6, Rectangle: 7 },
+  "hulihee": { Oval: 5, Round: 6, Square: 6, Oblong: 5, Diamond: 5, Triangle: 6, "Inverted Triangle": 5, Heart: 5, Rectangle: 6 },
   "clean-shaven": { Oval: 8, Round: 8, Square: 8, Oblong: 8, Diamond: 8, Triangle: 7, "Inverted Triangle": 7, Heart: 8, Rectangle: 8 },
 };
 
@@ -597,6 +762,8 @@ function getBeardReason(style: string, shape: string, score: number): string {
     "anchor": "Tapers the chin for a sophisticated, elongating effect",
     "balbo": "Defines the jawline without sideburns — modern and versatile",
     "mutton-chops": "Bold statement that broadens the jaw visually",
+    "friendly-mutton-chops": "Wider sideburns that add width and warmth to the face",
+    "hulihee": "Classic Fu Manchu style — distinctive and vintage",
   };
   const base = reasons[style] || "A classic grooming choice";
   if (score >= 9) return `${base}. Exceptional match for ${shape} faces.`;

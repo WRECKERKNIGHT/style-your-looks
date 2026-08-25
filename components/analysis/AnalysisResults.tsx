@@ -137,9 +137,40 @@ export function AnalysisResults() {
       <CategoryCards />
 
       <ScrollReveal>
-        <div className="bg-light-surface dark:bg-cosmic-surface p-10 border border-light-border dark:border-cosmic-border rounded-[var(--radius-xs)] card-nexus">
-          <div className="flex flex-col md:flex-row items-center gap-10">
-            <ScoreGauge score={faceResult.overallScore} size="lg" label="Overall FaceIQ" />
+        <div className="relative overflow-hidden bg-light-surface dark:bg-cosmic-surface p-10 border border-aurum-500/25 rounded-[var(--radius-xs)] card-nexus">
+          {/* Glow backdrop */}
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-aurum-500/8 blur-[120px]" />
+            <div className="absolute -top-20 -right-20 w-[300px] h-[300px] rounded-full bg-aurum-400/5 blur-[100px]" />
+            <motion.div
+              className="absolute inset-0"
+              style={{
+                background: "linear-gradient(135deg, rgba(200,150,62,0.06) 0%, transparent 50%, rgba(200,150,62,0.04) 100%)",
+              }}
+              animate={{ opacity: [0.3, 0.7, 0.3] }}
+              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+            />
+          </div>
+          <div className="relative z-10 flex flex-col md:flex-row items-center gap-10">
+            <div className="relative">
+              <ScoreGauge score={faceResult.overallScore} size="lg" label="Overall FaceIQ" />
+              {/* Animated ring around gauge */}
+              <motion.svg
+                className="absolute -inset-3 w-[calc(100%+24px)] h-[calc(100%+24px)]"
+                animate={{ rotate: 360 }}
+                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+              >
+                <circle
+                  cx="50%"
+                  cy="50%"
+                  r="calc(50% - 2px)"
+                  fill="none"
+                  stroke="rgba(200,150,62,0.2)"
+                  strokeWidth="1"
+                  strokeDasharray="8 12"
+                />
+              </motion.svg>
+            </div>
             <div className="flex-1 space-y-5">
               <div className="flex items-center gap-3">
                 <ScanFace className="w-6 h-6 text-aurum-500" />
@@ -155,12 +186,21 @@ export function AnalysisResults() {
               </div>
 
               {/* Face IQ Hero Banner */}
-              <div className="bg-nexus-400/10 p-6 border border-aurum-500/20 rounded-[var(--radius-xs)]">
+              <div className="relative bg-nexus-400/10 p-6 border border-aurum-500/25 rounded-[var(--radius-xs)] overflow-hidden">
+                {/* Banner glow */}
+                <div className="absolute inset-0 pointer-events-none">
+                  <motion.div
+                    className="absolute top-0 right-0 w-40 h-40 rounded-full bg-aurum-500/10 blur-[60px]"
+                    animate={{ scale: [1, 1.3, 1], opacity: [0.5, 0.8, 0.5] }}
+                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                  />
+                </div>
+                <div className="relative z-10">
                 <div className="flex items-baseline gap-4 mb-3">
-                  <span className="text-4xl font-display font-bold text-aurum-500">
+                  <span className="text-4xl font-display font-bold text-aurum-500 drop-shadow-[0_0_20px_rgba(200,150,62,0.4)]">
                     <AnimatedCounter target={faceResult.faceIQ} />/100
                   </span>
-                  <span className={`text-2xl font-display font-bold ${
+                  <span className={`text-2xl font-display font-bold drop-shadow-lg ${
                     faceResult.grade.startsWith("A") ? "text-green-400" :
                     faceResult.grade.startsWith("B") ? "text-aurum-500" :
                     faceResult.grade.startsWith("C") ? "text-amber-400" :
@@ -180,6 +220,7 @@ export function AnalysisResults() {
                   <span className="inline-flex items-center px-3 py-1 border border-aurum-500/30 bg-aurum-500/5 text-aurum-500 text-xs font-mono tracking-wider rounded-full">
                     {faceResult.gradeLabel}
                   </span>
+                </div>
                 </div>
               </div>
 

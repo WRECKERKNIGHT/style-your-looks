@@ -55,15 +55,24 @@ const nextConfig = {
   images: {
     // Only proxy images served from this project's Supabase storage bucket.
     // A wildcard hostname here would turn the optimizer into an open proxy.
-    remotePatterns: supabaseHost
-      ? [
-          {
-            protocol: "https",
-            hostname: supabaseHost,
-            pathname: "/storage/v1/**",
-          },
-        ]
-      : [],
+    remotePatterns: [
+      ...(supabaseHost
+        ? [
+            {
+              protocol: "https",
+              hostname: supabaseHost,
+              pathname: "/storage/v1/**",
+            },
+          ]
+        : []),
+      // Social login avatar providers
+      { protocol: "https", hostname: "lh3.googleusercontent.com" },
+      { protocol: "https", hostname: "pbs.twimg.com" },
+      { protocol: "https", hostname: "platform-lookaside.fbsbx.com" },
+      { protocol: "https", hostname: "avatars.githubusercontent.com" },
+      // Unsplash for color-book photos
+      { protocol: "https", hostname: "images.unsplash.com" },
+    ],
     formats: ["image/avif", "image/webp"],
     minimumCacheTTL: 60 * 60 * 24,
   },

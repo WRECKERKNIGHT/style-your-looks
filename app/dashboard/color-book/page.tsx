@@ -18,7 +18,6 @@ import {
 } from "@/lib/data/japanese-color-book";
 import { useToast } from "@/components/shared/Toast";
 import { OutfitIllustration } from "@/components/color-book/OutfitIllustration";
-import { COMBO_PHOTOS } from "@/lib/data/color-book-photos";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -26,25 +25,13 @@ const fadeUp = {
 };
 
 /**
- * Real stock photography per outfit with the hand-drawn illustration as an
- * offline/error fallback. Photos set the mood; the swatch chips carry the
- * exact traditional hex values.
+ * Hand-drawn SVG illustrations show the actual garment silhouettes filled
+ * with the correct traditional Japanese color hex values — the whole point
+ * of the Color Book. Unsplash stock photos are random and don't represent
+ * the actual color combinations, so the SVG illustration is primary.
  */
 function ComboPhotoView({ combo }: { combo: OutfitCombo }) {
-  const [broken, setBroken] = useState(false);
-  const photo = COMBO_PHOTOS[combo.id];
-  useEffect(() => setBroken(false), [combo.id]);
-  if (!photo || broken) return <OutfitIllustration combo={combo} />;
-  return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={photo.url}
-      alt={photo.alt}
-      loading="lazy"
-      onError={() => setBroken(true)}
-      className="w-full h-full object-cover"
-    />
-  );
+  return <OutfitIllustration combo={combo} />;
 }
 
 function SwatchStrip({ combo }: { combo: OutfitCombo }) {
