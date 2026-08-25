@@ -7,7 +7,7 @@ import { useAnalysisStore } from "@/store/analysis-store";
 import { runVton, type GarmentType, type VtonLayer, type VtonResult } from "@/lib/ml/vton-engine";
 import { loadRemoteProductImage, loadProductImage, type ProductItem, PRODUCT_CATALOG } from "@/lib/ml/product-catalog";
 import { motion } from "framer-motion";
-import { Shirt, Link2, Loader2, Download, RotateCcw, Layers, Ruler } from "lucide-react";
+import { Shirt, Link2, Loader2, Download, RotateCcw, Layers, Ruler, Info } from "lucide-react";
 import { useToast } from "@/components/shared/Toast";
 import { ScrollParallax, ScrollBlur, SectionScrollProgress } from "@/components/shared/ScrollEffects";
 
@@ -384,6 +384,17 @@ export default function VirtualTryOnPage() {
           </motion.div>
 
           <div className="glass-card p-6">
+            <div className="flex items-start gap-3 p-4 border border-[color-mix(in_srgb,var(--accent-nexus)_40%,transparent)] bg-[color-mix(in_srgb,var(--accent-nexus)_6%,transparent)] rounded-[var(--radius-md)] mb-4">
+              <Info className="w-5 h-5 text-[var(--accent-nexus)] shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-body font-semibold text-[var(--text-primary)] mb-1">How to try on a garment</p>
+                <p className="text-xs font-body text-[var(--text-muted)] leading-relaxed">
+                  1. Select a garment type above (top, jacket, or pants).<br />
+                  2. Pick a curated product below or paste any public product image URL.<br />
+                  3. Click &quot;Run Try-On&quot; — the engine segments your body and warps the garment in-browser.
+                </p>
+              </div>
+            </div>
             <div className="flex items-center justify-between gap-4 flex-wrap">
               <div className="min-w-0">
                 <p className="type-label text-[var(--text-muted)]">CURRENT PRODUCT</p>
@@ -392,7 +403,7 @@ export default function VirtualTryOnPage() {
                     {garmentMeta.name} — <span className="text-[var(--text-muted)]">{activeProduct ? "loaded from link" : garmentMeta.credit}</span>
                   </p>
                 ) : (
-                  <p className="text-sm text-[var(--text-muted)] font-body mt-1">None loaded yet</p>
+                  <p className="text-sm text-[var(--text-muted)] font-body mt-1">No product selected — choose one below or paste a link</p>
                 )}
               </div>
               <button onClick={runTryOn} disabled={!garmentCanvas || isProcessing}
