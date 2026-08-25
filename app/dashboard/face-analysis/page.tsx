@@ -412,7 +412,7 @@ export default function FaceAnalysisPage() {
       {!faceResult && (
         <motion.div variants={fadeUp} initial="hidden" animate="show">
           {/* Step indicator */}
-          <div className="flex items-center gap-2 mb-8">
+          <div className="flex items-center gap-2 mb-8 overflow-x-auto pb-1">
             {[
               { id: "calibrate", label: "CALIBRATE" },
               { id: "intake", label: "INTAKE" },
@@ -531,7 +531,7 @@ export default function FaceAnalysisPage() {
                   </div>
                 )}
 
-                <div className="glass-card p-8">
+                <div className="glass-card p-5 sm:p-8">
             <div className="flex items-center justify-between mb-5">
               <h2 className="type-subhead text-[var(--text-primary)] tracking-wider">
                 UPLOAD {MIN_PHOTOS}–{MAX_PHOTOS} PHOTOS
@@ -545,7 +545,7 @@ export default function FaceAnalysisPage() {
               <span className="type-mono text-[0.6rem] text-[var(--text-muted)] tracking-widest block mb-2">
                 ANALYSIS PROFILE
               </span>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 {(["masculine", "feminine", "neutral"] as const).map((p) => (
                   <motion.button
                     key={p}
@@ -944,7 +944,7 @@ export default function FaceAnalysisPage() {
           )}
 
           {faceResult.landmarks.length > 0 && uploadedImage && (
-            <motion.div variants={fadeUp} initial="hidden" animate="show" className="glass-card p-8">
+            <motion.div variants={fadeUp} initial="hidden" animate="show" className="glass-card p-5 sm:p-8">
               <div className="flex items-center gap-3 mb-6">
                 <GitCompareArrows className="w-5 h-5 text-[var(--accent-aurum)]" />
                 <h3 className="type-heading text-[var(--text-primary)] tracking-tight">SYMMETRY SPLIT</h3>
@@ -960,7 +960,7 @@ export default function FaceAnalysisPage() {
           )}
 
           {faceResult.landmarks.length > 0 && (
-            <motion.div variants={fadeUp} initial="hidden" animate="show" className="glass-card p-8">
+            <motion.div variants={fadeUp} initial="hidden" animate="show" className="glass-card p-5 sm:p-8">
               <div className="flex items-center gap-3 mb-6">
                 <Box className="w-5 h-5 text-[var(--accent-aurum)]" />
                 <h3 className="type-heading text-[var(--text-primary)] tracking-tight">3D FACE VIEW</h3>
@@ -970,7 +970,7 @@ export default function FaceAnalysisPage() {
           )}
 
           {faceResult && (
-            <motion.div variants={fadeUp} initial="hidden" animate="show" className="glass-card p-8">
+            <motion.div variants={fadeUp} initial="hidden" animate="show" className="glass-card p-5 sm:p-8">
               <div className="flex items-center gap-3 mb-6">
                 <Gauge className="w-5 h-5 text-[var(--accent-aurum)]" />
                 <h3 className="type-heading text-[var(--text-primary)] tracking-tight">DIAGNOSTIC READOUT</h3>
@@ -994,7 +994,7 @@ export default function FaceAnalysisPage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-50px" }}
             transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-            className="glass-card p-8"
+            className="glass-card p-5 sm:p-8"
           >
             <AnalysisResults />
           </motion.div>
