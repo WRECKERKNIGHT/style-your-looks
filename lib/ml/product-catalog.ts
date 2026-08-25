@@ -74,16 +74,36 @@ function clothingSvg(kind: "top" | "jacket" | "pants", colors: [string, string, 
   let inner = "";
   if (kind === "top") {
     inner = `
-      <path d="M95 82 L150 40 L205 82 L228 112 L198 132 L186 122 L186 262 L114 262 L114 122 L102 132 L72 112 Z" fill="${body}" stroke="#0D0A06" stroke-width="3" stroke-linejoin="round"/>
+      <defs>
+        <linearGradient id="fabric${name}" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="${body}" />
+          <stop offset="45%" stop-color="${shade}" stop-opacity="0.3"/>
+          <stop offset="100%" stop-color="${body}" />
+        </linearGradient>
+        <filter id="grain${name}"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4" result="n"/><feColorMatrix type="saturate" values="0" in="n" result="g"/><feBlend in="SourceGraphic" in2="g" mode="multiply"/></filter>
+      </defs>
+      <path d="M95 82 L150 40 L205 82 L228 112 L198 132 L186 122 L186 262 L114 262 L114 122 L102 132 L72 112 Z" fill="url(#fabric${name})" stroke="#0D0A06" stroke-width="3" stroke-linejoin="round"/>
       <path d="M95 82 L72 112 L102 132 Z" fill="${shade}" opacity="0.85"/>
       <path d="M205 82 L228 112 L198 132 Z" fill="${shade}" opacity="0.85"/>
       <path d="M150 42 L150 110 L133 118 L133 66 Z" fill="${shade}" opacity="0.7"/>
       <path d="M150 42 L150 110 L167 118 L167 66 Z" fill="${shade}" opacity="0.45"/>
       <path d="M146 96 L154 96 L154 112 L146 112 Z" fill="${accent}"/>
-      <rect x="150" y="150" width="8" height="112" fill="${accent}" opacity="0.55"/>`;
+      <rect x="150" y="150" width="8" height="112" fill="${accent}" opacity="0.55"/>
+      <path d="M120 180 Q 135 175 150 180" fill="none" stroke="${shade}" stroke-width="1.2" opacity="0.4"/>
+      <path d="M120 200 Q 135 195 150 200" fill="none" stroke="${shade}" stroke-width="1.2" opacity="0.3"/>
+      <path d="M150 180 Q 165 175 180 180" fill="none" stroke="${shade}" stroke-width="1.2" opacity="0.4"/>
+      <line x1="114" y1="122" x2="114" y2="262" stroke="${shade}" stroke-width="1" opacity="0.25"/>
+      <line x1="186" y1="122" x2="186" y2="262" stroke="${shade}" stroke-width="1" opacity="0.25"/>`;
   } else if (kind === "jacket") {
     inner = `
-      <path d="M94 96 L150 52 L206 96 L232 128 L206 150 L196 140 L190 150 L196 262 L104 262 L110 150 L104 140 L94 150 L68 128 Z" fill="${body}" stroke="#0D0A06" stroke-width="3" stroke-linejoin="round"/>
+      <defs>
+        <linearGradient id="fabric${name}" x1="0" y1="0" x2="0.3" y2="1">
+          <stop offset="0%" stop-color="${body}" />
+          <stop offset="60%" stop-color="${shade}" stop-opacity="0.25"/>
+          <stop offset="100%" stop-color="${body}" />
+        </linearGradient>
+      </defs>
+      <path d="M94 96 L150 52 L206 96 L232 128 L206 150 L196 140 L190 150 L196 262 L104 262 L110 150 L104 140 L94 150 L68 128 Z" fill="url(#fabric${name})" stroke="#0D0A06" stroke-width="3" stroke-linejoin="round"/>
       <path d="M104 262 L104 150 L150 148 L196 150 L196 262 Z" fill="${shade}" opacity="0.55"/>
       <path d="M150 52 L150 148" stroke="#0D0A06" stroke-width="3"/>
       <path d="M94 96 L68 128 L94 150 Z" fill="${shade}" opacity="0.85"/>
@@ -91,15 +111,34 @@ function clothingSvg(kind: "top" | "jacket" | "pants", colors: [string, string, 
       <path d="M94 96 L150 52 L150 148 Z" fill="${accent}" opacity="0.5"/>
       <circle cx="150" cy="120" r="6" fill="${accent}"/>
       <rect x="100" y="170" width="100" height="5" rx="2.5" fill="${accent}" opacity="0.6"/>
-      <rect x="100" y="196" width="100" height="5" rx="2.5" fill="${accent}" opacity="0.6"/>`;
+      <rect x="100" y="196" width="100" height="5" rx="2.5" fill="${accent}" opacity="0.6"/>
+      <path d="M115 160 Q 132 155 150 160" fill="none" stroke="${shade}" stroke-width="1" opacity="0.35"/>
+      <path d="M150 160 Q 168 155 185 160" fill="none" stroke="${shade}" stroke-width="1" opacity="0.35"/>
+      <path d="M115 210 Q 132 205 150 210" fill="none" stroke="${shade}" stroke-width="1" opacity="0.25"/>
+      <path d="M150 210 Q 168 205 185 210" fill="none" stroke="${shade}" stroke-width="1" opacity="0.25"/>
+      <rect x="108" y="140" width="28" height="22" rx="3" fill="none" stroke="${accent}" stroke-width="1.5" opacity="0.5"/>
+      <rect x="164" y="140" width="28" height="22" rx="3" fill="none" stroke="${accent}" stroke-width="1.5" opacity="0.5"/>`;
   } else {
     inner = `
-      <path d="M96 70 L204 70 L214 262 L162 262 L150 150 L138 262 L86 262 Z" fill="${body}" stroke="#0D0A06" stroke-width="3" stroke-linejoin="round"/>
+      <defs>
+        <linearGradient id="fabric${name}" x1="0.2" y1="0" x2="0.8" y2="1">
+          <stop offset="0%" stop-color="${body}" />
+          <stop offset="50%" stop-color="${shade}" stop-opacity="0.2"/>
+          <stop offset="100%" stop-color="${body}" />
+        </linearGradient>
+      </defs>
+      <path d="M96 70 L204 70 L214 262 L162 262 L150 150 L138 262 L86 262 Z" fill="url(#fabric${name})" stroke="#0D0A06" stroke-width="3" stroke-linejoin="round"/>
       <path d="M96 70 L204 70 L196 120 L104 120 Z" fill="${shade}" opacity="0.8"/>
       <path d="M150 70 L150 150" stroke="#0D0A06" stroke-width="2.5" stroke-dasharray="8 6"/>
       <rect x="104" y="132" width="92" height="6" rx="3" fill="${accent}" opacity="0.7"/>
       <path d="M104 120 L150 150 L150 262" fill="none" stroke="${shade}" stroke-width="2" opacity="0.7"/>
-      <path d="M196 120 L150 150 L150 262" fill="none" stroke="${shade}" stroke-width="2" opacity="0.7"/>`;
+      <path d="M196 120 L150 150 L150 262" fill="none" stroke="${shade}" stroke-width="2" opacity="0.7"/>
+      <path d="M110 160 Q 130 155 150 160" fill="none" stroke="${shade}" stroke-width="1" opacity="0.3"/>
+      <path d="M150 160 Q 170 155 190 160" fill="none" stroke="${shade}" stroke-width="1" opacity="0.3"/>
+      <path d="M110 200 Q 130 195 150 200" fill="none" stroke="${shade}" stroke-width="1" opacity="0.25"/>
+      <path d="M150 200 Q 170 195 190 200" fill="none" stroke="${shade}" stroke-width="1" opacity="0.25"/>
+      <path d="M110 240 Q 130 235 150 240" fill="none" stroke="${shade}" stroke-width="1" opacity="0.2"/>
+      <path d="M150 240 Q 170 235 190 240" fill="none" stroke="${shade}" stroke-width="1" opacity="0.2"/>`;
   }
   return svgDataUri(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" width="300" height="300">
   <g>${inner}</g>
