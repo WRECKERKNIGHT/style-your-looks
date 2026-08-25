@@ -31,6 +31,7 @@ export default function GroomingPage() {
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [hairColor, setHairColor] = useState("#3C2A21");
+  const detectedHairColorRef = useRef("#3C2A21");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [faceResult, setFaceResult] = useState<any>(null);
   const [groomingScores, setGroomingScores] = useState<GroomingScore[]>([]);
@@ -64,6 +65,7 @@ export default function GroomingPage() {
         ctx.drawImage(img, 0, 0);
         const color = detectHairColor(canvas, result);
         setHairColor(color);
+        detectedHairColorRef.current = color;
         const lm = result.faceLandmarks?.[0];
         const shapeResult = lm
           ? calculateFaceShape(lm.map((l) => [l.x, l.y, l.z]))
@@ -203,7 +205,7 @@ export default function GroomingPage() {
 
           <div className="glass-card p-5 sm:p-8">
             <h3 className="type-heading text-[var(--text-primary)] tracking-tight mb-4">HAIR COLOR</h3>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 flex-wrap">
               <input
                 type="color"
                 value={hairColor}
@@ -211,8 +213,16 @@ export default function GroomingPage() {
                 className="w-14 h-14 border border-[var(--border-primary)] cursor-pointer"
               />
               <span className="text-base text-[var(--text-muted)] font-body">
-                Auto-detected: <span className="text-[var(--text-primary)] font-bold">{hairColor}</span>
+                Auto-detected: <span className="text-[var(--text-primary)] font-bold">{detectedHairColorRef.current}</span>
               </span>
+              {hairColor !== detectedHairColorRef.current && (
+                <button
+                  onClick={() => setHairColor(detectedHairColorRef.current)}
+                  className="type-mono text-[0.6rem] tracking-widest text-[var(--accent-aurum)] hover:underline uppercase border border-[var(--accent-aurum)]/30 px-3 py-1.5 hover:bg-[var(--accent-aurum)]/10 transition-colors"
+                >
+                  USE DETECTED COLOR
+                </button>
+              )}
             </div>
           </div>
 

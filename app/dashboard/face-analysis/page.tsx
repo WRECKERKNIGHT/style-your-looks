@@ -344,6 +344,7 @@ export default function FaceAnalysisPage() {
 
     setError(null);
     useAnalysisStore.getState().reset();
+    useAnalysisStore.getState().setIsAnalyzing(true);
     setPhoto(photos[0], "face");
     setProcessingPreview({ image: photos[0], landmarks: [] });
 

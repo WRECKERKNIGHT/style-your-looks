@@ -9,7 +9,7 @@ import { segmentPerson, type PersonSegmentation } from "@/lib/ml/segmenter";
 import { compositeUnderHair } from "@/lib/ml/accessory-composite";
 import { GLASSES_PRODUCTS, loadProductImage, loadRemoteProductImage, type ProductItem } from "@/lib/ml/product-catalog";
 import { motion } from "framer-motion";
-import { Glasses, ArrowRight, Download, Trash2, Link2, Loader2 } from "lucide-react";
+import { Glasses, ArrowRight, Download, Trash2, Link2, Loader2, Sparkles } from "lucide-react";
 import { useToast } from "@/components/shared/Toast";
 import { ScrollParallax, ScrollBlur, SectionScrollProgress } from "@/components/shared/ScrollEffects";
 
@@ -251,6 +251,34 @@ export default function AccessoriesPage() {
               </div>
             )}
           </div>
+
+          {faceResult && faceResult.facialShape && (
+            <div className="glass-card p-5 sm:p-8">
+              <div className="flex items-center gap-3 mb-4">
+                <Sparkles className="w-5 h-5 text-[var(--accent-aurum)]" />
+                <h3 className="type-heading text-[var(--text-primary)] tracking-tight">YOUR FACE SHAPE</h3>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex-1 p-4 bg-[var(--bg-tertiary)] border border-[var(--border-primary)]">
+                  <span className="type-mono text-[0.55rem] text-[var(--accent-aurum)] tracking-widest block mb-1">DETECTED</span>
+                  <span className="font-display font-bold text-lg text-[var(--text-primary)]">{faceResult.facialShape}</span>
+                </div>
+                <div className="flex-1 p-4 bg-[var(--bg-tertiary)] border border-[var(--border-primary)]">
+                  <span className="type-mono text-[0.55rem] text-[var(--accent-aurum)] tracking-widest block mb-1">GLASSES PAIRING</span>
+                  <p className="text-sm text-[var(--text-muted)] font-body leading-relaxed">
+                    {faceResult.facialShape === "Oval" && "Most frame shapes work well — aviators, rounds, and squares all complement balanced proportions."}
+                    {faceResult.facialShape === "Round" && "Angular frames like rectangles, squares, and browlines add definition and lengthen the face."}
+                    {faceResult.facialShape === "Square" && "Round or oval frames soften strong jawlines. Aviators and rimless styles work well."}
+                    {faceResult.facialShape === "Heart" && "Bottom-heavy frames like aviators and round shapes balance a wider forehead with a narrower chin."}
+                    {faceResult.facialShape === "Oblong" && "Oversized or deep frames break up face length — aviators, wayfarers, and wraparound styles."}
+                    {faceResult.facialShape === "Diamond" && "Oval, rimless, or cat-eye frames highlight cheekbones and soften a narrow chin and forehead."}
+                    {faceResult.facialShape === "Triangle" && "Top-heavy frames like browlines and aviators add width at the forehead to balance a wider jawline."}
+                    {!["Oval", "Round", "Square", "Heart", "Oblong", "Diamond", "Triangle"].includes(faceResult.facialShape) && "Choose frames that contrast your face shape — angular faces suit round frames, round faces suit angular frames."}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="glass-card p-8">
             <h3 className="type-heading text-[var(--text-primary)] tracking-tight mb-2">SELECT FRAMES</h3>

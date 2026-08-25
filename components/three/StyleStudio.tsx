@@ -521,7 +521,7 @@ function ParametricStage() {
         )}
 
         {/* One-click outfit presets */}
-        <div className="glass-card p-4 mb-4">
+        <div className="glass-card p-4 mb-4 overflow-hidden">
           <div className="flex items-center gap-2 mb-3">
             <Sparkles className="w-4 h-4 text-[var(--accent-aurum)]" />
             <h3 className="type-label text-[var(--text-primary)]">ONE-CLICK OUTFITS</h3>
@@ -532,7 +532,7 @@ function ParametricStage() {
                 key={preset.id}
                 onClick={() => applyOutfitPreset(preset)}
                 title={preset.description}
-                className={`px-3 py-1.5 text-[10px] font-body uppercase tracking-wider rounded-[var(--radius-pill)] border transition-all ${
+                className={`px-3 py-1.5 text-[10px] sm:text-xs font-body uppercase tracking-wider rounded-[var(--radius-pill)] border transition-all whitespace-nowrap ${
                   activePresetId === preset.id
                     ? 'btn-nexus'
                     : 'bg-[var(--bg-tertiary)] text-[var(--text-primary)] border-[var(--border-primary)] hover:border-[color-mix(in_srgb,var(--accent-aurum)_35%,transparent)]'
