@@ -7,9 +7,11 @@ import { useAnalysisStore } from "@/store/analysis-store";
 import { hairRegion } from "@/lib/ml/face-landmarks";
 import { segmentPerson, type PersonSegmentation } from "@/lib/ml/segmenter";
 import { motion } from "framer-motion";
-import { Palette, Download, Trash2, ArrowRight, AlertTriangle } from "lucide-react";
+import { Palette, Download, Trash2, ArrowRight, AlertTriangle, Sparkles } from "lucide-react";
 import { useToast } from "@/components/shared/Toast";
 import { ScrollParallax, ScrollBlur, SectionScrollProgress } from "@/components/shared/ScrollEffects";
+import { detectHairColor } from "@/lib/ml/facial-hair";
+import { analyzeFace } from "@/lib/ml/face-analyzer";
 
 interface HairColor {
   id: string;
@@ -94,6 +96,7 @@ export default function HairPreviewPage() {
   const [hairSeg, setHairSeg] = useState<PersonSegmentation | null>(null);
   const [regionStatus, setRegionStatus] = useState<"ok" | "unavailable">("ok");
   const [canvasError, setCanvasError] = useState(false);
+  const [detectedHairColor, setDetectedHairColor] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -128,6 +131,28 @@ export default function HairPreviewPage() {
 
   useEffect(() => {
     if (currentPhoto) { const img = new Image(); img.onload = () => { setLoadedImg(img); }; img.src = currentPhoto; }
+  }, [currentPhoto]);
+
+  useEffect(() => {
+    if (!currentPhoto) { setDetectedHairColor(null); return; }
+    const img = new Image();
+    img.onload = async () => {
+      try {
+        const face = await analyzeFace(img);
+        const canvas = document.createElement("canvas");
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.drawImage(img, 0, 0);
+          const color = detectHairColor(canvas, face);
+          setDetectedHairColor(color);
+        }
+      } catch {
+        setDetectedHairColor(null);
+      }
+    };
+    img.src = currentPhoto;
   }, [currentPhoto]);
 
   const renderCanvas = useCallback(() => {
@@ -241,6 +266,22 @@ export default function HairPreviewPage() {
             className="glass-card p-6"
           >
             <h3 className="type-label text-[var(--text-primary)] mb-4">SELECT HAIR COLOR</h3>
+            {detectedHairColor && (
+              <button
+                onClick={() => {
+                  const match = HAIR_COLORS.find((c) => c.color.toLowerCase() === detectedHairColor.toLowerCase());
+                  if (match) {
+                    setSelectedColor(match);
+                  } else {
+                    setSelectedColor({ id: "detected", name: "Detected Color", color: detectedHairColor, overlay: `${detectedHairColor}66` });
+                  }
+                }}
+                className="flex items-center gap-2 mb-4 px-3 py-2 text-[0.65rem] font-body uppercase tracking-wider border border-[var(--accent-aurum)]/30 text-[var(--accent-aurum)] hover:bg-[var(--accent-aurum)]/10 transition-colors"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                USE DETECTED COLOR ({detectedHairColor})
+              </button>
+            )}
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
               {HAIR_COLORS.map((color) => (
                 <motion.button
