@@ -6,6 +6,8 @@ import { motion } from "framer-motion";
 import { Boxes } from "lucide-react";
 import { ScrollParallax, ScrollBlur, SectionScrollProgress } from "@/components/shared/ScrollEffects";
 import { MANNEQUIN_URL } from "@/lib/three/mannequin";
+import { useAnalysisStore } from "@/store/analysis-store";
+import { useToast } from "@/components/shared/Toast";
 
 // three.js is ~600KB of JS — keep it out of the dashboard's shared chunks and
 // only fetch it when the studio page itself is opened.
@@ -28,6 +30,16 @@ const fadeUp = {
 
 export default function StudioPage() {
   useEffect(() => { document.title = "3D Studio | ZERVEY"; }, []);
+
+  const { faceResult, bodyResult } = useAnalysisStore();
+  const { addToast } = useToast();
+
+  useEffect(() => {
+    if (!faceResult && !bodyResult) {
+      addToast("Upload a photo in Face IQ first to auto-fill your Digital Twin", "info");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Start streaming the mannequin GLB immediately — it downloads in parallel
   // with the studio JS chunk instead of serialised after mount.

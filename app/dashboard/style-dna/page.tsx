@@ -60,8 +60,8 @@ function ScoreTrendChart({ trends }: { trends: ScoreTrendPoint[] }) {
   };
 
   return (
-    <div className="w-full overflow-x-auto">
-      <svg width="100%" viewBox={`0 0 ${w} ${h}`} className="max-w-[560px]">
+    <div className="w-full overflow-hidden">
+      <svg width="100%" viewBox={`0 0 ${w} ${h}`} className="max-w-[560px] mx-auto">
         {[0, 2, 4, 6, 8, 10].map((v) => {
           const y = pad.top + plotH - (v / 10) * plotH;
           return (
@@ -388,7 +388,7 @@ export default function StyleDnaPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-50px" }}
               transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-              className="glass-card p-10"
+              className="glass-card p-6 sm:p-10"
             >
               <div className="flex items-center gap-3 mb-8">
                 <BarChart3 className="w-5 h-5 text-[var(--accent-aurum)]" />

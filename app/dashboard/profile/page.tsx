@@ -152,9 +152,9 @@ export default function ProfilePage() {
       </ScrollParallax>
 
       <ScrollBlur blur={0} minOpacity={0.95}>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
         <motion.div variants={fadeUp} initial="hidden" animate="show" className="lg:col-span-1 space-y-4">
-          <div className="glass-card p-6 text-center">
+          <div className="glass-card p-4 sm:p-6 text-center">
             <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[var(--accent-nexus)] to-[var(--accent-aurum)] mx-auto mb-4 flex items-center justify-center overflow-hidden border border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)] shadow-aurum">
               {avatarSrc ? (
                 <Image
@@ -177,14 +177,14 @@ export default function ProfilePage() {
             <div className="flex justify-center gap-2 flex-wrap">
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="btn-outline text-xs !py-1.5"
+                className="btn-outline text-xs !py-1.5 w-full sm:w-auto justify-center"
               >
                 <Pencil className="w-3 h-3" /> {avatarSrc ? "CHANGE PHOTO" : "ADD PHOTO"}
               </button>
               {localAvatar && (
                 <button
                   onClick={handleAvatarRemove}
-                  className="btn-outline text-xs !py-1.5 text-red-400 border-red-400/40 hover:border-red-400"
+                  className="btn-outline text-xs !py-1.5 text-red-400 border-red-400/40 hover:border-red-400 w-full sm:w-auto justify-center"
                 >
                   <Trash2 className="w-3 h-3" /> REMOVE
                 </button>
@@ -192,7 +192,7 @@ export default function ProfilePage() {
               <button
                 onClick={handleSignOut}
                 disabled={signingOut}
-                className="btn-outline text-xs !py-1.5 text-red-400 border-red-400/40 hover:border-red-400"
+                className="btn-outline text-xs !py-1.5 text-red-400 border-red-400/40 hover:border-red-400 w-full sm:w-auto justify-center"
               >
                 <LogOut className="w-3 h-3" /> {signingOut ? "SIGNING OUT…" : "SIGN OUT"}
               </button>
@@ -231,9 +231,9 @@ export default function ProfilePage() {
             </p>
           </div>
 
-          <div className="glass-card p-4">
+          <div className="glass-card p-3 sm:p-4">
             <h3 className="type-label text-[var(--text-primary)] mb-3">STATS</h3>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:gap-3">
               <div className="p-3 border border-[var(--border-primary)] bg-[var(--bg-tertiary)] card-nexus text-center">
                 <ScanFace className="w-4 h-4 text-[var(--accent-nexus)] mx-auto mb-1" />
                 <div className="type-display text-lg text-[var(--text-primary)]">{analysisCount}</div>

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useAnalysisStore } from "@/store/analysis-store";
 import { ScrollReveal, ScrollRevealItem, ScrollProgress } from "@/components/shared/ScrollReveal";
 import { motion, AnimatePresence } from "framer-motion";
-import { Droplets, ArrowRight, Shield, Sun, Sparkles, Clock, ChevronDown } from "lucide-react";
+import { Droplets, ArrowRight, Shield, Sun, Sparkles, Clock, ChevronDown, Info } from "lucide-react";
 
 interface SkinMetric {
   label: string;
@@ -195,6 +195,20 @@ export default function SkinHealthPage() {
           <h1 className="type-display text-[var(--text-primary)] tracking-tight">SKIN <span className="text-gradient-aurum">HEALTH.</span></h1>
         </div>
         <p className="text-[var(--text-muted)] font-body type-subhead max-w-xl">Detailed skin analysis with personalized skincare recommendations.</p>
+      </ScrollReveal>
+
+      <ScrollReveal>
+        <div className="flex items-start gap-3 p-4 border border-[color-mix(in_srgb,var(--accent-honey)_40%,transparent)] bg-[color-mix(in_srgb,var(--accent-honey)_6%,transparent)] rounded-[var(--radius-md)]">
+          <Info className="w-5 h-5 text-[var(--accent-honey)] shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-body font-semibold text-[var(--text-primary)] mb-1">Estimates Only</p>
+            <p className="text-xs font-body text-[var(--text-muted)] leading-relaxed">
+              These metrics are derived estimates inferred from photo analysis — not clinical dermatological
+              measurements. Treat them as directional guidance. For medical skin concerns, consult a
+              board-certified dermatologist.
+            </p>
+          </div>
+        </div>
       </ScrollReveal>
 
       <ScrollProgress />
