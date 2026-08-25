@@ -62,12 +62,13 @@ export default function GroomingPage() {
         const color = detectHairColor(canvas, result);
         setHairColor(color);
         const lm = result.faceLandmarks?.[0];
-        const shape = lm
+        const shapeResult = lm
           ? calculateFaceShape(lm.map((l) => [l.x, l.y, l.z]))
-          : useAnalysisStore.getState().faceResult?.facialShape;
-        setFaceShape(shape ?? null);
+          : null;
+        const shape = shapeResult?.primary ?? useAnalysisStore.getState().faceResult?.facialShape ?? null;
+        setFaceShape(typeof shape === "string" ? shape : null);
         setShapeSource(lm ? "photo" : "profile");
-        const scores = scoreGroomingStyles(shape);
+        const scores = scoreGroomingStyles(typeof shape === "string" ? shape : undefined);
         setGroomingScores(scores);
       } catch (err) {
         console.error("Grooming analysis failed:", err);

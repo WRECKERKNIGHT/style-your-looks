@@ -3,6 +3,8 @@ export interface Point2D {
   y: number;
 }
 
+import { classifyFaceShape } from "./calibration";
+
 export interface LandmarkPoint {
   x: number;
   y: number;
@@ -233,12 +235,30 @@ export function buildStructuralChains(landmarks: LandmarkList): StructuralChains
   };
 }
 
+export interface FaceShapeClassification {
+  primary: string;
+  probabilities: Record<string, number>;
+}
+
 /**
- * Face-shape classification using stable anatomical anchors:
- * temples 108/337, cheekbones 234/454, jaw 172/397 and length 10→152.
- * Returns Round, Square, Heart, Diamond, Oblong, Triangle or Oval.
+ * 10-ratio probabilistic face-shape classifier using cosine similarity
+ * against population prototypes from calibration.ts.
+ *
+ * Landmarks used (stable MediaPipe FaceMesh indices):
+ *   10  = top of head (forehead midline)
+ *   152 = chin bottom
+ *   108 = left temple
+ *   337 = right temple
+ *   234 = left cheekbone
+ *   454 = right cheekbone
+ *   172 = left jaw (gonion)
+ *   397 = right jaw (gonion)
+ *   127 = left mandible (mid-jaw)
+ *   363 = right mandible (mid-jaw)
+ *   13  = upper lip (Cupid's bow center)
+ *   14  = lower lip center
  */
-export function calculateFaceShape(landmarks: LandmarkList): string {
+export function calculateFaceShape(landmarks: LandmarkList): FaceShapeClassification {
   const U = createUprightAccessor(landmarks);
   const fw = U.pt(108);
   const fw2 = U.pt(337);
@@ -248,25 +268,49 @@ export function calculateFaceShape(landmarks: LandmarkList): string {
   const j2 = U.pt(397);
   const top = U.pt(10);
   const chin = U.pt(152);
-  if (!fw || !fw2 || !c1 || !c2 || !j1 || !j2 || !top || !chin) return "Oval";
+  const m1 = U.pt(127);
+  const m2 = U.pt(363);
+  if (!fw || !fw2 || !c1 || !c2 || !j1 || !j2 || !top || !chin) {
+    return { primary: "Oval", probabilities: { Oval: 1.0 } };
+  }
 
   const foreheadWidth = Math.abs(fw.x - fw2.x);
   const cheekWidth = Math.abs(c1.x - c2.x);
   const jawWidth = Math.abs(j1.x - j2.x);
   const faceLength = Math.hypot(top.x - chin.x, top.y - chin.y);
+  const mandibleWidth = m1 && m2 ? Math.abs(m1.x - m2.x) : jawWidth;
 
-  if (cheekWidth <= 0 || faceLength <= 0) return "Oval";
+  if (cheekWidth <= 0 || faceLength <= 0) {
+    return { primary: "Oval", probabilities: { Oval: 1.0 } };
+  }
 
-  const cheekToLength = cheekWidth / faceLength;
-  const foreheadToCheek = foreheadWidth / cheekWidth;
-  const jawToCheek = jawWidth / cheekWidth;
-  const foreheadToJaw = foreheadWidth / jawWidth;
+  // 10 ratios for classification
+  const faceLengthWidth = faceLength / cheekWidth;
+  const foreheadCheekRatio = foreheadWidth / cheekWidth;
+  const jawCheekRatio = jawWidth / cheekWidth;
+  const chinJawRatio = mandibleWidth > 0 ? jawWidth / mandibleWidth : 0.85;
+  const jawTaper = jawWidth > 0 ? (cheekWidth - jawWidth) / cheekWidth : 0.5;
+  const cheekLengthRatio = cheekWidth / faceLength;
+  const templeCheekRatio = foreheadWidth / cheekWidth;
 
-  if (cheekToLength >= 0.78 && foreheadToCheek >= 0.95 && jawToCheek >= 0.9) return "Round";
-  if (foreheadToJaw >= 0.9 && foreheadToJaw <= 1.1 && jawToCheek >= 0.95 && cheekToLength < 0.8) return "Square";
-  if (foreheadToCheek >= 1.02 && jawToCheek <= 0.85) return "Heart";
-  if (cheekToLength >= 0.68 && foreheadToCheek < 0.98 && jawToCheek <= 0.9) return "Diamond";
-  if (cheekToLength <= 0.6 && foreheadToJaw >= 0.9 && foreheadToJaw <= 1.1) return "Oblong";
-  if (foreheadToJaw <= 0.82 && jawToCheek >= 1.02) return "Triangle";
-  return "Oval";
+  const ratios = {
+    faceLengthWidth,
+    foreheadCheekRatio,
+    jawCheekRatio,
+    chinJawRatio,
+    jawTaper,
+    cheekLengthRatio,
+    templeCheekRatio,
+  };
+
+  // Use calibration module's cosine-similarity classifier
+  return classifyFaceShape(ratios) as FaceShapeClassification;
+}
+
+/**
+ * Legacy wrapper for code that still expects a plain string.
+ * Returns just the primary shape name.
+ */
+export function calculateFaceShapeName(landmarks: LandmarkList): string {
+  return calculateFaceShape(landmarks).primary;
 }

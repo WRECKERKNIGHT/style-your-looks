@@ -16,6 +16,7 @@ import {
   type FaceScoreSample,
   type AnalysisProfile,
 } from "@/lib/ml/scoring";
+import { getYouthfulness, getStructureProfile } from "@/lib/ml/face-analyzer";
 import { assessPhotoQuality, type PhotoQualityReport } from "@/lib/ml/face-quality";
 import { generateRecommendations } from "@/lib/ml/outfit-recommender";
 import { useAnalysisStore } from "@/store/analysis-store";
@@ -108,6 +109,7 @@ function buildStoreFaceResult(
     eyeSpacing: scoreResult.eyeSpacing,
     skinClarity: scoreResult.skinClarity,
     facialShape: scoreResult.facialShape,
+    faceShapeProbabilities: scoreResult.faceShapeProbabilities,
     skinTone: skinTone?.monkScale.label || "Unknown",
     skinToneValue: skinTone?.monkScale.hex,
     skinToneScaleId: skinTone?.monkScale.id,
@@ -154,6 +156,13 @@ function buildStoreFaceResult(
     consistencyScore: scoreResult.consistencyScore,
     analysisConfidence: scoreResult.analysisConfidence,
     photoCount: scoreResult.photoCount,
+    faceIQ: scoreResult.faceIQ,
+    grade: scoreResult.grade,
+    gradeLabel: scoreResult.gradeLabel,
+    comparison: scoreResult.comparison,
+    structureProfile: scoreResult.structureProfile,
+    youthfulness: scoreResult.youthfulness,
+    metricPercentiles: scoreResult.metricPercentiles,
     qualityGate: quality
       ? {
           brightness: quality.brightness,
@@ -246,8 +255,13 @@ export function useMediaPipe() {
           );
         }
         const metrics = computeFaceMetrics(faceResult);
+        const blendshapes = faceResult.faceBlendshapes?.[0]?.categories;
+        const eyeOpenness = blendshapes ? 1 - ((blendshapes.find(s => s.categoryName === "eyeBlinkLeft")?.score ?? 0) + (blendshapes.find(s => s.categoryName === "eyeBlinkRight")?.score ?? 0)) / 2 : 0.5;
+        const smileIntensity = blendshapes ? ((blendshapes.find(s => s.categoryName === "smileLeft")?.score ?? 0) + (blendshapes.find(s => s.categoryName === "smileRight")?.score ?? 0)) / 2 : 0;
+        const youthfulness = getYouthfulness(canvas, faceResult, { eyeOpenness, smileIntensity });
+        const structureProfile = getStructureProfile(faceResult);
         const scoreResult = mergeFaceScores(
-          [{ metrics, skinClarity: skinClarityScore, quality }],
+          [{ metrics, skinClarity: skinClarityScore, quality, youthfulness, structureProfile: structureProfile.label }],
           genderProfile
         ).result;
 
@@ -333,7 +347,12 @@ export function useMediaPipe() {
           );
           const skinClarityScore = computeSkinClarityScore(canvas, ctx, numFaces);
           const metrics = computeFaceMetrics(faceResult);
-          samples.push({ metrics, skinClarity: skinClarityScore, quality, sourceResult: faceResult });
+          const blendshapes = faceResult.faceBlendshapes?.[0]?.categories;
+          const eyeOpenness = blendshapes ? 1 - ((blendshapes.find(s => s.categoryName === "eyeBlinkLeft")?.score ?? 0) + (blendshapes.find(s => s.categoryName === "eyeBlinkRight")?.score ?? 0)) / 2 : 0.5;
+          const smileIntensity = blendshapes ? ((blendshapes.find(s => s.categoryName === "smileLeft")?.score ?? 0) + (blendshapes.find(s => s.categoryName === "smileRight")?.score ?? 0)) / 2 : 0;
+          const youthfulness = getYouthfulness(canvas, faceResult, { eyeOpenness, smileIntensity });
+          const structureProfile = getStructureProfile(faceResult);
+          samples.push({ metrics, skinClarity: skinClarityScore, quality, sourceResult: faceResult, youthfulness, structureProfile: structureProfile.label });
 
           if (quality.score > bestQuality) {
             bestQuality = quality.score;

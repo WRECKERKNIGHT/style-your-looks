@@ -17,9 +17,22 @@ import {
   getRawEyeNoseRatio,
   getNoseChinRatioScore,
   getMidfaceRatioScore,
+  getStructureProfile,
+  getYouthfulness,
+  type StructureProfileType,
 } from "./face-analyzer";
 import type { PhotoQualityReport } from "./face-quality";
 import { frontalityScore } from "./face-quality";
+import {
+  scoreToPercentile,
+  computeFaceIQ,
+  gradeFromPercentile,
+  comparisonFromPercentile,
+  percentileFromZ,
+  zScore,
+  resolveRef,
+  type EthnicRegion,
+} from "./calibration";
 
 export interface FacialMetric {
   label: string;
@@ -61,6 +74,7 @@ export interface FaceScoreResult {
   eyeSpacing: number;
   skinClarity: number;
   facialShape: string;
+  faceShapeProbabilities: Record<string, number>;
   goldenRatio: number;
   lipFullness: number;
   noseProfile: number;
@@ -92,6 +106,20 @@ export interface FaceScoreResult {
   photoCount: number;
   /** Pose-aware symmetry axis tilt (degrees from vertical) for overlays. */
   symmetryAxis?: { angleDeg: number };
+  /** Population-calibrated Face IQ (0-100). Higher = more rare/attractive. */
+  faceIQ: number;
+  /** Letter grade from percentile. */
+  grade: string;
+  /** Descriptive label for the grade. */
+  gradeLabel: string;
+  /** Human-readable comparison. */
+  comparison: string;
+  /** Structure profile descriptor (Soft/Balanced/Defined/Sharp). */
+  structureProfile: StructureProfileType;
+  /** Youthfulness score (0-100). */
+  youthfulness: number;
+  /** Per-metric percentiles for distribution bars. */
+  metricPercentiles: Record<string, number>;
 }
 
 export interface FaceMetricScores {
@@ -111,6 +139,7 @@ export interface FaceMetricScores {
   midfaceRatio: number;
   horizontalFifths: number;
   facialShape: string;
+  faceShapeProbabilities: Record<string, number>;
 }
 
 export interface FaceScoreSample {
@@ -118,6 +147,8 @@ export interface FaceScoreSample {
   skinClarity: number;
   quality: PhotoQualityReport;
   sourceResult?: FaceLandmarkerResult;
+  youthfulness?: number;
+  structureProfile?: StructureProfileType;
 }
 
 function scoreToRating(score: number): string {
@@ -494,6 +525,7 @@ function getStyleProfile(shape: string, scores: { symmetry: number; jawline: num
 }
 
 export function computeFaceMetrics(result: FaceLandmarkerResult): FaceMetricScores {
+  const shapeResult = getFacialShape(result);
   return {
     symmetry: getFaceSymmetry(result),
     proportions: getFaceProportions(result),
@@ -510,7 +542,8 @@ export function computeFaceMetrics(result: FaceLandmarkerResult): FaceMetricScor
     noseChinRatio: getNoseChinRatioScore(result),
     midfaceRatio: getMidfaceRatioScore(result),
     horizontalFifths: getHorizontalFifthsScore(result),
-    facialShape: getFacialShape(result),
+    facialShape: shapeResult.primary,
+    faceShapeProbabilities: shapeResult.probabilities,
   };
 }
 
@@ -526,7 +559,9 @@ export function buildFaceScoreFromMetrics(
   skinClarityScore: number,
   options: BuildOptions = {},
   sourceResult?: FaceLandmarkerResult,
-  profile: AnalysisProfile = "neutral"
+  profile: AnalysisProfile = "neutral",
+  youthfulnessOverride?: number,
+  structureProfileOverride?: StructureProfileType
 ): FaceScoreResult {
   const {
     photoQualityScore = 8,
@@ -554,6 +589,7 @@ export function buildFaceScoreFromMetrics(
     midfaceRatio,
     horizontalFifths,
     facialShape,
+    faceShapeProbabilities,
   } = metrics;
 
   const facialHarmony =
@@ -562,6 +598,53 @@ export function buildFaceScoreFromMetrics(
   const rawFwhr = sourceResult ? getRawFwhr(sourceResult) : undefined;
   const rawCanthalTilt = sourceResult ? getRawCanthalTilt(sourceResult) : undefined;
   const rawEyeNoseRatio = sourceResult ? getRawEyeNoseRatio(sourceResult) : undefined;
+
+  // --- NEW: Compute per-metric percentiles using population calibration ---
+  const metricPercentiles: Record<string, number> = {
+    "Facial Symmetry": scoreToPercentile(symmetry),
+    "Golden Ratio Adherence": scoreToPercentile(goldenRatio),
+    "Jawline Definition": scoreToPercentile(jawline),
+    "Proportional Harmony": scoreToPercentile(proportions),
+    "Eye Spacing": scoreToPercentile(eyeSpacing),
+    "Skin Clarity": scoreToPercentile(skinClarityScore),
+    "Cheekbone Definition": scoreToPercentile(cheekboneDefinition),
+    "FWHR (Facial Width-to-Height)": scoreToPercentile(fwhr),
+    "Canthal Tilt": scoreToPercentile(canthalTilt),
+    "Horizontal Fifths": scoreToPercentile(horizontalFifths),
+    "Eye–Nose Ratio": scoreToPercentile(eyeNoseRatio),
+    "Nose–Chin Balance": scoreToPercentile(noseChinRatio),
+    "Midface Harmony": scoreToPercentile(midfaceRatio),
+    "Lip Proportion": scoreToPercentile(lipFullness),
+    "Nose Profile": scoreToPercentile(noseProfile),
+    "Forehead Balance": scoreToPercentile(foreheadBalance),
+  };
+
+  // Build weight map for Face IQ composition
+  const weightMap: Record<string, number> = {
+    "Facial Symmetry": weights.symmetry,
+    "Golden Ratio Adherence": weights.goldenRatio,
+    "Jawline Definition": weights.jawline,
+    "Proportional Harmony": weights.proportions,
+    "Eye Spacing": weights.eyeSpacing,
+    "Skin Clarity": weights.skinClarity,
+    "Cheekbone Definition": weights.cheekboneDefinition,
+    "FWHR (Facial Width-to-Height)": weights.fwhr,
+    "Canthal Tilt": weights.canthalTilt,
+    "Horizontal Fifths": weights.horizontalFifths,
+    "Eye–Nose Ratio": weights.eyeNoseRatio,
+    "Nose–Chin Balance": weights.noseChinRatio,
+    "Midface Harmony": weights.midfaceRatio,
+    "Lip Proportion": weights.lipFullness,
+    "Nose Profile": weights.noseProfile,
+    "Forehead Balance": weights.foreheadBalance,
+  };
+
+  // Face IQ: weighted average of percentiles (0-100)
+  const { faceIQ, grade, label: gradeLabel, comparison } = computeFaceIQ(metricPercentiles, weightMap);
+
+  // Structure profile
+  const structureProfile = structureProfileOverride ?? "Balanced";
+  const youthfulness = youthfulnessOverride ?? 50;
 
   const metricDefs: Omit<FacialMetric, "score" | "rating" | "spread">[] = [
     {
@@ -579,7 +662,7 @@ export function buildFaceScoreFromMetrics(
     {
       label: "Jawline Definition",
       weight: weights.jawline,
-      description: "Jaw angle sharpness, chin prominence, and jaw-to-face ratio. Strong jawlines signal structural confidence.",
+      description: "Multi-factor jawline analysis: jaw-to-face ratio, gonial angle sharpness, mandibular taper, chin projection, and jaw symmetry.",
       tip: jawline >= 7 ? "Your jawline is a defining feature. Keep it clean and well-groomed." : "Angular beard styles (Van Dyke, Anchor) can create the illusion of a sharper jawline.",
     },
     {
@@ -687,21 +770,20 @@ export function buildFaceScoreFromMetrics(
   const breakdown: FacialMetric[] = metricDefs.map((m) => ({
     ...m,
     score: Math.round(metricScores[m.label] * 10) / 10,
-    rating: scoreToRating(metricScores[m.label]),
+    rating: scoreToRating(metricPercentiles[m.label] / 10),
     tip: m.tip,
   }));
 
-  const overallScore = metrics
-    ? breakdown.reduce((acc, m) => acc + m.score * m.weight, 0)
-    : 0;
-  const roundedScore = Math.round(overallScore * 10) / 10;
+  // Overall score: use Face IQ directly (already 0-100), convert to 2-10 for backward compat
+  const roundedScore = Math.round(((faceIQ / 100) * 8 + 2) * 10) / 10;
 
   const strengths: string[] = [];
   const improvements: string[] = [];
 
   breakdown.forEach((m) => {
-    if (m.score >= 7.5) strengths.push(`${m.label} (${m.score.toFixed(1)}/10) — ${m.rating}`);
-    if (m.score < 5.5) improvements.push(`${m.label} (${m.score.toFixed(1)}/10) — ${m.tip}`);
+    const pct = metricPercentiles[m.label] ?? 50;
+    if (pct >= 80) strengths.push(`${m.label} (${m.score.toFixed(1)}/10) — ${scoreToRating(pct / 10)}`);
+    if (pct < 40) improvements.push(`${m.label} (${m.score.toFixed(1)}/10) — ${m.tip}`);
   });
 
   const styleProfile = getStyleProfile(facialShape, {
@@ -721,16 +803,16 @@ export function buildFaceScoreFromMetrics(
     headTilt: 0,
   };
   const percentile = {
-    overall: calculateScoreIndex(roundedScore),
-    symmetry: calculateScoreIndex(symmetry),
-    goldenRatio: calculateScoreIndex(goldenRatio),
-    jawline: calculateScoreIndex(jawline),
-    skinClarity: calculateScoreIndex(skinClarityScore),
-    harmony: calculateScoreIndex(facialHarmony),
-    bracket: getScoreBand(calculateScoreIndex(roundedScore)),
-    comparisonText: `Your overall score of ${roundedScore.toFixed(1)}/10 maps to a ${getScoreBand(calculateScoreIndex(roundedScore))} band (index ${calculateScoreIndex(roundedScore)}/100). This is a direct rescale of your measured score — not a population percentile, because ZERVEY does not yet have enough analysed faces to publish real rankings.`,
+    overall: faceIQ,
+    symmetry: metricPercentiles["Facial Symmetry"] ?? 50,
+    goldenRatio: metricPercentiles["Golden Ratio Adherence"] ?? 50,
+    jawline: metricPercentiles["Jawline Definition"] ?? 50,
+    skinClarity: metricPercentiles["Skin Clarity"] ?? 50,
+    harmony: scoreToPercentile(facialHarmony),
+    bracket: grade,
+    comparisonText: comparison,
   };
-  const beautyIndex = calculateBeautyIndex(metrics, skinClarityScore, weights);
+  const beautyIndex = faceIQ;
   const faceShapeDetails = FACE_SHAPE_INFO[facialShape] || FACE_SHAPE_INFO.Oval;
 
   return {
@@ -741,6 +823,7 @@ export function buildFaceScoreFromMetrics(
     eyeSpacing: Math.round(eyeSpacing * 10) / 10,
     skinClarity: Math.round(skinClarityScore * 10) / 10,
     facialShape,
+    faceShapeProbabilities,
     goldenRatio: Math.round(goldenRatio * 10) / 10,
     lipFullness: Math.round(lipFullness * 10) / 10,
     noseProfile: Math.round(noseProfile * 10) / 10,
@@ -757,7 +840,7 @@ export function buildFaceScoreFromMetrics(
     rawEyeNoseRatio: rawEyeNoseRatio ?? 0,
     facialHarmony: Math.round(facialHarmony * 10) / 10,
     breakdown,
-    overallRating: scoreToRating(roundedScore),
+    overallRating: gradeLabel,
     detailedAnalysis,
     strengths,
     improvements,
@@ -774,6 +857,13 @@ export function buildFaceScoreFromMetrics(
       const axis = sourceResult ? getFaceSymmetryAxis(sourceResult) : null;
       return axis ? { angleDeg: axis.angleDeg } : undefined;
     })(),
+    faceIQ,
+    grade,
+    gradeLabel,
+    comparison,
+    structureProfile,
+    youthfulness,
+    metricPercentiles,
   };
 }
 
@@ -805,7 +895,7 @@ function stddev(values: number[]): number {
   return Math.sqrt(variance);
 }
 
-const MERGE_KEYS: Exclude<keyof FaceMetricScores, "facialShape">[] = [
+const MERGE_KEYS: Exclude<keyof FaceMetricScores, "facialShape" | "faceShapeProbabilities">[] = [
   "symmetry",
   "proportions",
   "jawline",
@@ -859,6 +949,15 @@ export function mergeFaceScores(
   }
   merged.facialShape = bestShape;
 
+  // Merge face shape probabilities: average across samples
+  const mergedProbabilities: Record<string, number> = {};
+  for (const s of samples) {
+    for (const [shape, prob] of Object.entries(s.metrics.faceShapeProbabilities)) {
+      mergedProbabilities[shape] = (mergedProbabilities[shape] || 0) + prob / samples.length;
+    }
+  }
+  merged.faceShapeProbabilities = mergedProbabilities;
+
   const skinClarity = median(samples.map((s) => s.skinClarity));
   const photoQuality = median(samples.map((s) => s.quality.score));
 
@@ -881,6 +980,18 @@ export function mergeFaceScores(
 
   const bestSample = [...samples].sort((a, b) => b.quality.score - a.quality.score)[0];
 
+  // Merge youthfulness and structure profile across samples
+  const youthfulnessValues = samples.map((s) => s.youthfulness).filter((v): v is number => typeof v === "number");
+  const youthfulness = youthfulnessValues.length > 0 ? Math.round(youthfulnessValues.reduce((a, b) => a + b, 0) / youthfulnessValues.length) : 50;
+
+  const structureProfiles = samples.map((s) => s.structureProfile).filter((v): v is StructureProfileType => typeof v === "string");
+  const structureProfile = structureProfiles.length > 0
+    ? structureProfiles.sort((a, b) => {
+        const order = { "Sharp": 4, "Defined": 3, "Balanced": 2, "Soft": 1 };
+        return (order[b] ?? 2) - (order[a] ?? 2);
+      })[0]
+    : "Balanced";
+
   const result = buildFaceScoreFromMetrics(
     merged,
     skinClarity,
@@ -891,7 +1002,9 @@ export function mergeFaceScores(
       photoCount: samples.length,
     },
     bestSample?.sourceResult,
-    profile
+    profile,
+    youthfulness,
+    structureProfile
   );
 
   result.breakdown = result.breakdown.map((m) => {
