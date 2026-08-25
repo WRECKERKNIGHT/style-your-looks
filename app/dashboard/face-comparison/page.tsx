@@ -361,7 +361,7 @@ export default function FaceComparisonPage() {
 
           {result && !loading && (
             <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }} className="glass-card p-6">
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
                 <h3 className="type-label text-[var(--text-primary)]">OVERALL GEOMETRY SIMILARITY</h3>
                 <span className="type-display text-2xl text-[var(--accent-aurum)]">{result.overall}%</span>
               </div>
