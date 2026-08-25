@@ -253,7 +253,7 @@ export default function BodyAnalysisPage() {
             </motion.div>
           )}
 
-          <motion.div variants={fadeUp} className="glass-card p-10">
+          <motion.div variants={fadeUp} className="glass-card p-6 sm:p-10">
             <div className="flex items-center gap-3 mb-8">
               <Layers className="w-5 h-5 text-[var(--accent-aurum)]" />
               <h3 className="type-heading text-[var(--text-primary)] tracking-tight">BODY TYPE DETECTION</h3>
@@ -275,7 +275,7 @@ export default function BodyAnalysisPage() {
             </div>
           </motion.div>
 
-          <motion.div variants={fadeUp} className="glass-card p-10">
+          <motion.div variants={fadeUp} className="glass-card p-6 sm:p-10">
             <div className="flex items-center gap-3 mb-8">
               <Activity className="w-5 h-5 text-[var(--accent-aurum)]" />
               <h3 className="type-heading text-[var(--text-primary)] tracking-tight">BODY PROPORTIONS</h3>
@@ -333,12 +333,12 @@ export default function BodyAnalysisPage() {
             </div>
           </motion.div>
 
-          <motion.div variants={fadeUp} className="glass-card p-10">
+          <motion.div variants={fadeUp} className="glass-card p-6 sm:p-10">
             <div className="flex items-center gap-3 mb-8">
               <Droplets className="w-5 h-5 text-[var(--accent-aurum)]" />
               <h3 className="type-heading text-[var(--text-primary)] tracking-tight">SKIN TONE ANALYSIS</h3>
             </div>
-            <div className="flex items-center gap-8">
+            <div className="flex items-center gap-5 sm:gap-8">
               <div
                 className="w-24 h-24 rounded-full border-2 border-[var(--border-primary)] flex-shrink-0 glow-ring"
                 style={{ backgroundColor: bodyResult.skinToneValue }}
@@ -358,7 +358,7 @@ export default function BodyAnalysisPage() {
           </motion.div>
 
           {outfitRecommendations.length > 0 && (
-            <motion.div variants={fadeUp} className="glass-card p-10">
+            <motion.div variants={fadeUp} className="glass-card p-6 sm:p-10">
               <h3 className="type-heading text-[var(--text-primary)] tracking-tight mb-3">RECOMMENDED OUTFITS</h3>
               <p className="text-[var(--text-muted)] font-body text-sm mb-8">
                 Curated based on your {bodyResult.bodyType} body type and {bodyResult.undertone.toLowerCase()} undertone.
