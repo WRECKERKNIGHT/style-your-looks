@@ -184,8 +184,8 @@ export function HeroSection() {
                 className="mt-12 flex flex-wrap gap-5"
               >
                 <MagneticButton>
-                  <Link href="/signup" className="btn-nexus">
-                    START YOUR ANALYSIS
+                  <Link href="/dashboard/face-analysis" className="btn-nexus">
+                    GET YOUR FACE IQ
                     <span className="text-lg leading-none inline-block">
                       &rarr;
                     </span>

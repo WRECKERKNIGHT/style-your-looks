@@ -605,7 +605,7 @@ export default function FaceAnalysisPage() {
             />
 
             {photos.length > 0 && (
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-5">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mt-5">
                 {photos.map((photo, i) => {
                   const issues = rejectedPhotos.find((r) => r.index === i)?.issues;
                   const isRejected = !!issues;
@@ -622,7 +622,7 @@ export default function FaceAnalysisPage() {
                         alt={`Photo ${i + 1}`}
                         className={`w-full h-full object-cover ${isRejected ? "opacity-40 grayscale" : ""}`}
                       />
-                      <span className="absolute top-2 left-2 w-6 h-6 bg-[color-mix(in_srgb,var(--bg-primary)_80%,transparent)] border border-[var(--border-primary)] text-[0.6rem] font-mono flex items-center justify-center">
+                      <span className="absolute top-2 left-2 w-7 h-7 bg-[color-mix(in_srgb,var(--bg-primary)_80%,transparent)] border border-[var(--border-primary)] text-[0.6rem] font-mono flex items-center justify-center">
                         {i + 1}
                       </span>
                       {isRejected && (
@@ -633,7 +633,7 @@ export default function FaceAnalysisPage() {
                       )}
                       <button
                         onClick={() => removePhoto(i)}
-                        className="absolute top-2 right-2 w-6 h-6 bg-[color-mix(in_srgb,var(--bg-primary)_80%,transparent)] border border-[var(--border-primary)] flex items-center justify-center hover:border-red-500/50 hover:text-red-400 transition-colors"
+                        className="absolute top-2 right-2 w-7 h-7 bg-[color-mix(in_srgb,var(--bg-primary)_80%,transparent)] border border-[var(--border-primary)] flex items-center justify-center hover:border-red-500/50 hover:text-red-400 transition-colors"
                       >
                         <X className="w-3.5 h-3.5" />
                       </button>
