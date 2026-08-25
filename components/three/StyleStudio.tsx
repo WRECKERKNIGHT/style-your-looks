@@ -19,11 +19,32 @@ import type { GlassesOptions } from '@/lib/three/glasses';
 import type { HairStyleId } from '@/lib/three/hair';
 import type { BeardStyleId } from '@/lib/three/beard';
 import { useAnalysisStore } from '@/store/analysis-store';
+import { Component, type ReactNode } from 'react';
 import { PersonStanding, Boxes, ScanLine, Sparkles } from 'lucide-react';
 import { OUTFIT_PRESETS, applyPreset, type OutfitPreset } from '@/lib/three/outfit-presets';
 import StudioControls from './StudioControls';
 
 type StudioMode = 'mannequin' | 'parametric';
+
+class CanvasErrorBoundary extends Component<{ children: ReactNode; fallback?: ReactNode }, { hasError: boolean }> {
+  state = { hasError: false };
+  static getDerivedStateFromError() { return { hasError: true }; }
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback ?? (
+        <div className="glass-card flex items-center justify-center" style={{ height: 'min(640px, 70vh)' }}>
+          <div className="px-8 text-center max-w-sm">
+            <p className="font-semibold text-aurum-300 mb-2">3D canvas crashed</p>
+            <p className="text-sm text-[var(--text-muted)] opacity-80">
+              An unexpected error stopped the Three.js renderer. Try reloading the page — the Parametric Fit Form may still be available.
+            </p>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 const DEFAULT_BODY: BodyParams = {
   gender: 'male',
@@ -72,7 +93,15 @@ export default function StyleStudio() {
         </span>
       </div>
 
-      {mode === 'mannequin' ? <MannequinStage /> : <ParametricStage />}
+      {mode === 'mannequin' ? (
+        <CanvasErrorBoundary>
+          <MannequinStage />
+        </CanvasErrorBoundary>
+      ) : (
+        <CanvasErrorBoundary>
+          <ParametricStage />
+        </CanvasErrorBoundary>
+      )}
     </div>
   );
 }

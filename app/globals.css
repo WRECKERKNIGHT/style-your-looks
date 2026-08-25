@@ -22,6 +22,18 @@ body {
   }
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
+/* Only apply hover colour shifts on devices that actually support hover —
+   prevents the "sticky" hover tint on touch screens. */
+@media (hover: hover) and (pointer: fine) {
+  nav .hover\:text-\[var\(--text-primary\)\]:hover {
+    color: var(--text-primary);
+  }
+}
+
 ::selection {
   background: #B98B56;
   color: #FFFFFF;

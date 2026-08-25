@@ -126,37 +126,40 @@ export default function VirtualTryOnPage() {
     }
   };
 
+  const [canvasError, setCanvasError] = useState(false);
+
   const renderCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     const container = containerRef.current;
     const img = loadedImg;
     if (!canvas || !container || !img) return;
 
-    const displayWidth = container.clientWidth;
-    const displayHeight = Math.min(displayWidth * (img.height / img.width), 560);
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = displayWidth * dpr;
-    canvas.height = displayHeight * dpr;
-    canvas.style.width = `${displayWidth}px`;
-    canvas.style.height = `${displayHeight}px`;
+    try {
+      const displayWidth = container.clientWidth;
+      const displayHeight = Math.min(displayWidth * (img.height / img.width), 560);
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = displayWidth * dpr;
+      canvas.height = displayHeight * dpr;
+      canvas.style.width = `${displayWidth}px`;
+      canvas.style.height = `${displayHeight}px`;
 
-    const ctx = canvas.getContext("2d");
-    if (!ctx) {
-      canvas.style.display = "none";
-      const fallback = document.createElement("p");
-      fallback.textContent = "Canvas is not supported in your browser.";
-      fallback.className = "text-sm text-[var(--text-muted)] font-body text-center p-8";
-      container.appendChild(fallback);
-      return;
-    }
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.clearRect(0, 0, displayWidth, displayHeight);
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        setCanvasError(true);
+        return;
+      }
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, displayWidth, displayHeight);
 
-    if (result) {
-      const src = layer === "original" ? result.original : layer === "warp" ? result.warp : result.final;
-      ctx.drawImage(src, 0, 0, displayWidth, displayHeight);
-    } else {
-      ctx.drawImage(img, 0, 0, displayWidth, displayHeight);
+      if (result) {
+        const src = layer === "original" ? result.original : layer === "warp" ? result.warp : result.final;
+        ctx.drawImage(src, 0, 0, displayWidth, displayHeight);
+      } else {
+        ctx.drawImage(img, 0, 0, displayWidth, displayHeight);
+      }
+      setCanvasError(false);
+    } catch {
+      setCanvasError(true);
     }
   }, [result, layer, loadedImg]);
 
@@ -210,6 +213,17 @@ export default function VirtualTryOnPage() {
             className="glass-card overflow-hidden relative"
           >
             <canvas ref={canvasRef} className="w-full" />
+
+            {canvasError && (
+              <div className="absolute inset-0 flex items-center justify-center bg-[var(--bg-secondary)] backdrop-blur-sm p-6">
+                <div className="text-center max-w-sm">
+                  <p className="font-semibold text-aurum-300 mb-2">Canvas unavailable</p>
+                  <p className="text-sm text-[var(--text-muted)] opacity-80">
+                    Your browser could not initialise the 2D canvas for the try-on preview. Try a different browser or enable hardware acceleration.
+                  </p>
+                </div>
+              </div>
+            )}
 
             {isProcessing && (
               <div className="absolute inset-0 glass-card backdrop-blur-sm flex flex-col items-center justify-center z-10 p-6">

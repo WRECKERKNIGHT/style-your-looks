@@ -57,7 +57,7 @@ function ComboCard({ combo, onOpen }: { combo: OutfitCombo; onOpen: () => void }
       className="group w-full text-left border border-[var(--border-primary)] bg-[var(--bg-secondary)] rounded-[var(--radius-md)] overflow-hidden transition-all hover:border-[var(--accent-aurum)]/50 hover:shadow-aurum"
     >
       <div className="aspect-[4/3] border-b border-[var(--border-primary)] overflow-hidden">
-        <div className="w-full h-full transition-transform duration-500 ease-out group-hover:scale-[1.03]">
+        <div className="w-full h-full transition-transform duration-500 ease-out group-hover:scale-[1.03] overflow-hidden">
           <ComboPhotoView combo={combo} />
         </div>
       </div>
