@@ -152,6 +152,8 @@ export function renderStudio(
     body: BodyParams;
     skinTone: string;
     garment: GarmentOptions | null;
+    /** Additional garment layers (bottom, outerwear) rendered in order. */
+    extraGarments?: GarmentOptions[];
     glasses: GlassesOptions | null;
     hairStyle: HairStyleId;
     hairColor: string;
@@ -207,6 +209,21 @@ export function renderStudio(
     });
     garmentGroup.add(g);
     garmentGroup.position.y = -m.soleY;
+  }
+
+  // Render additional garment layers (bottom, outerwear) on top
+  if (state.extraGarments) {
+    for (const extra of state.extraGarments) {
+      const g = buildGarment(state.body, extra);
+      g.traverse((o) => {
+        const mesh = o as THREE.Mesh;
+        if (mesh.isMesh) {
+          mesh.castShadow = true;
+          mesh.receiveShadow = true;
+        }
+      });
+      garmentGroup.add(g);
+    }
   }
 
   if (state.glasses) {
