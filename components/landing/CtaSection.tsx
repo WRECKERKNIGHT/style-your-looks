@@ -74,7 +74,7 @@ export function CtaSection() {
         <Reveal delay={0.3} y={30}>
           <div className="mt-14">
             <MagneticButton>
-              <Link href="/signup" className="btn-nexus text-sm py-4 px-10">
+              <Link href="/signup" className="btn-nexus text-sm py-3 px-8 sm:py-4 sm:px-10">
                 GET STARTED FREE
                 <span
                   className="text-xl inline-block"
@@ -90,7 +90,7 @@ export function CtaSection() {
         </Reveal>
 
         <Reveal delay={0.4}>
-          <div className="mt-16 flex items-center justify-center gap-8 flex-wrap">
+          <div className="mt-16 flex items-center justify-center gap-x-6 gap-y-3 sm:gap-8 flex-wrap">
             {[
               { label: "100% ON-DEVICE", color: "bg-nexus-500/60" },
               { label: "ANALYSIS STAYS LOCAL", color: "bg-aurum-400/50" },

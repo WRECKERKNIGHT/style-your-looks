@@ -386,6 +386,8 @@ export default function ColorAnalysisPage() {
   const [testColor, setTestColor] = useState("#C89D7C");
   const [shareOpen, setShareOpen] = useState(false);
 
+  useEffect(() => { document.title = "Tone Studio | ZERVEY"; }, []);
+
   useEffect(() => {
     // Face-only is enough: ITA + undertone + Monk scale fully determine the
     // seasonal palette, so don't force users through a body scan first.

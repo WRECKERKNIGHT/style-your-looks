@@ -48,7 +48,7 @@ export function Footer() {
 
       {/* CTA band */}
       <Reveal amount={0.2} className="relative z-10 max-w-[1400px] mx-auto px-8 md:px-16 lg:px-24 pt-20 md:pt-28">
-        <div className="relative overflow-hidden rounded-lg border border-[var(--border-primary)] bg-[var(--bg-secondary)] shadow-paper-lg px-8 md:px-16 py-14 md:py-20 text-center">
+        <div className="relative overflow-hidden rounded-lg border border-[var(--border-primary)] bg-[var(--bg-secondary)] shadow-paper-lg px-6 sm:px-8 md:px-16 py-10 sm:py-14 md:py-20 text-center">
           <div className="absolute inset-0 grid-bg opacity-40 pointer-events-none" />
           <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-aurum-400/60 to-transparent" />
           <div className="relative z-10">

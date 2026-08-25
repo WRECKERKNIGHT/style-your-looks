@@ -191,6 +191,8 @@ export default function FaceAnalysisPage() {
   // a reload. Real results stay in-memory so the rest of the dashboard
   // (hair-preview, accessories, studio...) can reuse the photo + analysis, and
   // only the explicit "SAVE ANALYSIS" button writes to history.
+  useEffect(() => { document.title = "Face IQ Analysis | ZERVEY"; }, []);
+
   useEffect(() => {
     return () => {
       if (useAnalysisStore.getState().source === "demo") {
