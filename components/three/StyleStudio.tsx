@@ -19,7 +19,8 @@ import type { GlassesOptions } from '@/lib/three/glasses';
 import type { HairStyleId } from '@/lib/three/hair';
 import type { BeardStyleId } from '@/lib/three/beard';
 import { useAnalysisStore } from '@/store/analysis-store';
-import { PersonStanding, Boxes, ScanLine } from 'lucide-react';
+import { PersonStanding, Boxes, ScanLine, Sparkles } from 'lucide-react';
+import { OUTFIT_PRESETS, applyPreset, type OutfitPreset } from '@/lib/three/outfit-presets';
 import StudioControls from './StudioControls';
 
 type StudioMode = 'mannequin' | 'parametric';
@@ -310,7 +311,9 @@ function ParametricStage() {
   const rafRef = useRef<number>(0);
 
   const bodyResult = useAnalysisStore((s) => s.bodyResult);
+  const faceResult = useAnalysisStore((s) => s.faceResult);
   const genderProfile = useAnalysisStore((s) => s.faceResult?.genderProfile);
+  const colorAnalysis = useAnalysisStore((s) => s.colorAnalysis);
 
   const [body, setBody] = useState<BodyParams>(DEFAULT_BODY);
   const [prefilledFromScan, setPrefilledFromScan] = useState(false);
@@ -321,6 +324,13 @@ function ParametricStage() {
     pattern: 'solid',
     fit: 0.008,
   });
+  const [bottomGarment, setBottomGarment] = useState<GarmentOptions | null>({
+    kind: 'jeans',
+    color: '#2C3E5A',
+    pattern: 'denim',
+    fit: 0.006,
+  });
+  const [outerGarment, setOuterGarment] = useState<GarmentOptions | null>(null);
   const [glasses, setGlasses] = useState<GlassesOptions | null>(null);
   const [hairStyle, setHairStyle] = useState<HairStyleId>('textured');
   const [hairColor, setHairColor] = useState('#2E2118');
@@ -328,13 +338,14 @@ function ParametricStage() {
   const [beardColor, setBeardColor] = useState('#2E2118');
   const [autoRotate, setAutoRotate] = useState(false);
   const [webglUnsupported, setWebglUnsupported] = useState(false);
+  const [activePresetId, setActivePresetId] = useState<string | null>(null);
 
   const patchBody = useCallback((patch: Partial<BodyParams>) => {
     setBody((prev) => ({ ...prev, ...patch }));
   }, []);
 
-  // Pre-fill the fit form from the user's measured pose ratios — once, so
-  // manual adjustments afterwards always win.
+  // Pre-fill the fit form + skin tone from the user's measured data — once,
+  // so manual adjustments afterwards always win.
   useEffect(() => {
     if (prefilledFromScan || !bodyResult) return;
     const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
@@ -344,22 +355,24 @@ function ParametricStage() {
         bodyResult.shoulderToWaistRatio !== undefined &&
         Number.isFinite(bodyResult.shoulderToWaistRatio)
       ) {
-        // ratio ~1.0 (straight) .. 1.5+ (very broad) → shoulders 0..1
         next.shoulders = clamp01((bodyResult.shoulderToWaistRatio - 1.0) / 0.5);
       }
       if (
         bodyResult.waistToHipRatio !== undefined &&
         Number.isFinite(bodyResult.waistToHipRatio)
       ) {
-        // ratio ~1.05 (straight) .. 0.7 (slim) → slimness 0..1
         next.waist = clamp01((1.05 - bodyResult.waistToHipRatio) / 0.4);
       }
       if (genderProfile === 'masculine') next.gender = 'male';
       else if (genderProfile === 'feminine') next.gender = 'female';
       return next;
     });
+    // Auto-detect skin tone from face scan
+    if (faceResult?.skinToneValue) {
+      setSkinTone(faceResult.skinToneValue);
+    }
     setPrefilledFromScan(true);
-  }, [prefilledFromScan, bodyResult, genderProfile]);
+  }, [prefilledFromScan, bodyResult, genderProfile, faceResult]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -415,6 +428,7 @@ function ParametricStage() {
         body,
         skinTone,
         garment,
+        extraGarments: [bottomGarment, outerGarment].filter(Boolean) as GarmentOptions[],
         glasses,
         hairStyle,
         hairColor,
@@ -423,7 +437,7 @@ function ParametricStage() {
       });
     }, 120);
     return () => window.clearTimeout(timer);
-  }, [body, skinTone, garment, glasses, hairStyle, hairColor, beardStyle, beardColor]);
+  }, [body, skinTone, garment, bottomGarment, outerGarment, glasses, hairStyle, hairColor, beardStyle, beardColor]);
 
   useEffect(() => {
     if (studioRef.current) {
@@ -449,6 +463,18 @@ function ParametricStage() {
     link.click();
   }, []);
 
+  const applyOutfitPreset = useCallback((preset: OutfitPreset) => {
+    const applied = applyPreset(
+      preset,
+      colorAnalysis?.bestColors,
+      colorAnalysis?.neutralColors,
+    );
+    setGarment(applied.top);
+    setBottomGarment(applied.bottom);
+    setOuterGarment(applied.outerwear ?? null);
+    setActivePresetId(preset.id);
+  }, [colorAnalysis]);
+
   if (webglUnsupported) {
     return <WebglFallbackCard />;
   }
@@ -461,9 +487,39 @@ function ParametricStage() {
       <div className="lg:col-span-3">
         {prefilledFromScan && (
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 mb-3 rounded-full border border-[color-mix(in_srgb,var(--accent-aurum)_35%,transparent)] bg-[color-mix(in_srgb,var(--accent-aurum)_8%,transparent)] type-mono text-[0.55rem] tracking-widest text-[var(--accent-aurum)]">
-            <ScanLine className="w-3 h-3" /> FIT FORM PRE-FILLED FROM YOUR BODY SCAN
+            <ScanLine className="w-3 h-3" /> DIGITAL TWIN — AUTO-FILLED FROM YOUR SCAN
           </span>
         )}
+
+        {/* One-click outfit presets */}
+        <div className="glass-card p-4 mb-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Sparkles className="w-4 h-4 text-[var(--accent-aurum)]" />
+            <h3 className="type-label text-[var(--text-primary)]">ONE-CLICK OUTFITS</h3>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {OUTFIT_PRESETS.map((preset) => (
+              <button
+                key={preset.id}
+                onClick={() => applyOutfitPreset(preset)}
+                title={preset.description}
+                className={`px-3 py-1.5 text-[10px] font-body uppercase tracking-wider rounded-[var(--radius-pill)] border transition-all ${
+                  activePresetId === preset.id
+                    ? 'btn-nexus'
+                    : 'bg-[var(--bg-tertiary)] text-[var(--text-primary)] border-[var(--border-primary)] hover:border-[color-mix(in_srgb,var(--accent-aurum)_35%,transparent)]'
+                }`}
+              >
+                {preset.name}
+              </button>
+            ))}
+          </div>
+          {activePresetId && (
+            <p className="mt-2 text-[10px] font-body text-[var(--text-muted)] opacity-70">
+              {OUTFIT_PRESETS.find((p) => p.id === activePresetId)?.description}
+            </p>
+          )}
+        </div>
+
         <StudioControls
           body={body}
           onBody={patchBody}
