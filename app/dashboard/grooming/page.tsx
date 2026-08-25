@@ -481,8 +481,8 @@ function GroomingGuide({ selectedBeardStyle }: { selectedBeardStyle: string }) {
         </div>
         <div className="space-y-4">
           {LINE_UP_ZONES.map((z) => (
-            <div key={z.zone} className="flex gap-4 p-4 bg-[var(--bg-tertiary)] border border-[var(--border-primary)]">
-              <span className="type-mono text-[0.55rem] text-[var(--accent-aurum)] tracking-widest whitespace-nowrap pt-1">{z.zone}</span>
+            <div key={z.zone} className="flex flex-col sm:flex-row gap-2 sm:gap-4 p-4 bg-[var(--bg-tertiary)] border border-[var(--border-primary)]">
+              <span className="type-mono text-[0.55rem] text-[var(--accent-aurum)] tracking-widest sm:whitespace-nowrap pt-1">{z.zone}</span>
               <p className="text-sm text-[var(--text-muted)] font-body leading-relaxed">{z.rule}</p>
             </div>
           ))}

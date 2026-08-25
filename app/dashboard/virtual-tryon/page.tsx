@@ -210,7 +210,7 @@ export default function VirtualTryOnPage() {
             viewport={{ once: true, margin: "-50px" }}
             transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
             ref={containerRef}
-            className="glass-card overflow-hidden relative"
+            className="glass-card overflow-hidden relative max-h-[50vh] sm:max-h-[55vh] md:max-h-none"
           >
             <canvas ref={canvasRef} className="w-full" />
 

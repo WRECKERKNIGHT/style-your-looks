@@ -53,7 +53,7 @@ export default function StudioPage() {
       </ScrollParallax>
 
       <ScrollBlur blur={0} minOpacity={0.9}>
-        <motion.div variants={fadeUp} initial="hidden" animate="show">
+        <motion.div variants={fadeUp} initial="hidden" animate="show" className="max-h-[60vh] md:max-h-none overflow-hidden">
           <StyleStudio />
         </motion.div>
       </ScrollBlur>
