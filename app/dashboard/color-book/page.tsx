@@ -343,7 +343,7 @@ function ComboModal({ combo, onClose }: { combo: OutfitCombo | null; onClose: ()
                   return (
                     <li key={garment} className="flex items-center gap-3">
                       <span
-                        className="w-9 h-9 rounded-[var(--radius-xs)] border border-[color-mix(in_srgb,var(--border-primary)_60%,transparent)] shrink-0"
+                        className="w-11 h-11 rounded-[var(--radius-xs)] border border-[color-mix(in_srgb,var(--border-primary)_60%,transparent)] shrink-0"
                         style={{ backgroundColor: c.hex }}
                       />
                       <div className="min-w-0">

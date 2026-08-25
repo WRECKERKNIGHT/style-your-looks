@@ -50,6 +50,10 @@ html {
   border-radius: var(--radius-xs);
 }
 
+* {
+  scrollbar-width: none;
+}
+
 ::-webkit-scrollbar {
   width: 10px;
 }

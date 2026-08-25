@@ -165,6 +165,11 @@ export default function CommunityPage() {
       </motion.div>
       </ScrollParallax>
 
+      <div className="w-full px-4 py-2.5 border border-amber-400/40 bg-amber-400/10 flex items-center justify-center gap-2">
+        <WifiOff className="w-3.5 h-3.5 text-amber-400" />
+        <span className="type-mono text-[0.6rem] tracking-widest text-amber-400">DEMO — FEED OFFLINE</span>
+      </div>
+
       <ScrollBlur blur={0} minOpacity={0.95}>
       <motion.div variants={fadeUp} initial="hidden" animate="show" className="flex flex-wrap gap-2 items-center">
         {(["feed", "members", "tags"] as const).map((tab) => (
