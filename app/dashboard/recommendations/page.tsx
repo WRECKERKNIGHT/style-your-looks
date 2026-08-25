@@ -97,7 +97,9 @@ export default function RecommendationsPage() {
             <motion.div variants={stagger} initial="hidden" animate="show" className="space-y-3">
               {outfitRecommendations.map((rec, i) => (
                 <motion.div key={rec.id} variants={fadeUp}
-                  className="p-4 border border-[var(--border-primary)] bg-[var(--bg-tertiary)] card-nexus group hover:border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)] transition-all">
+                  whileHover={{ scale: 1.01, borderColor: "color-mix(in srgb, var(--accent-aurum) 50%, transparent)" }}
+                  whileTap={{ scale: 0.99 }}
+                  className="p-4 border border-[var(--border-primary)] bg-[var(--bg-tertiary)] card-nexus group transition-all">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex items-start gap-3">
                       <span className="type-mono text-[var(--accent-aurum)] text-xs">{String(i + 1).padStart(2, "0")}</span>
@@ -142,6 +144,8 @@ export default function RecommendationsPage() {
               <motion.div variants={stagger} initial="hidden" animate="show" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 {weekPlan.map(({ day, outfit }) => (
                   <motion.div key={day} variants={fadeUp}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     className="p-4 border border-[var(--border-primary)] bg-[var(--bg-tertiary)] card-nexus">
                     <div className="flex items-center justify-between mb-2">
                       <span className="type-mono text-[0.6rem] tracking-widest text-[var(--accent-mocha)]">{day.toUpperCase()}</span>

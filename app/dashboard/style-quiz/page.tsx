@@ -99,6 +99,23 @@ export default function StyleQuizPage() {
     }
   }, []);
 
+  useEffect(() => {
+    if (step !== "quiz") return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        if (currentQuestion > 0) setCurrentQuestion(prev => prev - 1);
+      } else if (e.key === "ArrowRight") {
+        e.preventDefault();
+        if (currentQuestion < QUIZ_DATA.length - 1 && answers[currentQuestion]) {
+          setCurrentQuestion(prev => prev + 1);
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [step, currentQuestion, answers]);
+
   const startQuiz = () => setStep("quiz");
 
   const selectOption = (value: string) => {

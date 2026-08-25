@@ -298,7 +298,7 @@ export default function FaceComparisonPage() {
             ) : (
               <div className="relative">
                 <img src={idx === 0 ? imageA! : imageB!} alt={`Face ${idx === 0 ? "A" : "B"}`}
-                  className="w-full h-48 object-cover" />
+                  className="w-full h-40 sm:h-48 object-cover" />
                 <button onClick={() => { idx === 0 ? setImageA(null) : setImageB(null); setResult(null); setError(null); }}
                   className="absolute top-2 right-2 p-1 glass-card text-xs text-red-400 hover:text-red-300">
                   REMOVE
@@ -319,7 +319,7 @@ export default function FaceComparisonPage() {
       {bothLoaded && (
         <ScrollBlur blur={0} minOpacity={0.9}>
         <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }} className="space-y-6">
-          <div ref={containerRef} className="glass-card overflow-hidden relative cursor-col-resize select-none"
+          <div ref={containerRef} className="glass-card overflow-hidden relative cursor-col-resize select-none touch-none"
             onMouseDown={handleDragStart} onTouchStart={handleDragStart}>
             <canvas ref={canvasRef} className="w-full block" />
           </div>

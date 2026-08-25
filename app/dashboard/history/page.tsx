@@ -120,6 +120,7 @@ export default function HistoryPage() {
   const types = Array.from(new Set(realRows.map((h) => h.type)));
 
   const clearHistoryAll = () => {
+    if (!window.confirm("Clear all analysis history? This cannot be undone.")) return;
     clearHistory();
     setRows([]);
     addToast("History cleared", "success");
@@ -206,6 +207,7 @@ export default function HistoryPage() {
                   <Eye className="w-3.5 h-3.5 text-[var(--text-muted)]" />
                 </Link>
                 <button onClick={() => {
+                  if (!window.confirm("Delete this analysis entry? This cannot be undone.")) return;
                   deleteFromHistory(entry.id);
                   reload();
                   addToast("Entry removed", "success");

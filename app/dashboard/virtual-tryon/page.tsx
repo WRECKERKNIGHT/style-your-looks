@@ -227,6 +227,13 @@ export default function VirtualTryOnPage() {
               </div>
             )}
 
+            {isLoadingProduct && (
+              <div className="absolute inset-0 glass-card backdrop-blur-sm flex flex-col items-center justify-center z-10 p-6">
+                <Loader2 className="w-8 h-8 animate-spin text-[var(--accent-aurum)] mb-3" />
+                <p className="type-mono text-[0.55rem] text-[var(--text-muted)] tracking-widest">LOADING PRODUCT…</p>
+              </div>
+            )}
+
             {isProcessing && (
               <div className="absolute inset-0 glass-card backdrop-blur-sm flex flex-col items-center justify-center z-10 p-6">
                 <AIScanner
