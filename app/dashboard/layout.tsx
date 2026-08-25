@@ -27,7 +27,7 @@ import {
   BookOpen,
 
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { PageTransition } from "@/components/shared/PageTransition";
@@ -73,6 +73,27 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  // Lock body scroll when sidebar is open on mobile
+  useEffect(() => {
+    if (sidebarOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [sidebarOpen]);
+
+  // Close sidebar on Escape key
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === "Escape") setSidebarOpen(false);
+  }, []);
+  useEffect(() => {
+    if (sidebarOpen) {
+      document.addEventListener("keydown", handleKeyDown);
+      return () => document.removeEventListener("keydown", handleKeyDown);
+    }
+  }, [sidebarOpen, handleKeyDown]);
+
   return (
     <div className="min-h-screen bg-[var(--bg-primary)]">
       {/* Mobile top bar */}
@@ -96,8 +117,11 @@ export default function DashboardLayout({
 
       {/* Sidebar — floats as a rounded rail on desktop */}
       <aside
+        role="dialog"
+        aria-modal={sidebarOpen}
+        aria-label="Navigation sidebar"
         className={cn(
-          "fixed top-0 left-0 bottom-0 w-64 bg-[var(--bg-secondary)] border-r border-[var(--border-primary)] z-40 transition-transform duration-300 flex flex-col",
+          "fixed top-16 left-0 bottom-0 w-64 bg-[var(--bg-secondary)] border-r border-[var(--border-primary)] z-40 transition-transform duration-300 flex flex-col",
           "lg:top-4 lg:left-4 lg:bottom-4 lg:right-auto lg:border lg:border-[var(--border-primary)] lg:rounded-[var(--radius-xl)] lg:shadow-paper-lg lg:overflow-hidden",
           "rounded-r-[var(--radius-lg)]",
           "lg:translate-x-0",
@@ -129,7 +153,7 @@ export default function DashboardLayout({
                 href={item.href}
                 onClick={() => setSidebarOpen(false)}
                 className={cn(
-                  "flex items-center gap-3 px-4 py-3 text-xs font-body font-semibold tracking-wider transition-all rounded-[var(--radius-sm)]",
+                  "flex items-center gap-3 px-4 py-3 min-h-[44px] text-xs font-body font-semibold tracking-wider transition-all rounded-[var(--radius-sm)]",
                   isActive
                     ? "bg-gradient-to-r from-aurum-400/15 to-transparent text-[var(--accent-mocha)] shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--accent-caramel)_28%,transparent)]"
                     : "text-[var(--text-muted)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]"
