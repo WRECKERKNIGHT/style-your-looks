@@ -511,9 +511,9 @@ function ParametricStage() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
       <div className="lg:col-span-2">
-        <div ref={containerRef} className="glass-card overflow-hidden h-[45vh] sm:h-[55vh] md:h-[min(640px,70vh)]" />
+        <div ref={containerRef} className="glass-card overflow-hidden h-[40vh] sm:h-[50vh] md:h-[min(640px,65vh)]" />
       </div>
-      <div className="lg:col-span-3">
+      <div className="lg:col-span-3 max-h-[60vh] lg:max-h-none overflow-y-auto">
         {prefilledFromScan && (
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 mb-3 rounded-full border border-[color-mix(in_srgb,var(--accent-aurum)_35%,transparent)] bg-[color-mix(in_srgb,var(--accent-aurum)_8%,transparent)] type-mono text-[0.55rem] tracking-widest text-[var(--accent-aurum)]">
             <ScanLine className="w-3 h-3" /> DIGITAL TWIN — AUTO-FILLED FROM YOUR SCAN
