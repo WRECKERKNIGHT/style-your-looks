@@ -86,12 +86,12 @@ export function IntakeQuestionnaire({ onComplete }: { onComplete: () => void }) 
             <Globe className="w-4 h-4 text-[var(--accent-aurum)]" />
             <span className="type-mono text-[0.55rem] tracking-widest text-[var(--text-muted)]">ETHNIC BACKGROUND</span>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2">
             {REGIONS.map((r) => (
               <button
                 key={r.value}
                 onClick={() => { setRegion(r.value); setError(null); }}
-                className={`flex items-center gap-2 p-3 border text-left text-sm transition-all ${
+                className={`flex items-center gap-2 p-3.5 sm:p-3 border text-left text-sm transition-all min-h-[48px] ${
                   region === r.value
                     ? "border-[var(--accent-aurum)] bg-[var(--accent-aurum)]/10 text-[var(--text-primary)]"
                     : "border-[var(--border-primary)] text-[var(--text-muted)] hover:border-[var(--accent-aurum)]/50"
@@ -116,7 +116,7 @@ export function IntakeQuestionnaire({ onComplete }: { onComplete: () => void }) 
               <button
                 key={ab.label}
                 onClick={() => { setAgeBand(ab.label); setError(null); }}
-                className={`px-4 py-2 border text-sm font-body transition-all ${
+                className={`px-4 py-2.5 sm:py-2 border text-sm font-body transition-all min-h-[44px] ${
                   ageBand === ab.label
                     ? "border-[var(--accent-aurum)] bg-[var(--accent-aurum)]/10 text-[var(--text-primary)]"
                     : "border-[var(--border-primary)] text-[var(--text-muted)] hover:border-[var(--accent-aurum)]/50"
@@ -139,7 +139,7 @@ export function IntakeQuestionnaire({ onComplete }: { onComplete: () => void }) 
               <button
                 key={g.value}
                 onClick={() => setGender(g.value)}
-                className={`px-4 py-2 border text-sm font-body transition-all ${
+                className={`px-4 py-2.5 sm:py-2 border text-sm font-body transition-all min-h-[44px] ${
                   gender === g.value
                     ? "border-[var(--accent-aurum)] bg-[var(--accent-aurum)]/10 text-[var(--text-primary)]"
                     : "border-[var(--border-primary)] text-[var(--text-muted)] hover:border-[var(--accent-aurum)]/50"
@@ -154,7 +154,7 @@ export function IntakeQuestionnaire({ onComplete }: { onComplete: () => void }) 
         {/* Continue */}
         <button
           onClick={handleContinue}
-          className="flex items-center gap-2 px-6 py-3 bg-[var(--accent-aurum)] text-[var(--bg-primary)] font-body font-semibold text-sm hover:opacity-90 transition-opacity"
+          className="flex items-center justify-center gap-2 px-6 py-3.5 sm:py-3 w-full sm:w-auto bg-[var(--accent-aurum)] text-[var(--bg-primary)] font-body font-semibold text-sm hover:opacity-90 transition-opacity min-h-[48px]"
         >
           Continue to Photo Capture
           <ChevronRight className="w-4 h-4" />

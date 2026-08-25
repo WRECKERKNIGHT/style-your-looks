@@ -270,7 +270,7 @@ export default function DashboardHome() {
   }, []);
 
   return (
-    <div className="space-y-16">
+    <div className="space-y-10 sm:space-y-16">
       <SectionScrollProgress className="mb-2" />
       <ScrollParallax speed={0.15} distance={40}>
         <ScrollReveal>
@@ -289,7 +289,7 @@ export default function DashboardHome() {
       {/* Style Score Overview / Onboarding */}
       <ScrollBlur blur={0} minOpacity={0.85}>
         <ScrollReveal>
-          <div className="relative overflow-hidden rounded-[var(--radius-xl)] bg-[var(--bg-secondary)] border border-[var(--border-primary)] shadow-paper-lg p-8">
+          <div className="relative overflow-hidden rounded-[var(--radius-xl)] bg-[var(--bg-secondary)] border border-[var(--border-primary)] shadow-paper-lg p-5 sm:p-8">
           <div className="absolute inset-0 bg-gradient-to-br from-[color-mix(in_srgb,var(--accent-caramel)_12%,transparent)] via-transparent to-[color-mix(in_srgb,var(--accent-honey)_8%,transparent)] pointer-events-none" />
           {hasAnalysis && faceResult ? (
             <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-8 items-center">
@@ -299,7 +299,7 @@ export default function DashboardHome() {
                   <span className="type-label text-[var(--accent-mocha)]">STYLE SCORE OVERVIEW</span>
                 </div>
                 <div className="flex items-baseline gap-4">
-                  <span className="text-6xl font-display font-bold text-gradient-aurum">
+                  <span className="text-4xl sm:text-6xl font-display font-bold text-gradient-aurum">
                     <AnimatedCounter target={overallScore!} decimals={1} />
                   </span>
                   <span className="text-sm text-[var(--text-muted)] font-body">/ 100</span>
@@ -336,7 +336,7 @@ export default function DashboardHome() {
               </div>
               <Link
                 href="/dashboard/face-analysis"
-                className="btn-nexus shrink-0 justify-center gap-2"
+                className="btn-nexus shrink-0 justify-center gap-2 w-full sm:w-auto"
               >
                 <ScanFace className="w-5 h-5" />
                 RUN FACE IQ SCAN
@@ -470,7 +470,7 @@ export default function DashboardHome() {
       </ScrollReveal>
 
       <ScrollReveal>
-        <div className="glass-card p-10">
+        <div className="glass-card p-6 sm:p-10">
           <div className="flex items-center gap-3 mb-8">
             <Camera className="w-5 h-5 text-[var(--accent-aurum)]" />
             <h2 className="type-heading text-[var(--text-primary)] tracking-tight">QUICK START</h2>
