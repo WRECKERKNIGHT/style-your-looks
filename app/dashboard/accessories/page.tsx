@@ -230,7 +230,7 @@ export default function AccessoriesPage() {
             )}
 
             {selectedProduct && (
-              <div className="absolute top-3 right-3 glass-card p-3 space-y-2 max-w-[240px]">
+              <div className="absolute bottom-3 left-3 right-3 sm:top-3 sm:left-auto sm:right-3 sm:bottom-auto sm:w-[220px] glass-card p-3 space-y-2 z-20">
                 <p className="type-label text-[var(--text-muted)]">ADJUST</p>
                 <div>
                   <label className="type-mono text-[var(--text-muted)]">VERTICAL</label>

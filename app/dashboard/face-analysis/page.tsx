@@ -774,7 +774,7 @@ export default function FaceAnalysisPage() {
           transition={{ duration: 0.5 }}
           className="space-y-8"
         >
-          <motion.div variants={fadeUp} initial="hidden" animate="show" className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <motion.div variants={fadeUp} initial="hidden" animate="show" className="flex flex-wrap items-center gap-2 sm:gap-3 [&>*]:min-w-0">
             <span className="type-mono text-[0.6rem] tracking-[0.25em] uppercase px-2 sm:px-3 py-1.5 border border-aurum-500/40 text-[var(--accent-aurum)] bg-aurum-500/[0.06]">
               {faceResult.genderProfile.toUpperCase()} PROFILE
             </span>

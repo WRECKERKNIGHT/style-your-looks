@@ -289,14 +289,14 @@ export default function HairPreviewPage() {
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setSelectedColor(selectedColor?.id === color.id ? null : color)}
-                  className={`p-3 border text-center transition-all duration-300 ${
+                  className={`p-3 sm:p-3 border text-center transition-all duration-300 min-h-[88px] sm:min-h-0 ${
                     selectedColor?.id === color.id
                       ? "border-[var(--accent-aurum)] bg-[color-mix(in_srgb,var(--accent-aurum)_10%,transparent)]"
                       : "border-[var(--border-primary)] hover:border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)] bg-[var(--bg-tertiary)] card-nexus"
                   }`}
                 >
-                  <div className="w-full h-8 mb-2 rounded-full border border-[var(--border-primary)]" style={{ backgroundColor: color.color }} />
-                  <p className="text-[0.65rem] font-body text-[var(--text-primary)]">{color.name}</p>
+                  <div className="w-full h-10 sm:h-8 mb-2 rounded-full border border-[var(--border-primary)]" style={{ backgroundColor: color.color }} />
+                  <p className="text-xs sm:text-[0.65rem] font-body text-[var(--text-primary)]">{color.name}</p>
                 </motion.button>
               ))}
             </div>

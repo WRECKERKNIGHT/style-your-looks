@@ -93,7 +93,7 @@ function SwatchRow({ colors, value, onPick }: { colors: string[]; value: string 
         <button
           key={c}
           onClick={() => onPick(c)}
-          className={`w-7 h-7 rounded-full border-2 transition-all ${
+          className={`w-8 h-8 sm:w-7 sm:h-7 rounded-full border-2 transition-all ${
             value === c ? "border-[var(--accent-aurum)] scale-110" : "border-[var(--border-primary)] hover:scale-110"
           }`}
           style={{ background: c }}

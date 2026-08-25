@@ -327,7 +327,7 @@ export default function MannequinPage() {
                 <p className="text-xs text-[var(--text-muted)]">No garments added</p>
               ) : (
                 garments.map((g, i) => (
-                  <div key={`${g.id}-${i}`} className="flex items-center gap-2 text-xs text-[var(--text-primary)]">
+                  <div key={`${g.id}-${i}`} className="flex items-center gap-2 text-xs text-[var(--text-primary)] min-w-0">
                     <div className="w-3 h-3 rounded" style={{ background: g.color }} />
                     <span>{g.name}</span>
                   </div>
