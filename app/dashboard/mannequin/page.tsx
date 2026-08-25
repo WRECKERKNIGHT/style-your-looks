@@ -38,7 +38,9 @@ function drawMannequin(ctx: CanvasRenderingContext2D, w: number, h: number, pose
   ctx.save();
   const cx = w / 2;
   const scale = Math.min(w, h) / 500;
-  ctx.translate(cx, h * 0.05);
+  const mannequinHeight = 380;
+  const offsetY = (h - mannequinHeight * scale) / 2 + 30 * scale;
+  ctx.translate(cx, offsetY);
   ctx.scale(scale, scale);
 
   const shoulders = pose === "side" ? 60 : 90;

@@ -7,7 +7,7 @@ import { useAnalysisStore } from "@/store/analysis-store";
 import { runVton, type GarmentType, type VtonLayer, type VtonResult } from "@/lib/ml/vton-engine";
 import { loadRemoteProductImage, loadProductImage, type ProductItem, PRODUCT_CATALOG } from "@/lib/ml/product-catalog";
 import { motion } from "framer-motion";
-import { Shirt, Link2, Loader2, Download, RotateCcw, Layers, Ruler, Info } from "lucide-react";
+import { Shirt, Link2, Loader2, Download, RotateCcw, Layers, Ruler, Info, Clipboard } from "lucide-react";
 import { useToast } from "@/components/shared/Toast";
 import { ScrollParallax, ScrollBlur, SectionScrollProgress } from "@/components/shared/ScrollEffects";
 
@@ -339,15 +339,28 @@ export default function VirtualTryOnPage() {
               Paste a public product image URL (flat-lay or isolated shots work best). Studio backgrounds are stripped automatically before warping.
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
-              <div className="flex items-center gap-2 flex-1 bg-[var(--bg-tertiary)] border border-[var(--border-primary)] px-3">
+              <div className="flex items-center gap-2 flex-1 min-h-[48px] bg-[var(--bg-tertiary)] border border-[var(--border-primary)] px-3">
                 <Link2 className="w-4 h-4 text-[var(--text-muted)] shrink-0" />
                 <input
                   value={productUrl}
                   onChange={(e) => setProductUrl(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && loadFromUrl()}
                   placeholder="https://.../product.png"
-                  className="flex-1 bg-transparent py-3 text-sm text-[var(--text-primary)] outline-none font-body placeholder:text-[var(--text-muted)]/50"
+                  className="flex-1 bg-transparent py-3 text-sm text-[var(--text-primary)] outline-none font-body placeholder:text-[var(--text-muted)]/50 min-w-0"
                 />
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      const text = await navigator.clipboard.readText();
+                      if (text) { setProductUrl(text); addToast("Pasted from clipboard", "success"); }
+                    } catch { addToast("Clipboard access denied", "error"); }
+                  }}
+                  className="shrink-0 p-1.5 text-[var(--text-muted)] hover:text-[var(--accent-aurum)] transition-colors"
+                  title="Paste from clipboard"
+                >
+                  <Clipboard className="w-4 h-4" />
+                </button>
               </div>
               <button onClick={loadFromUrl} disabled={isLoadingProduct} className="btn-nexus justify-center disabled:opacity-40">
                 {isLoadingProduct ? <Loader2 className="w-4 h-4 animate-spin" /> : <Link2 className="w-4 h-4" />}
