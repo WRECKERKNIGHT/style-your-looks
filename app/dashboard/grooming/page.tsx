@@ -201,7 +201,7 @@ export default function GroomingPage() {
             )}
           </motion.div>
 
-          <div className="glass-card p-8">
+          <div className="glass-card p-5 sm:p-8">
             <h3 className="type-heading text-[var(--text-primary)] tracking-tight mb-4">HAIR COLOR</h3>
             <div className="flex items-center gap-4">
               <input
@@ -222,7 +222,7 @@ export default function GroomingPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-50px" }}
               transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-              className="glass-card p-8"
+              className="glass-card p-5 sm:p-8"
             >
               <div className="flex items-center gap-3 mb-6">
                 <Sparkles className="w-5 h-5 text-[var(--accent-aurum)]" />
@@ -315,7 +315,7 @@ export default function GroomingPage() {
             </div>
           )}
 
-          <div className="glass-card p-8">
+          <div className="glass-card p-5 sm:p-8">
             <h3 className="type-heading text-[var(--text-primary)] tracking-tight mb-5">BEARD STYLE</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
               {BEARD_STYLES.map((style) => (
@@ -339,7 +339,7 @@ export default function GroomingPage() {
             </div>
           </div>
 
-          <div className="glass-card p-8">
+          <div className="glass-card p-5 sm:p-8">
             <h3 className="type-heading text-[var(--text-primary)] tracking-tight mb-5">MUSTACHE STYLE</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
               {MUSTACHE_STYLES.map((style) => (
@@ -440,7 +440,7 @@ function GroomingGuide({ selectedBeardStyle }: { selectedBeardStyle: string }) {
 
   return (
     <motion.div variants={fadeUp} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <div className="glass-card p-8">
+      <div className="glass-card p-5 sm:p-8">
         <div className="flex items-center gap-3 mb-6">
           <Sparkles className="w-5 h-5 text-[var(--accent-aurum)]" />
           <h3 className="type-heading text-[var(--text-primary)] tracking-tight">LENGTH & GROWTH GUIDE</h3>
@@ -486,7 +486,7 @@ function GroomingGuide({ selectedBeardStyle }: { selectedBeardStyle: string }) {
         </p>
       </div>
 
-      <div className="glass-card p-8">
+      <div className="glass-card p-5 sm:p-8">
         <div className="flex items-center gap-3 mb-6">
           <Scissors className="w-5 h-5 text-[var(--accent-aurum)]" />
           <h3 className="type-heading text-[var(--text-primary)] tracking-tight">GROWTH DIRECTION MAP</h3>
@@ -494,7 +494,7 @@ function GroomingGuide({ selectedBeardStyle }: { selectedBeardStyle: string }) {
         <GrowthDirectionMap />
       </div>
 
-      <div className="glass-card p-8 lg:col-span-2">
+      <div className="glass-card p-5 sm:p-8 lg:col-span-2">
         <div className="flex items-center gap-3 mb-6">
           <Check className="w-5 h-5 text-[var(--accent-aurum)]" />
           <h3 className="type-heading text-[var(--text-primary)] tracking-tight">LINE-UP GUIDE</h3>

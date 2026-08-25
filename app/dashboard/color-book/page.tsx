@@ -178,7 +178,7 @@ function BookPanel({
       </div>
 
       {/* Pages */}
-      <div className="flex-1 p-6 lg:p-8">
+      <div className="flex-1 p-4 sm:p-6 lg:p-8">
         <div className="flex items-center justify-between gap-4 mb-5">
           <h2 className="type-heading text-[var(--text-primary)] tracking-tight">
             {side === "left" ? "MEN" : "WOMEN"}&apos;S VOLUME{" "}
@@ -287,9 +287,9 @@ function ComboModal({ combo, onClose }: { combo: OutfitCombo | null; onClose: ()
           exit={{ opacity: 0, scale: 0.95, y: 16 }}
           transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
           onClick={(e) => e.stopPropagation()}
-          className="w-full max-w-lg max-h-[85vh] flex flex-col border border-[var(--border-primary)] bg-[var(--bg-primary)] shadow-nexus-xl rounded-[var(--radius-xl)]"
+          className="w-full max-w-lg max-h-[90vh] sm:max-h-[85vh] flex flex-col border border-[var(--border-primary)] bg-[var(--bg-primary)] shadow-nexus-xl rounded-[var(--radius-xl)]"
         >
-          <div className="flex items-start justify-between px-6 py-5 border-b border-[var(--border-primary)]">
+          <div className="flex items-start justify-between px-4 sm:px-6 py-4 sm:py-5 border-b border-[var(--border-primary)]">
             <div>
               <p className="font-display text-2xl text-[var(--accent-aurum)] leading-none mb-1.5">
                 {combo.kanji}
@@ -311,7 +311,7 @@ function ComboModal({ combo, onClose }: { combo: OutfitCombo | null; onClose: ()
             </button>
           </div>
 
-          <div data-lenis-prevent className="flex-1 overflow-y-auto p-6 space-y-5">
+          <div data-lenis-prevent className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5">
             <div className="rounded-[var(--radius-md)] overflow-hidden border border-[var(--border-primary)] aspect-[4/3]">
               <ComboPhotoView combo={combo} />
             </div>
@@ -370,7 +370,7 @@ function ComboModal({ combo, onClose }: { combo: OutfitCombo | null; onClose: ()
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 px-6 py-4 border-t border-[var(--border-primary)]">
+          <div className="flex justify-end gap-3 px-4 sm:px-6 py-4 border-t border-[var(--border-primary)]">
             <button onClick={onClose} className="btn-outline">
               Close
             </button>
@@ -498,7 +498,7 @@ export default function ColorBookPage() {
       </motion.div>
 
       {/* Full palette reference */}
-      <motion.section variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }} className="glass-card p-8">
+      <motion.section variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }} className="glass-card p-5 sm:p-8">
         <div className="flex items-baseline justify-between gap-3 mb-6">
           <h2 className="type-heading text-[var(--text-primary)] tracking-tight">
             THE FULL PALETTE <span className="text-gradient-aurum">伝統色一覧</span>
@@ -507,7 +507,7 @@ export default function ColorBookPage() {
             {JAPANESE_COLORS.length} COLOURS
           </span>
         </div>
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 xl:grid-cols-8 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 xl:grid-cols-8 gap-2">
           {JAPANESE_COLORS.map((c) => (
             <div
               key={c.id}

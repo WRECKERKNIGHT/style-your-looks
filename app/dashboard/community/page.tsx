@@ -263,7 +263,7 @@ export default function CommunityPage() {
         </div>
 
         <motion.div variants={fadeUp} initial="hidden" animate="show" className="space-y-4">
-          <div className="glass-card p-4">
+          <div className="glass-card p-4 sm:p-5">
             <h3 className="type-label text-[var(--text-primary)] mb-3">CONNECT</h3>
             <p className="text-xs text-[var(--text-muted)] mb-2">
               Friend discovery and search are not built yet. They will be
@@ -274,7 +274,7 @@ export default function CommunityPage() {
             </span>
           </div>
 
-          <div className="glass-card p-4">
+          <div className="glass-card p-4 sm:p-5">
             <h3 className="type-label text-[var(--text-primary)] mb-3">YOUR STATS</h3>
             {realAnalyses === 0 ? (
               <p className="text-xs text-[var(--text-muted)] leading-relaxed mb-2">

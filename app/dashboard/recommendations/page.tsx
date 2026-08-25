@@ -85,7 +85,7 @@ export default function RecommendationsPage() {
         </motion.div>
       ) : (
         <>
-          <motion.div variants={fadeUp} initial="hidden" animate="show" className="glass-card p-6">
+          <motion.div variants={fadeUp} initial="hidden" animate="show" className="glass-card p-5 sm:p-6">
             <div className="flex items-center justify-between mb-5">
               <h3 className="type-label text-[var(--text-primary)]">
                 OUTFIT PICKS <span className="text-[var(--text-muted)]">({outfitRecommendations.length})</span>
@@ -100,10 +100,10 @@ export default function RecommendationsPage() {
                   whileHover={{ scale: 1.01, borderColor: "color-mix(in srgb, var(--accent-aurum) 50%, transparent)" }}
                   whileTap={{ scale: 0.99 }}
                   className="p-4 border border-[var(--border-primary)] bg-[var(--bg-tertiary)] card-nexus group transition-all">
-                  <div className="flex items-start justify-between gap-4">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                     <div className="flex items-start gap-3">
                       <span className="type-mono text-[var(--accent-aurum)] text-xs">{String(i + 1).padStart(2, "0")}</span>
-                      <div>
+                      <div className="min-w-0">
                         <p className="type-body text-[var(--text-primary)]">{rec.name}</p>
                         <p className="text-xs text-[var(--text-muted)] mt-1">{rec.description}</p>
                         {rec.keyPieces.length > 0 && (
@@ -115,14 +115,14 @@ export default function RecommendationsPage() {
                         <p className="text-xs text-[var(--text-muted)] mt-2 italic">{rec.reasoning}</p>
                       </div>
                     </div>
-                    <div className="flex flex-col items-end gap-2 shrink-0">
+                    <div className="flex sm:flex-col items-center sm:items-end gap-2 shrink-0 pl-9 sm:pl-0">
                       <span className="type-mono text-[0.55rem] text-[var(--text-muted)] tracking-widest">{rec.occasion.toUpperCase()}</span>
                       <div className="flex items-center gap-1.5">
                         {rec.colors.slice(0, 5).map((c) => (
                           <span key={c} className="w-5 h-5 rounded-full border border-[var(--border-primary)]" style={{ backgroundColor: c }} />
                         ))}
                       </div>
-                      <ChevronRight className="w-4 h-4 text-[var(--text-muted)] group-hover:text-[var(--accent-aurum)] transition-colors" />
+                      <ChevronRight className="w-4 h-4 text-[var(--text-muted)] group-hover:text-[var(--accent-aurum)] transition-colors hidden sm:block" />
                     </div>
                   </div>
                 </motion.div>
@@ -131,7 +131,7 @@ export default function RecommendationsPage() {
           </motion.div>
 
           {weekPlan && (
-            <motion.div variants={fadeUp} initial="hidden" animate="show" className="glass-card p-6">
+            <motion.div variants={fadeUp} initial="hidden" animate="show" className="glass-card p-5 sm:p-6">
               <div className="flex items-center justify-between mb-5">
                 <h3 className="type-label text-[var(--text-primary)] flex items-center gap-2">
                   <CalendarDays className="w-4 h-4 text-[var(--accent-aurum)]" />
@@ -163,9 +163,9 @@ export default function RecommendationsPage() {
             </motion.div>
           )}
 
-          <motion.div variants={fadeUp} initial="hidden" animate="show" className="glass-card p-6">
+          <motion.div variants={fadeUp} initial="hidden" animate="show" className="glass-card p-5 sm:p-6">
             <h3 className="type-label text-[var(--text-primary)] mb-3">ANALYSIS SUMMARY</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
               {[
                 { label: "FACE", value: pillarResult.face || "N/A" },
                 { label: "BODY", value: pillarResult.body || "N/A" },
