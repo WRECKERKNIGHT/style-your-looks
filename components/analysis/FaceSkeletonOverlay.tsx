@@ -233,7 +233,8 @@ function drawOverlay(
   timeSec: number,
   animate: boolean,
   data: PreparedData,
-  measurements: SkeletonMeasurements
+  measurements: SkeletonMeasurements,
+  scale: number
 ) {
   ctx.clearRect(0, 0, width, height);
 
@@ -310,7 +311,7 @@ function drawOverlay(
       ctx.lineDashOffset = 0;
       if (timeSec > drawDelay + 1.5) {
         const label = `AXIS ${data.axis.angle >= 0 ? "+" : ""}${data.axis.angle.toFixed(1)}°`;
-        drawLabel(ctx, label, data.axis.x1 + 8, data.axis.y1 - 6);
+        drawLabel(ctx, label, data.axis.x1 + 8, data.axis.y1 - 6, scale);
       }
     }
     ctx.restore();
@@ -330,7 +331,7 @@ function drawOverlay(
       ctx.moveTo(data.fwhr.xv, data.fwhr.yh1);
       ctx.lineTo(data.fwhr.xv, data.fwhr.yh2);
       ctx.stroke();
-      drawLabel(ctx, `FWHR ${measurements.fwhr.toFixed(2)}`, Math.min(data.fwhr.x1, data.fwhr.x2) + 8, data.fwhr.yw - 6);
+      drawLabel(ctx, `FWHR ${measurements.fwhr.toFixed(2)}`, Math.min(data.fwhr.x1, data.fwhr.x2) + 8, data.fwhr.yw - 6, scale);
       ctx.restore();
     }
   }
@@ -348,7 +349,7 @@ function drawOverlay(
       ctx.lineTo(data.canthal.x2, data.canthal.y2);
       ctx.stroke();
       const label = `${measurements.canthalTilt >= 0 ? "+" : ""}${measurements.canthalTilt.toFixed(1)}°`;
-      drawLabel(ctx, label, data.canthal.x2 - 4, data.canthal.y2 - 8);
+        drawLabel(ctx, label, data.canthal.x2 - 4, data.canthal.y2 - 8, scale);
       ctx.restore();
     }
   }
@@ -369,30 +370,33 @@ function drawOverlay(
         ctx,
         `E/N ${measurements.eyeNoseRatio.toFixed(2)}`,
         (data.eyeNose.x1 + data.eyeNose.x2) / 2 - 40,
-        data.eyeNose.y1 - 8
+        data.eyeNose.y1 - 8,
+        scale
       );
       ctx.restore();
     }
   }
 
+  const dotScale = Math.max(0.6, scale);
   for (const dot of data.keyDots) {
     const start = drawDelay + dot.delay;
     const appear = animate ? Math.min(1, (timeSec - start) / 0.35) : 1;
     if (appear <= 0) continue;
+    const r = dot.r * dotScale;
 
     if (animate) {
       const cycle = ((timeSec - start) % 2) / 2;
-      const ringR = dot.r * (1.4 + 1.8 * cycle);
+      const ringR = r * (1.4 + 1.8 * cycle);
       ctx.beginPath();
       ctx.arc(dot.p.x, dot.p.y, ringR, 0, Math.PI * 2);
       ctx.strokeStyle = COLORS.oval;
-      ctx.lineWidth = 1.2;
+      ctx.lineWidth = 1.2 * dotScale;
       ctx.globalAlpha = 0.5 * (1 - cycle);
       ctx.stroke();
     }
 
     ctx.beginPath();
-    ctx.arc(dot.p.x, dot.p.y, dot.r, 0, Math.PI * 2);
+    ctx.arc(dot.p.x, dot.p.y, r, 0, Math.PI * 2);
     ctx.fillStyle = COLORS.dot;
     ctx.globalAlpha = appear;
     ctx.fill();
@@ -465,10 +469,11 @@ function drawOverlay(
   }
 }
 
-function drawLabel(ctx: CanvasRenderingContext2D, text: string, x: number, y: number) {
-  ctx.font = "600 11px ui-monospace, SFMono-Regular, Menlo, monospace";
+function drawLabel(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, scale: number) {
+  const size = Math.max(9, Math.round(11 * scale));
+  ctx.font = `600 ${size}px ui-monospace, SFMono-Regular, Menlo, monospace`;
   ctx.textBaseline = "bottom";
-  ctx.lineWidth = 3;
+  ctx.lineWidth = Math.max(2, Math.round(3 * scale));
   ctx.strokeStyle = "rgba(0,0,0,0.65)";
   ctx.strokeText(text, x, y);
   ctx.fillStyle = "#fff";
@@ -511,14 +516,15 @@ export function FaceSkeletonOverlay({
     let raf = 0;
     let running = true;
 
-    const tick = (now: number) => {
-      if (!running) return;
-      const timeSec = now / 1000;
-      const c = ctx;
-      c.setTransform(dpr, 0, 0, dpr, 0, 0);
-      if (dataRef.current) {
-        drawOverlay(c, width, height, timeSec, animate, dataRef.current, measurements ?? {});
-      }
+      const tick = (now: number) => {
+        if (!running) return;
+        const timeSec = now / 1000;
+        const c = ctx;
+        c.setTransform(dpr, 0, 0, dpr, 0, 0);
+        const scale = Math.min(width, height) / 600;
+        if (dataRef.current) {
+          drawOverlay(c, width, height, timeSec, animate, dataRef.current, measurements ?? {}, scale);
+        }
       raf = requestAnimationFrame(tick);
     };
 
@@ -560,20 +566,20 @@ export function FaceSkeletonOverlay({
       {animate && data.bounds && (
         <>
           <div
-            className="absolute w-8 h-8 border-t-2 border-l-2"
-            style={{ top: data.bounds.y, left: data.bounds.x, borderColor: "rgba(200,150,62,0.7)" }}
+            className="absolute border-t-2 border-l-2"
+            style={{ top: data.bounds.y, left: data.bounds.x, borderColor: "rgba(200,150,62,0.7)", width: `${Math.max(20, Math.min(32, data.bounds.w * 0.12))}px`, height: `${Math.max(20, Math.min(32, data.bounds.h * 0.12))}px` }}
           />
           <div
-            className="absolute w-8 h-8 border-t-2 border-r-2"
-            style={{ top: data.bounds.y, left: data.bounds.x + data.bounds.w - 32, borderColor: "rgba(200,150,62,0.7)" }}
+            className="absolute border-t-2 border-r-2"
+            style={{ top: data.bounds.y, borderColor: "rgba(200,150,62,0.7)", width: `${Math.max(20, Math.min(32, data.bounds.w * 0.12))}px`, height: `${Math.max(20, Math.min(32, data.bounds.h * 0.12))}px`, left: `calc(${data.bounds.x + data.bounds.w}px - ${Math.max(20, Math.min(32, data.bounds.w * 0.12))}px)` }}
           />
           <div
-            className="absolute w-8 h-8 border-b-2 border-l-2"
-            style={{ top: data.bounds.y + data.bounds.h - 32, left: data.bounds.x, borderColor: "rgba(200,150,62,0.7)" }}
+            className="absolute border-b-2 border-l-2"
+            style={{ borderColor: "rgba(200,150,62,0.7)", width: `${Math.max(20, Math.min(32, data.bounds.w * 0.12))}px`, height: `${Math.max(20, Math.min(32, data.bounds.h * 0.12))}px`, top: `calc(${data.bounds.y + data.bounds.h}px - ${Math.max(20, Math.min(32, data.bounds.h * 0.12))}px)`, left: data.bounds.x }}
           />
           <div
-            className="absolute w-8 h-8 border-b-2 border-r-2"
-            style={{ top: data.bounds.y + data.bounds.h - 32, left: data.bounds.x + data.bounds.w - 32, borderColor: "rgba(200,150,62,0.7)" }}
+            className="absolute border-b-2 border-r-2"
+            style={{ borderColor: "rgba(200,150,62,0.7)", width: `${Math.max(20, Math.min(32, data.bounds.w * 0.12))}px`, height: `${Math.max(20, Math.min(32, data.bounds.h * 0.12))}px`, top: `calc(${data.bounds.y + data.bounds.h}px - ${Math.max(20, Math.min(32, data.bounds.h * 0.12))}px)`, left: `calc(${data.bounds.x + data.bounds.w}px - ${Math.max(20, Math.min(32, data.bounds.w * 0.12))}px)` }}
           />
         </>
       )}
