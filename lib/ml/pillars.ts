@@ -172,17 +172,22 @@ export function calculatePillarAnalysis(faceResult: FaceScoreResult): PillarAnal
     "Vitality",
     "Surface signals of health and rest: skin clarity and evenness, plus expression energy around the eyes and mouth.",
     [
-      { label: "Skin Clarity", score: faceResult.skinClarity, weight: 0.45 },
-      { label: "Skin Evenness", score: faceResult.skinClarity, weight: 0.2 },
+      { label: "Skin Clarity", score: faceResult.skinClarity, weight: 0.35 },
+      { label: "Skin Evenness", score: Math.max(0, Math.min(10, faceResult.skinClarity * 0.9 + faceResult.blendshapes.smileIntensity * 1.5)), weight: 0.2 },
       {
         label: "Eye Energy",
-        score: Math.round((faceResult.blendshapes.eyeOpenness * 8 + 2) * 10) / 10,
+        score: Math.round(Math.max(0, Math.min(10, faceResult.blendshapes.eyeOpenness * 9 + 1)) * 10) / 10,
         weight: 0.2,
       },
       {
         label: "Expression Vitality",
-        score: Math.round((faceResult.blendshapes.smileIntensity * 8 + 2) * 10) / 10,
+        score: Math.round(Math.max(0, Math.min(10, faceResult.blendshapes.smileIntensity * 7 + 3)) * 10) / 10,
         weight: 0.15,
+      },
+      {
+        label: "Facial Fullness",
+        score: Math.round(Math.max(0, Math.min(10, faceResult.youthfulness * 0.1)) * 10) / 10,
+        weight: 0.1,
       },
     ]
   );
