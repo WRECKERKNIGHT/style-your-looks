@@ -32,7 +32,7 @@ class CanvasErrorBoundary extends Component<{ children: ReactNode; fallback?: Re
   render() {
     if (this.state.hasError) {
       return this.props.fallback ?? (
-        <div className="glass-card flex items-center justify-center" style={{ height: 'min(640px, 70vh)' }}>
+        <div className="glass-card flex items-center justify-center h-[45vh] sm:h-[55vh] md:h-[min(640px,70vh)]">
           <div className="px-8 text-center max-w-sm">
             <p className="font-semibold text-aurum-300 mb-2">3D canvas crashed</p>
             <p className="text-sm text-[var(--text-muted)] opacity-80">
@@ -511,7 +511,7 @@ function ParametricStage() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
       <div className="lg:col-span-2">
-        <div ref={containerRef} className="glass-card overflow-hidden" style={{ height: 'min(640px, 70vh)' }} />
+        <div ref={containerRef} className="glass-card overflow-hidden h-[45vh] sm:h-[55vh] md:h-[min(640px,70vh)]" />
       </div>
       <div className="lg:col-span-3">
         {prefilledFromScan && (
@@ -578,7 +578,7 @@ function ParametricStage() {
 
 function WebglFallbackCard() {
   return (
-    <div className="glass-card flex items-center justify-center" style={{ height: 480 }}>
+    <div className="glass-card flex items-center justify-center h-[45vh] sm:h-[55vh] md:h-[480px]">
       <div className="px-8 text-center max-w-sm">
         <p className="font-semibold text-aurum-300 mb-2">3D Studio unavailable</p>
         <p className="text-sm text-[var(--text-muted)] opacity-80">

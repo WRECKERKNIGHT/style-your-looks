@@ -248,7 +248,7 @@ export default function HairPreviewPage() {
             </div>
           </motion.div>
 
-          <div className="flex gap-4">
+          <div className="flex flex-col sm:flex-row gap-3">
             <button onClick={() => setSelectedColor(null)} className="btn-outline flex-1 justify-center">
               <Trash2 className="w-4 h-4" />
               REMOVE

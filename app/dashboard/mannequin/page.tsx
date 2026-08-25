@@ -279,7 +279,7 @@ export default function MannequinPage() {
         <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }} className="lg:col-span-2">
           <div className="glass-card overflow-hidden">
             <canvas ref={canvasRef} className="w-full" />
-            <div className="flex items-center justify-center gap-3 p-4 border-t border-[var(--border-primary)]">
+            <div className="flex items-center justify-center gap-2 sm:gap-3 p-4 border-t border-[var(--border-primary)] flex-wrap">
               {(["front", "three-quarter", "side"] as MannequinPose[]).map(p => (
                 <button key={p} onClick={() => setPose(p)}
                   className={`px-3 py-1 text-xs border transition-all ${

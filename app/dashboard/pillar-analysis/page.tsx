@@ -260,7 +260,7 @@ export default function PillarAnalysisPage() {
                           </span>
                         </div>
                         <p className="text-sm text-[var(--text-muted)] font-body leading-relaxed mb-2">{item.description}</p>
-                        <div className="flex items-center gap-4 text-xs font-mono text-[var(--text-muted)]">
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs font-mono text-[var(--text-muted)]">
                           <span>{effortLabels[item.effort]}</span>
                           <span className="text-[var(--border-primary)]">|</span>
                           <span>{item.timeframe}</span>

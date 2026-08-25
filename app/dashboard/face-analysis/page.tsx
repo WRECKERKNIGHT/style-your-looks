@@ -600,7 +600,7 @@ export default function FaceAnalysisPage() {
             />
 
             {photos.length > 0 && (
-              <div className="grid grid-cols-3 gap-3 mt-5">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-5">
                 {photos.map((photo, i) => {
                   const issues = rejectedPhotos.find((r) => r.index === i)?.issues;
                   const isRejected = !!issues;
@@ -767,8 +767,8 @@ export default function FaceAnalysisPage() {
           transition={{ duration: 0.5 }}
           className="space-y-8"
         >
-          <motion.div variants={fadeUp} initial="hidden" animate="show" className="flex flex-wrap items-center gap-3">
-            <span className="type-mono text-[0.6rem] tracking-[0.25em] uppercase px-3 py-1.5 border border-aurum-500/40 text-[var(--accent-aurum)] bg-aurum-500/[0.06]">
+          <motion.div variants={fadeUp} initial="hidden" animate="show" className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <span className="type-mono text-[0.6rem] tracking-[0.25em] uppercase px-2 sm:px-3 py-1.5 border border-aurum-500/40 text-[var(--accent-aurum)] bg-aurum-500/[0.06]">
               {faceResult.genderProfile.toUpperCase()} PROFILE
             </span>
             {isDemoPhoto(uploadedImage) && <DemoBadge />}
@@ -790,49 +790,49 @@ export default function FaceAnalysisPage() {
                   addToast("Could not save to history — browser storage is full", "error");
                 }
               }}
-              className={`flex items-center gap-2 px-6 py-3 font-body text-sm tracking-wider uppercase transition-all ${
+              className={`flex items-center gap-2 px-3 sm:px-6 py-2 sm:py-3 font-body text-xs sm:text-sm tracking-wider uppercase transition-all ${
                 saved
                   ? "bg-[var(--accent-nexus)] text-white"
                   : "btn-nexus"
               }`}
             >
-              {saved ? <CheckCircle className="w-5 h-5" /> : <Save className="w-5 h-5" />}
-              {saved ? "SAVED TO HISTORY" : "SAVE ANALYSIS"}
+              {saved ? <CheckCircle className="w-4 h-4" /> : <Save className="w-4 h-4" />}
+              {saved ? "SAVED" : "SAVE"}
             </button>
             <button
               onClick={copyReport}
-              className={`flex items-center gap-2 px-6 py-3 font-body text-sm tracking-wider uppercase transition-all border ${
+              className={`flex items-center gap-2 px-3 sm:px-6 py-2 sm:py-3 font-body text-xs sm:text-sm tracking-wider uppercase transition-all border ${
                 copied
                   ? "bg-[var(--accent-aurum)] text-[var(--bg-primary)] border-transparent"
                   : "btn-outline"
               }`}
             >
-              {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
-              {copied ? "COPIED" : "COPY REPORT"}
+              {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+              {copied ? "COPIED" : "COPY"}
             </button>
             <button
               onClick={() => setReportOpen(true)}
-              className="flex items-center gap-2 px-6 py-3 font-body text-sm tracking-wider uppercase transition-all btn-outline"
+              className="flex items-center gap-2 px-3 sm:px-6 py-2 sm:py-3 font-body text-xs sm:text-sm tracking-wider uppercase transition-all btn-outline"
             >
-              <ScanFace className="w-5 h-5" />
-              VIEW FULL REPORT
+              <ScanFace className="w-4 h-4" />
+              REPORT
             </button>
             <button
               onClick={() => setShareOpen(true)}
               aria-label="Share result card"
-              className="flex items-center gap-2 px-6 py-3 font-body text-sm tracking-wider uppercase transition-all btn-outline"
+              className="flex items-center gap-2 px-3 sm:px-6 py-2 sm:py-3 font-body text-xs sm:text-sm tracking-wider uppercase transition-all btn-outline"
             >
-              <Share2 className="w-5 h-5" />
-              SHARE CARD
+              <Share2 className="w-4 h-4" />
+              SHARE
             </button>
             {!isDemoPhoto(uploadedImage) && (
               <button
                 onClick={() => setShareCommunityOpen(true)}
                 aria-label="Share to community"
-                className="flex items-center gap-2 px-6 py-3 font-body text-sm tracking-wider uppercase transition-all btn-nexus"
+                className="flex items-center gap-2 px-3 sm:px-6 py-2 sm:py-3 font-body text-xs sm:text-sm tracking-wider uppercase transition-all btn-nexus"
               >
-                <Users className="w-5 h-5" />
-                SHARE TO COMMUNITY
+                <Users className="w-4 h-4" />
+                COMMUNITY
               </button>
             )}
             <button
@@ -845,9 +845,9 @@ export default function FaceAnalysisPage() {
                 setStep("calibrate");
                 cancelAnalysis();
               }}
-              className="flex items-center gap-2 px-6 py-3 font-body text-sm tracking-wider uppercase transition-all btn-outline"
+              className="flex items-center gap-2 px-3 sm:px-6 py-2 sm:py-3 font-body text-xs sm:text-sm tracking-wider uppercase transition-all btn-outline"
             >
-              <Camera className="w-5 h-5" />
+              <Camera className="w-4 h-4" />
               NEW SCAN
             </button>
           </motion.div>

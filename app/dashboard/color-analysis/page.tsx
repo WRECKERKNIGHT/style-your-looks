@@ -156,7 +156,7 @@ function DrapeTool({ photo, palette }: { photo: string | null; palette: string[]
               <button
                 key={c}
                 onClick={() => setDrape(c)}
-                className={`w-10 h-10 border-2 transition-transform hover:scale-110 ${
+                className={`w-10 h-10 min-w-[44px] min-h-[44px] border-2 transition-transform hover:scale-110 ${
                   drape === c ? "border-[var(--accent-aurum)]" : "border-[var(--border-primary)]"
                 }`}
                 style={{ backgroundColor: c }}
@@ -307,15 +307,15 @@ function WardrobeMatcher({ palette }: { palette: string[] }) {
           className="w-14 h-10 border border-[var(--border-primary)] cursor-pointer"
         />
         <div className="flex gap-2">
-          {["#CCA066", "#A13B2F", "#4682B4", "#241812", "#FBF7F0", "#7A9E6B", "#C4703F", "#8A5F3D"].map((c) => (
-            <button
-              key={c}
-              onClick={() => setDraft(c)}
-              className="w-8 h-8 border border-[var(--border-primary)] hover:scale-110 transition-transform"
-              style={{ backgroundColor: c }}
-              aria-label={`Add ${c}`}
-            />
-          ))}
+            {["#CCA066", "#A13B2F", "#4682B4", "#241812", "#FBF7F0", "#7A9E6B", "#C4703F", "#8A5F3D"].map((c) => (
+              <button
+                key={c}
+                onClick={() => setDraft(c)}
+                className="w-8 h-8 min-w-[44px] min-h-[44px] border border-[var(--border-primary)] hover:scale-110 transition-transform"
+                style={{ backgroundColor: c }}
+                aria-label={`Add ${c}`}
+              />
+            ))}
         </div>
         <button onClick={addItem} className="btn-nexus !py-2 !px-4 text-xs">
           <Plus className="w-3.5 h-3.5" />
@@ -634,7 +634,7 @@ export default function ColorAnalysisPage() {
                 <h3 className="type-heading text-[var(--text-primary)] tracking-tight">EXPORT PALETTE CARD</h3>
                 <p className="text-[var(--text-muted)] font-body text-sm mt-1">Download a shareable card with your color palette</p>
               </div>
-              <div className="flex gap-3">
+              <div className="flex flex-wrap gap-3">
                 <button
                   onClick={exportPaletteCard}
                   className="btn-nexus"
@@ -734,13 +734,13 @@ export default function ColorAnalysisPage() {
                   />
                   <span className="font-mono text-sm text-[var(--text-primary)]">{testColor}</span>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   {["#C4703F", "#4682B4", "#7A9E6B", "#C8963E", "#241812", "#FBF7F0", "#A13B2F", "#8A5F3D"].map(
                     (c) => (
                       <button
                         key={c}
                         onClick={() => setTestColor(c)}
-                        className="w-8 h-8 border border-[var(--border-primary)] hover:scale-110 transition-transform"
+                        className="w-8 h-8 min-w-[44px] min-h-[44px] border border-[var(--border-primary)] hover:scale-110 transition-transform"
                         style={{ backgroundColor: c }}
                       />
                     )

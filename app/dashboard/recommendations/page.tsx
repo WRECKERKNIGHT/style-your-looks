@@ -174,7 +174,7 @@ export default function RecommendationsPage() {
             </div>
           </motion.div>
 
-          <div className="flex gap-4">
+          <div className="flex flex-col sm:flex-row gap-4">
             <Link href="/dashboard/mannequin" className="btn-nexus flex-1 justify-center">
               <Shirt className="w-4 h-4" /> TRY ON MANNEQUIN
             </Link>
