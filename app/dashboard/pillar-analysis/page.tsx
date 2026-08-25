@@ -254,27 +254,27 @@ export default function PillarAnalysisPage() {
               return (
                 <ScrollRevealItem key={item.id}>
                   <div className={`p-5 border ${impactBg[item.impact]} card-nexus`}>
-                    <div className="flex items-start gap-4">
-                      <div className="w-10 h-10 bg-[var(--bg-secondary)] flex items-center justify-center rounded-full border border-[var(--border-primary)] shrink-0 mt-0.5">
-                        <Icon className="w-5 h-5 text-[var(--accent-aurum)]" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-3 mb-1">
-                          <h4 className="type-label text-[var(--text-primary)]">{item.title}</h4>
-                          <span className={`type-label ${impactColors[item.impact]}`}>
-                            {item.impact} impact
-                          </span>
-                        </div>
-                        <p className="text-sm text-[var(--text-muted)] font-body leading-relaxed mb-2">{item.description}</p>
-                        <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs font-mono text-[var(--text-muted)]">
-                          <span>{effortLabels[item.effort]}</span>
-                          <span className="text-[var(--border-primary)]">|</span>
-                          <span>{item.timeframe}</span>
-                          <span className="text-[var(--border-primary)]">|</span>
-                          <span className="uppercase">{item.pillar}</span>
-                        </div>
-                      </div>
+                <div className="flex items-start gap-3 sm:gap-4">
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 bg-[var(--bg-secondary)] flex items-center justify-center rounded-full border border-[var(--border-primary)] shrink-0 mt-0.5">
+                    <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--accent-aurum)]" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mb-1">
+                      <h4 className="type-label text-[var(--text-primary)]">{item.title}</h4>
+                      <span className={`type-label ${impactColors[item.impact]}`}>
+                        {item.impact} impact
+                      </span>
                     </div>
+                    <p className="text-sm text-[var(--text-muted)] font-body leading-relaxed mb-2">{item.description}</p>
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 sm:gap-x-4 text-xs font-mono text-[var(--text-muted)]">
+                      <span>{effortLabels[item.effort]}</span>
+                      <span className="text-[var(--border-primary)] hidden sm:inline">|</span>
+                      <span>{item.timeframe}</span>
+                      <span className="text-[var(--border-primary)] hidden sm:inline">|</span>
+                      <span className="uppercase">{item.pillar}</span>
+                    </div>
+                  </div>
+                </div>
                   </div>
                 </ScrollRevealItem>
               );

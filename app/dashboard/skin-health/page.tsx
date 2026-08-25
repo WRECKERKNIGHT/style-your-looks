@@ -214,14 +214,14 @@ export default function SkinHealthPage() {
       <ScrollProgress />
 
       <ScrollReveal>
-        <div className="glass-card p-8">
-          <div className="flex items-center justify-between">
+        <div className="glass-card p-5 sm:p-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <p className="type-label text-[var(--text-muted)] mb-1">OVERALL SKIN SCORE</p>
               <div className="type-display text-gradient-aurum">{avgScore}</div>
               <p className="text-sm text-[var(--text-muted)] font-body mt-1">out of 10</p>
             </div>
-            <div className="text-right">
+            <div className="sm:text-right">
               <div className="flex items-center gap-2 mb-2">
                 <Shield className="w-5 h-5 text-[var(--accent-aurum)]" />
                 <span className="text-sm font-body font-bold text-[var(--text-primary)]">{avgScore >= 7 ? "Healthy Skin" : avgScore >= 5 ? "Good Foundation" : "Needs Attention"}</span>
@@ -318,7 +318,7 @@ export default function SkinHealthPage() {
           </div>
           <p className="text-[var(--text-muted)] font-body mb-6">Specific product types chosen for your skin profile. Focus on ingredients, not brands.</p>
         </ScrollReveal>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           {products.map((product, i) => (<ScrollReveal key={product.name} delay={i * 0.05}><ProductCard product={product} /></ScrollReveal>))}
         </div>
       </div>

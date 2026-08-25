@@ -262,14 +262,14 @@ export default function StyleDnaPage() {
       {hasData && (
         <motion.div variants={stagger} initial="hidden" animate="show" className="space-y-8">
           <ScrollBlur blur={0} minOpacity={0.9}>
-          <motion.div variants={fadeUp} className="glass-card p-10 relative overflow-hidden">
+          <motion.div variants={fadeUp} className="glass-card p-6 sm:p-10 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-[color-mix(in_srgb,var(--accent-nexus)_5%,transparent)] rounded-full -translate-y-1/2 translate-x-1/2" />
             <div className="relative">
               <div className="flex items-center gap-3 mb-6">
                 <Crown className="w-5 h-5 text-[var(--accent-aurum)]" />
                 <h3 className="type-heading text-[var(--text-primary)] tracking-tight">YOUR STYLE IDENTITY</h3>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
                 <div className="bg-[var(--bg-tertiary)] p-6 border border-[var(--border-primary)] text-center card-nexus">
                   <ScanFace className="w-8 h-8 text-[var(--accent-aurum)] mx-auto mb-3" />
                   <span className="type-label text-[var(--text-muted)]">Face Profile</span>
@@ -294,12 +294,12 @@ export default function StyleDnaPage() {
           </ScrollBlur>
 
           {faceResult && (
-            <motion.div variants={fadeUp} className="glass-card p-10">
+            <motion.div variants={fadeUp} className="glass-card p-6 sm:p-10">
               <div className="flex items-center gap-3 mb-8">
                 <TrendingUp className="w-5 h-5 text-[var(--accent-aurum)]" />
                 <h3 className="type-heading text-[var(--text-primary)] tracking-tight">COMPOSITE SCORES</h3>
               </div>
-              <div className="flex flex-wrap justify-center gap-10">
+              <div className="flex flex-wrap justify-center gap-6 sm:gap-10">
                 <ScoreGauge score={faceResult.overallScore} size="md" label="Face IQ" />
                 <ScoreGauge score={faceResult.facialHarmony} size="md" label="Facial Harmony" />
                 {bodyResult?.bodyProportionScore && (
@@ -320,7 +320,7 @@ export default function StyleDnaPage() {
           )}
 
           {faceResult && (
-            <motion.div variants={fadeUp} className="glass-card p-10">
+            <motion.div variants={fadeUp} className="glass-card p-6 sm:p-10">
               <div className="flex items-center gap-3 mb-3">
                 <SlidersHorizontal className="w-5 h-5 text-[var(--accent-aurum)]" />
                 <h3 className="type-heading text-[var(--text-primary)] tracking-tight">AESTHETIC DIRECTIONS LAB</h3>
@@ -399,7 +399,7 @@ export default function StyleDnaPage() {
             </motion.div>
           )}
 
-          <motion.div variants={fadeUp} className="glass-card p-10">
+          <motion.div variants={fadeUp} className="glass-card p-6 sm:p-10">
             <div className="flex items-center gap-3 mb-3">
               <Sparkles className="w-5 h-5 text-[var(--accent-aurum)]" />
               <h3 className="type-heading text-[var(--text-primary)] tracking-tight">STYLE RECOMMENDATIONS</h3>
@@ -438,13 +438,13 @@ export default function StyleDnaPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-50px" }}
               transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-              className="glass-card p-10"
+              className="glass-card p-6 sm:p-10"
             >
               <div className="flex items-center gap-3 mb-6">
                 <ScanFace className="w-5 h-5 text-[var(--accent-aurum)]" />
                 <h3 className="type-heading text-[var(--text-primary)] tracking-tight">FULL FACE METRICS</h3>
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
                 <MetricTile label="Symmetry" score={faceResult.symmetry} />
                 <MetricTile label="Golden Ratio" score={faceResult.goldenRatio} />
                 <MetricTile label="Jawline" score={faceResult.jawline} />
@@ -461,7 +461,7 @@ export default function StyleDnaPage() {
             </motion.div>
           )}
 
-          <motion.div variants={fadeUp} className="glass-card p-10">
+          <motion.div variants={fadeUp} className="glass-card p-6 sm:p-10">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
                 <Share2 className="w-5 h-5 text-[var(--accent-aurum)]" />

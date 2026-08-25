@@ -48,9 +48,11 @@ export default function RecommendationsPage() {
       undertone,
       bodyResult.bodyType,
       bodyResult.skinToneValue,
-      faceShape
+      faceShape,
+      colorAnalysis?.bestColors,
+      colorAnalysis?.worstColors
     );
-  }, [unlocked, bodyResult, faceResult]);
+  }, [unlocked, bodyResult, faceResult, colorAnalysis]);
 
   return (
     <div className="space-y-8">

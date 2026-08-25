@@ -127,7 +127,7 @@ function DrapeTool({ photo, palette }: { photo: string | null; palette: string[]
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-      <div className="relative overflow-hidden border border-[var(--border-primary)] bg-[var(--bg-base)] aspect-[3/4] max-w-sm mx-auto w-full">
+      <div className="relative overflow-hidden border border-[var(--border-primary)] bg-[var(--bg-base)] aspect-[3/4] max-w-sm mx-auto w-full rounded-[var(--radius-sm)]">
         {photo ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={photo} alt="Drape preview" className="w-full h-full object-cover" />
@@ -178,7 +178,7 @@ function DrapeTool({ photo, palette }: { photo: string | null; palette: string[]
               <button
                 key={m}
                 onClick={() => setMode(m)}
-                className={`px-3 py-1.5 border text-xs font-body uppercase tracking-wider transition-colors ${
+                className={`px-3 py-2 min-h-[44px] border text-xs font-body uppercase tracking-wider transition-colors ${
                   mode === m
                     ? "border-[var(--accent-aurum)] text-[var(--accent-aurum)]"
                     : "border-[var(--border-primary)] text-[var(--text-muted)] hover:border-[var(--accent-aurum)]/40"

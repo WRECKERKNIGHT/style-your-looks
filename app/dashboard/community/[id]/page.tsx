@@ -214,16 +214,16 @@ export default function CommunityPostPage() {
           </div>
         )}
 
-        <div className="p-6 md:p-8 space-y-5">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 bg-gradient-to-br from-[var(--accent-nexus)] to-[var(--accent-aurum)] flex items-center justify-center rounded-full">
+        <div className="p-4 sm:p-6 md:p-8 space-y-5">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="w-10 h-10 sm:w-11 sm:h-11 bg-gradient-to-br from-[var(--accent-nexus)] to-[var(--accent-aurum)] flex items-center justify-center rounded-full shrink-0">
               <span className="text-base font-display font-bold text-white">{post.avatar}</span>
             </div>
-            <div>
-              <span className="text-base font-body font-bold text-[var(--text-primary)]">{post.userName}</span>
-              <span className="text-sm text-[var(--text-muted)] ml-2 font-body">{post.createdAt}</span>
+            <div className="min-w-0">
+              <span className="text-sm sm:text-base font-body font-bold text-[var(--text-primary)] block sm:inline sm:mr-2">{post.userName}</span>
+              <span className="text-xs sm:text-sm text-[var(--text-muted)] font-body">{post.createdAt}</span>
             </div>
-            <span className="text-xs font-mono bg-[var(--bg-tertiary)] text-[var(--accent-mocha)] px-3 py-1.5 uppercase tracking-widest border border-[var(--border-primary)] ml-auto">
+            <span className="text-[0.6rem] sm:text-xs font-mono bg-[var(--bg-tertiary)] text-[var(--accent-mocha)] px-2 sm:px-3 py-1 sm:py-1.5 uppercase tracking-widest border border-[var(--border-primary)] ml-auto">
               {post.category}
             </span>
           </div>
@@ -253,7 +253,7 @@ export default function CommunityPostPage() {
         </div>
       </motion.div>
 
-      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-6 space-y-5">
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-4 sm:p-6 space-y-5">
         <h3 className="type-label text-[var(--text-primary)]">RATE & COMMENT</h3>
         <div className="bg-[var(--bg-tertiary)] p-4 border border-[var(--border-primary)]">
           <div className="flex items-center justify-between mb-3">
@@ -269,19 +269,19 @@ export default function CommunityPostPage() {
             className="w-full h-2 appearance-none cursor-pointer rounded-full accent-[var(--accent-aurum)]"
           />
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-2 sm:gap-3">
           <input
             type="text"
             placeholder="Write a comment (optional)..."
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && submit()}
-            className="flex-1 px-4 py-3 bg-[var(--bg-tertiary)] border border-[var(--border-primary)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] font-body focus:outline-none focus:border-[var(--accent-aurum)]"
+            className="flex-1 px-3 sm:px-4 py-3 bg-[var(--bg-tertiary)] border border-[var(--border-primary)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] font-body focus:outline-none focus:border-[var(--accent-aurum)]"
           />
           <button
             onClick={submit}
             disabled={submitting}
-            className="px-5 py-3 bg-[var(--accent-aurum)] text-white hover:opacity-90 transition-opacity disabled:opacity-40"
+            className="px-4 sm:px-5 py-3 bg-[var(--accent-aurum)] text-white hover:opacity-90 transition-opacity disabled:opacity-40 shrink-0"
           >
             {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
           </button>
