@@ -380,6 +380,8 @@ function ComboModal({ combo, onClose }: { combo: OutfitCombo | null; onClose: ()
 }
 
 export default function ColorBookPage() {
+  useEffect(() => { document.title = "Color Book | ZERVEY"; }, []);
+
   // One shared filter keeps both volumes aligned to the same season — like
   // flipping both halves of the book to the same chapter.
   const [seasonFilter, setSeasonFilter] = useState<Season | "all">("all");

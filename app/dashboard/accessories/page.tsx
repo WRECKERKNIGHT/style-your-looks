@@ -19,6 +19,8 @@ const fadeUp = {
 };
 
 export default function AccessoriesPage() {
+  useEffect(() => { document.title = "Accessories | ZERVEY"; }, []);
+
   const { uploadedImage, fullBodyImage, setUploadedImage, setFullBodyImage, faceResult } = useAnalysisStore();
   const currentPhoto = fullBodyImage ?? uploadedImage;
   const { addToast } = useToast();

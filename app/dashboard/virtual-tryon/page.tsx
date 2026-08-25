@@ -29,6 +29,8 @@ const LAYER_TABS: { id: VtonLayer; label: string }[] = [
 ];
 
 export default function VirtualTryOnPage() {
+  useEffect(() => { document.title = "Virtual Try-On | ZERVEY"; }, []);
+
   const { uploadedImage, fullBodyImage, setUploadedImage, setFullBodyImage } = useAnalysisStore();
   const activePhoto = fullBodyImage ?? uploadedImage;
   const { addToast } = useToast();

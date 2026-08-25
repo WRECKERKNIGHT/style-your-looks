@@ -93,6 +93,8 @@ function HistoryThumb({ entry }: { entry: HistoryRow }) {
 }
 
 export default function HistoryPage() {
+  useEffect(() => { document.title = "Analysis History | ZERVEY"; }, []);
+
   const { addToast } = useToast();
   const [rows, setRows] = useState<HistoryRow[]>([]);
   const [filter, setFilter] = useState<string>("all");

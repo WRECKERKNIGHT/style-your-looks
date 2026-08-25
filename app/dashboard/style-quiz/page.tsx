@@ -81,6 +81,8 @@ const fadeUp = {
 const QUIZ_STORAGE_KEY = "zervey_style_quiz";
 
 export default function StyleQuizPage() {
+  useEffect(() => { document.title = "Style Quiz | ZERVEY"; }, []);
+
   const { addToast } = useToast();
   const [step, setStep] = useState<"intro" | "quiz" | "result">("intro");
   const [currentQuestion, setCurrentQuestion] = useState(0);

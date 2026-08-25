@@ -81,6 +81,8 @@ const fadeUp = {
 };
 
 export default function HairPreviewPage() {
+  useEffect(() => { document.title = "Hair Color | ZERVEY"; }, []);
+
   const { uploadedImage, fullBodyImage, setUploadedImage, setFullBodyImage, faceResult } = useAnalysisStore();
   const currentPhoto = fullBodyImage ?? uploadedImage;
   const { addToast } = useToast();

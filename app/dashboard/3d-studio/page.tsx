@@ -27,7 +27,7 @@ const fadeUp = {
 };
 
 export default function StudioPage() {
-  useEffect(() => { document.title = "3D Style Studio | ZERVEY"; }, []);
+  useEffect(() => { document.title = "3D Studio | ZERVEY"; }, []);
 
   // Start streaming the mannequin GLB immediately — it downloads in parallel
   // with the studio JS chunk instead of serialised after mount.

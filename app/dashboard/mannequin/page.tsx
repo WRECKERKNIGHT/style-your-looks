@@ -148,6 +148,8 @@ const fadeUp = {
 };
 
 export default function MannequinPage() {
+  useEffect(() => { document.title = "Outfit Lab | ZERVEY"; }, []);
+
   const { addToast } = useToast();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const bodyResult = useAnalysisStore((s) => s.bodyResult);

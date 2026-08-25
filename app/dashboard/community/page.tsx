@@ -56,6 +56,8 @@ function timeAgo(iso: string): string {
 }
 
 export default function CommunityPage() {
+  useEffect(() => { document.title = "Community Feed | ZERVEY"; }, []);
+
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"feed" | "members" | "tags">("feed");
   const [activeCategory, setActiveCategory] = useState<string>("all");
