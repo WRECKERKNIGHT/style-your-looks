@@ -214,7 +214,7 @@ function MannequinStage() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
       <div className="lg:col-span-3">
-        <div className="relative glass-card overflow-hidden" style={{ height: 640 }}>
+        <div className="relative glass-card overflow-hidden" style={{ height: 'min(640px, 70vh)' }}>
           <div ref={containerRef} className="absolute inset-0" />
           {status !== 'ready' && (
             <div className="absolute inset-0 flex items-center justify-center bg-[var(--bg-secondary)] backdrop-blur-sm">
@@ -482,7 +482,7 @@ function ParametricStage() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
       <div className="lg:col-span-2">
-        <div ref={containerRef} className="glass-card overflow-hidden" style={{ height: 640 }} />
+        <div ref={containerRef} className="glass-card overflow-hidden" style={{ height: 'min(640px, 70vh)' }} />
       </div>
       <div className="lg:col-span-3">
         {prefilledFromScan && (

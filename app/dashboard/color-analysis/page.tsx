@@ -224,8 +224,8 @@ function ContrastMatrix({ skinHex, palette }: { skinHex: string; palette: string
         </p>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse min-w-[560px]">
+      <div className="overflow-x-auto -mx-6 px-6">
+        <table className="w-full border-collapse min-w-[480px]">
           <thead>
             <tr>
               <th className="p-2 text-left type-mono text-[0.55rem] text-[var(--text-muted)] tracking-widest">COLOR</th>
