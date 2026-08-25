@@ -259,8 +259,10 @@ export default function AccessoriesPage() {
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {GLASSES_PRODUCTS.map((item) => (
-                <button
+                <motion.button
                   key={item.id}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={() => selectProduct(item)}
                   disabled={isLoading}
                   className={`p-3 border text-left transition-all duration-300 disabled:opacity-50 ${
@@ -274,7 +276,7 @@ export default function AccessoriesPage() {
                   </div>
                   <p className="text-xs font-body text-[var(--text-primary)] truncate">{item.name}</p>
                   <p className="type-mono text-[0.5rem] text-[var(--text-muted)] tracking-widest mt-1">{item.source}</p>
-                </button>
+                </motion.button>
               ))}
             </div>
 
@@ -291,24 +293,24 @@ export default function AccessoriesPage() {
                     className="flex-1 bg-transparent py-3 text-sm text-[var(--text-primary)] outline-none font-body placeholder:text-[var(--text-muted)]/50"
                   />
                 </div>
-                <button onClick={loadFromUrl} disabled={isLoading} className="btn-outline justify-center disabled:opacity-40">
+                <motion.button whileTap={{ scale: 0.97 }} onClick={loadFromUrl} disabled={isLoading} className="btn-outline justify-center disabled:opacity-40">
                   {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Link2 className="w-4 h-4" />}
                   LOAD FROM LINK
-                </button>
+                </motion.button>
               </div>
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <button onClick={clearSelection} className="btn-outline justify-center">
+            <motion.button whileTap={{ scale: 0.97 }} onClick={clearSelection} className="btn-outline justify-center">
               <Trash2 className="w-4 h-4" />
               REMOVE
-            </button>
-            <button onClick={downloadResult} disabled={!selectedProduct}
+            </motion.button>
+            <motion.button whileTap={{ scale: 0.97 }} onClick={downloadResult} disabled={!selectedProduct}
               className="btn-nexus justify-center disabled:opacity-40">
               <Download className="w-4 h-4" />
               SAVE IMAGE
-            </button>
+            </motion.button>
             <Link href="/dashboard/hair-preview" className="btn-nexus justify-center">
               HAIR PREVIEW <ArrowRight className="w-4 h-4" />
             </Link>

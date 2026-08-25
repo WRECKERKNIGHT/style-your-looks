@@ -292,18 +292,18 @@ export default function MannequinPage() {
             )}
             <div className="flex items-center justify-center gap-2 sm:gap-3 p-4 border-t border-[var(--border-primary)] flex-wrap">
               {(["front", "three-quarter", "side"] as MannequinPose[]).map(p => (
-                <button key={p} onClick={() => setPose(p)}
+                <motion.button key={p} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setPose(p)}
                   className={`px-3 py-1 text-xs border transition-all ${
                     pose === p ? "border-[var(--accent-aurum)] text-[var(--accent-aurum)]" : "border-[var(--border-primary)] text-[var(--text-muted)] hover:border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)]"
-                  }`}>{p.replace("-", " ").toUpperCase()}</button>
+                  }`}>{p.replace("-", " ").toUpperCase()}</motion.button>
               ))}
             </div>
             <div className="flex items-center justify-center gap-3 p-4 border-t border-[var(--border-primary)] flex-wrap">
               {(["hourglass", "rectangle", "triangle", "inverted-triangle", "oval"] as BodyType[]).map(bt => (
-                <button key={bt} onClick={() => setBodyType(bt)}
+                <motion.button key={bt} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setBodyType(bt)}
                   className={`px-3 py-1 text-xs border transition-all ${
                     bodyType === bt ? "border-[var(--accent-aurum)] text-[var(--accent-aurum)]" : "border-[var(--border-primary)] text-[var(--text-muted)] hover:border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)]"
-                  }`}>{bt.replace("-", " ").toUpperCase()}</button>
+                  }`}>{bt.replace("-", " ").toUpperCase()}</motion.button>
               ))}
             </div>
           </div>
@@ -314,12 +314,12 @@ export default function MannequinPage() {
             <div className="flex items-center justify-between mb-3">
               <h3 className="type-label text-[var(--text-primary)]">LAYERS</h3>
               <div className="flex gap-1">
-                <button onClick={undo} disabled={undoStack.length === 0}
-                  className="p-1.5 border border-[var(--border-primary)] disabled:opacity-30"><Undo2 className="w-3.5 h-3.5" /></button>
-                <button onClick={redo} disabled={redoStack.length === 0}
-                  className="p-1.5 border border-[var(--border-primary)] disabled:opacity-30"><Redo2 className="w-3.5 h-3.5" /></button>
-                <button onClick={reset} disabled={garments.length === 0}
-                  className="p-1.5 border border-[var(--border-primary)] disabled:opacity-30"><RotateCcw className="w-3.5 h-3.5" /></button>
+                <motion.button whileTap={{ scale: 0.9 }} onClick={undo} disabled={undoStack.length === 0}
+                  className="p-1.5 border border-[var(--border-primary)] disabled:opacity-30"><Undo2 className="w-3.5 h-3.5" /></motion.button>
+                <motion.button whileTap={{ scale: 0.9 }} onClick={redo} disabled={redoStack.length === 0}
+                  className="p-1.5 border border-[var(--border-primary)] disabled:opacity-30"><Redo2 className="w-3.5 h-3.5" /></motion.button>
+                <motion.button whileTap={{ scale: 0.9 }} onClick={reset} disabled={garments.length === 0}
+                  className="p-1.5 border border-[var(--border-primary)] disabled:opacity-30"><RotateCcw className="w-3.5 h-3.5" /></motion.button>
               </div>
             </div>
             <div data-lenis-prevent className="space-y-1 max-h-32 overflow-y-auto">
@@ -343,20 +343,20 @@ export default function MannequinPage() {
                 <summary className="type-mono text-[var(--text-muted)] cursor-pointer hover:text-[var(--accent-aurum)]">{type.toUpperCase()}</summary>
                 <div className="mt-1 space-y-1 pl-2">
                   {GARMENTS.filter(g => g.type === type).map(g => (
-                    <button key={g.id} onClick={() => addGarment(g)}
+                    <motion.button key={g.id} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => addGarment(g)}
                       className="w-full text-left text-xs text-[var(--text-primary)] p-1.5 border border-[var(--border-primary)] hover:border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)] flex items-center gap-2">
                       <div className="w-4 h-4 rounded" style={{ background: g.color }} />
                       {g.name}
-                    </button>
+                    </motion.button>
                   ))}
                 </div>
               </details>
             ))}
           </div>
 
-          <button onClick={downloadResult} className="btn-nexus w-full justify-center">
+          <motion.button whileTap={{ scale: 0.97 }} onClick={downloadResult} className="btn-nexus w-full justify-center">
             <Download className="w-4 h-4" /> SAVE IMAGE
-          </button>
+          </motion.button>
           <Link href="/dashboard/recommendations" className="btn-outline w-full justify-center">
             RECOMMENDATIONS <ArrowRight className="w-4 h-4" />
           </Link>
