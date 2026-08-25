@@ -269,11 +269,11 @@ export function HeroSection() {
 
           <motion.div
             variants={itemVariants}
-            className="mt-16 lg:mt-20 grid grid-cols-3 gap-8 max-w-2xl"
+            className="mt-16 lg:mt-20 grid grid-cols-3 gap-3 sm:gap-6 md:gap-8 max-w-2xl"
           >
             {stats.map((stat) => (
-              <div key={stat.label} className="glass-card rounded-lg px-6 py-5 text-center group hover:border-[color-mix(in_srgb,var(--accent-caramel)_40%,transparent)] transition-colors duration-500">
-                <div className="text-3xl md:text-4xl font-display font-bold text-gradient-aurum">
+              <div key={stat.label} className="glass-card rounded-lg px-3 py-4 sm:px-6 sm:py-5 text-center group hover:border-[color-mix(in_srgb,var(--accent-caramel)_40%,transparent)] transition-colors duration-500">
+                <div className="text-2xl sm:text-3xl md:text-4xl font-display font-bold text-gradient-aurum">
                   {stat.prefix && <span className="text-[var(--text-muted)] text-sm">{stat.prefix}</span>}
                   <StatsCounter target={stat.target} suffix="" />
                   <span className="text-lg">{stat.suffix}</span>

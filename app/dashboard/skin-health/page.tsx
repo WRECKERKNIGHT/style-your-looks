@@ -1,11 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useAnalysisStore } from "@/store/analysis-store";
 import { ScrollReveal, ScrollRevealItem, ScrollProgress } from "@/components/shared/ScrollReveal";
 import { motion, AnimatePresence } from "framer-motion";
-import { Droplets, ArrowRight, Shield, Sun, Sparkles, Clock, ChevronDown, CheckCircle2 } from "lucide-react";
+import { Droplets, ArrowRight, Shield, Sun, Sparkles, Clock, ChevronDown } from "lucide-react";
 
 interface SkinMetric {
   label: string;
@@ -157,6 +157,8 @@ function MetricCard({ metric, index }: { metric: SkinMetric; index: number }) {
 
 export default function SkinHealthPage() {
   const { faceResult } = useAnalysisStore();
+
+  useEffect(() => { document.title = "Skin Health | ZERVEY"; }, []);
   const metrics = useMemo(() => getSkinMetrics(faceResult), [faceResult]);
   const routine = useMemo(() => faceResult ? getSkincareRoutine(faceResult.skinClarity) : [], [faceResult]);
   const products = useMemo(() => getProductRecommendations(metrics), [metrics]);

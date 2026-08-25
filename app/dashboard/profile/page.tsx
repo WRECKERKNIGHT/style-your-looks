@@ -65,6 +65,8 @@ export default function ProfilePage() {
   const [analysisCount, setAnalysisCount] = useState(0);
   const [bestScore, setBestScore] = useState<number | null>(null);
 
+  useEffect(() => { document.title = "Profile | ZERVEY"; }, []);
+
   useEffect(() => {
     const supabase = createClient();
     if (supabase) {

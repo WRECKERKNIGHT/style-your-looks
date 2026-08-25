@@ -43,6 +43,8 @@ export default function GroomingPage() {
   // face"), hiding offline/blocked-CDN causes. Surface them honestly.
   const [analysisError, setAnalysisError] = useState<string | null>(null);
 
+  useEffect(() => { document.title = "Grooming Studio | ZERVEY"; }, []);
+
   const analyzePhoto = useCallback(async (imageData: string) => {
     setIsAnalyzing(true);
     setAnalysisComplete(false);

@@ -1,12 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useAnalysisStore } from "@/store/analysis-store";
 import { calculatePillarAnalysis } from "@/lib/ml/pillars";
 import { motion, AnimatePresence } from "framer-motion";
 import { ScrollReveal, ScrollRevealItem, ScrollProgress } from "@/components/shared/ScrollReveal";
-import { Target, TrendingUp, ArrowRight, Sparkles, Dumbbell, Scissors, Droplets, Shirt, Zap, ChevronDown, CheckCircle2 } from "lucide-react";
+import { Target, TrendingUp, ArrowRight, Sparkles, Dumbbell, Scissors, Droplets, Shirt, Zap, ChevronDown } from "lucide-react";
 
 const impactColors: Record<string, string> = { high: "text-[var(--accent-aurum)]", medium: "text-[var(--accent-nexus)]", low: "text-[var(--text-muted)]" };
 const impactBg: Record<string, string> = { high: "bg-[color-mix(in_srgb,var(--accent-aurum)_10%,transparent)] border-[color-mix(in_srgb,var(--accent-aurum)_25%,transparent)]", medium: "bg-[color-mix(in_srgb,var(--accent-nexus)_10%,transparent)] border-[color-mix(in_srgb,var(--accent-nexus)_25%,transparent)]", low: "bg-[var(--bg-tertiary)] border-[var(--border-primary)]" };
@@ -104,6 +104,8 @@ function PillarCard({ pillar, index }: { pillar: { name: string; score: number; 
 
 export default function PillarAnalysisPage() {
   const { faceResult } = useAnalysisStore();
+
+  useEffect(() => { document.title = "4 Pillars Analysis | ZERVEY"; }, []);
 
   const analysis = useMemo(() => {
     if (!faceResult) return null;

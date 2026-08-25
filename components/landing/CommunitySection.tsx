@@ -164,8 +164,8 @@ export function CommunitySection() {
         </div>
 
         <Reveal y={30} delay={0.6} className="mt-16 text-center">
-          <div className="inline-flex items-center gap-3 glass-card rounded-full px-8 py-4">
-            <span className="type-mono text-[0.6rem] text-[var(--accent-mocha)] tracking-widest">
+          <div className="inline-flex items-center gap-3 glass-card rounded-full px-5 py-3 sm:px-8 sm:py-4">
+            <span className="type-mono text-[0.5rem] sm:text-[0.6rem] text-[var(--accent-mocha)] tracking-widest text-center">
               NO SAMPLE POSTS. THE FEED SHOWS REAL USER SUBMISSIONS ONLY.
             </span>
           </div>
