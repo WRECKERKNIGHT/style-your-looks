@@ -188,7 +188,7 @@ export function HorizontalPipeline() {
     <section
       ref={sectionRef}
       id="pipeline"
-      className="relative h-[260vh] bg-cosmic-surface scroll-mt-24"
+      className="relative h-[260vh] bg-cosmic-surface scroll-mt-24 hidden md:block"
     >
       <div className="sticky top-0 h-screen overflow-hidden flex items-center will-change-transform">
         <div className="absolute inset-0 grid-bg opacity-40" />

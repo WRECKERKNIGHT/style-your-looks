@@ -4,7 +4,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { useAnalysisStore } from "@/store/analysis-store";
 import { motion } from "framer-motion";
-import { Shirt, Undo2, Redo2, Download, ArrowRight, RotateCcw, Boxes, ScanLine } from "lucide-react";
+import { Shirt, Undo2, Redo2, Download, ArrowRight, RotateCcw, Boxes, ScanLine, AlertTriangle } from "lucide-react";
 import { useToast } from "@/components/shared/Toast";
 import { ScrollParallax, ScrollBlur, SectionScrollProgress } from "@/components/shared/ScrollEffects";
 
@@ -159,6 +159,7 @@ export default function MannequinPage() {
   const [garments, setGarments] = useState<Garment[]>([]);
   const [undoStack, setUndoStack] = useState<Garment[][]>([]);
   const [redoStack, setRedoStack] = useState<Garment[][]>([]);
+  const [canvasError, setCanvasError] = useState(false);
 
   // Auto-select the measured body type from the user's real pose scan —
   // only on first load, so manual picks afterwards always win.
@@ -196,7 +197,7 @@ export default function MannequinPage() {
     canvas.style.width = `${w}px`;
     canvas.style.height = `${h}px`;
     const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    if (!ctx) { setCanvasError(true); return; }
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, w, h);
     drawMannequin(ctx, w, h, pose, bodyType, garments);
@@ -279,8 +280,16 @@ export default function MannequinPage() {
       <ScrollBlur blur={0} minOpacity={0.9}>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }} className="lg:col-span-2">
-          <div className="glass-card overflow-hidden">
+          <div className="glass-card overflow-hidden relative">
             <canvas ref={canvasRef} className="w-full" />
+            {canvasError && (
+              <div className="absolute inset-0 glass-card backdrop-blur-sm flex items-center justify-center z-10">
+                <div className="text-center">
+                  <AlertTriangle className="w-8 h-8 text-[#C05B4D] mx-auto mb-3" />
+                  <p className="text-sm text-[var(--text-muted)] font-body">Canvas rendering is unavailable in this browser.</p>
+                </div>
+              </div>
+            )}
             <div className="flex items-center justify-center gap-2 sm:gap-3 p-4 border-t border-[var(--border-primary)] flex-wrap">
               {(["front", "three-quarter", "side"] as MannequinPose[]).map(p => (
                 <button key={p} onClick={() => setPose(p)}

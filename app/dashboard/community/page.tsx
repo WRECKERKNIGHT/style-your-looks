@@ -182,6 +182,11 @@ export default function CommunityPage() {
             <motion.div variants={stagger} initial="hidden" animate="show" className="space-y-4">
               {feed.length === 0 && !loading && (
                 <div className="glass-card p-10 text-center">
+                  {!live && (
+                    <span className="inline-block px-2.5 py-1 mb-3 border border-amber-400/40 bg-amber-400/10 type-mono text-[0.55rem] tracking-widest text-amber-400">
+                      DEMO — FEED OFFLINE
+                    </span>
+                  )}
                   <p className="text-[var(--text-muted)] font-body text-sm mb-2">
                     {activeCategory === "all"
                       ? "No posts yet."
