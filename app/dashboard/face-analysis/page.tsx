@@ -976,9 +976,15 @@ export default function FaceAnalysisPage() {
             </motion.div>
           )}
 
-          <div className="glass-card p-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            className="glass-card p-8"
+          >
             <AnalysisResults />
-          </div>
+          </motion.div>
 
           <button
             onClick={() => {

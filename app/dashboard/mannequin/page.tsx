@@ -244,7 +244,7 @@ export default function MannequinPage() {
     <div className="space-y-8">
       <SectionScrollProgress />
       <ScrollParallax speed={0.12} distance={30}>
-      <motion.div variants={fadeUp} initial="hidden" animate="show">
+      <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }}>
         <span className="section-number">EST. MMXXIV // OUTFIT LAB</span>
         <div className="flex items-center gap-3 mt-3 mb-2">
           <Shirt className="w-7 h-7 text-[var(--accent-aurum)]" />
@@ -276,7 +276,7 @@ export default function MannequinPage() {
 
       <ScrollBlur blur={0} minOpacity={0.9}>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <motion.div variants={fadeUp} initial="hidden" animate="show" className="lg:col-span-2">
+        <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }} className="lg:col-span-2">
           <div className="glass-card overflow-hidden">
             <canvas ref={canvasRef} className="w-full" />
             <div className="flex items-center justify-center gap-3 p-4 border-t border-[var(--border-primary)]">
@@ -298,7 +298,7 @@ export default function MannequinPage() {
           </div>
         </motion.div>
 
-        <motion.div variants={fadeUp} initial="hidden" animate="show" className="space-y-4">
+        <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }} className="space-y-4">
           <div className="glass-card p-4">
             <div className="flex items-center justify-between mb-3">
               <h3 className="type-label text-[var(--text-primary)]">LAYERS</h3>

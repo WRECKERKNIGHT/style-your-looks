@@ -197,7 +197,7 @@ export default function AccessoriesPage() {
     <div className="space-y-8">
       <SectionScrollProgress />
       <ScrollParallax speed={0.12} distance={30}>
-      <motion.div variants={fadeUp} initial="hidden" animate="show">
+      <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }}>
         <span className="section-number">EST. MMXXIV // ACCESSORIES</span>
         <div className="flex items-center gap-3 mt-3 mb-2">
           <Glasses className="w-7 h-7 text-[var(--accent-aurum)]" />
@@ -217,7 +217,7 @@ export default function AccessoriesPage() {
         </div>
       ) : (
         <ScrollBlur blur={0} minOpacity={0.9}>
-        <motion.div variants={fadeUp} initial="hidden" animate="show" className="space-y-8">
+        <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }} className="space-y-8">
           <div ref={containerRef} className="glass-card overflow-hidden relative">
             <canvas ref={canvasRef} className="w-full" />
 

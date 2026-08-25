@@ -172,7 +172,13 @@ export default function GroomingPage() {
       ) : (
         <ScrollBlur blur={0} minOpacity={0.9}>
         <motion.div variants={fadeUp} initial="hidden" animate="show" className="space-y-8">
-          <div className="glass-card overflow-hidden relative">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            className="glass-card overflow-hidden relative"
+          >
             {isAnalyzing && (
               <div className="absolute inset-0 glass-card backdrop-blur-sm flex items-center justify-center z-10">
                 <div className="text-center">
@@ -182,7 +188,7 @@ export default function GroomingPage() {
               </div>
             )}
             <canvas ref={canvasRef} className="w-full max-h-[560px] object-contain" />
-          </div>
+          </motion.div>
 
           <div className="glass-card p-8">
             <h3 className="type-heading text-[var(--text-primary)] tracking-tight mb-4">HAIR COLOR</h3>
@@ -200,7 +206,13 @@ export default function GroomingPage() {
           </div>
 
           {groomingScores.length > 0 && (
-            <div className="glass-card p-8">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-50px" }}
+              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              className="glass-card p-8"
+            >
               <div className="flex items-center gap-3 mb-6">
                 <Sparkles className="w-5 h-5 text-[var(--accent-aurum)]" />
                 <h3 className="type-heading text-[var(--text-primary)] tracking-tight">RECOMMENDED FOR YOUR FACE</h3>
@@ -263,7 +275,7 @@ export default function GroomingPage() {
                   </div>
                 ))}
               </div>
-            </div>
+            </motion.div>
           )}
 
           {analysisError && (

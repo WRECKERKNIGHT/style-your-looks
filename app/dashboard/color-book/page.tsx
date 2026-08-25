@@ -389,7 +389,7 @@ export default function ColorBookPage() {
     <div className="space-y-8">
       <SectionScrollProgress />
 
-      <motion.header variants={fadeUp} initial="hidden" animate="show" className="max-w-2xl">
+      <motion.header variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }} className="max-w-2xl">
         <div className="flex items-center gap-3">
           <BookOpen className="w-7 h-7 text-[var(--accent-aurum)]" />
           <h1 className="type-display text-[var(--text-primary)] tracking-tight">
@@ -403,7 +403,7 @@ export default function ColorBookPage() {
         </p>
       </motion.header>
 
-      <motion.div variants={fadeUp} initial="hidden" animate="show">
+      <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }}>
         <SeasonFilter active={seasonFilter} onChange={setSeasonFilter} />
       </motion.div>
 
@@ -411,7 +411,8 @@ export default function ColorBookPage() {
       <motion.ol
         variants={fadeUp}
         initial="hidden"
-        animate="show"
+        whileInView="show"
+        viewport={{ once: true, margin: "-50px" }}
         className="grid grid-cols-1 sm:grid-cols-3 gap-3"
         aria-label="How to use the colour book"
       >
@@ -450,7 +451,7 @@ export default function ColorBookPage() {
       </motion.ol>
 
       {/* Mobile volume jump links — the split stacks on small screens */}
-      <motion.div variants={fadeUp} initial="hidden" animate="show" className="flex gap-2 lg:hidden">
+      <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }} className="flex gap-2 lg:hidden">
         {[
           { href: "#volume-men", label: "MEN 紳" },
           { href: "#volume-women", label: "WOMEN 淑" },
@@ -462,7 +463,7 @@ export default function ColorBookPage() {
       </motion.div>
 
       {/* 50/50 split screen — two volumes of the book side by side */}
-      <motion.div variants={fadeUp} initial="hidden" animate="show">
+      <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }}>
         <div className="grid grid-cols-1 lg:grid-cols-2 border border-[var(--border-primary)] bg-[var(--bg-secondary)] shadow-paper-lg overflow-hidden">
           <BookPanel
             side="left"
@@ -489,7 +490,7 @@ export default function ColorBookPage() {
       </motion.div>
 
       {/* Full palette reference */}
-      <motion.section variants={fadeUp} initial="hidden" animate="show" className="glass-card p-8">
+      <motion.section variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }} className="glass-card p-8">
         <div className="flex items-baseline justify-between gap-3 mb-6">
           <h2 className="type-heading text-[var(--text-primary)] tracking-tight">
             THE FULL PALETTE <span className="text-gradient-aurum">伝統色一覧</span>
