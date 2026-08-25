@@ -468,12 +468,15 @@ export function useMediaPipe() {
           // contributes to outfit ranking instead of sitting at a flat
           // neutral score for everyone.
           const faceShape = useAnalysisStore.getState().faceResult?.facialShape;
+          const colorAnalysis = useAnalysisStore.getState().colorAnalysis;
           const recs = generateRecommendations(
             skinTone.undertone,
             bodyType,
             undefined,
             skinTone.monkScale.hex,
-            faceShape
+            faceShape,
+            colorAnalysis?.bestColors,
+            colorAnalysis?.worstColors
           );
           setOutfitRecommendations(
             recs.map((r) => ({

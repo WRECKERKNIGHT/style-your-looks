@@ -617,13 +617,17 @@ export function generateRecommendations(
   bodyType: string,
   occasion?: string,
   skinToneHex?: string,
-  faceShape?: string
+  faceShape?: string,
+  seasonalBestColors?: string[],
+  seasonalWorstColors?: string[]
 ): OutfitRecommendation[] {
   const pool = occasion ? OUTFIT_DATABASE.filter((o) => o.occasion === occasion) : [...OUTFIT_DATABASE];
-  const hex = skinToneHex || "#c89d7c";
+  const hex = skinToneHex || "#A0764E";
   const colorFn = undertone === "Warm" ? getWarmColorRecommendations : undertone === "Cool" ? getCoolColorRecommendations : getNeutralColorRecommendations;
   const recommendedColors = colorFn(hex);
   const season = getCurrentSeason();
+  const bestSet = new Set((seasonalBestColors || []).map((c) => c.toLowerCase()));
+  const worstSet = new Set((seasonalWorstColors || []).map((c) => c.toLowerCase()));
 
   const scored = pool.map((outfit) => {
     const uScore = undertoneScore(outfit.colors, hex, undertone);
@@ -633,14 +637,18 @@ export function generateRecommendations(
     const oScore = occasionScore(outfit, occasion);
     const cScore = skinToneContrastScore(outfit.colors, hex);
     const colorMatch = outfit.colors.filter((c) => recommendedColors.includes(c)).length;
+    const seasonalBestMatch = bestSet.size > 0 ? outfit.colors.filter((c) => bestSet.has(c.toLowerCase())).length : 0;
+    const seasonalWorstPenalty = worstSet.size > 0 ? outfit.colors.filter((c) => worstSet.has(c.toLowerCase())).length : 0;
 
-    const totalScore = uScore * 0.25 + bScore * 0.15 + fScore * 0.12 + sScore * 0.12 + oScore * 0.15 + cScore * 0.10 + colorMatch * 8;
+    const totalScore = uScore * 0.20 + bScore * 0.12 + fScore * 0.10 + sScore * 0.10 + oScore * 0.13 + cScore * 0.10 + colorMatch * 6 + seasonalBestMatch * 10 - seasonalWorstPenalty * 12;
 
     const matchPct = Math.round(Math.min(100, totalScore));
     let reasoning = outfit.reasoning;
     if (bScore >= 80) reasoning += ` This style specifically flatters ${bodyType} body types.`;
     if (fScore >= 80) reasoning += ` The silhouette complements your ${faceShape} face shape.`;
     if (sScore >= 80) reasoning += ` Perfect for the ${season.toLowerCase()} season.`;
+    if (seasonalBestMatch > 0) reasoning += ` Uses ${seasonalBestMatch} color(s) from your best seasonal palette.`;
+    if (seasonalWorstPenalty > 0) reasoning += ` Note: ${seasonalWorstPenalty} color(s) from your avoid list.`;
     reasoning += ` Overall match: ${matchPct}%.`;
 
     return { ...outfit, reasoning, confidence: matchPct, _score: totalScore };
@@ -654,7 +662,9 @@ export function generateWeekPlan(
   undertone: "Warm" | "Cool" | "Neutral",
   bodyType: string,
   skinToneHex?: string,
-  faceShape?: string
+  faceShape?: string,
+  seasonalBestColors?: string[],
+  seasonalWorstColors?: string[]
 ): { day: string; outfit: OutfitRecommendation }[] {
   const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
   const dayOccasions: Record<string, string> = {
@@ -668,7 +678,7 @@ export function generateWeekPlan(
   };
 
   return days.map((day) => {
-    const recs = generateRecommendations(undertone, bodyType, dayOccasions[day], skinToneHex, faceShape);
+    const recs = generateRecommendations(undertone, bodyType, dayOccasions[day], skinToneHex, faceShape, seasonalBestColors, seasonalWorstColors);
     return { day, outfit: recs[0] };
   });
 }
