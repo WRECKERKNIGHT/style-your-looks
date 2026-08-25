@@ -191,7 +191,14 @@ export default function HairPreviewPage() {
       ) : (
         <ScrollBlur blur={0} minOpacity={0.9}>
         <motion.div variants={fadeUp} initial="hidden" animate="show" className="space-y-8">
-          <div ref={containerRef} className="glass-card overflow-hidden relative">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            ref={containerRef}
+            className="glass-card overflow-hidden relative"
+          >
             <canvas ref={canvasRef} className="w-full" />
             {selectedColor && (
               <div className="absolute top-3 right-3 glass-card p-3 space-y-2">
@@ -202,7 +209,7 @@ export default function HairPreviewPage() {
                 <p className="type-mono text-[var(--text-muted)]">{Math.round(intensity * 100)}%</p>
               </div>
             )}
-          </div>
+          </motion.div>
 
           {selectedColor && regionStatus === "unavailable" && (
             <div className="glass-card p-4 border-[color-mix(in_srgb,var(--accent-aurum)_35%,transparent)]">
@@ -215,7 +222,13 @@ export default function HairPreviewPage() {
             </div>
           )}
 
-          <div className="glass-card p-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            className="glass-card p-6"
+          >
             <h3 className="type-label text-[var(--text-primary)] mb-4">SELECT HAIR COLOR</h3>
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
               {HAIR_COLORS.map((color) => (
@@ -233,7 +246,7 @@ export default function HairPreviewPage() {
                 </button>
               ))}
             </div>
-          </div>
+          </motion.div>
 
           <div className="flex gap-4">
             <button onClick={() => setSelectedColor(null)} className="btn-outline flex-1 justify-center">

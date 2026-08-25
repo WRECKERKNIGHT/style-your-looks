@@ -137,7 +137,7 @@ export default function StyleQuizPage() {
     <div className="space-y-8">
       <SectionScrollProgress />
       <ScrollParallax speed={0.12} distance={30}>
-      <motion.div variants={fadeUp} initial="hidden" animate="show">
+      <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }}>
         <span className="section-number">EST. MMXXIV // STYLE QUIZ</span>
         <div className="flex items-center gap-3 mt-3 mb-2">
           <Sparkles className="w-7 h-7 text-[var(--accent-aurum)]" />
@@ -154,7 +154,7 @@ export default function StyleQuizPage() {
       <ScrollBlur blur={0} minOpacity={0.95}>
       <AnimatePresence mode="wait">
         {step === "intro" && (
-          <motion.div key="intro" variants={fadeUp} initial="hidden" animate="show" exit={{ opacity: 0, y: -10 }}
+          <motion.div key="intro" variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }} exit={{ opacity: 0, y: -10 }}
             className="glass-card p-8 text-center space-y-6 max-w-lg mx-auto">
             <Sparkles className="w-12 h-12 text-[var(--accent-aurum)] mx-auto" />
             <h2 className="type-display text-[var(--text-primary)]">FIND YOUR STYLE</h2>
@@ -170,7 +170,7 @@ export default function StyleQuizPage() {
         )}
 
         {step === "quiz" && (
-          <motion.div key="quiz" variants={fadeUp} initial="hidden" animate="show" exit={{ opacity: 0, y: -10 }}
+          <motion.div key="quiz" variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }} exit={{ opacity: 0, y: -10 }}
             className="glass-card p-6 max-w-2xl mx-auto">
             <div className="mb-6">
               <div className="flex justify-between text-xs text-[var(--text-muted)] mb-2">
@@ -226,7 +226,7 @@ export default function StyleQuizPage() {
         )}
 
         {step === "result" && result && (
-          <motion.div key="result" variants={fadeUp} initial="hidden" animate="show" exit={{ opacity: 0, y: -10 }}
+          <motion.div key="result" variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }} exit={{ opacity: 0, y: -10 }}
             className="glass-card p-8 text-center max-w-lg mx-auto space-y-6">
             <span className="text-4xl">{RESULTS[result].icon}</span>
             <h2 className="type-display text-[var(--text-primary)]">{RESULTS[result].title}</h2>

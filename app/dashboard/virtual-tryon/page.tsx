@@ -194,7 +194,14 @@ export default function VirtualTryOnPage() {
       ) : (
         <ScrollBlur blur={0} minOpacity={0.9}>
         <motion.div variants={fadeUp} initial="hidden" animate="show" className="space-y-8">
-          <div ref={containerRef} className="glass-card overflow-hidden relative">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            ref={containerRef}
+            className="glass-card overflow-hidden relative"
+          >
             <canvas ref={canvasRef} className="w-full" />
 
             {isProcessing && (
@@ -227,7 +234,7 @@ export default function VirtualTryOnPage() {
                 ))}
               </div>
             )}
-          </div>
+          </motion.div>
 
           {result && !isProcessing && (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -290,7 +297,13 @@ export default function VirtualTryOnPage() {
             </div>
           </div>
 
-          <div className="glass-card p-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            className="glass-card p-8"
+          >
             <h3 className="type-heading text-[var(--text-primary)] tracking-tight mb-2">LOAD PRODUCT</h3>
             <p className="text-sm text-[var(--text-muted)] font-body mb-6 max-w-2xl">
               Paste a public product image URL (flat-lay or isolated shots work best). Studio backgrounds are stripped automatically before warping.
@@ -338,7 +351,7 @@ export default function VirtualTryOnPage() {
                 })}
               </div>
             </div>
-          </div>
+          </motion.div>
 
           <div className="glass-card p-6">
             <div className="flex items-center justify-between gap-4 flex-wrap">

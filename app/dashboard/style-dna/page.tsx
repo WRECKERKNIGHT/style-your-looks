@@ -381,7 +381,13 @@ export default function StyleDnaPage() {
           )}
 
           {faceResult && trends.length >= 2 && (
-            <motion.div variants={fadeUp} className="glass-card p-10">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-50px" }}
+              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              className="glass-card p-10"
+            >
               <div className="flex items-center gap-3 mb-8">
                 <BarChart3 className="w-5 h-5 text-[var(--accent-aurum)]" />
                 <h3 className="type-heading text-[var(--text-primary)] tracking-tight">SCORE PROGRESS</h3>
@@ -425,7 +431,13 @@ export default function StyleDnaPage() {
           </motion.div>
 
           {faceResult && (
-            <motion.div variants={fadeUp} className="glass-card p-10">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-50px" }}
+              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              className="glass-card p-10"
+            >
               <div className="flex items-center gap-3 mb-6">
                 <ScanFace className="w-5 h-5 text-[var(--accent-aurum)]" />
                 <h3 className="type-heading text-[var(--text-primary)] tracking-tight">FULL FACE METRICS</h3>

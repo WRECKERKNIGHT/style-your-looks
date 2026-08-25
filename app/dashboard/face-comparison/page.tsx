@@ -268,7 +268,7 @@ export default function FaceComparisonPage() {
     <div className="space-y-8">
       <SectionScrollProgress />
       <ScrollParallax speed={0.12} distance={30}>
-      <motion.div variants={fadeUp} initial="hidden" animate="show">
+      <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }}>
         <span className="section-number">EST. MMXXIV // FACE COMPARISON</span>
         <div className="flex items-center gap-3 mt-3 mb-2">
           <ScanLine className="w-7 h-7 text-[var(--accent-aurum)]" />
@@ -285,7 +285,7 @@ export default function FaceComparisonPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {([0, 1] as const).map(idx => (
-          <motion.div key={idx} variants={fadeUp} initial="hidden" animate="show"
+          <motion.div key={idx} variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }}
             className="glass-card p-4">
             <p className="type-label text-[var(--text-muted)] mb-3">{idx === 0 ? "IMAGE A" : "IMAGE B"}</p>
             {(!(idx === 0 ? imageA : imageB)) ? (
@@ -308,7 +308,7 @@ export default function FaceComparisonPage() {
       </div>
 
       {error && (
-        <motion.div variants={fadeUp} initial="hidden" animate="show" className="flex items-center gap-3 bg-red-500/10 border border-red-500/30 p-5">
+        <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }} className="flex items-center gap-3 bg-red-500/10 border border-red-500/30 p-5">
           <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
           <p className="text-sm text-red-400 font-body">{error}</p>
         </motion.div>
@@ -316,7 +316,7 @@ export default function FaceComparisonPage() {
 
       {bothLoaded && (
         <ScrollBlur blur={0} minOpacity={0.9}>
-        <motion.div variants={fadeUp} initial="hidden" animate="show" className="space-y-6">
+        <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }} className="space-y-6">
           <div ref={containerRef} className="glass-card overflow-hidden relative cursor-col-resize select-none"
             onMouseDown={handleDragStart} onTouchStart={handleDragStart}>
             <canvas ref={canvasRef} className="w-full block" />
@@ -358,14 +358,14 @@ export default function FaceComparisonPage() {
           )}
 
           {result && !loading && (
-            <motion.div variants={stagger} initial="hidden" animate="show" className="glass-card p-6">
+            <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }} className="glass-card p-6">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="type-label text-[var(--text-primary)]">OVERALL GEOMETRY SIMILARITY</h3>
                 <span className="type-display text-2xl text-[var(--accent-aurum)]">{result.overall}%</span>
               </div>
               <div className="space-y-2">
                 {result.features.map(f => (
-                  <motion.div key={f.name} variants={fadeUp}
+                  <motion.div key={f.name} variants={fadeUp} viewport={{ once: true, margin: "-50px" }}
                     className="flex items-center justify-between text-xs">
                     <span className="text-[var(--text-muted)]">{f.name}</span>
                     <div className="flex items-center gap-2">

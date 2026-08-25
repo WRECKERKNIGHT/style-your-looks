@@ -1,5 +1,7 @@
 "use client";
 
+import { motion } from "framer-motion";
+
 const bigWords = ["MEASURED", "CUT", "TAILORED", "FITTED", "FINISHED"];
 const smallWords = ["PRIVATE", "ON-DEVICE", "47-POINT", "RATIO", "HARMONY", "FIT"];
 
@@ -73,12 +75,24 @@ export function StatementMarquee() {
       aria-label="Our promise"
       className="relative overflow-hidden border-y border-[var(--border-primary)] bg-[var(--bg-tertiary)] py-20 md:py-28"
     >
-      <div className="relative z-10 flex flex-col gap-8 md:gap-10">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-50px" }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        className="relative z-10 flex flex-col gap-8 md:gap-10"
+      >
         <BigRow />
         <SmallRow />
-      </div>
+      </motion.div>
 
-      <div className="absolute left-1/2 top-1/2 z-20 hidden -translate-x-1/2 -translate-y-1/2 md:block">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-50px" }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        className="absolute left-1/2 top-1/2 z-20 hidden -translate-x-1/2 -translate-y-1/2 md:block"
+      >
         <div className="relative flex h-36 w-36 items-center justify-center rounded-full border border-[var(--border-primary)] bg-[var(--bg-elevated)]/80 shadow-[var(--card-shadow)] backdrop-blur">
           <svg viewBox="0 0 100 100" className="h-[118px] w-[118px] animate-spin-slow">
             <defs>
@@ -107,7 +121,7 @@ export function StatementMarquee() {
             </span>
           </div>
         </div>
-      </div>
+      </motion.div>
     </section>
   );
 }
