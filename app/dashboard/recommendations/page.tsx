@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import { useAnalysisStore } from "@/store/analysis-store";
 import { motion } from "framer-motion";
 import { Sparkles, ChevronRight, Shirt, ArrowRight, Palette, CalendarDays } from "lucide-react";
@@ -18,6 +18,8 @@ const stagger = {
 };
 
 export default function RecommendationsPage() {
+  useEffect(() => { document.title = "Outfit Guide | ZERVEY"; }, []);
+
   const { faceResult, bodyResult, colorAnalysis, outfitRecommendations } = useAnalysisStore();
 
   const pillarResult = faceResult || bodyResult || colorAnalysis

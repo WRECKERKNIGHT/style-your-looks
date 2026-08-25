@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { ImageUploader } from "@/components/shared/ImageUploader";
 import { useAnalysisStore } from "@/store/analysis-store";
 import { useMediaPipe, AnalysisCancelledError } from "@/hooks/useMediaPipe";
@@ -104,6 +104,8 @@ function BodySilhouette({ bodyType }: { bodyType: string }) {
 }
 
 export default function BodyAnalysisPage() {
+  useEffect(() => { document.title = "Body Analysis | ZERVEY"; }, []);
+
   const {
     fullBodyImage,
     setFullBodyImage,

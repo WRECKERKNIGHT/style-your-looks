@@ -113,6 +113,8 @@ const stagger = {
 };
 
 export default function FaceComparisonPage() {
+  useEffect(() => { document.title = "Face Compare | ZERVEY"; }, []);
+
   const { addToast } = useToast();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);

@@ -165,6 +165,8 @@ export default function StyleDnaPage() {
   const [softness, setSoftness] = useState(50);
   const [boldness, setBoldness] = useState(50);
 
+  useEffect(() => { document.title = "Style DNA | ZERVEY"; }, []);
+
   useEffect(() => {
     setTrends(getScoreTrends());
   }, []);

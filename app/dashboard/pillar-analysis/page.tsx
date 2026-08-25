@@ -105,7 +105,7 @@ function PillarCard({ pillar, index }: { pillar: { name: string; score: number; 
 export default function PillarAnalysisPage() {
   const { faceResult } = useAnalysisStore();
 
-  useEffect(() => { document.title = "4 Pillars Analysis | ZERVEY"; }, []);
+  useEffect(() => { document.title = "4 Pillars | ZERVEY"; }, []);
 
   const analysis = useMemo(() => {
     if (!faceResult) return null;
