@@ -116,51 +116,6 @@ export function ScrollBlur({
   );
 }
 
-interface ScrollTrackerProps {
-  children: ReactNode;
-  className?: string;
-  /** Track bar placement on the tracked wrapper. */
-  trackSide?: "right" | "left";
-  trackClassName?: string;
-}
-
-/**
- * Tracks an element's scroll position through the viewport and renders a
- * vertical fill bar alongside it — a live "how far through the viewport is
- * this block" indicator driven by useScroll + useTransform.
- */
-export function ScrollTracker({
-  children,
-  className = "",
-  trackSide = "right",
-  trackClassName = "",
-}: ScrollTrackerProps) {
-  const ref = useRef<HTMLDivElement>(null);
-  const reduce = useReducedMotion();
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start center", "end center"],
-  });
-  const scaleY = useSpring(scrollYProgress, { stiffness: 120, damping: 30 });
-
-  return (
-    <div ref={ref} className={cn("relative", className)}>
-      {children}
-      {!reduce && (
-        <motion.div
-          aria-hidden
-          style={{ scaleY }}
-          className={cn(
-            "absolute top-0 bottom-0 w-px origin-top bg-gradient-to-b from-nexus-500 via-aurum-400 to-aurum-300",
-            trackSide === "right" ? "right-0" : "left-0",
-            trackClassName
-          )}
-        />
-      )}
-    </div>
-  );
-}
-
 interface SectionScrollProgressProps {
   className?: string;
   /** Show only after the section enters the viewport. */
@@ -176,6 +131,7 @@ export function SectionScrollProgress({
   ariaLabel = "Section scroll progress",
 }: SectionScrollProgressProps) {
   const ref = useRef<HTMLDivElement>(null);
+  const reduce = useReducedMotion();
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start end", "end start"],
@@ -185,6 +141,8 @@ export function SectionScrollProgress({
     damping: 30,
     restDelta: 0.001,
   });
+
+  if (reduce) return null;
 
   return (
     <div ref={ref} className={cn("relative", className)}>

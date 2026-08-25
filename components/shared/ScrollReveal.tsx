@@ -127,28 +127,4 @@ export function ScrollProgress({ className = "" }: { className?: string }) {
   );
 }
 
-export function ParallaxText({
-  children,
-  className = "",
-  speed = 0.3,
-}: {
-  children: ReactNode;
-  className?: string;
-  speed?: number;
-}) {
-  const ref = useRef(null);
 
-  return (
-    <div ref={ref} className="overflow-hidden">
-      <motion.div
-        initial={{ y: "100%" }}
-        whileInView={{ y: "0%" }}
-        viewport={{ once: true, margin: "-80px" }}
-        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className={className}
-      >
-        {children}
-      </motion.div>
-    </div>
-  );
-}
