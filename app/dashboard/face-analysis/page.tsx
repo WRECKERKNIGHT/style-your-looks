@@ -547,9 +547,11 @@ export default function FaceAnalysisPage() {
               </span>
               <div className="grid grid-cols-3 gap-2">
                 {(["masculine", "feminine", "neutral"] as const).map((p) => (
-                  <button
+                  <motion.button
                     key={p}
                     type="button"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={() => setGenderProfile(p)}
                     className={`border px-3 py-2.5 text-left transition-all ${
                       genderProfile === p
@@ -573,7 +575,7 @@ export default function FaceAnalysisPage() {
                         ? "Lips, tilt & cheeks weighted"
                         : "Balanced standards"}
                     </span>
-                  </button>
+                  </motion.button>
                 ))}
               </div>
             </div>
@@ -701,21 +703,23 @@ export default function FaceAnalysisPage() {
 
           {isStreaming && (
             <div className="flex flex-col sm:flex-row gap-3">
-              <button
+              <motion.button
+                whileTap={{ scale: 0.97 }}
                 onClick={handleWebcamCapture}
                 className="btn-nexus flex-1 justify-center"
               >
                 <Camera className="w-5 h-5" />
                 CAPTURE PHOTO
-              </button>
-              <button
+              </motion.button>
+              <motion.button
+                whileTap={{ scale: 0.97 }}
                 onClick={stopWebcam}
                 aria-label="Close camera"
                 className="btn-outline justify-center"
               >
                 <X className="w-4 h-4" />
                 CLOSE CAMERA
-              </button>
+              </motion.button>
             </div>
           )}
 
@@ -774,7 +778,8 @@ export default function FaceAnalysisPage() {
               {faceResult.genderProfile.toUpperCase()} PROFILE
             </span>
             {isDemoPhoto(uploadedImage) && <DemoBadge />}
-            <button
+            <motion.button
+              whileTap={{ scale: 0.97 }}
               onClick={() => {
                 if (useAnalysisStore.getState().source === "demo") {
                   addToast(
@@ -800,8 +805,9 @@ export default function FaceAnalysisPage() {
             >
               {saved ? <CheckCircle className="w-4 h-4" /> : <Save className="w-4 h-4" />}
               {saved ? "SAVED" : "SAVE"}
-            </button>
-            <button
+            </motion.button>
+            <motion.button
+              whileTap={{ scale: 0.97 }}
               onClick={copyReport}
               className={`flex items-center gap-2 px-3 sm:px-6 py-2 sm:py-3 font-body text-xs sm:text-sm tracking-wider uppercase transition-all border ${
                 copied
@@ -811,33 +817,37 @@ export default function FaceAnalysisPage() {
             >
               {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
               {copied ? "COPIED" : "COPY"}
-            </button>
-            <button
+            </motion.button>
+            <motion.button
+              whileTap={{ scale: 0.97 }}
               onClick={() => setReportOpen(true)}
               className="flex items-center gap-2 px-3 sm:px-6 py-2 sm:py-3 font-body text-xs sm:text-sm tracking-wider uppercase transition-all btn-outline"
             >
               <ScanFace className="w-4 h-4" />
               REPORT
-            </button>
-            <button
+            </motion.button>
+            <motion.button
+              whileTap={{ scale: 0.97 }}
               onClick={() => setShareOpen(true)}
               aria-label="Share result card"
               className="flex items-center gap-2 px-3 sm:px-6 py-2 sm:py-3 font-body text-xs sm:text-sm tracking-wider uppercase transition-all btn-outline"
             >
               <Share2 className="w-4 h-4" />
               SHARE
-            </button>
+            </motion.button>
             {!isDemoPhoto(uploadedImage) && (
-              <button
+              <motion.button
+                whileTap={{ scale: 0.97 }}
                 onClick={() => setShareCommunityOpen(true)}
                 aria-label="Share to community"
                 className="flex items-center gap-2 px-3 sm:px-6 py-2 sm:py-3 font-body text-xs sm:text-sm tracking-wider uppercase transition-all btn-nexus"
               >
                 <Users className="w-4 h-4" />
                 COMMUNITY
-              </button>
+              </motion.button>
             )}
-            <button
+            <motion.button
+              whileTap={{ scale: 0.97 }}
               onClick={() => {
                 useAnalysisStore.getState().reset();
                 setPhotos([]);
@@ -851,7 +861,7 @@ export default function FaceAnalysisPage() {
             >
               <Camera className="w-4 h-4" />
               NEW SCAN
-            </button>
+            </motion.button>
           </motion.div>
 
           {rejectedPhotos.length > 0 && (
@@ -922,13 +932,14 @@ export default function FaceAnalysisPage() {
                   }}
                 />
               )}
-              <button
+              <motion.button
+                whileTap={{ scale: 0.97 }}
                 onClick={() => setShowLandmarks(!showLandmarks)}
                 className="absolute top-4 right-4 flex items-center gap-2 bg-[color-mix(in_srgb,var(--bg-primary)_80%,transparent)] text-[var(--text-primary)] px-3 py-1.5 text-xs font-body tracking-wider transition-colors border border-[var(--border-primary)]"
               >
                 <Eye className="w-3.5 h-3.5" />
                 {showLandmarks ? "HIDE" : "SHOW"} SKELETON
-              </button>
+              </motion.button>
             </motion.div>
           )}
 
@@ -988,7 +999,8 @@ export default function FaceAnalysisPage() {
             <AnalysisResults />
           </motion.div>
 
-          <button
+          <motion.button
+            whileTap={{ scale: 0.97 }}
             onClick={() => {
               useAnalysisStore.getState().reset();
               setPhotos([]);
@@ -1000,7 +1012,7 @@ export default function FaceAnalysisPage() {
             className="btn-outline w-full justify-center"
           >
             Analyse Another Set of Photos
-          </button>
+          </motion.button>
         </motion.div>
         </ScrollBlur>
       )}

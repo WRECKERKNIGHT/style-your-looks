@@ -52,7 +52,9 @@ function SwatchStrip({ combo }: { combo: OutfitCombo }) {
 function ComboCard({ combo, onOpen }: { combo: OutfitCombo; onOpen: () => void }) {
   const season = SEASONS.find((s) => s.id === combo.season);
   return (
-    <button
+    <motion.button
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
       onClick={onOpen}
       className="group w-full text-left border border-[var(--border-primary)] bg-[var(--bg-secondary)] rounded-[var(--radius-md)] overflow-hidden transition-all hover:border-[var(--accent-aurum)]/50 hover:shadow-aurum"
     >
@@ -80,7 +82,7 @@ function ComboCard({ combo, onOpen }: { combo: OutfitCombo; onOpen: () => void }
         </div>
         <SwatchStrip combo={combo} />
       </div>
-    </button>
+    </motion.button>
   );
 }
 
@@ -95,7 +97,9 @@ function SeasonFilter({
     "px-3 py-1.5 type-mono text-[0.55rem] tracking-widest uppercase border transition-all";
   return (
     <div className="flex flex-wrap gap-1.5">
-      <button
+      <motion.button
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
         onClick={() => onChange("all")}
         className={`${base} ${
           active === "all"
@@ -104,10 +108,12 @@ function SeasonFilter({
         } rounded-full`}
       >
         All 四季
-      </button>
+      </motion.button>
       {SEASONS.map((s) => (
-        <button
+        <motion.button
           key={s.id}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
           onClick={() => onChange(s.id)}
           className={`${base} ${
             active === s.id
@@ -116,7 +122,7 @@ function SeasonFilter({
           } rounded-full`}
         >
           {s.label} {s.kanji}
-        </button>
+        </motion.button>
       ))}
     </div>
   );

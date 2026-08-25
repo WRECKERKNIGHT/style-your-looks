@@ -238,8 +238,10 @@ export default function GroomingPage() {
               </div>
               <div className="space-y-4">
                 {groomingScores.filter((s) => s.type === "beard").slice(0, 3).map((rec) => (
-                  <div
+                  <motion.div
                     key={rec.styleId}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     className={`p-5 border transition-all cursor-pointer ${
                       selectedBeardStyle === rec.styleId
                         ? "bg-[color-mix(in_srgb,var(--accent-aurum)_10%,transparent)] border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)]"
@@ -259,11 +261,13 @@ export default function GroomingPage() {
                       </span>
                     </div>
                     <p className="text-sm text-[var(--text-muted)] font-body ml-6">{rec.reason}</p>
-                  </div>
+                  </motion.div>
                 ))}
                 {groomingScores.filter((s) => s.type === "mustache").slice(0, 2).map((rec) => (
-                  <div
+                  <motion.div
                     key={rec.styleId}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     className={`p-5 border transition-all cursor-pointer ${
                       selectedMustacheStyle === rec.styleId
                         ? "bg-[color-mix(in_srgb,var(--accent-aurum)_10%,transparent)] border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)]"
@@ -283,7 +287,7 @@ export default function GroomingPage() {
                       </span>
                     </div>
                     <p className="text-sm text-[var(--text-muted)] font-body ml-6">{rec.reason}</p>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
             </motion.div>
@@ -315,8 +319,10 @@ export default function GroomingPage() {
             <h3 className="type-heading text-[var(--text-primary)] tracking-tight mb-5">BEARD STYLE</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
               {BEARD_STYLES.map((style) => (
-                <button
+                <motion.button
                   key={style.id}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={() => setSelectedBeardStyle(style.id)}
                   className={`p-4 text-left text-base font-body transition-all duration-300 ${
                     selectedBeardStyle === style.id
@@ -328,7 +334,7 @@ export default function GroomingPage() {
                     {selectedBeardStyle === style.id && <Check className="w-4 h-4 flex-shrink-0" />}
                     <span className="truncate">{style.label}</span>
                   </div>
-                </button>
+                </motion.button>
               ))}
             </div>
           </div>
@@ -337,8 +343,10 @@ export default function GroomingPage() {
             <h3 className="type-heading text-[var(--text-primary)] tracking-tight mb-5">MUSTACHE STYLE</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
               {MUSTACHE_STYLES.map((style) => (
-                <button
+                <motion.button
                   key={style.id}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={() => setSelectedMustacheStyle(style.id)}
                   className={`p-4 text-left text-base font-body transition-all duration-300 ${
                     selectedMustacheStyle === style.id
@@ -350,19 +358,20 @@ export default function GroomingPage() {
                     {selectedMustacheStyle === style.id && <Check className="w-4 h-4 flex-shrink-0" />}
                     <span className="truncate">{style.label}</span>
                   </div>
-                </button>
+                </motion.button>
               ))}
             </div>
           </div>
 
           <GroomingGuide selectedBeardStyle={selectedBeardStyle} />
 
-          <button
+          <motion.button
+            whileTap={{ scale: 0.97 }}
             onClick={() => { useAnalysisStore.getState().setUploadedImage(null); useAnalysisStore.getState().setFullBodyImage(null); setFaceResult(null); }}
             className="btn-outline w-full justify-center"
           >
             Upload New Photo
-          </button>
+          </motion.button>
         </motion.div>
         </ScrollBlur>
       )}

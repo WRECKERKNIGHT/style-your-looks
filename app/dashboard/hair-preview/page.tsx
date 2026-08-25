@@ -243,8 +243,10 @@ export default function HairPreviewPage() {
             <h3 className="type-label text-[var(--text-primary)] mb-4">SELECT HAIR COLOR</h3>
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
               {HAIR_COLORS.map((color) => (
-                <button
+                <motion.button
                   key={color.id}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={() => setSelectedColor(selectedColor?.id === color.id ? null : color)}
                   className={`p-3 border text-center transition-all duration-300 ${
                     selectedColor?.id === color.id
@@ -254,21 +256,21 @@ export default function HairPreviewPage() {
                 >
                   <div className="w-full h-8 mb-2 rounded-full border border-[var(--border-primary)]" style={{ backgroundColor: color.color }} />
                   <p className="text-[0.65rem] font-body text-[var(--text-primary)]">{color.name}</p>
-                </button>
+                </motion.button>
               ))}
             </div>
           </motion.div>
 
           <div className="flex flex-col sm:flex-row gap-3">
-            <button onClick={() => setSelectedColor(null)} className="btn-outline flex-1 justify-center">
+            <motion.button whileTap={{ scale: 0.97 }} onClick={() => setSelectedColor(null)} className="btn-outline flex-1 justify-center">
               <Trash2 className="w-4 h-4" />
               REMOVE
-            </button>
-            <button onClick={downloadResult} disabled={!selectedColor}
+            </motion.button>
+            <motion.button whileTap={{ scale: 0.97 }} onClick={downloadResult} disabled={!selectedColor}
               className="btn-nexus flex-1 justify-center disabled:opacity-40">
               <Download className="w-4 h-4" />
               SAVE IMAGE
-            </button>
+            </motion.button>
             <Link href="/dashboard/accessories" className="btn-nexus flex-1 justify-center">
               GLASSES <ArrowRight className="w-4 h-4" />
             </Link>

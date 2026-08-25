@@ -19,7 +19,11 @@ function PillarCard({ pillar, index }: { pillar: { name: string; score: number; 
 
   return (
     <ScrollReveal>
-      <div className="glass-card overflow-hidden">
+      <motion.div
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        className="glass-card overflow-hidden"
+      >
         <button
           onClick={() => setExpanded(!expanded)}
           className="w-full p-6 text-left transition-colors"
@@ -97,7 +101,7 @@ function PillarCard({ pillar, index }: { pillar: { name: string; score: number; 
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
+      </motion.div>
     </ScrollReveal>
   );
 }
