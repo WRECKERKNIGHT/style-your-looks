@@ -19,6 +19,10 @@ import {
   Dna,
   Pencil,
   Trash2,
+  Sparkles,
+  Target,
+  Droplets,
+  Scissors,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { getHistory, isDemoEntry } from "@/lib/history";
@@ -310,6 +314,37 @@ export default function ProfilePage() {
               {["Classic", "Minimalist", "Neutral Palette", "Structured Silhouettes", "Sustainable", "Quality Over Quantity"].map((pref) => (
                 <span key={pref}
                   className="px-3.5 py-1.5 border border-[var(--border-primary)] card-nexus text-xs text-[var(--text-primary)] hover:border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)] transition-all rounded-full">{pref}</span>
+              ))}
+            </div>
+          </motion.div>
+
+          <motion.div variants={fadeUp} className="glass-card p-6">
+            <h3 className="type-label text-[var(--text-primary)] mb-4">ACHIEVEMENTS</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-3">
+              {[
+                { icon: ScanFace, label: "First Scan", desc: "Complete your first Face IQ", unlocked: analysisCount >= 1 },
+                { icon: Target, label: "Pillar Master", desc: "Score all 4 pillars", unlocked: analysisCount >= 4 },
+                { icon: Sparkles, label: "High Scorer", desc: "Reach a score of 85+", unlocked: (bestScore ?? 0) >= 85 },
+                { icon: Droplets, label: "Skin Aware", desc: "Run skin health analysis", unlocked: analysisCount >= 2 },
+                { icon: Scissors, label: "Groom Pro", desc: "Try a grooming style", unlocked: analysisCount >= 3 },
+                { icon: Dna, label: "Style DNA", desc: "Build your full profile", unlocked: analysisCount >= 5 },
+              ].map((badge) => (
+                <div key={badge.label}
+                  className={`flex flex-col items-center text-center p-3 sm:p-4 border rounded-[var(--radius-md)] transition-all ${
+                    badge.unlocked
+                      ? "border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)] bg-[color-mix(in_srgb,var(--accent-aurum)_6%,transparent)]"
+                      : "border-[var(--border-primary)] bg-[var(--bg-tertiary)] opacity-50"
+                  }`}>
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${
+                    badge.unlocked
+                      ? "bg-gradient-to-br from-[var(--accent-nexus)] to-[var(--accent-aurum)]"
+                      : "bg-[var(--bg-tertiary)] border border-[var(--border-primary)]"
+                  }`}>
+                    <badge.icon className={`w-5 h-5 ${badge.unlocked ? "text-white" : "text-[var(--text-muted)]"}`} />
+                  </div>
+                  <span className="type-mono text-[0.55rem] tracking-widest text-[var(--text-primary)]">{badge.label}</span>
+                  <span className="text-[0.5rem] text-[var(--text-muted)] mt-0.5 leading-tight">{badge.desc}</span>
+                </div>
               ))}
             </div>
           </motion.div>

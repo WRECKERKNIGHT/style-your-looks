@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Clock, Trash2, Eye, ArrowRight } from "lucide-react";
+import { Clock, Trash2, Eye, ArrowRight, GitCompareArrows } from "lucide-react";
 import { useToast } from "@/components/shared/Toast";
 import {
   getHistory,
@@ -179,7 +179,7 @@ export default function HistoryPage() {
         <motion.div variants={fadeUp} initial="hidden" animate="show" className="space-y-2">
           {filtered.map(entry => (
             <div key={entry.id}
-              className="glass-card p-4 flex items-center justify-between group hover:border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)] transition-all">
+              className="glass-card p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 group hover:border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)] transition-all">
               <div className="flex items-center gap-3 min-w-0">
                 <HistoryThumb entry={entry} />
                 <div className="min-w-0">
@@ -189,7 +189,7 @@ export default function HistoryPage() {
                     {entry.score !== undefined && (
                       <>
                         <span>·</span>
-                        <span className="text-[var(--accent-aurum)]">{entry.score}</span>
+                        <span className="text-[var(--accent-aurum)] font-medium">{entry.score}</span>
                       </>
                     )}
                     {entry.result && (
@@ -201,7 +201,14 @@ export default function HistoryPage() {
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-2 shrink-0">
+              <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                {entry.type === "face" && (
+                  <Link href={`/dashboard/face-comparison?from=${entry.id}`}
+                    className="p-2 border border-[var(--border-primary)] rounded-full hover:border-[color-mix(in_srgb,var(--accent-nexus)_50%,transparent)] hover:bg-[color-mix(in_srgb,var(--accent-nexus)_8%,transparent)] transition-all"
+                    title="Compare this entry">
+                    <GitCompareArrows className="w-3.5 h-3.5 text-[var(--accent-nexus)]" />
+                  </Link>
+                )}
                 <Link href={entry.route}
                   className="p-2 border border-[var(--border-primary)] rounded-full hover:border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)] transition-colors">
                   <Eye className="w-3.5 h-3.5 text-[var(--text-muted)]" />

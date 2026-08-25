@@ -363,6 +363,21 @@ export default function DashboardHome() {
         </motion.div>
       </ScrollParallax>
 
+      {/* Quick Action Buttons */}
+      <ScrollReveal>
+        <div className="flex flex-wrap gap-3">
+          <Link href="/dashboard/face-analysis" className="btn-nexus gap-2">
+            <ScanFace className="w-4 h-4" /> Run Face IQ
+          </Link>
+          <Link href="/dashboard/grooming" className="btn-outline gap-2">
+            <Scissors className="w-4 h-4" /> Try Grooming
+          </Link>
+          <Link href="/dashboard/style-dna" className="btn-outline gap-2">
+            <Dna className="w-4 h-4" /> Open 3D Studio
+          </Link>
+        </div>
+      </ScrollReveal>
+
       <ScrollProgress />
 
       {/* AI Tip of the Day + Vibe Check + Streak Row */}

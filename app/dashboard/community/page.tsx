@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Users, Star, MessageCircle, ArrowRight, RefreshCw, Wifi, WifiOff, ExternalLink } from "lucide-react";
+import { Users, Star, MessageCircle, ArrowRight, RefreshCw, Wifi, WifiOff, ExternalLink, Heart, Share2 } from "lucide-react";
 import { ScrollParallax, ScrollBlur, SectionScrollProgress } from "@/components/shared/ScrollEffects";
 import { getHistory, isDemoEntry } from "@/lib/history";
 
@@ -53,6 +53,49 @@ function timeAgo(iso: string): string {
   const hrs = Math.round(mins / 60);
   if (hrs < 24) return `${hrs}h ago`;
   return `${Math.round(hrs / 24)}d ago`;
+}
+
+function PostActions({ post }: { post: Post }) {
+  const [liked, setLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(post.ratingCount);
+  const [commented, setCommented] = useState(false);
+  const [commentCount, setCommentCount] = useState(post.comments);
+  const [shared, setShared] = useState(false);
+
+  return (
+    <div className="flex items-center gap-3 text-xs text-[var(--text-muted)]">
+      <button
+        onClick={(e) => { e.stopPropagation(); setLiked(l => !l); setLikeCount(c => liked ? c - 1 : c + 1); }}
+        className={`flex items-center gap-1.5 px-2 py-1 rounded-full border transition-all ${
+          liked
+            ? "border-[var(--accent-aurum)]/50 bg-[color-mix(in_srgb,var(--accent-aurum)_12%,transparent)] text-[var(--accent-aurum)]"
+            : "border-[var(--border-primary)] hover:border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)]"
+        }`}
+      >
+        <Star className={`w-3.5 h-3.5 transition-transform ${liked ? "scale-110 fill-[var(--accent-aurum)]" : ""}`} /> {likeCount}
+      </button>
+      <button
+        onClick={(e) => { e.stopPropagation(); setCommented(c => !c); setCommentCount(c => commented ? c - 1 : c + 1); }}
+        className={`flex items-center gap-1 px-2 py-1 rounded-full border transition-all ${
+          commented
+            ? "border-[color-mix(in_srgb,var(--accent-nexus)_50%,transparent)] bg-[color-mix(in_srgb,var(--accent-nexus)_12%,transparent)] text-[var(--accent-nexus)]"
+            : "border-[var(--border-primary)] hover:border-[color-mix(in_srgb,var(--accent-nexus)_40%,transparent)]"
+        }`}
+      >
+        <MessageCircle className="w-3.5 h-3.5" /> {commentCount}
+      </button>
+      <button
+        onClick={(e) => { e.stopPropagation(); setShared(s => !s); }}
+        className={`flex items-center gap-1 px-2 py-1 rounded-full border transition-all ${
+          shared
+            ? "border-green-400/50 bg-green-400/10 text-green-400"
+            : "border-[var(--border-primary)] hover:border-green-400/40"
+        }`}
+      >
+        <Share2 className="w-3.5 h-3.5" /> Share
+      </button>
+    </div>
+  );
 }
 
 export default function CommunityPage() {
@@ -221,12 +264,7 @@ export default function CommunityPage() {
                     ))}
                   </div>
                   <div className="flex items-center gap-4 text-xs text-[var(--text-muted)]">
-                    <span className="flex items-center gap-1.5">
-                      <Star className="w-3.5 h-3.5 text-[var(--accent-aurum)]" /> {post.ratingCount} ratings
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <MessageCircle className="w-3.5 h-3.5" /> {post.comments} comments
-                    </span>
+                    <PostActions post={post} />
                   </div>
                 </motion.div>
               ))}
