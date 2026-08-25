@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import { saveToHistory, type AnalysisEntry } from "@/lib/history";
 import type { AnalysisProfile } from "@/lib/ml/scoring";
+import type { StructureProfileType } from "@/lib/ml/face-analyzer";
+import type { EthnicRegion } from "@/lib/ml/calibration";
 
 export interface FacialMetric {
   label: string;
@@ -53,6 +55,7 @@ export interface FaceAnalysisResult {
   eyeSpacing: number;
   skinClarity: number;
   facialShape: string;
+  faceShapeProbabilities: Record<string, number>;
   skinTone: string;
   skinToneValue?: string;
   skinToneScaleId?: number;
@@ -99,6 +102,26 @@ export interface FaceAnalysisResult {
   qualityGate?: PhotoQualityGate;
   /** Pose-aware symmetry axis tilt (degrees from vertical) for overlays. */
   symmetryAxis?: { angleDeg: number };
+  /** Population-calibrated Face IQ (0-100). */
+  faceIQ: number;
+  /** Letter grade from percentile. */
+  grade: string;
+  /** Descriptive label for the grade. */
+  gradeLabel: string;
+  /** Human-readable comparison. */
+  comparison: string;
+  /** Structure profile descriptor (Soft/Balanced/Defined/Sharp). */
+  structureProfile: StructureProfileType;
+  /** Youthfulness score (0-100). */
+  youthfulness: number;
+  /** Per-metric percentiles for distribution bars. */
+  metricPercentiles: Record<string, number>;
+}
+
+export interface IntakeProfile {
+  region: EthnicRegion;
+  ageBand: string;
+  genderProfile: AnalysisProfile;
 }
 
 export interface BodyAnalysisResult {
@@ -162,6 +185,8 @@ interface AnalysisState {
   pipelineRev: number;
   /** True when the active photo is newer than the cached analysis results. */
   photoDirty: boolean;
+  /** Pre-analysis intake profile for calibration. */
+  intakeProfile: IntakeProfile | null;
 
   setFaceResult: (result: FaceAnalysisResult) => void;
   setBodyResult: (result: BodyAnalysisResult) => void;
@@ -176,6 +201,7 @@ interface AnalysisState {
   setSelectedBeardStyle: (style: string) => void;
   setSelectedMustacheStyle: (style: string) => void;
   setSource: (source: AnalysisSource) => void;
+  setIntakeProfile: (profile: IntakeProfile | null) => void;
   /**
    * Canonical photo entry point. Sets the face or full-body photo, bumps the
    * pipeline revision so subscribed tools re-derive, and flags results stale.
@@ -204,6 +230,7 @@ export const useAnalysisStore = create<AnalysisState>((set, get) => ({
   lastSavedEntry: null,
   pipelineRev: 0,
   photoDirty: false,
+  intakeProfile: null,
 
   setFaceResult: (result) => set({ faceResult: result }),
   setBodyResult: (result) => set({ bodyResult: result }),
@@ -218,6 +245,7 @@ export const useAnalysisStore = create<AnalysisState>((set, get) => ({
   setSelectedBeardStyle: (style) => set({ selectedBeardStyle: style }),
   setSelectedMustacheStyle: (style) => set({ selectedMustacheStyle: style }),
   setSource: (source) => set({ source }),
+  setIntakeProfile: (intakeProfile) => set({ intakeProfile }),
 
   setPhoto: (photo, kind) =>
     set((state) => ({

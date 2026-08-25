@@ -1,7 +1,7 @@
 import { FaceLandmarker, FilesetResolver, type FaceLandmarkerResult } from "@mediapipe/tasks-vision";
 import { prepareCanvas } from "./preprocessing";
 import { resolveModelUrl, resolveWasmBase, invalidateAssetResolution, MODEL_SOURCES } from "./engine-assets";
-import { calculateSymmetryScore, calculateFaceShape, calculateSymmetryAxis, createUprightAccessor } from "./face-geometry";
+import { calculateSymmetryScore, calculateFaceShape, calculateSymmetryAxis, createUprightAccessor, type FaceShapeClassification } from "./face-geometry";
 import { idealScore } from "./scoring-curves";
 
 let faceLandmarker: FaceLandmarker | null = null;
@@ -200,6 +200,19 @@ export function getFaceProportions(result: FaceLandmarkerResult): number {
   return idealScore(deviation, 0, 0.09);
 }
 
+/**
+ * Multi-factor jawline scorer.
+ *
+ * Old version used only jaw-width/face-length + one angle → didn't
+ * differentiate between faces. New version combines five independent
+ * sub-scores, each 0-10, then averages with appropriate weights:
+ *
+ *   1. Jaw-to-face ratio (width relative to face length)
+ *   2. Gonial angle proxy (angle at jaw corner landmarks)
+ *   3. Mandibular taper (how much the jaw narrows from gonion to chin)
+ *   4. Chin projection (chin prominence relative to lower face)
+ *   5. Jaw symmetry (levelness between left and right jaw corners)
+ */
 export function getJawlineScore(result: FaceLandmarkerResult): number {
   if (!result.faceLandmarks || result.faceLandmarks.length === 0) return 0;
 
@@ -210,25 +223,268 @@ export function getJawlineScore(result: FaceLandmarkerResult): number {
   const rightJaw2 = U.pt(363);
   const chin = U.pt(152);
   const top = U.pt(10);
-  if (!leftJaw1 || !leftJaw2 || !rightJaw1 || !rightJaw2 || !chin || !top) return 0;
+  const leftCheek = U.pt(234);
+  const rightCheek = U.pt(454);
+  const chinTip = U.pt(152);
+  if (!leftJaw1 || !leftJaw2 || !rightJaw1 || !rightJaw2 || !chin || !top || !leftCheek || !rightCheek || !chinTip) return 0;
+
+  // 1. Jaw-to-face ratio
+  const jawWidth = Math.hypot(rightJaw1.x - leftJaw1.x, rightJaw1.y - leftJaw1.y);
+  const faceLength = Math.hypot(top.x - chin.x, top.y - chin.y);
+  const jawRatio = jawWidth / faceLength;
+  const s1 = idealScore(jawRatio, 0.78, 0.10);
+
+  // 2. Gonial angle proxy (angle between jaw corner and chin)
+  const leftAngle = Math.abs(
+    Math.atan2(leftJaw2.y - chin.y, leftJaw2.x - chin.x) -
+    Math.atan2(rightJaw2.y - chin.y, rightJaw2.x - chin.x)
+  ) * (180 / Math.PI);
+  // Ideal gonial angle ~120° for balanced jaw
+  const s2 = idealScore(leftAngle, 120, 18);
+
+  // 3. Mandibular taper (jaw narrows toward chin — higher = more tapered)
+  const cheekWidth = Math.abs(rightCheek.x - leftCheek.x);
+  const taper = cheekWidth > 0 ? (cheekWidth - jawWidth) / cheekWidth : 0.5;
+  // Ideal taper ~0.45 (jaw is ~55% of cheek width)
+  const s3 = idealScore(taper, 0.45, 0.15);
+
+  // 4. Chin projection (chin position relative to jaw — closer to center = more projected)
+  const chinCenter = Math.abs(chinTip.x - (leftJaw1.x + rightJaw1.x) / 2);
+  const chinProjection = jawWidth > 0 ? chinCenter / (jawWidth / 2) : 0.5;
+  // Lower chinCenter = more centered = better projection
+  const s4 = idealScore(chinProjection, 0.0, 0.3);
+
+  // 5. Jaw symmetry (levelness between left and right jaw corners)
+  const asymmetry = Math.abs(leftJaw1.y - rightJaw1.y) * (180 / Math.PI) / faceLength;
+  const s5 = idealScore(asymmetry, 0, 0.08);
+
+  // Weighted average: ratio and gonial are most important
+  const score = s1 * 0.25 + s2 * 0.30 + s3 * 0.15 + s4 * 0.15 + s5 * 0.15;
+  return Math.min(10, Math.max(0, Math.round(score * 10) / 10));
+}
+
+/**
+ * Raw jaw metrics for display in the results panel.
+ */
+export function getJawlineRaw(result: FaceLandmarkerResult): {
+  jawAngle: number;
+  jawRatio: number;
+  taper: number;
+} | null {
+  if (!result.faceLandmarks || result.faceLandmarks.length === 0) return null;
+
+  const U = createUprightAccessor(result.faceLandmarks[0]);
+  const leftJaw1 = U.pt(127);
+  const leftJaw2 = U.pt(134);
+  const rightJaw1 = U.pt(356);
+  const rightJaw2 = U.pt(363);
+  const chin = U.pt(152);
+  const top = U.pt(10);
+  const leftCheek = U.pt(234);
+  const rightCheek = U.pt(454);
+  if (!leftJaw1 || !leftJaw2 || !rightJaw1 || !rightJaw2 || !chin || !top || !leftCheek || !rightCheek) return null;
 
   const jawWidth = Math.hypot(rightJaw1.x - leftJaw1.x, rightJaw1.y - leftJaw1.y);
   const faceLength = Math.hypot(top.x - chin.x, top.y - chin.y);
-
-  const jawRatio = jawWidth / faceLength;
+  const cheekWidth = Math.abs(rightCheek.x - leftCheek.x);
 
   const jawAngle = Math.abs(
     Math.atan2(leftJaw2.y - chin.y, leftJaw2.x - chin.x) -
     Math.atan2(rightJaw2.y - chin.y, rightJaw2.x - chin.x)
   ) * (180 / Math.PI);
 
-  let score = 5;
-  if (jawRatio > 0.7 && jawRatio < 0.85) score += 2;
-  if (jawAngle > 100 && jawAngle < 130) score += 2;
-  // Jaw corner levelness is only meaningful in the upright frame.
-  if (Math.abs(leftJaw1.y - rightJaw1.y) < 0.01) score += 1;
+  return {
+    jawAngle: Math.round(jawAngle * 10) / 10,
+    jawRatio: Math.round((jawWidth / faceLength) * 1000) / 1000,
+    taper: Math.round(((cheekWidth - jawWidth) / cheekWidth) * 100) / 100,
+  };
+}
 
-  return Math.min(10, Math.max(0, score));
+/**
+ * Structure Profile — replaces the old "Angular Matrix" label.
+ *
+ * Measures overall facial angularity using four independent factors:
+ *   1. Jawline prominence (jaw-to-face ratio)
+ *   2. Cheekbone definition (cheek-to-jaw ratio)
+ *   3. Chin projection (chin centering in the jaw frame)
+ *   4. Facial convexity (upper face width relative to cheekbone width)
+ *
+ * Returns a descriptor: "Soft", "Balanced", "Defined", or "Sharp".
+ */
+export type StructureProfileType = "Soft" | "Balanced" | "Defined" | "Sharp";
+
+export interface StructureProfileResult {
+  label: StructureProfileType;
+  jawlineScore: number;
+  cheekboneScore: number;
+  chinProjection: number;
+  facialConvexity: number;
+  overallAngle: number;
+}
+
+export function getStructureProfile(result: FaceLandmarkerResult): StructureProfileResult {
+  const defaultProfile: StructureProfileResult = {
+    label: "Balanced",
+    jawlineScore: 5,
+    cheekboneScore: 5,
+    chinProjection: 5,
+    facialConvexity: 5,
+    overallAngle: 5,
+  };
+
+  if (!result.faceLandmarks || result.faceLandmarks.length === 0) return defaultProfile;
+
+  const U = createUprightAccessor(result.faceLandmarks[0]);
+  const leftJaw = U.pt(127);
+  const rightJaw = U.pt(356);
+  const leftCheek = U.pt(234);
+  const rightCheek = U.pt(454);
+  const chin = U.pt(152);
+  const top = U.pt(10);
+  const leftTemple = U.pt(108);
+  const rightTemple = U.pt(337);
+
+  if (!leftJaw || !rightJaw || !leftCheek || !rightCheek || !chin || !top || !leftTemple || !rightTemple) return defaultProfile;
+
+  const jawWidth = Math.abs(rightJaw.x - leftJaw.x);
+  const cheekWidth = Math.abs(rightCheek.x - leftCheek.x);
+  const faceLength = Math.hypot(top.x - chin.x, top.y - chin.y);
+  const templeWidth = Math.abs(rightTemple.x - leftTemple.x);
+
+  if (faceLength <= 0 || cheekWidth <= 0 || jawWidth <= 0) return defaultProfile;
+
+  const jawlineProminence = jawWidth / faceLength;
+  const cheekToJaw = cheekWidth / jawWidth;
+  const chinCenter = Math.abs(chin.x - (leftJaw.x + rightJaw.x) / 2) / (jawWidth / 2);
+  const facialConvexity = templeWidth / cheekWidth;
+
+  const jawlineScore = idealScore(jawlineProminence, 0.78, 0.10);
+  const cheekboneScore = idealScore(cheekToJaw, 1.07, 0.09);
+  const chinProj = idealScore(chinCenter, 0.0, 0.3);
+  const convexity = idealScore(facialConvexity, 0.90, 0.12);
+
+  const overall = (jawlineScore + cheekboneScore + chinProj + convexity) / 4;
+
+  let label: StructureProfileType = "Balanced";
+  if (overall >= 8) label = "Sharp";
+  else if (overall >= 6.5) label = "Defined";
+  else if (overall >= 4.5) label = "Balanced";
+  else label = "Soft";
+
+  return {
+    label,
+    jawlineScore: Math.round(jawlineScore * 10) / 10,
+    cheekboneScore: Math.round(cheekboneScore * 10) / 10,
+    chinProjection: Math.round(chinProj * 10) / 10,
+    facialConvexity: Math.round(convexity * 10) / 10,
+    overallAngle: Math.round(overall * 10) / 10,
+  };
+}
+
+/**
+ * Youthfulness metric — replaces the old "Age Matrix".
+ *
+ * Uses geometric proxies available from landmarks + blendshapes:
+ *   1. Skin smoothness (brightness variance across zones)
+ *   2. Eye openness (from blendshapes — younger faces tend to have wider eyes)
+ *   3. Eye region proportion (lower eyelid position relative to iris)
+ *   4. Facial compactness (midface ratio — shorter midface reads younger)
+ *   5. Skin brightness (average brightness — brighter skin often reads younger)
+ *
+ * Returns 0-100 where higher = more youthful.
+ */
+export function getYouthfulness(
+  canvas: HTMLCanvasElement,
+  result: FaceLandmarkerResult,
+  blendshapes?: { eyeOpenness: number; smileIntensity: number }
+): number {
+  if (!result.faceLandmarks || result.faceLandmarks.length === 0) return 50;
+
+  const U = createUprightAccessor(result.faceLandmarks[0]);
+  const lm = result.faceLandmarks[0];
+
+  // 1. Skin smoothness — average brightness variance across face zones
+  const ctx = canvas.getContext("2d");
+  let skinSmoothness = 50;
+  if (ctx) {
+    const samplePoints = [lm[50], lm[101], lm[118], lm[330], lm[280]];
+    let totalVariance = 0;
+    let samples = 0;
+    const imgWidth = canvas.width;
+    const imgHeight = canvas.height;
+
+    for (const point of samplePoints) {
+      if (!point) continue;
+      const x = Math.floor(point.x * imgWidth);
+      const y = Math.floor(point.y * imgHeight);
+      const radius = 6;
+      try {
+        const imageData = ctx.getImageData(
+          Math.max(0, x - radius), Math.max(0, y - radius),
+          radius * 2, radius * 2
+        );
+        const pixels = imageData.data;
+        const values: number[] = [];
+        for (let i = 0; i < pixels.length; i += 4) {
+          values.push((pixels[i] + pixels[i + 1] + pixels[i + 2]) / 3);
+        }
+        const mean = values.reduce((a, b) => a + b, 0) / values.length;
+        const variance = values.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / values.length;
+        totalVariance += Math.sqrt(variance);
+        samples++;
+      } catch { continue; }
+    }
+    if (samples > 0) {
+      const avgVariance = totalVariance / samples;
+      // Lower variance = smoother skin = higher youthfulness
+      skinSmoothness = Math.max(0, Math.min(100, 100 - avgVariance * 3));
+    }
+  }
+
+  // 2. Eye openness from blendshapes
+  const eyeOpenness = blendshapes ? blendshapes.eyeOpenness * 100 : 50;
+
+  // 3. Facial compactness (midface ratio — shorter midface reads younger)
+  const browLine = U.pt(9);
+  const noseBase = U.pt(2);
+  const chin = U.pt(152);
+  let compactness = 50;
+  if (browLine && noseBase && chin) {
+    const upper = Math.abs(browLine.y - noseBase.y);
+    const lower = Math.abs(noseBase.y - chin.y);
+    if (upper > 0 && lower > 0) {
+      const ratio = upper / lower;
+      // Shorter midface (ratio < 1.0) reads younger
+      compactness = Math.max(0, Math.min(100, 100 - Math.abs(ratio - 0.95) * 200));
+    }
+  }
+
+  // 4. Skin brightness (brighter often reads younger)
+  let brightness = 50;
+  if (ctx) {
+    const center = lm[1]; // nose tip
+    if (center) {
+      const x = Math.floor(center.x * canvas.width);
+      const y = Math.floor(center.y * canvas.height);
+      try {
+        const imageData = ctx.getImageData(
+          Math.max(0, x - 10), Math.max(0, y - 10), 20, 20
+        );
+        const pixels = imageData.data;
+        let totalBrightness = 0;
+        let count = 0;
+        for (let i = 0; i < pixels.length; i += 4) {
+          totalBrightness += (pixels[i] + pixels[i + 1] + pixels[i + 2]) / 3;
+          count++;
+        }
+        brightness = count > 0 ? (totalBrightness / count / 255) * 100 : 50;
+      } catch { /* ignore */ }
+    }
+  }
+
+  // Weighted composite
+  const score = skinSmoothness * 0.35 + eyeOpenness * 0.20 + compactness * 0.25 + brightness * 0.20;
+  return Math.round(Math.max(0, Math.min(100, score)));
 }
 
 export function getEyeSpacingScore(result: FaceLandmarkerResult): number {
@@ -487,8 +743,8 @@ export function getSkinClarity(
   return score;
 }
 
-export function getFacialShape(result: FaceLandmarkerResult): string {
-  if (!result.faceLandmarks || result.faceLandmarks.length === 0) return "Unknown";
+export function getFacialShape(result: FaceLandmarkerResult): FaceShapeClassification {
+  if (!result.faceLandmarks || result.faceLandmarks.length === 0) return { primary: "Unknown", probabilities: {} };
   return calculateFaceShape(result.faceLandmarks[0]);
 }
 

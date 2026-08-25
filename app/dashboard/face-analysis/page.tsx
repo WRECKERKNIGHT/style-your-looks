@@ -10,6 +10,7 @@ import { PhotoReviewPanel, type RejectedPhoto } from "@/components/analysis/Phot
 import { FaceCalibration } from "@/components/analysis/FaceCalibration";
 import { CalibrationModal, type CalibrationProfile } from "@/components/analysis/CalibrationModal";
 import { FaceView3D } from "@/components/analysis/FaceView3D";
+import { IntakeQuestionnaire } from "@/components/analysis/IntakeQuestionnaire";
 import { DemoCarousel } from "@/components/demo/DemoCarousel";
 import { DemoBadge } from "@/components/demo/DemoBadge";
 import { DEMO_PEOPLE, buildDemoFaceResult, generateDemoLandmarks, isDemoPhoto } from "@/lib/demo/demo-analysis";
@@ -174,7 +175,7 @@ export default function FaceAnalysisPage() {
   const [reportOpen, setReportOpen] = useState(false);
   const [photos, setPhotos] = useState<string[]>([]);
   const [rejectedPhotos, setRejectedPhotos] = useState<RejectedPhoto[]>([]);
-  const [step, setStep] = useState<"calibrate" | "capture">("calibrate");
+  const [step, setStep] = useState<"calibrate" | "intake" | "capture">("calibrate");
   const [calibOpen, setCalibOpen] = useState(false);
   const [calibration, setCalibration] = useState<CalibrationProfile | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
@@ -412,6 +413,7 @@ export default function FaceAnalysisPage() {
           <div className="flex items-center gap-2 mb-8">
             {[
               { id: "calibrate", label: "CALIBRATE" },
+              { id: "intake", label: "INTAKE" },
               { id: "capture", label: "CAPTURE" },
               { id: "results", label: "RESULTS" },
             ].map((s, i) => {
@@ -421,6 +423,8 @@ export default function FaceAnalysisPage() {
                   : step === s.id;
               const isDone =
                 s.id === "calibrate"
+                  ? step === "intake" || step === "capture"
+                  : s.id === "intake"
                   ? step === "capture"
                   : s.id === "capture"
                   ? step === "capture"
@@ -428,7 +432,7 @@ export default function FaceAnalysisPage() {
               return (
                 <Fragment key={s.id}>
                   {i > 0 && (
-                    <div className={`flex-1 h-px max-w-16 ${isDone || (i === 1 && step === "capture") ? "bg-[var(--accent-aurum)]" : "bg-[var(--border-primary)]"}`} />
+                    <div className={`flex-1 h-px max-w-16 ${isDone || (i === 1 && (step === "intake" || step === "capture")) || (i === 2 && step === "capture") ? "bg-[var(--accent-aurum)]" : "bg-[var(--border-primary)]"}`} />
                   )}
                   <div className="flex items-center gap-2">
                     <span
@@ -467,6 +471,16 @@ export default function FaceAnalysisPage() {
                 transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
               >
                 <FaceCalibration onBegin={() => setCalibOpen(true)} />
+              </motion.div>
+            ) : step === "intake" ? (
+              <motion.div
+                key="intake"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+              >
+                <IntakeQuestionnaire onComplete={() => setStep("capture")} />
               </motion.div>
             ) : (
               <motion.div
@@ -1041,7 +1055,7 @@ export default function FaceAnalysisPage() {
         onComplete={(profile) => {
           setCalibration(profile);
           setGenderProfile(profile.gender);
-          setStep("capture");
+          setStep("intake");
         }}
       />
 

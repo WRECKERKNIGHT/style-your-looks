@@ -154,6 +154,35 @@ export function AnalysisResults() {
                 />
               </div>
 
+              {/* Face IQ Hero Banner */}
+              <div className="bg-nexus-400/10 p-6 border border-aurum-500/20 rounded-[var(--radius-xs)]">
+                <div className="flex items-baseline gap-4 mb-3">
+                  <span className="text-4xl font-display font-bold text-aurum-500">
+                    <AnimatedCounter target={faceResult.faceIQ} />/100
+                  </span>
+                  <span className={`text-2xl font-display font-bold ${
+                    faceResult.grade.startsWith("A") ? "text-green-400" :
+                    faceResult.grade.startsWith("B") ? "text-aurum-500" :
+                    faceResult.grade.startsWith("C") ? "text-amber-400" :
+                    "text-red-400"
+                  }`}>
+                    {faceResult.grade}
+                  </span>
+                </div>
+                <p className="text-nexus-800 dark:text-white font-body text-base leading-relaxed">
+                  {faceResult.comparison}
+                </p>
+                <div className="flex flex-wrap gap-2 mt-3">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-aurum-500 text-white text-xs font-mono tracking-wider rounded-full">
+                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                    POPULATION-CALIBRATED
+                  </span>
+                  <span className="inline-flex items-center px-3 py-1 border border-aurum-500/30 bg-aurum-500/5 text-aurum-500 text-xs font-mono tracking-wider rounded-full">
+                    {faceResult.gradeLabel}
+                  </span>
+                </div>
+              </div>
+
               <div className="bg-light-base dark:bg-cosmic-elevated p-5 border border-light-border dark:border-cosmic-border rounded-[var(--radius-xs)]">
                 <span className="text-aurum-500 font-body font-bold text-sm tracking-widest uppercase">
                   {faceResult.overallRating}
@@ -163,22 +192,11 @@ export function AnalysisResults() {
                 </p>
               </div>
 
-              <div className="bg-nexus-400/10 p-5 border border-aurum-500/20 rounded-[var(--radius-xs)]">
-                <div className="flex items-center gap-2 mb-2">
-                  <Percent className="w-5 h-5 text-aurum-500" />
-                  <span className="text-sm font-body font-bold text-aurum-500 tracking-wider">SCORE INDEX</span>
-                </div>
-                <p className="text-nexus-800 dark:text-white font-body text-base leading-relaxed">
-                  {faceResult.percentile.comparisonText}
-                </p>
-                <span className="inline-block mt-2 px-3 py-1 bg-aurum-500 text-white text-xs font-mono tracking-wider rounded-full">
-                  {faceResult.percentile.bracket}
-                </span>
-              </div>
-
               <div className="grid grid-cols-2 gap-4">
                 {[
                   { label: "Face Shape", value: faceResult.facialShape, icon: ScanFace },
+                  { label: "Structure", value: faceResult.structureProfile, icon: Target },
+                  { label: "Youthfulness", value: `${faceResult.youthfulness}/100`, icon: Smile },
                   { label: "Style Profile", value: faceResult.styleProfile, icon: Sparkles },
                   { label: "Skin Tone", value: faceResult.skinTone, icon: Palette },
                   { label: "Undertone", value: faceResult.undertone, icon: Fingerprint },
@@ -407,12 +425,12 @@ export function AnalysisResults() {
         </div>
       </CollapsibleSection>
 
-      <CollapsibleSection icon={Eye} title="SCORE INDEX" defaultOpen>
+      <CollapsibleSection icon={Eye} title="POPULATION DISTRIBUTION" defaultOpen>
         <div className="flex flex-col md:flex-row items-center gap-6 mb-6">
           <div className="text-center shrink-0">
             <div className="flex items-baseline justify-center gap-1">
               <AnimatedCounter
-                target={faceResult.percentile.overall}
+                target={faceResult.faceIQ}
                 duration={1.4}
                 decimals={0}
                 className="text-5xl font-body font-bold text-gradient-aurum"
@@ -421,22 +439,24 @@ export function AnalysisResults() {
                 /100
               </span>
             </div>
-            <span className="type-mono text-[0.6rem] text-nexus-400/50 dark:text-cosmic-muted/50 tracking-widest block mt-1">SCORE INDEX</span>
-            <span className="inline-block mt-2 px-3 py-1 bg-aurum-500 text-white text-xs font-mono tracking-wider rounded-full">
-              {faceResult.percentile.bracket}
+            <span className="type-mono text-[0.6rem] text-nexus-400/50 dark:text-cosmic-muted/50 tracking-widest block mt-1">FACE IQ</span>
+            <span className={`inline-block mt-2 px-3 py-1 text-white text-xs font-mono tracking-wider rounded-full ${
+              faceResult.grade.startsWith("A") ? "bg-green-500" :
+              faceResult.grade.startsWith("B") ? "bg-aurum-500" :
+              faceResult.grade.startsWith("C") ? "bg-amber-500" :
+              "bg-red-500"
+            }`}>
+              {faceResult.grade} · {faceResult.gradeLabel}
             </span>
           </div>
           <div className="flex-1 text-sm text-nexus-400 dark:text-cosmic-muted font-body leading-relaxed">
-            {faceResult.percentile.comparisonText}
+            {faceResult.comparison}
           </div>
         </div>
         <div className="space-y-3">
-          <PercentileBar label="Overall" percentile={faceResult.percentile.overall} />
-          <PercentileBar label="Symmetry" percentile={faceResult.percentile.symmetry} />
-          <PercentileBar label="Golden Ratio" percentile={faceResult.percentile.goldenRatio} />
-          <PercentileBar label="Jawline" percentile={faceResult.percentile.jawline} />
-          <PercentileBar label="Skin Clarity" percentile={faceResult.percentile.skinClarity} />
-          <PercentileBar label="Harmony" percentile={faceResult.percentile.harmony} />
+          {faceResult.metricPercentiles && Object.entries(faceResult.metricPercentiles).map(([label, pct]) => (
+            <PercentileBar key={label} label={label} percentile={pct} />
+          ))}
         </div>
       </CollapsibleSection>
 

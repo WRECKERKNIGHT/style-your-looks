@@ -66,7 +66,7 @@ export function ProcessingOverlay({
     if (fwhr !== undefined) measurements.fwhr = fwhr;
     if (tilt !== undefined) measurements.canthalTilt = tilt;
     if (eyeNoseRatio !== undefined) measurements.eyeNoseRatio = eyeNoseRatio;
-    return { measurements, shape: calculateFaceShape(lm as number[][]) };
+    return { measurements, shape: calculateFaceShape(lm as number[][]).primary };
   }, [preview]);
 
   const showPhoto = Boolean(preview);
