@@ -52,11 +52,14 @@ export function OutfitIllustration({ combo }: { combo: OutfitCombo }) {
   return (
     <svg
       viewBox="0 0 400 300"
+      width="400"
+      height="300"
       role="img"
       aria-label={`Flat-lay preview of ${combo.name}: ${combo.items
         .map((i) => i.garment)
         .join(", ")}`}
       className="w-full h-full"
+      style={{ aspectRatio: '4 / 3' }}
     >
       {/* Paper backdrop */}
       <rect width="400" height="300" fill="#F5F1E8" />

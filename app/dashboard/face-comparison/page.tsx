@@ -322,24 +322,24 @@ export default function FaceComparisonPage() {
             <canvas ref={canvasRef} className="w-full block" />
           </div>
 
-          <div className="flex flex-wrap gap-3 justify-center items-center">
+          <div className="flex flex-col sm:flex-row flex-wrap gap-3 justify-center items-center">
             <input type="range" min={5} max={95} value={splitPosition}
               onChange={e => setSplitPosition(parseInt(e.target.value))}
               className="w-40 h-1 accent-[var(--accent-aurum)] self-center" />
-            <button onClick={swapImages} className="btn-outline">
+            <button onClick={swapImages} className="btn-outline w-full sm:w-auto">
               <Shuffle className="w-4 h-4" /> SWAP
             </button>
-            <button onClick={downloadResult} className="btn-outline">
+            <button onClick={downloadResult} className="btn-outline w-full sm:w-auto">
               <Download className="w-4 h-4" /> SAVE
             </button>
             <button
               onClick={() => setShowOverlay((v) => !v)}
-              className={`btn-outline ${showOverlay ? "!border-[var(--accent-aurum)] !text-[var(--accent-aurum)]" : ""}`}
+              className={`btn-outline w-full sm:w-auto ${showOverlay ? "!border-[var(--accent-aurum)] !text-[var(--accent-aurum)]" : ""}`}
             >
               <Layers className="w-4 h-4" /> {showOverlay ? "HIDE" : "SHOW"} METRIC OVERLAY
             </button>
             <button onClick={runComparison} disabled={loading || !bothLoaded}
-              className="btn-nexus disabled:opacity-40">
+              className="btn-nexus w-full sm:w-auto disabled:opacity-40">
               {loading ? "ANALYZING..." : "COMPARE FACES"}
             </button>
           </div>

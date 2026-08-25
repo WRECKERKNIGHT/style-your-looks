@@ -297,17 +297,17 @@ export default function AccessoriesPage() {
             </div>
           </div>
 
-          <div className="flex gap-4">
-            <button onClick={clearSelection} className="btn-outline flex-1 justify-center">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <button onClick={clearSelection} className="btn-outline justify-center">
               <Trash2 className="w-4 h-4" />
               REMOVE
             </button>
             <button onClick={downloadResult} disabled={!selectedProduct}
-              className="btn-nexus flex-1 justify-center disabled:opacity-40">
+              className="btn-nexus justify-center disabled:opacity-40">
               <Download className="w-4 h-4" />
               SAVE IMAGE
             </button>
-            <Link href="/dashboard/hair-preview" className="btn-nexus flex-1 justify-center">
+            <Link href="/dashboard/hair-preview" className="btn-nexus justify-center">
               HAIR PREVIEW <ArrowRight className="w-4 h-4" />
             </Link>
           </div>

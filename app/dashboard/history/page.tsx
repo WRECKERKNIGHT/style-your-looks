@@ -234,9 +234,9 @@ export default function HistoryPage() {
               const avg = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
               const trend = scores.length > 1 ? scores[0] - scores[scores.length - 1] : 0;
               return (
-                <div key={type} className="flex items-center justify-between text-xs">
+                <div key={type} className="flex flex-col sm:flex-row sm:items-center justify-between text-xs gap-2">
                   <span className="type-mono text-[var(--text-muted)] capitalize">{type}</span>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 flex-wrap">
                     <span className="text-[var(--text-primary)]">Latest: {latest}</span>
                     <span className="text-[var(--text-muted)]">Avg: {avg}</span>
                     <span className={trend >= 0 ? "text-green-400" : "text-red-400"}>
