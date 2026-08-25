@@ -141,7 +141,14 @@ export default function VirtualTryOnPage() {
     canvas.style.height = `${displayHeight}px`;
 
     const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    if (!ctx) {
+      canvas.style.display = "none";
+      const fallback = document.createElement("p");
+      fallback.textContent = "Canvas is not supported in your browser.";
+      fallback.className = "text-sm text-[var(--text-muted)] font-body text-center p-8";
+      container.appendChild(fallback);
+      return;
+    }
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, displayWidth, displayHeight);
 

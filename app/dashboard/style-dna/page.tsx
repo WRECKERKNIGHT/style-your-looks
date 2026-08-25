@@ -43,7 +43,7 @@ function ScoreTrendChart({ trends }: { trends: ScoreTrendPoint[] }) {
   ];
 
   const w = 560;
-  const h = 200;
+  const h = 300;
   const pad = { top: 10, right: 20, bottom: 30, left: 30 };
   const plotW = w - pad.left - pad.right;
   const plotH = h - pad.top - pad.bottom;
@@ -61,7 +61,7 @@ function ScoreTrendChart({ trends }: { trends: ScoreTrendPoint[] }) {
 
   return (
     <div className="w-full overflow-x-auto">
-      <svg viewBox={`0 0 ${w} ${h}`} className="w-full max-w-[560px]">
+      <svg width="100%" viewBox={`0 0 ${w} ${h}`} className="max-w-[560px]">
         {[0, 2, 4, 6, 8, 10].map((v) => {
           const y = pad.top + plotH - (v / 10) * plotH;
           return (
