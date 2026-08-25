@@ -42,6 +42,7 @@ export default function GroomingPage() {
   // Engine failures were silently swallowed (spinner cleared, UI said "no
   // face"), hiding offline/blocked-CDN causes. Surface them honestly.
   const [analysisError, setAnalysisError] = useState<string | null>(null);
+  const [canvasError, setCanvasError] = useState(false);
 
   useEffect(() => { document.title = "Grooming Studio | ZERVEY"; }, []);
 
@@ -117,7 +118,7 @@ export default function GroomingPage() {
     if (!faceResult || !currentPhoto || !canvasRef.current) return;
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    if (!ctx) { setCanvasError(true); return; }
     const img = new Image();
     img.onload = () => {
       canvas.width = img.naturalWidth;
@@ -139,7 +140,7 @@ export default function GroomingPage() {
     if (faceResult || isAnalyzing || !analysisComplete || !currentPhoto || !canvasRef.current) return;
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    if (!ctx) { setCanvasError(true); return; }
     const img = new Image();
     img.onload = () => {
       canvas.width = img.naturalWidth;
@@ -190,6 +191,14 @@ export default function GroomingPage() {
               </div>
             )}
             <canvas ref={canvasRef} className="w-full max-h-[560px] object-contain" />
+            {canvasError && (
+              <div className="absolute inset-0 glass-card backdrop-blur-sm flex items-center justify-center z-10">
+                <div className="text-center">
+                  <AlertTriangle className="w-8 h-8 text-[#C05B4D] mx-auto mb-3" />
+                  <p className="text-sm text-[var(--text-muted)] font-body">Canvas rendering is unavailable in this browser.</p>
+                </div>
+              </div>
+            )}
           </motion.div>
 
           <div className="glass-card p-8">

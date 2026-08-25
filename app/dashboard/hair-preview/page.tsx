@@ -7,7 +7,7 @@ import { useAnalysisStore } from "@/store/analysis-store";
 import { hairRegion } from "@/lib/ml/face-landmarks";
 import { segmentPerson, type PersonSegmentation } from "@/lib/ml/segmenter";
 import { motion } from "framer-motion";
-import { Palette, Download, Trash2, ArrowRight } from "lucide-react";
+import { Palette, Download, Trash2, ArrowRight, AlertTriangle } from "lucide-react";
 import { useToast } from "@/components/shared/Toast";
 import { ScrollParallax, ScrollBlur, SectionScrollProgress } from "@/components/shared/ScrollEffects";
 
@@ -93,6 +93,7 @@ export default function HairPreviewPage() {
   const [intensity, setIntensity] = useState(0.7);
   const [hairSeg, setHairSeg] = useState<PersonSegmentation | null>(null);
   const [regionStatus, setRegionStatus] = useState<"ok" | "unavailable">("ok");
+  const [canvasError, setCanvasError] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -142,7 +143,7 @@ export default function HairPreviewPage() {
     canvas.style.width = `${displayWidth}px`;
     canvas.style.height = `${displayHeight}px`;
     const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    if (!ctx) { setCanvasError(true); return; }
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, displayWidth, displayHeight);
     ctx.drawImage(img, 0, 0, displayWidth, displayHeight);
@@ -202,6 +203,14 @@ export default function HairPreviewPage() {
             className="glass-card overflow-hidden relative"
           >
             <canvas ref={canvasRef} className="w-full" />
+            {canvasError && (
+              <div className="absolute inset-0 glass-card backdrop-blur-sm flex items-center justify-center z-10">
+                <div className="text-center">
+                  <AlertTriangle className="w-8 h-8 text-[#C05B4D] mx-auto mb-3" />
+                  <p className="text-sm text-[var(--text-muted)] font-body">Canvas rendering is unavailable in this browser.</p>
+                </div>
+              </div>
+            )}
             {selectedColor && (
               <div className="absolute top-3 right-3 glass-card p-3 space-y-2">
                 <p className="type-label text-[var(--text-muted)]">INTENSITY</p>
