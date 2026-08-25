@@ -174,7 +174,7 @@ export function ImageUploader({
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onClick={() => inputRef.current?.click()}
-            className={`relative cursor-pointer border-2 border-dashed transition-all duration-500 ${aspectRatioClasses[aspectRatio]} min-h-[320px] flex flex-col items-center justify-center gap-5 p-10 rounded-[var(--radius-xl)] ${
+            className={`relative cursor-pointer border-2 border-dashed transition-all duration-500 ${aspectRatioClasses[aspectRatio]} min-h-[240px] sm:min-h-[320px] flex flex-col items-center justify-center gap-4 sm:gap-5 p-6 sm:p-10 rounded-[var(--radius-xl)] ${
               dragOver
                 ? "border-aurum-500 bg-aurum-500/[0.04] shadow-aurum"
                 : "border-light-border/30 dark:border-cosmic-border/30 bg-light-base/30 dark:bg-cosmic-base/30 backdrop-blur-sm hover:border-aurum-500/40 hover:bg-light-surface/50 dark:hover:bg-cosmic-surface/50"
@@ -185,7 +185,7 @@ export function ImageUploader({
           >
             <motion.div
               animate={dragOver ? { scale: 1.1, rotate: -5 } : { scale: 1, rotate: 0 }}
-              className="w-20 h-20 border border-light-border/20 dark:border-cosmic-border/20 bg-light-surface/50 dark:bg-cosmic-surface/50 backdrop-blur-sm flex items-center justify-center rounded-full"
+              className="w-16 h-16 sm:w-20 sm:h-20 border border-light-border/20 dark:border-cosmic-border/20 bg-light-surface/50 dark:bg-cosmic-surface/50 backdrop-blur-sm flex items-center justify-center rounded-full"
             >
               <Upload className="w-8 h-8 text-aurum-500/60" />
             </motion.div>
@@ -199,36 +199,32 @@ export function ImageUploader({
               </p>
             </div>
 
-            <div className="flex items-center gap-4 mt-2">
-              <div className="h-px w-8 bg-light-border/15 dark:bg-cosmic-border/15" />
-              <span className="type-mono text-[0.5rem] text-nexus-400/30 dark:text-cosmic-muted/30 tracking-widest">OR</span>
-              <div className="h-px w-8 bg-light-border/15 dark:bg-cosmic-border/15" />
-            </div>
-
-            <button
-              type="button"
-              className="btn-outline text-xs py-2.5 px-6 border-aurum-500/50 text-aurum-500 hover:bg-aurum-500/10"
-              onClick={(e) => {
-                e.stopPropagation();
-                inputRef.current?.click();
-              }}
-            >
-              Browse Files
-            </button>
-
-            {onWebcamCapture && (
+            <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 mt-2 w-full sm:w-auto">
               <button
                 type="button"
-                className="btn-nexus text-xs py-2.5 px-6"
+                className="btn-outline text-xs py-2.5 px-6 border-aurum-500/50 text-aurum-500 hover:bg-aurum-500/10 w-full sm:w-auto min-h-[44px]"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onWebcamCapture();
+                  inputRef.current?.click();
                 }}
               >
-                <Camera className="w-3.5 h-3.5" />
-                Use Camera
+                Browse Files
               </button>
-            )}
+
+              {onWebcamCapture && (
+                <button
+                  type="button"
+                  className="btn-nexus text-xs py-2.5 px-6 w-full sm:w-auto min-h-[44px]"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onWebcamCapture();
+                  }}
+                >
+                  <Camera className="w-3.5 h-3.5" />
+                  Use Camera
+                </button>
+              )}
+            </div>
 
             <input
               ref={inputRef}

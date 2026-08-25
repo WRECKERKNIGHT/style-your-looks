@@ -104,7 +104,7 @@ function PercentileBar({ label, percentile }: { label: string; percentile: numbe
     "#6F4A30";
   return (
     <div className="flex items-center gap-4 bg-light-base dark:bg-cosmic-elevated p-4 border border-light-border dark:border-cosmic-border rounded-[var(--radius-xs)]">
-      <span className="text-sm font-body text-nexus-800 dark:text-white min-w-[140px]">{label}</span>
+      <span className="text-sm font-body text-nexus-800 dark:text-white min-w-[100px] sm:min-w-[140px] truncate">{label}</span>
       <div className="flex-1 h-3 bg-light-border dark:bg-cosmic-border rounded-full overflow-hidden">
         <motion.div
           initial={{ width: 0 }}
@@ -137,7 +137,7 @@ export function AnalysisResults() {
       <CategoryCards />
 
       <ScrollReveal>
-        <div className="relative overflow-hidden bg-light-surface dark:bg-cosmic-surface p-10 border border-aurum-500/25 rounded-[var(--radius-xs)] card-nexus">
+        <div className="relative overflow-hidden bg-light-surface dark:bg-cosmic-surface p-5 sm:p-10 border border-aurum-500/25 rounded-[var(--radius-xs)] card-nexus">
           {/* Glow backdrop */}
           <div className="absolute inset-0 pointer-events-none">
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-aurum-500/8 blur-[120px]" />
@@ -196,11 +196,11 @@ export function AnalysisResults() {
                   />
                 </div>
                 <div className="relative z-10">
-                <div className="flex items-baseline gap-4 mb-3">
-                  <span className="text-4xl font-display font-bold text-aurum-500 drop-shadow-[0_0_20px_rgba(200,150,62,0.4)]">
+                <div className="flex items-baseline gap-2 sm:gap-4 mb-3 flex-wrap">
+                  <span className="text-3xl sm:text-4xl font-display font-bold text-aurum-500 drop-shadow-[0_0_20px_rgba(200,150,62,0.4)]">
                     <AnimatedCounter target={faceResult.faceIQ} />/100
                   </span>
-                  <span className={`text-2xl font-display font-bold drop-shadow-lg ${
+                  <span className={`text-xl sm:text-2xl font-display font-bold drop-shadow-lg ${
                     faceResult.grade.startsWith("A") ? "text-green-400" :
                     faceResult.grade.startsWith("B") ? "text-aurum-500" :
                     faceResult.grade.startsWith("C") ? "text-amber-400" :
@@ -233,7 +233,7 @@ export function AnalysisResults() {
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {[
                   { label: "Face Shape", value: faceResult.facialShape, icon: ScanFace },
                   { label: "Structure", value: faceResult.structureProfile, icon: Target },
@@ -279,7 +279,7 @@ export function AnalysisResults() {
                     {faceResult.skinToneScaleId ? `LEVEL ${faceResult.skinToneScaleId}` : faceResult.skinTone}
                   </span>
                 </div>
-                <div className="flex gap-1.5">
+                <div className="flex gap-1 sm:gap-1.5">
                   {MONK_SCALE.map((level, i) => {
                     const detected = level.id === faceResult.skinToneScaleId;
                     return (

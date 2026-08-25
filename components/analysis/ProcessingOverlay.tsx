@@ -111,7 +111,7 @@ export function ProcessingOverlay({
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full bg-[color-mix(in_srgb,var(--accent-caramel)_12%,transparent)] blur-[90px]" />
           </div>
 
-          <div className="relative z-10 p-8 md:p-10">
+          <div className="relative z-10 p-5 sm:p-8 md:p-10">
             <div className="flex items-center gap-3 mb-8">
               <motion.div
                 animate={{ rotate: [0, 360] }}
@@ -156,7 +156,7 @@ export function ProcessingOverlay({
                     src={preview!.image}
                     alt="Live analysis preview"
                     onLoad={handlePreviewLoad}
-                    className="w-full max-h-[440px] object-cover"
+                    className="w-full max-h-[280px] sm:max-h-[440px] object-cover"
                   />
 
                   {previewDims && preview!.landmarks.length > 0 && (
@@ -209,11 +209,11 @@ export function ProcessingOverlay({
                 />
 
                 <div
-                  className="absolute bottom-3 left-3 flex items-center gap-2 px-3 py-1.5 rounded-[var(--radius-xs)] border bg-black/50 backdrop-blur-sm"
+                  className="absolute bottom-3 left-3 flex items-center gap-2 px-3 py-1.5 rounded-[var(--radius-xs)] border bg-black/50 backdrop-blur-sm max-w-[calc(100%-24px)]"
                   style={{ borderColor: "rgba(200,150,62,0.5)" }}
                 >
-                  <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: "#E8C88A" }} />
-                  <span className="text-[0.6rem] font-mono tracking-[0.25em] text-[#E8C88A]">
+                  <span className="w-2 h-2 rounded-full animate-pulse shrink-0" style={{ background: "#E8C88A" }} />
+                  <span className="text-[0.55rem] sm:text-[0.6rem] font-mono tracking-[0.2em] sm:tracking-[0.25em] text-[#E8C88A] truncate">
                     {preview!.landmarks.length > 0 ? "FACE LOCKED — 478 POINTS MAPPED" : "SCANNING FOR FACE..."}
                   </span>
                 </div>
