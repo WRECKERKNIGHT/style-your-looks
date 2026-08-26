@@ -308,7 +308,129 @@ export function calculateFaceShape(landmarks: LandmarkList): FaceShapeClassifica
 }
 
 /**
- * Legacy wrapper for code that still expects a plain string.
+ * Compute the mandibular angle — the angle at the gonion (jaw corner) formed
+ * by the ramus (vertical jaw) and the mandibular body (lower jaw edge).
+ * A sharper angle (~120°) indicates a more defined jawline.
+ */
+export function calculateMandibularAngle(landmarks: LandmarkList): number | null {
+  const U = createUprightAccessor(landmarks);
+  const gonion = U.pt(172); // left gonion
+  const gonionR = U.pt(397); // right gonion
+  const chin = U.pt(152);
+  const temple = U.pt(108); // above gonion on ramus
+  if (!gonion || !chin || !temple) return null;
+
+  // Use average of left and right for robustness
+  const g = gonionR
+    ? { x: (gonion.x + gonionR.x) / 2, y: (gonion.y + gonionR.y) / 2 }
+    : gonion;
+
+  const angle = Math.abs(
+    Math.atan2(temple.y - g.y, temple.x - g.x) -
+    Math.atan2(chin.y - g.y, chin.x - g.x)
+  ) * (180 / Math.PI);
+
+  // Normalize to 0-180 range
+  return Math.min(180, Math.max(0, angle));
+}
+
+/**
+ * Compute nose projection — ratio of nose tip protrusion to nose length.
+ * Higher = more projected nose (typically more aesthetically preferred).
+ */
+export function calculateNoseProjection(landmarks: LandmarkList): number | null {
+  const U = createUprightAccessor(landmarks);
+  const bridge = U.pt(6); // nose bridge
+  const tip = U.pt(4); // nose tip (slightly above)
+  const base = U.pt(2); // nose base
+  const tipLow = U.pt(1); // nose tip (lowest point)
+  if (!bridge || !tip || !base || !tipLow) return null;
+
+  const noseLength = Math.abs(base.y - bridge.y);
+  if (noseLength <= 0) return null;
+
+  // Projection is how far the tip extends beyond the bridge-to-base line
+  const tipOffset = Math.abs(tip.x - (bridge.x + base.x) / 2);
+  return tipOffset / noseLength;
+}
+
+/**
+ * Compute lip width ratio — mouth width relative to face width.
+ * Wider mouths are associated with attractiveness in many cultures.
+ */
+export function calculateLipWidthRatio(landmarks: LandmarkList): number | null {
+  const U = createUprightAccessor(landmarks);
+  const leftMouth = U.pt(61);
+  const rightMouth = U.pt(291);
+  const leftCheek = U.pt(234);
+  const rightCheek = U.pt(454);
+  if (!leftMouth || !rightMouth || !leftCheek || !rightCheek) return null;
+
+  const mouthWidth = Math.abs(rightMouth.x - leftMouth.x);
+  const faceWidth = Math.abs(rightCheek.x - leftCheek.x);
+  if (faceWidth <= 0) return null;
+
+  return mouthWidth / faceWidth;
+}
+
+/**
+ * Compute upper lip ratio — upper lip height relative to total lip height.
+ * The upper lip should be about 1/3 of total lip height for ideal proportion.
+ */
+export function calculateUpperLipRatio(landmarks: LandmarkList): number | null {
+  const U = createUprightAccessor(landmarks);
+  const upperLip = U.pt(13);
+  const lowerLip = U.pt(14);
+  const mouthTop = U.pt(0);
+  const mouthBottom = U.pt(17);
+  if (!upperLip || !lowerLip || !mouthTop || !mouthBottom) return null;
+
+  const totalLipHeight = Math.abs(lowerLip.y - upperLip.y);
+  const upperHeight = Math.abs(upperLip.y - mouthTop.y);
+  if (totalLipHeight <= 0) return null;
+
+  return upperHeight / totalLipHeight;
+}
+
+/**
+ * Compute nose bridge angle — the angle of the nose bridge relative to vertical.
+ * A straighter bridge (~135°) is considered more aesthetic.
+ */
+export function calculateNoseBridgeAngle(landmarks: LandmarkList): number | null {
+  const U = createUprightAccessor(landmarks);
+  const bridge = U.pt(168); // upper bridge
+  const mid = U.pt(6); // mid bridge
+  const tip = U.pt(4); // lower bridge
+  if (!bridge || !mid || !tip) return null;
+
+  const angle = Math.abs(
+    Math.atan2(mid.y - bridge.y, mid.x - bridge.x) -
+    Math.atan2(tip.y - mid.y, tip.x - mid.x)
+  ) * (180 / Math.PI);
+
+  return Math.min(180, Math.max(0, angle));
+}
+
+/**
+ * Compute eye tilt — the angle of the eye's long axis relative to horizontal.
+ * Positive = outer corner raised (associated with alertness/attractiveness).
+ */
+export function calculateEyeTilt(landmarks: LandmarkList): number | null {
+  const U = createUprightAccessor(landmarks);
+  const leftInner = U.pt(133);
+  const leftOuter = U.pt(33);
+  const rightInner = U.pt(362);
+  const rightOuter = U.pt(263);
+  if (!leftInner || !leftOuter || !rightInner || !rightOuter) return null;
+
+  const leftTilt = Math.atan2(leftOuter.y - leftInner.y, leftOuter.x - leftInner.x) * (180 / Math.PI);
+  const rightTilt = Math.atan2(rightOuter.y - rightInner.y, rightOuter.x - rightInner.x) * (180 / Math.PI);
+
+  // Average tilt (right eye is mirrored)
+  return (leftTilt + (-rightTilt)) / 2;
+}
+
+/** Legacy wrapper for code that still expects a plain string.
  * Returns just the primary shape name.
  */
 export function calculateFaceShapeName(landmarks: LandmarkList): string {

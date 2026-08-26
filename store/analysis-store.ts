@@ -73,13 +73,16 @@ export interface FaceAnalysisResult {
   goldenRatio: number;
   lipFullness: number;
   noseProfile: number;
-  foreheadBalance: number;
+  noseProjection: number;
+  lipWidthRatio: number;
+  upperLipRatio: number;
+  noseBridgeAngle: number;
+  eyeTilt: number;
   cheekboneDefinition: number;
   fwhr: number;
   canthalTilt: number;
   eyeNoseRatio: number;
   noseChinRatio: number;
-  midfaceRatio: number;
   horizontalFifths: number;
   rawFwhr: number;
   rawCanthalTilt: number;

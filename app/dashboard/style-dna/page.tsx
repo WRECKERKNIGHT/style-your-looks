@@ -454,7 +454,7 @@ export default function StyleDnaPage() {
                 <MetricTile label="Cheekbone" score={faceResult.cheekboneDefinition} />
                 <MetricTile label="Lip Proportion" score={faceResult.lipFullness} />
                 <MetricTile label="Nose Profile" score={faceResult.noseProfile} />
-                <MetricTile label="Forehead Balance" score={faceResult.foreheadBalance} />
+                <MetricTile label="Nose Projection" score={faceResult.noseProjection} />
                 <MetricTile label="Facial Harmony" score={faceResult.facialHarmony} />
                 <MetricTile label="Overall" score={faceResult.overallScore} />
               </div>
