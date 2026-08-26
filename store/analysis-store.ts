@@ -284,7 +284,8 @@ export const useAnalysisStore = create<AnalysisState>((set, get) => ({
       });
       set({ lastSavedEntry: entry });
       return entry;
-    } catch {
+    } catch (err) {
+      console.warn("Could not save analysis to history:", err);
       return null;
     }
   },

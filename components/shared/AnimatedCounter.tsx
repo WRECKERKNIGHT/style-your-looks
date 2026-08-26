@@ -24,6 +24,8 @@ export function AnimatedCounter({
   const isInView = useInView(ref, { once: true });
   const [count, setCount] = useState(0);
 
+  const safeTarget = Number.isFinite(target) ? target : 0;
+
   useEffect(() => {
     if (!isInView) return;
 
@@ -36,7 +38,7 @@ export function AnimatedCounter({
       const progress = Math.min(elapsed, 1);
 
       const eased = 1 - Math.pow(1 - progress, 3);
-      setCount(eased * target);
+      setCount(eased * safeTarget);
 
       if (progress < 1) {
         animationFrame = requestAnimationFrame(animate);
@@ -45,7 +47,7 @@ export function AnimatedCounter({
 
     animationFrame = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(animationFrame);
-  }, [isInView, target, duration]);
+  }, [isInView, safeTarget, duration]);
 
   return (
     <span ref={ref} className={className}>

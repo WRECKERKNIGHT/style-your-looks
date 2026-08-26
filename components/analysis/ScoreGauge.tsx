@@ -29,6 +29,8 @@ export function ScoreGauge({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { width, strokeWidth, fontSize, labelSize } = sizeMap[size];
 
+  const safeScore = Number.isFinite(score) ? Math.max(0, Math.min(maxScore, score)) : 0;
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -50,11 +52,11 @@ export function ScoreGauge({
     const totalAngle = endAngle - startAngle;
 
     let currentAngle = startAngle;
-    const scoreAngle = startAngle + (score / maxScore) * totalAngle;
+    const scoreAngle = startAngle + (safeScore / maxScore) * totalAngle;
     const duration = 1200;
     const startTime = performance.now();
 
-    const scorePercent = score / maxScore;
+    const scorePercent = safeScore / maxScore;
     let fillColor = "#C8963E";
     if (scorePercent >= 0.8) fillColor = "#C8963E";
     else if (scorePercent >= 0.6) fillColor = "#B98B56";
@@ -119,7 +121,7 @@ export function ScoreGauge({
         {showValue && (
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <span className={cn("font-body font-bold text-nexus-800 dark:text-white", fontSize)}>
-              {score.toFixed(1)}
+              {safeScore.toFixed(1)}
             </span>
             <span className={cn("text-nexus-400 dark:text-cosmic-muted font-body", labelSize)}>/ {maxScore}</span>
           </div>
