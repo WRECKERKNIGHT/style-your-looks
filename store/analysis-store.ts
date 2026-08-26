@@ -99,8 +99,9 @@ export interface FaceAnalysisResult {
   beautyIndex: number;
   faceShapeDetails: { description: string; characteristics: string[]; idealHairstyles: string[]; idealGlasses: string[] };
   photoQualityScore: number;
-  consistencyScore: number;
+  consistencyScore?: number;
   analysisConfidence: number;
+  metricAvailability: string[];
   photoCount: number;
   qualityGate?: PhotoQualityGate;
   /** Pose-aware symmetry axis tilt (degrees from vertical) for overlays. */

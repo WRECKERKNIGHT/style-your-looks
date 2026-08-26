@@ -72,6 +72,7 @@ function normalizeFaceResult(r: FaceAnalysisResult): FaceAnalysisResult {
     photoQualityScore: r.photoQualityScore ?? 8,
     consistencyScore: r.consistencyScore ?? 8,
     analysisConfidence: r.analysisConfidence ?? 80,
+    metricAvailability: r.metricAvailability ?? ["Facial Symmetry", "Golden Ratio Adherence", "Jawline Definition", "Proportional Harmony", "Eye Spacing", "Cheekbone Definition", "FWHR (Facial Width-to-Height)", "Canthal Tilt", "Horizontal Fifths", "Eye–Nose Ratio", "Nose–Chin Balance", "Lip Proportion", "Nose Profile"],
     photoCount: r.photoCount ?? 1,
     qualityGate: r.qualityGate,
     symmetryAxis: r.symmetryAxis,
