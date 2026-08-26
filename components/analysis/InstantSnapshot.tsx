@@ -18,8 +18,8 @@ export function InstantSnapshot() {
   const { faceResult } = useAnalysisStore();
   if (!faceResult) return null;
 
-  const top3 = [...faceResult.breakdown].sort((a, b) => b.score - a.score).slice(0, 3);
-  const opportunity = [...faceResult.breakdown].sort((a, b) => a.score - b.score)[0];
+  const top3 = [...(faceResult.breakdown ?? [])].sort((a, b) => b.score - a.score).slice(0, 3);
+  const opportunity = [...(faceResult.breakdown ?? [])].sort((a, b) => a.score - b.score)[0];
 
   return (
     <motion.div
@@ -44,16 +44,16 @@ export function InstantSnapshot() {
             </span>
             <div className="flex flex-wrap gap-2">
               <span className="inline-flex items-center px-2.5 py-1 border border-aurum-500/30 bg-aurum-500/5 text-xs font-mono tracking-wider text-[var(--text-primary)]">
-                {faceResult.facialShape.toUpperCase()} FACE
+                {faceResult.facialShape?.toUpperCase() ?? "OVAL"} FACE
               </span>
               <span className="inline-flex items-center px-2.5 py-1 border border-[var(--border-primary)] bg-[var(--bg-base)]/40 text-xs font-mono tracking-wider text-[var(--text-muted)]">
-                {faceResult.styleProfile.toUpperCase()}
+                {faceResult.styleProfile?.toUpperCase() ?? "EVERYMAN APPEAL"}
               </span>
               <span
                 className="inline-flex items-center gap-1.5 px-2.5 py-1 border border-[var(--border-primary)] bg-[var(--bg-base)]/40 text-xs font-mono tracking-wider text-[var(--text-muted)]"
                 title={`Derived from ${faceResult.ageBasis ?? "skin texture signals"}. Confidence ${Math.round((faceResult.ageConfidence ?? 0) * 100)}%.`}
               >
-                ~{faceResult.ageEstimation} YRS
+                ~{faceResult.ageEstimation ?? "—"} YRS
               </span>
             </div>
           </div>
@@ -108,12 +108,12 @@ export function InstantSnapshot() {
       <div className="px-6 pb-5 flex items-center gap-2">
         <Crown className="w-3.5 h-3.5 text-aurum-500" />
         <AnimatedCounter
-          target={faceResult.beautyIndex}
+          target={faceResult.beautyIndex ?? 50}
           duration={1.4}
           decimals={1}
           className="text-sm font-bold text-gradient-aurum"
         />
-        <span className="text-xs text-[var(--text-muted)] font-mono">BEAUTY INDEX · {faceResult.percentile.bracket.toUpperCase()}</span>
+        <span className="text-xs text-[var(--text-muted)] font-mono">BEAUTY INDEX · {faceResult.percentile?.bracket?.toUpperCase() ?? "—"}</span>
       </div>
     </motion.div>
   );

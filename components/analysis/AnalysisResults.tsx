@@ -201,12 +201,12 @@ export function AnalysisResults() {
                     <AnimatedCounter target={faceResult.faceIQ} />/100
                   </span>
                   <span className={`text-xl sm:text-2xl font-display font-bold drop-shadow-lg ${
-                    faceResult.grade.startsWith("A") ? "text-green-400" :
-                    faceResult.grade.startsWith("B") ? "text-aurum-500" :
-                    faceResult.grade.startsWith("C") ? "text-amber-400" :
+                    faceResult.grade?.startsWith("A") ? "text-green-400" :
+                    faceResult.grade?.startsWith("B") ? "text-aurum-500" :
+                    faceResult.grade?.startsWith("C") ? "text-amber-400" :
                     "text-red-400"
                   }`}>
-                    {faceResult.grade}
+                    {faceResult.grade ?? "—"}
                   </span>
                 </div>
                 <p className="text-nexus-800 dark:text-white font-body text-base leading-relaxed">
@@ -313,7 +313,7 @@ export function AnalysisResults() {
                   })}
                 </div>
                 <p className="text-[0.6rem] text-nexus-400/60 dark:text-cosmic-muted/60 font-mono mt-2">
-                  {faceResult.skinTone.toUpperCase()} · {faceResult.undertone.toUpperCase()} UNDERTONE · ITA-MEASURED SCALE
+                  {faceResult.skinTone?.toUpperCase() ?? "—"} · {faceResult.undertone?.toUpperCase() ?? "—"} UNDERTONE · ITA-MEASURED SCALE
                 </p>
               </div>
             </div>
@@ -327,7 +327,7 @@ export function AnalysisResults() {
         icon={Gauge}
         title="FACEIQ OVERVIEW"
         defaultOpen
-        badge={`${faceResult.overallScore.toFixed(1)}/10`}
+        badge={`${(faceResult.overallScore ?? 5).toFixed(1)}/10`}
       >
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           {[
@@ -403,7 +403,7 @@ export function AnalysisResults() {
             <div className="h-4 bg-light-border dark:bg-cosmic-border rounded-full overflow-hidden">
               <motion.div
                 initial={{ width: 0 }}
-                whileInView={{ width: `${faceResult.beautyIndex}%` }}
+                whileInView={{ width: `${faceResult.beautyIndex ?? 50}%` }}
                 viewport={{ once: true }}
                 transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
                 className="h-full rounded-full bg-gradient-to-r from-aurum-500 via-aurum-400 to-aurum-500"
@@ -413,7 +413,7 @@ export function AnalysisResults() {
         </div>
       </CollapsibleSection>
 
-      <CollapsibleSection icon={Smile} title="EXPRESSION ANALYSIS" badge={faceResult.blendshapes.emotion}>
+      <CollapsibleSection icon={Smile} title="EXPRESSION ANALYSIS" badge={faceResult.blendshapes?.emotion ?? "Neutral"}>
         <p className="text-nexus-400 dark:text-cosmic-muted font-body text-sm mb-6 leading-relaxed">
           Detected live from 478-point facial blendshapes during analysis.
         </p>
@@ -424,25 +424,25 @@ export function AnalysisResults() {
               <span className="text-[0.55rem] font-mono text-aurum-500 tracking-widest">LIVE</span>
             </span>
             <span className="text-xs font-body text-nexus-400 dark:text-cosmic-muted tracking-wider uppercase">Emotion</span>
-            <p className="font-body font-bold text-aurum-500 text-xl mt-1">{faceResult.blendshapes.emotion}</p>
+            <p className="font-body font-bold text-aurum-500 text-xl mt-1">{faceResult.blendshapes?.emotion ?? "Neutral"}</p>
             <div className="h-2 bg-light-border dark:bg-cosmic-border rounded-full mt-2 overflow-hidden">
               <motion.div
                 initial={{ width: 0 }}
-                whileInView={{ width: `${faceResult.blendshapes.emotionConfidence * 100}%` }}
+                whileInView={{ width: `${(faceResult.blendshapes?.emotionConfidence ?? 0.5) * 100}%` }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
                 className="h-full rounded-full bg-gradient-to-r from-aurum-600 to-aurum-400"
               />
             </div>
             <span className="text-xs text-nexus-400 dark:text-cosmic-muted font-mono">
-              {Math.round(faceResult.blendshapes.emotionConfidence * 100)}% confidence
+              {Math.round((faceResult.blendshapes?.emotionConfidence ?? 0.5) * 100)}% confidence
             </span>
           </div>
           {[
-            { label: "Smile", value: faceResult.blendshapes.smileIntensity, color: "bg-aurum-500" },
-            { label: "Eye Openness", value: faceResult.blendshapes.eyeOpenness, color: "bg-nexus-400" },
-            { label: "Brow Raise", value: faceResult.blendshapes.browRaise, color: "bg-aurum-600" },
-            { label: "Mouth Openness", value: faceResult.blendshapes.mouthOpenness, color: "bg-nexus-500" },
+            { label: "Smile", value: faceResult.blendshapes?.smileIntensity ?? 0, color: "bg-aurum-500" },
+            { label: "Eye Openness", value: faceResult.blendshapes?.eyeOpenness ?? 0.5, color: "bg-nexus-400" },
+            { label: "Brow Raise", value: faceResult.blendshapes?.browRaise ?? 0.5, color: "bg-aurum-600" },
+            { label: "Mouth Openness", value: faceResult.blendshapes?.mouthOpenness ?? 0.3, color: "bg-nexus-500" },
           ].map((item, i) => (
             <div key={item.label} className="bg-light-base dark:bg-cosmic-elevated p-5 border border-light-border dark:border-cosmic-border rounded-[var(--radius-xs)]">
               <span className="text-xs font-body text-nexus-400 dark:text-cosmic-muted tracking-wider uppercase">{item.label}</span>
@@ -460,7 +460,7 @@ export function AnalysisResults() {
           ))}
           <div className="bg-light-base dark:bg-cosmic-elevated p-5 border border-light-border dark:border-cosmic-border rounded-[var(--radius-xs)]">
             <span className="text-xs font-body text-nexus-400 dark:text-cosmic-muted tracking-wider uppercase">Head Tilt</span>
-            <p className="font-body font-bold text-nexus-800 dark:text-white text-xl mt-1">{faceResult.blendshapes.headTilt}deg</p>
+            <p className="font-body font-bold text-nexus-800 dark:text-white text-xl mt-1">{faceResult.blendshapes?.headTilt ?? 0}deg</p>
             <span className="text-xs text-nexus-400 dark:text-cosmic-muted font-mono">pose correction applied</span>
           </div>
         </div>
@@ -482,12 +482,12 @@ export function AnalysisResults() {
             </div>
             <span className="type-mono text-[0.6rem] text-nexus-400/50 dark:text-cosmic-muted/50 tracking-widest block mt-1">FACE IQ</span>
             <span className={`inline-block mt-2 px-3 py-1 text-white text-xs font-mono tracking-wider rounded-full ${
-              faceResult.grade.startsWith("A") ? "bg-green-500" :
-              faceResult.grade.startsWith("B") ? "bg-aurum-500" :
-              faceResult.grade.startsWith("C") ? "bg-amber-500" :
+              faceResult.grade?.startsWith("A") ? "bg-green-500" :
+              faceResult.grade?.startsWith("B") ? "bg-aurum-500" :
+              faceResult.grade?.startsWith("C") ? "bg-amber-500" :
               "bg-red-500"
             }`}>
-              {faceResult.grade} · {faceResult.gradeLabel}
+              {faceResult.grade ?? "—"} · {faceResult.gradeLabel ?? ""}
             </span>
           </div>
           <div className="flex-1 text-sm text-nexus-400 dark:text-cosmic-muted font-body leading-relaxed">
@@ -589,7 +589,7 @@ export function AnalysisResults() {
       </CollapsibleSection>
 
       {faceResult.qualityGate && (
-        <CollapsibleSection icon={ShieldCheck} title="PHOTO QUALITY GATE" badge={faceResult.qualityGate.issues.length === 0 ? "PASSED" : "FLAGGED"}>
+        <CollapsibleSection icon={ShieldCheck} title="PHOTO QUALITY GATE" badge={(faceResult.qualityGate.issues?.length ?? 0) === 0 ? "PASSED" : "FLAGGED"}>
           <p className="text-nexus-400 dark:text-cosmic-muted font-body text-sm mb-6 leading-relaxed">
             Automated checks run on your best photo before scoring. Flags warn when geometry accuracy may be reduced.
           </p>
@@ -665,15 +665,15 @@ export function AnalysisResults() {
               );
             })}
           </div>
-          {faceResult.qualityGate.warnings.length + faceResult.qualityGate.issues.length > 0 && (
+          {(faceResult.qualityGate.warnings?.length ?? 0) + (faceResult.qualityGate.issues?.length ?? 0) > 0 && (
             <div className="mt-4 space-y-2">
-              {faceResult.qualityGate.warnings.map((w) => (
+              {(faceResult.qualityGate.warnings ?? []).map((w) => (
                 <p key={w} className="flex items-center gap-2 text-xs text-amber-500/90 font-body">
                   <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
                   {w}
                 </p>
               ))}
-              {faceResult.qualityGate.issues.map((w) => (
+              {(faceResult.qualityGate.issues ?? []).map((w) => (
                 <p key={w} className="flex items-center gap-2 text-xs text-red-500/90 font-body">
                   <X className="w-3.5 h-3.5 shrink-0" />
                   {w}
@@ -696,10 +696,10 @@ export function AnalysisResults() {
           </div>
           <div className="md:col-span-2">
             <p className="text-nexus-400 dark:text-cosmic-muted font-body text-sm leading-relaxed">
-              {faceResult.faceShapeDetails.description}
+              {faceResult.faceShapeDetails?.description ?? "Your face shape has been classified."}
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
-              {faceResult.faceShapeDetails.characteristics.map((c, i) => (
+              {(faceResult.faceShapeDetails?.characteristics ?? []).map((c, i) => (
                 <div key={i} className="flex items-center gap-2 text-sm text-nexus-800 dark:text-white font-body bg-light-base dark:bg-cosmic-elevated p-3 border border-light-border dark:border-cosmic-border rounded-[var(--radius-xs)]">
                   <div className="w-1.5 h-1.5 bg-aurum-500 rounded-full flex-shrink-0" />
                   {c}
@@ -712,7 +712,7 @@ export function AnalysisResults() {
           <div className="bg-light-base dark:bg-cosmic-elevated p-5 border border-light-border dark:border-cosmic-border rounded-[var(--radius-xs)]">
             <h4 className="text-xs font-body font-bold text-aurum-500 tracking-wider mb-3">IDEAL HAIRSTYLES</h4>
             <ul className="space-y-2">
-              {faceResult.faceShapeDetails.idealHairstyles.map((h, i) => (
+              {(faceResult.faceShapeDetails?.idealHairstyles ?? []).map((h, i) => (
                 <li key={i} className="flex items-center gap-2 text-sm text-nexus-800 dark:text-white font-body">
                   <div className="w-1.5 h-1.5 bg-nexus-400 rounded-full flex-shrink-0" />
                   {h}
@@ -723,7 +723,7 @@ export function AnalysisResults() {
           <div className="bg-light-base dark:bg-cosmic-elevated p-5 border border-light-border dark:border-cosmic-border rounded-[var(--radius-xs)]">
             <h4 className="text-xs font-body font-bold text-aurum-600 tracking-wider mb-3">IDEAL GLASSES</h4>
             <ul className="space-y-2">
-              {faceResult.faceShapeDetails.idealGlasses.map((g, i) => (
+              {(faceResult.faceShapeDetails?.idealGlasses ?? []).map((g, i) => (
                 <li key={i} className="flex items-center gap-2 text-sm text-nexus-800 dark:text-white font-body">
                   <div className="w-1.5 h-1.5 bg-aurum-600 rounded-full flex-shrink-0" />
                   {g}
@@ -740,7 +740,7 @@ export function AnalysisResults() {
           {faceResult.photoCount > 1 && " Scores are the median across your uploaded photos."}
         </p>
         <div className="space-y-6">
-          {[...faceResult.breakdown]
+          {[...(faceResult.breakdown ?? [])]
             .sort((a, b) => b.weight - a.weight)
             .map((metric) => (
               <MetricBar
@@ -763,7 +763,7 @@ export function AnalysisResults() {
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-center">
           <div className="lg:col-span-3">
             <MetricRadar
-              metrics={faceResult.breakdown.map((m) => ({ label: m.label, score: m.score }))}
+              metrics={(faceResult.breakdown ?? []).map((m) => ({ label: m.label, score: m.score }))}
               size={430}
             />
           </div>
@@ -774,7 +774,7 @@ export function AnalysisResults() {
                 <span className="text-xs font-body font-bold text-aurum-500 tracking-wider">SIGNATURE STRENGTHS</span>
               </div>
               <div className="space-y-3">
-                {[...faceResult.breakdown]
+                {[...(faceResult.breakdown ?? [])]
                   .sort((a, b) => b.score - a.score)
                   .slice(0, 3)
                   .map((m, i) => (
@@ -794,7 +794,7 @@ export function AnalysisResults() {
                 <span className="text-xs font-body font-bold text-nexus-400 tracking-wider">FOCUS AREAS</span>
               </div>
               <div className="space-y-3">
-                {[...faceResult.breakdown]
+                {[...(faceResult.breakdown ?? [])]
                   .sort((a, b) => a.score - b.score)
                   .slice(0, 3)
                   .map((m, i) => (
@@ -823,7 +823,7 @@ export function AnalysisResults() {
           from your geometry.
         </p>
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {[...faceResult.breakdown]
+          {[...(faceResult.breakdown ?? [])]
             .sort((a, b) => b.weight - a.weight)
             .slice(0, 6)
             .map((m, i) => (
@@ -881,10 +881,10 @@ export function AnalysisResults() {
         </div>
       </CollapsibleSection>
 
-      {faceResult.strengths.length > 0 && (
-        <CollapsibleSection icon={TrendingUp} title="YOUR STRENGTHS" badge={`${faceResult.strengths.length} found`}>
+      {(faceResult.strengths?.length ?? 0) > 0 && (
+        <CollapsibleSection icon={TrendingUp} title="YOUR STRENGTHS" badge={`${faceResult.strengths?.length ?? 0} found`}>
           <div className="space-y-3">
-            {faceResult.strengths.map((strength, i) => (
+            {(faceResult.strengths ?? []).map((strength, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, x: -16 }}
@@ -918,10 +918,10 @@ export function AnalysisResults() {
         </CollapsibleSection>
       )}
 
-      {faceResult.improvements.length > 0 && (
-        <CollapsibleSection icon={AlertTriangle} title="AREAS FOR IMPROVEMENT" badge={`${faceResult.improvements.length} found`}>
+      {(faceResult.improvements?.length ?? 0) > 0 && (
+        <CollapsibleSection icon={AlertTriangle} title="AREAS FOR IMPROVEMENT" badge={`${faceResult.improvements?.length ?? 0} found`}>
           <div className="space-y-3">
-            {faceResult.improvements.map((improvement, i) => (
+            {(faceResult.improvements ?? []).map((improvement, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, x: 16 }}
@@ -956,7 +956,7 @@ export function AnalysisResults() {
           Tailored to your {faceResult.facialShape} face shape and {faceResult.styleProfile} style profile.
         </p>
         <div className="space-y-3">
-          {faceResult.groomingSuggestions.map((suggestion, i) => (
+          {(faceResult.groomingSuggestions ?? []).map((suggestion, i) => (
             <motion.div
               key={i}
               initial={{ opacity: 0, y: 12 }}

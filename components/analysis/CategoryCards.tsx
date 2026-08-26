@@ -53,7 +53,7 @@ export function CategoryCards() {
   const { faceResult } = useAnalysisStore();
   if (!faceResult) return null;
 
-  const sorted = [...faceResult.breakdown].sort((a, b) => b.score - a.score);
+  const sorted = [...(faceResult.breakdown ?? [])].sort((a, b) => b.score - a.score);
   const best = sorted.slice(0, 3);
   const weakest = [...sorted].sort((a, b) => a.score - b.score).slice(0, 3);
 
@@ -139,10 +139,10 @@ export function CategoryCards() {
         <p className="text-sm text-[var(--text-primary)] font-body leading-relaxed">
           A <span className="font-bold">{faceResult.facialShape}</span> face with a{" "}
           <span className="font-bold text-aurum-500">{faceResult.styleProfile}</span> look —{" "}
-          {faceResult.faceShapeDetails.description}
+          {faceResult.faceShapeDetails?.description ?? "Your face shape has been classified."}
         </p>
         <div className="flex flex-wrap gap-2 mt-4">
-          {faceResult.faceShapeDetails.idealHairstyles.slice(0, 2).map((h) => (
+          {(faceResult.faceShapeDetails?.idealHairstyles ?? []).slice(0, 2).map((h) => (
             <span
               key={h}
               className="px-2.5 py-1 border border-aurum-500/30 bg-aurum-500/5 text-[0.65rem] font-mono tracking-wider text-[var(--text-primary)]"
