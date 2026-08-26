@@ -4,7 +4,7 @@ import { useState, useCallback, useRef, Fragment, useMemo, useEffect, Component,
 import { ImageUploader } from "@/components/shared/ImageUploader";
 import { AnalysisResults } from "@/components/analysis/AnalysisResults";
 import { FaceSkeletonOverlay } from "@/components/analysis/FaceSkeletonOverlay";
-import { ProcessingOverlay } from "@/components/analysis/ProcessingOverlay";
+import { ProcessingCinematic } from "@/components/analysis/ProcessingCinematic";
 import { PhotoGuidelines } from "@/components/analysis/PhotoGuidelines";
 import { PhotoReviewPanel, type RejectedPhoto } from "@/components/analysis/PhotoReviewPanel";
 import { FaceCalibration } from "@/components/analysis/FaceCalibration";
@@ -755,7 +755,7 @@ export default function FaceAnalysisPage() {
             </div>
           )}
 
-          <ProcessingOverlay title="ANALYSING YOUR FACE..." />
+          <ProcessingCinematic />
 
           {error && (
             <motion.div

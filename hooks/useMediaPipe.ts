@@ -168,6 +168,8 @@ function buildStoreFaceResult(
     structureProfile: scoreResult.structureProfile,
     youthfulness: scoreResult.youthfulness,
     metricPercentiles: scoreResult.metricPercentiles,
+    rawGeometry: scoreResult.rawGeometry,
+    domainScores: scoreResult.domainScores,
     qualityGate: quality
       ? {
           brightness: quality.brightness,

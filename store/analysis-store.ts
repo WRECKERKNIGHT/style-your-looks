@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { saveToHistory, type AnalysisEntry } from "@/lib/history";
 import type { AnalysisProfile } from "@/lib/ml/scoring";
 import type { StructureProfileType } from "@/lib/ml/face-analyzer";
+import type { RawGeometry } from "@/lib/ml/face-analyzer";
 import type { EthnicRegion } from "@/lib/ml/calibration";
 
 export interface FacialMetric {
@@ -120,6 +121,10 @@ export interface FaceAnalysisResult {
   youthfulness: number;
   /** Per-metric percentiles for distribution bars. */
   metricPercentiles: Record<string, number>;
+  /** Raw geometry measurements (for measurement debugger). */
+  rawGeometry?: RawGeometry;
+  /** Domain-level scores. */
+  domainScores?: { proportion: number; symmetry: number; structure: number; features: number; quality: number; faceIQ: number };
 }
 
 export interface IntakeProfile {
