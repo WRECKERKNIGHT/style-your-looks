@@ -763,6 +763,366 @@ export function getSkinClarity(
   return score;
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// RAW GEOMETRY ENGINE
+//
+// One function produces ALL measurements from landmarks.
+// Every other scorer uses these numbers — no independent rediscovery.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type MeasurementUnit = "ratio" | "degrees" | "px_ratio" | "score";
+
+export interface Measurement {
+  raw: number;
+  z: number;
+  confidence: number;
+  unit: MeasurementUnit;
+  label: string;
+}
+
+export interface RawGeometry {
+  // Raw pixel measurements
+  faceWidth: number;
+  faceLength: number;
+  cheekWidth: number;
+  jawWidth: number;
+  eyeGap: number;
+  leftEyeWidth: number;
+  rightEyeWidth: number;
+  noseWidth: number;
+  noseLength: number;
+  mouthWidth: number;
+
+  // Derived ratios
+  faceRatio: Measurement;
+  upperThird: Measurement;
+  middleThird: Measurement;
+  lowerThird: Measurement;
+  verticalBalance: Measurement;
+  horizontalFifths: Measurement;
+  goldenRatio: Measurement;
+  fwhr: Measurement;
+
+  // Eyes
+  eyeSpacing: Measurement;
+  canthalTilt: Measurement;
+  eyeTilt: Measurement;
+
+  // Nose
+  noseWidthRatio: Measurement;
+  noseChinRatio: Measurement;
+  noseProjection: Measurement;
+  noseBridgeAngle: Measurement;
+
+  // Lips
+  lipFullness: Measurement;
+  lipWidthRatio: Measurement;
+  upperLipRatio: Measurement;
+
+  // Structure
+  jawRatio: Measurement;
+  gonialAngle: Measurement;
+  mandibularTaper: Measurement;
+  chinProjection: Measurement;
+  jawSymmetry: Measurement;
+  cheekboneDefinition: Measurement;
+
+  // Overall
+  symmetry: Measurement;
+
+  // Classification
+  faceShape: FaceShapeClassification;
+}
+
+/** Reference distributions: population mean (mu) and standard deviation (sigma). */
+const REFS: Record<string, { mu: number; sigma: number }> = {
+  faceRatio:       { mu: 0.68, sigma: 0.06 },
+  verticalBalance: { mu: 0.0,  sigma: 0.04 },
+  horizontalFifths:{ mu: 0.0,  sigma: 0.12 },
+  goldenRatio:     { mu: 0.618, sigma: 0.06 },
+  fwhr:            { mu: 1.95, sigma: 0.15 },
+  eyeSpacing:      { mu: 1.0,  sigma: 0.12 },
+  canthalTilt:     { mu: 5.0,  sigma: 3.0 },
+  eyeTilt:         { mu: 5.0,  sigma: 3.0 },
+  noseWidthRatio:  { mu: 0.28, sigma: 0.03 },
+  noseChinRatio:   { mu: 0.30, sigma: 0.035 },
+  noseProjection:  { mu: 0.55, sigma: 0.07 },
+  noseBridgeAngle: { mu: 135,  sigma: 8 },
+  lipFullness:     { mu: 0.55, sigma: 0.08 },
+  lipWidthRatio:   { mu: 0.42, sigma: 0.05 },
+  upperLipRatio:   { mu: 0.38, sigma: 0.05 },
+  jawRatio:        { mu: 0.78, sigma: 0.05 },
+  gonialAngle:     { mu: 120,  sigma: 8 },
+  mandibularTaper: { mu: 0.45, sigma: 0.08 },
+  chinProjection:  { mu: 0.0,  sigma: 0.15 },
+  jawSymmetry:     { mu: 0.0,  sigma: 0.04 },
+  cheekboneDefinition: { mu: 1.07, sigma: 0.05 },
+  symmetry:        { mu: 0.0,  sigma: 0.03 },
+};
+
+function m(
+  label: string,
+  raw: number,
+  ref: { mu: number; sigma: number },
+  confidence: number,
+  unit: MeasurementUnit = "ratio"
+): Measurement {
+  if (!Number.isFinite(raw) || ref.sigma <= 0) {
+    return { raw: 0, z: 0, confidence: 0, unit, label };
+  }
+  return {
+    raw: Math.round(raw * 10000) / 10000,
+    z: Math.round(((raw - ref.mu) / ref.sigma) * 1000) / 1000,
+    confidence: Math.round(confidence * 100) / 100,
+    unit,
+    label,
+  };
+}
+
+function perpDist(ax: number, ay: number, bx: number, by: number, px: number, py: number): number {
+  const dx = bx - ax;
+  const dy = by - ay;
+  const len = Math.hypot(dx, dy);
+  if (len === 0) return Math.hypot(px - ax, py - ay);
+  return Math.abs(dy * px - dx * py + bx * ay - by * ax) / len;
+}
+
+/**
+ * Compute ALL raw facial geometry measurements from MediaPipe landmarks.
+ *
+ * This is the single source of truth — no other function should
+ * independently compute geometry from landmarks.
+ */
+export function computeRawGeometry(result: FaceLandmarkerResult): RawGeometry | null {
+  const lm = result.faceLandmarks?.[0];
+  if (!lm || lm.length < 468) return null;
+
+  const U = createUprightAccessor(lm);
+  const pt = (i: number) => U.pt(i);
+  const p = (i: number) => lm[i];
+
+  // ── Core landmarks ──
+  const forehead = pt(10);
+  const chin     = pt(152);
+  const browLine = pt(9);
+  const noseBase = pt(2);
+
+  const leftCheek  = pt(234);
+  const rightCheek = pt(454);
+  const leftJaw    = pt(127);
+  const leftJaw2   = pt(134);
+  const rightJaw   = pt(356);
+  const rightJaw2  = pt(363);
+  const leftTemple = pt(108);
+  const rightTemple= pt(337);
+
+  const leftEyeInner  = pt(133);
+  const rightEyeInner = pt(362);
+  const leftEyeOuter  = pt(33);
+  const rightEyeOuter = pt(263);
+
+  const noseBridge  = pt(6);
+  const noseTip     = pt(1);
+  const noseLeft    = p(458);
+  const noseRight   = p(468);
+  const noseBaseL   = p(94);
+  const noseBaseR   = p(278);
+
+  const mouthTop    = pt(0);
+  const mouthBottom = pt(17);
+  const upperLip    = pt(13);
+  const lowerLip    = pt(14);
+  const leftMouth   = pt(61);
+  const rightMouth  = pt(291);
+
+  // Check all required landmarks first
+  const required = [forehead, chin, browLine, noseBase, leftCheek, rightCheek,
+    leftJaw, leftJaw2, rightJaw, rightJaw2, leftEyeInner, rightEyeInner,
+    leftEyeOuter, rightEyeOuter, noseBridge, noseTip, mouthTop, mouthBottom,
+    upperLip, lowerLip, leftMouth, rightMouth, leftTemple, rightTemple];
+  if (required.some(p => !p)) return null;
+
+  // Safe accessors (non-null after guard above)
+  const fg = forehead!;
+  const cn = chin!;
+  const bl = browLine!;
+  const nb = noseBase!;
+  const lc = leftCheek!;
+  const rc = rightCheek!;
+  const lj = leftJaw!;
+  const lj2 = leftJaw2!;
+  const rj = rightJaw!;
+  const rj2 = rightJaw2!;
+  const lei = leftEyeInner!;
+  const rei = rightEyeInner!;
+  const leo = leftEyeOuter!;
+  const reo = rightEyeOuter!;
+  const nb2 = noseBridge!;
+  const nt = noseTip!;
+  const mt = mouthTop!;
+  const mb = mouthBottom!;
+  const ul = upperLip!;
+  const ll = lowerLip!;
+  const lm2 = leftMouth!;
+  const rm = rightMouth!;
+  const lt = leftTemple!;
+  const rt = rightTemple!;
+
+  // ── Raw pixel measurements ──
+  const faceWidth  = Math.hypot(rc.x - lc.x, rc.y - lc.y);
+  const faceLength = Math.hypot(fg.x - cn.x, fg.y - cn.y);
+  const cheekWidth = Math.abs(rc.x - lc.x);
+  const jawWidth   = Math.hypot(rj.x - lj.x, rj.y - lj.y);
+  const eyeGap     = Math.hypot(rei.x - lei.x, rei.y - lei.y);
+  const leftEyeW   = Math.hypot(leo.x - lei.x, leo.y - lei.y);
+  const rightEyeW  = Math.hypot(reo.x - rei.x, reo.y - rei.y);
+  const noseW      = Math.abs(noseRight.x - noseLeft.x);
+  const noseL      = Math.abs(nb.y - nb2.y);
+  const mouthW     = Math.abs(rm.x - lm2.x);
+
+  const avgEyeWidth = (leftEyeW + rightEyeW) / 2;
+  const upper = Math.abs(bl.y - fg.y);
+  const middle = Math.abs(nb.y - bl.y);
+  const lower = Math.abs(cn.y - nb.y);
+
+  // ── Derived ratios ──
+  const faceRatio   = faceLength > 0 ? faceWidth / faceLength : 1;
+  const uThird      = faceLength > 0 ? upper / faceLength : 1/3;
+  const mThird      = faceLength > 0 ? middle / faceLength : 1/3;
+  const lThird      = faceLength > 0 ? lower / faceLength : 1/3;
+  const avgThird    = (uThird + mThird + lThird) / 3;
+  const vBalance    = avgThird > 0
+    ? (Math.abs(uThird - avgThird) + Math.abs(mThird - avgThird) + Math.abs(lThird - avgThird)) / (avgThird * 3)
+    : 0;
+
+  const faceW = reo.x - leo.x;
+  const leftEyeW2 = lei.x - leo.x;
+  const intercanthal = rei.x - lei.x;
+  const rightEyeW2 = reo.x - rei.x;
+  const outerBands = faceW > 0 ? (faceW - (leftEyeW2 + intercanthal + rightEyeW2)) / 2 : 0;
+  const ideal5 = faceW > 0 ? faceW / 5 : 1;
+  const fifths = [outerBands, leftEyeW2, intercanthal, rightEyeW2, outerBands];
+  const hFifths = ideal5 > 0
+    ? fifths.reduce((sum, f) => sum + Math.abs(f - ideal5) / ideal5, 0)
+    : 0;
+
+  const widthToLength = faceLength > 0 ? faceWidth / faceLength : 1;
+  const mouthToFaceW  = faceWidth > 0 ? mouthW / faceWidth : 0.5;
+  const goldenAdherence = Math.abs(widthToLength - 0.618) + Math.abs(mouthToFaceW - 0.6) * 0.35;
+
+  const browToLip = Math.abs(ul.y - bl.y);
+  const fwhrVal   = browToLip > 0 ? cheekWidth / browToLip : 1.95;
+
+  // ── Eyes ──
+  const eyeSpacingRatio = avgEyeWidth > 0 ? eyeGap / avgEyeWidth : 1;
+
+  const leftTiltFn = () => Math.atan2(lei.y - leo.y, leo.x - lei.x) * (180 / Math.PI);
+  const rightTiltFn = () => Math.atan2(rei.y - reo.y, reo.x - rei.x) * (180 / Math.PI);
+  const canthal = (leftTiltFn() + rightTiltFn()) / 2 - U.correctedByDeg;
+
+  const rawLeftTilt  = Math.atan2(p(468).y - p(33).y, p(33).x - p(468).x) * (180 / Math.PI);
+  const rawRightTilt = Math.atan2(p(278).y - p(263).y, p(263).x - p(278).x) * (180 / Math.PI);
+  const eyeTiltVal = (rawLeftTilt + rawRightTilt) / 2 - U.correctedByDeg;
+
+  // ── Nose ──
+  const noseWidthRatioVal = faceWidth > 0 ? noseW / faceWidth : 0.28;
+  const noseChinRatioVal  = faceLength > 0 ? noseL / faceLength : 0.30;
+
+  const noseProjectionVal = (() => {
+    const noseBaseWidth = Math.abs(noseRight.x - noseLeft.x);
+    const noseLen = Math.abs(nt.y - nb.y);
+    if (noseLen <= 0) return 0.55;
+    return noseBaseWidth / (2 * noseLen);
+  })();
+
+  const noseBridgeAngleVal = (() => {
+    const v1x = noseLeft.x - nt.x;
+    const v1y = noseLeft.y - nt.y;
+    const v2x = noseRight.x - nt.x;
+    const v2y = noseRight.y - nt.y;
+    const dot = v1x * v2x + v1y * v2y;
+    const mag = Math.hypot(v1x, v1y) * Math.hypot(v2x, v2y);
+    return mag > 0 ? Math.acos(Math.max(-1, Math.min(1, dot / mag))) * (180 / Math.PI) : 135;
+  })();
+
+  // ── Lips ──
+  const lipH    = Math.abs(ll.y - ul.y);
+  const mouthH  = Math.abs(mb.y - mt.y);
+  const lipFull = mouthH > 0 ? lipH / mouthH : 0.55;
+  const lipWR   = faceWidth > 0 ? mouthW / faceWidth : 0.42;
+  const upperLR = lipH > 0 ? Math.abs(ul.y - mt.y) / lipH : 0.38;
+
+  // ── Structure ──
+  const jawRatioVal   = faceLength > 0 ? jawWidth / faceLength : 0.78;
+
+  const gonialAngleVal = Math.abs(
+    Math.atan2(lj2.y - cn.y, lj2.x - cn.x) -
+    Math.atan2(rj2.y - cn.y, rj2.x - cn.x)
+  ) * (180 / Math.PI);
+
+  const taperVal = cheekWidth > 0 ? (cheekWidth - jawWidth) / cheekWidth : 0.45;
+
+  const chinCenter = Math.abs(cn.x - (lj.x + rj.x) / 2);
+  const chinProj   = jawWidth > 0 ? chinCenter / (jawWidth / 2) : 0;
+
+  const asymmetry = faceLength > 0 ? Math.abs(lj.y - rj.y) / faceLength : 0;
+
+  const cheekDef = jawWidth > 0 ? cheekWidth / jawWidth : 1.07;
+
+  // ── Symmetry ──
+  const axisA = { x: (lei.x + rei.x) / 2, y: (lei.y + rei.y) / 2 };
+  const axisB = { x: cn.x, y: cn.y };
+  const pairs = [[lj, rj], [lc, rc], [leo, reo], [lm2, rm]];
+  let symSum = 0;
+  for (const [lp, rp] of pairs) {
+    symSum += Math.abs(perpDist(axisA.x, axisA.y, axisB.x, axisB.y, lp.x, lp.y) -
+                       perpDist(axisA.x, axisA.y, axisB.x, axisB.y, rp.x, rp.y));
+  }
+  const symDev = faceLength > 0 ? symSum / (pairs.length * faceLength) : 0;
+
+  // ── Face shape ──
+  const faceShape = calculateFaceShape(lm);
+
+  return {
+    faceWidth, faceLength, cheekWidth, jawWidth, eyeGap,
+    leftEyeWidth: leftEyeW, rightEyeWidth: rightEyeW,
+    noseWidth: noseW, noseLength: noseL, mouthWidth: mouthW,
+
+    faceRatio:      m("Face Ratio (W/L)", faceRatio, REFS.faceRatio, 1),
+    upperThird:     m("Upper Third", uThird, { mu: 1/3, sigma: 0.04 }, 1),
+    middleThird:    m("Middle Third", mThird, { mu: 1/3, sigma: 0.04 }, 1),
+    lowerThird:     m("Lower Third", lThird, { mu: 1/3, sigma: 0.04 }, 1),
+    verticalBalance:m("Vertical Balance", vBalance, REFS.verticalBalance, 1),
+    horizontalFifths: m("Horizontal Fifths", hFifths, REFS.horizontalFifths, 1),
+    goldenRatio:    m("Golden Ratio Adherence", goldenAdherence, REFS.goldenRatio, 1),
+    fwhr:           m("FWHR", fwhrVal, REFS.fwhr, 1),
+
+    eyeSpacing:     m("Eye Spacing", eyeSpacingRatio, REFS.eyeSpacing, 1),
+    canthalTilt:    m("Canthal Tilt", canthal, REFS.canthalTilt, 1, "degrees"),
+    eyeTilt:        m("Eye Tilt", eyeTiltVal, REFS.eyeTilt, 1, "degrees"),
+
+    noseWidthRatio: m("Nose Width Ratio", noseWidthRatioVal, REFS.noseWidthRatio, 1),
+    noseChinRatio:  m("Nose–Chin Ratio", noseChinRatioVal, REFS.noseChinRatio, 1),
+    noseProjection: m("Nose Projection", noseProjectionVal, REFS.noseProjection, 1),
+    noseBridgeAngle:m("Nose Bridge Angle", noseBridgeAngleVal, REFS.noseBridgeAngle, 1, "degrees"),
+
+    lipFullness:    m("Lip Fullness", lipFull, REFS.lipFullness, 1),
+    lipWidthRatio:  m("Lip Width Ratio", lipWR, REFS.lipWidthRatio, 1),
+    upperLipRatio:  m("Upper Lip Ratio", upperLR, REFS.upperLipRatio, 1),
+
+    jawRatio:       m("Jaw Ratio", jawRatioVal, REFS.jawRatio, 1),
+    gonialAngle:    m("Gonial Angle", gonialAngleVal, REFS.gonialAngle, 1, "degrees"),
+    mandibularTaper:m("Mandibular Taper", taperVal, REFS.mandibularTaper, 1),
+    chinProjection: m("Chin Projection", chinProj, REFS.chinProjection, 1),
+    jawSymmetry:    m("Jaw Symmetry", asymmetry, REFS.jawSymmetry, 1),
+    cheekboneDefinition: m("Cheekbone Definition", cheekDef, REFS.cheekboneDefinition, 1),
+
+    symmetry:       m("Symmetry", symDev, REFS.symmetry, 1),
+
+    faceShape,
+  };
+}
+
 export function getFacialShape(result: FaceLandmarkerResult): FaceShapeClassification {
   if (!result.faceLandmarks || result.faceLandmarks.length === 0) return { primary: "Unknown", probabilities: {} };
   return calculateFaceShape(result.faceLandmarks[0]);
