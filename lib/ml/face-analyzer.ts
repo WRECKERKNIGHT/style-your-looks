@@ -708,6 +708,7 @@ export function getSkinClarity(
   let samples = 0;
 
   for (const point of samplePoints) {
+    if (!point) continue;
     const x = Math.floor(point.x * imgWidth);
     const y = Math.floor(point.y * imgHeight);
     const radius = 8;
