@@ -128,11 +128,9 @@ function getAverageColor(
     count++;
   }
 
-  return {
-    r: Math.round(r / count),
-    g: Math.round(g / count),
-    b: Math.round(b / count),
-  };
+  return count > 0
+    ? { r: Math.round(r / count), g: Math.round(g / count), b: Math.round(b / count) }
+    : null;
 }
 
 export function analyzeSkinTone(
@@ -153,6 +151,9 @@ export function analyzeSkinTone(
   const lm = faceResult.faceLandmarks[0];
   const imgWidth = canvas.width;
   const imgHeight = canvas.height;
+
+  const requiredIndices = [1, 4, 6, 168, 197];
+  if (lm.length < Math.max(...requiredIndices) + 1) return null;
 
   const samplePoints = [
     { x: lm[1].x, y: lm[1].y },

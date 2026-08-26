@@ -285,6 +285,7 @@ export function calibrateMetric(
  * the 2-10 output through percentile normalization.
  */
 export function scoreToPercentile(score: number): number {
+  if (!Number.isFinite(score)) return 50;
   // Map the 2-10 score through a calibrated curve:
   // μ = 6.0 (average score), σ = 1.8 (spreads the distribution)
   const z = (score - 6.0) / 1.8;
@@ -307,10 +308,11 @@ export function computeFaceIQ(
   let weightedSum = 0;
   for (const [key, pct] of Object.entries(metricPercentiles)) {
     const w = weights[key] ?? 0;
-    weightedSum += pct * w;
+    const safe = Number.isFinite(pct) ? pct : 50;
+    weightedSum += safe * w;
     totalWeight += w;
   }
-  const faceIQ = totalWeight > 0 ? Math.round(weightedSum / totalWeight) : 50;
+  const faceIQ = totalWeight > 0 ? Math.round(Math.max(0, Math.min(100, weightedSum / totalWeight))) : 50;
   const { grade, label } = gradeFromPercentile(faceIQ);
   const comparison = comparisonFromPercentile(faceIQ);
   return { faceIQ, grade, label, comparison };

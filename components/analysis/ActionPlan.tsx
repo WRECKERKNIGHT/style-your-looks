@@ -22,7 +22,7 @@ function buildPlan(faceResult: ReturnType<typeof useAnalysisStore.getState>["fac
   const jaw = faceResult?.jawline ?? 7;
   const skin = faceResult?.skinClarity ?? 7;
   const feminine = faceResult?.genderProfile === "feminine";
-  const idealHair = faceResult?.faceShapeDetails.idealHairstyles ?? [];
+  const idealHair = faceResult?.faceShapeDetails?.idealHairstyles ?? [];
 
   const barber: PlanItem[] = [];
   if (idealHair.length >= 2) {
