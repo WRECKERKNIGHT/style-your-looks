@@ -979,6 +979,93 @@ export function AnalysisResults() {
 
       <ActionPlan />
 
+      {faceResult.rawGeometry && (
+        <CollapsibleSection icon={BarChart3} title="RAW MEASUREMENTS (DEBUG)">
+          <div className="space-y-4">
+            <p className="text-xs text-nexus-400 dark:text-cosmic-muted font-body">
+              Raw pixel measurements and derived ratios from 478 MediaPipe landmarks.
+              Each measurement shows its population z-score (how unusual it is) and confidence.
+            </p>
+
+            <h4 className="text-[0.65rem] font-mono font-bold text-aurum-500 tracking-widest uppercase">
+              Pixel Measurements
+            </h4>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+              {(["faceWidth", "faceLength", "cheekWidth", "jawWidth", "eyeGap", "noseWidth", "noseLength", "mouthWidth"] as const).map((key) => (
+                <div key={key} className="bg-light-base dark:bg-cosmic-elevated p-2.5 border border-light-border dark:border-cosmic-border rounded-[var(--radius-xs)]">
+                  <span className="text-[0.55rem] font-mono tracking-widest text-nexus-400/70 dark:text-cosmic-muted/70 uppercase">{key}</span>
+                  <p className="font-mono font-bold text-nexus-800 dark:text-white text-sm mt-0.5">
+                    {faceResult.rawGeometry![key] !== undefined
+                      ? (faceResult.rawGeometry![key] as number).toFixed(3)
+                      : "—"}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            <h4 className="text-[0.65rem] font-mono font-bold text-aurum-500 tracking-widest uppercase mt-4">
+              Derived Measurements (raw / z-score / confidence)
+            </h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {Object.entries(faceResult.rawGeometry!)
+                .filter(([_, v]) => v && typeof v === "object" && "raw" in v && "z" in v)
+                .map(([key, m]) => {
+                  const meas = m as { raw: number; z: number; confidence: number; label: string; unit: string };
+                  const zAbs = Math.abs(meas.z);
+                  const zColor = zAbs <= 0.5 ? "text-green-400" : zAbs <= 1.0 ? "text-aurum-500" : zAbs <= 2.0 ? "text-amber-400" : "text-red-400";
+                  return (
+                    <div key={key} className="bg-light-base dark:bg-cosmic-elevated p-2.5 border border-light-border dark:border-cosmic-border rounded-[var(--radius-xs)]">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[0.55rem] font-mono tracking-widest text-nexus-400/70 dark:text-cosmic-muted/70 uppercase">
+                          {meas.label || key}
+                        </span>
+                        <span className="text-[0.5rem] font-mono text-nexus-400/50 dark:text-cosmic-muted/50">
+                          {meas.unit}
+                        </span>
+                      </div>
+                      <div className="flex gap-3 mt-1 font-mono text-xs">
+                        <span className="text-nexus-800 dark:text-white">
+                          {meas.raw.toFixed(4)}
+                        </span>
+                        <span className={zColor}>
+                          z={meas.z >= 0 ? "+" : ""}{meas.z.toFixed(2)}
+                        </span>
+                        <span className="text-nexus-400 dark:text-cosmic-muted">
+                          {(meas.confidence * 100).toFixed(0)}%
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+
+            {faceResult.domainScores && (
+              <>
+                <h4 className="text-[0.65rem] font-mono font-bold text-aurum-500 tracking-widest uppercase mt-4">
+                  Domain Scores
+                </h4>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+                  {([
+                    ["proportion", "Proportion"],
+                    ["symmetry", "Symmetry"],
+                    ["structure", "Structure"],
+                    ["features", "Features"],
+                    ["quality", "Quality"],
+                  ] as const).map(([key, label]) => (
+                    <div key={key} className="bg-light-base dark:bg-cosmic-elevated p-2.5 border border-light-border dark:border-cosmic-border rounded-[var(--radius-xs)] text-center">
+                      <span className="text-[0.55rem] font-mono tracking-widest text-nexus-400/70 dark:text-cosmic-muted/70 uppercase">{label}</span>
+                      <p className="font-mono font-bold text-nexus-800 dark:text-white text-lg mt-0.5">
+                        {faceResult.domainScores![key as keyof typeof faceResult.domainScores]?.toFixed(1) ?? "—"}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        </CollapsibleSection>
+      )}
+
       <CollapsibleSection icon={Target} title="HOW WE SCORED YOU">
         <div className="space-y-4 text-sm text-nexus-400 dark:text-cosmic-muted font-body leading-relaxed">
           <p>

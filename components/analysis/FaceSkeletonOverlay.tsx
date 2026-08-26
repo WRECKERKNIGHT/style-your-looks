@@ -480,6 +480,139 @@ function drawLabel(ctx: CanvasRenderingContext2D, text: string, x: number, y: nu
   ctx.fillText(text, x, y);
 }
 
+// ─── Exported geometry drawing utilities (used by ProcessingCinematic) ──────
+
+export interface DrawPt { x: number; y: number }
+
+/** Map normalised MediaPipe coords (0..1) to canvas pixels, accounting for object-fit: cover. */
+export function mapLandmark(
+  u: number,
+  v: number,
+  width: number,
+  height: number,
+  imageAspect?: number,
+): DrawPt {
+  return mapCoverPoint(u, v, {
+    boxW: width,
+    boxH: height,
+    imageAspect: imageAspect ?? width / height,
+  });
+}
+
+/** Draw an angle arc between two arms meeting at a vertex. */
+export function drawAngleArc(
+  ctx: CanvasRenderingContext2D,
+  vertex: DrawPt,
+  arm1: DrawPt,
+  arm2: DrawPt,
+  radius: number,
+  color: string,
+  label?: string,
+  scale = 1,
+) {
+  const a1 = Math.atan2(arm1.y - vertex.y, arm1.x - vertex.x);
+  const a2 = Math.atan2(arm2.y - vertex.y, arm2.x - vertex.x);
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  let start = a1;
+  let end = a2;
+  let diff = end - start;
+  if (diff > Math.PI) { start = a2; end = a1; diff = end - start; }
+  if (diff < -Math.PI) { end = start + 2 * Math.PI; diff = end - start; }
+  ctx.arc(vertex.x, vertex.y, radius, start, end);
+  ctx.stroke();
+  if (label) {
+    const mid = start + diff / 2;
+    const lx = vertex.x + (radius + 10 * scale) * Math.cos(mid);
+    const ly = vertex.y + (radius + 10 * scale) * Math.sin(mid);
+    drawLabel(ctx, label, lx - 10, ly + 3, scale);
+  }
+  ctx.restore();
+}
+
+/** Draw a dimension line (with end-tick marks) between two points, offset perpendicular. */
+export function drawMeasurementLine(
+  ctx: CanvasRenderingContext2D,
+  start: DrawPt,
+  end: DrawPt,
+  offset: number,
+  color: string,
+  label: string,
+  scale = 1,
+) {
+  const dx = end.x - start.x;
+  const dy = end.y - start.y;
+  const len = Math.hypot(dx, dy);
+  if (len < 1) return;
+  const nx = -dy / len;
+  const ny = dx / len;
+  const s = { x: start.x + nx * offset, y: start.y + ny * offset };
+  const e = { x: end.x + nx * offset, y: end.y + ny * offset };
+  const tickLen = 4 * scale;
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(s.x, s.y);
+  ctx.lineTo(e.x, e.y);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(s.x - nx * tickLen, s.y - ny * tickLen);
+  ctx.lineTo(s.x + nx * tickLen, s.y + ny * tickLen);
+  ctx.moveTo(e.x - nx * tickLen, e.y - ny * tickLen);
+  ctx.lineTo(e.x + nx * tickLen, e.y + ny * tickLen);
+  ctx.stroke();
+  drawLabel(ctx, label, (s.x + e.x) / 2 - 12, (s.y + e.y) / 2 + 3, scale);
+  ctx.restore();
+}
+
+/** Draw horizontal proportion guide lines (facial thirds). */
+export function drawProportionGuide(
+  ctx: CanvasRenderingContext2D,
+  top: number,
+  bottom: number,
+  x: number,
+  w: number,
+  color: string,
+  scale = 1,
+) {
+  const h = bottom - top;
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4, 4]);
+  for (let i = 1; i <= 2; i++) {
+    const y = top + (h * i) / 3;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x + w, y);
+    ctx.stroke();
+    drawLabel(ctx, `⅓`, x + w + 6, y + 3, scale);
+  }
+  ctx.setLineDash([]);
+  ctx.restore();
+}
+
+/** Draw a dashed symmetry axis line. */
+export function drawSymmetryAxis(
+  ctx: CanvasRenderingContext2D,
+  axis: { x1: number; y1: number; x2: number; y2: number },
+  color: string,
+) {
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([6, 5]);
+  ctx.beginPath();
+  ctx.moveTo(axis.x1, axis.y1);
+  ctx.lineTo(axis.x2, axis.y2);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.restore();
+}
+
 export function FaceSkeletonOverlay({
   landmarks,
   width,
