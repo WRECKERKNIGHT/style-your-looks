@@ -231,25 +231,25 @@ export default function FaceAnalysisPage() {
     return [
       "ZERVEY — FACEIQ ANALYSIS REPORT",
       "=================================",
-      `FaceIQ Score:  ${faceResult.overallScore.toFixed(1)}/10  (${faceResult.overallRating})`,
-      `Beauty Index:  ${faceResult.beautyIndex}/100`,
-      `Face Shape:    ${faceResult.facialShape}`,
-      `Style Profile: ${faceResult.styleProfile}`,
-      `Confidence:    ${faceResult.analysisConfidence}%  (${faceResult.photoCount} photo(s))`,
+      `FaceIQ Score:  ${(faceResult.overallScore ?? 5).toFixed(1)}/10  (${faceResult.overallRating ?? "—"})`,
+      `Beauty Index:  ${faceResult.beautyIndex ?? 50}/100`,
+      `Face Shape:    ${faceResult.facialShape ?? "Oval"}`,
+      `Style Profile: ${faceResult.styleProfile ?? "Everyman Appeal"}`,
+      `Confidence:    ${faceResult.analysisConfidence ?? 80}%  (${faceResult.photoCount ?? 1} photo(s))`,
       "",
       "METRIC BREAKDOWN",
-      faceResult.breakdown
+      (faceResult.breakdown ?? [])
         .map((m) => `  - ${m.label}: ${m.score.toFixed(1)}/10${m.value ? `  [${m.value}]` : ""}`)
         .join("\n"),
       "",
       "STRENGTHS",
-      faceResult.strengths.map((s) => `  + ${s}`).join("\n"),
+      (faceResult.strengths ?? []).map((s) => `  + ${s}`).join("\n"),
       "",
       "IMPROVEMENTS",
-      faceResult.improvements.map((s) => `  - ${s}`).join("\n"),
+      (faceResult.improvements ?? []).map((s) => `  - ${s}`).join("\n"),
       "",
       "GROOMING TIPS",
-      faceResult.groomingSuggestions.map((s) => `  > ${s}`).join("\n"),
+      (faceResult.groomingSuggestions ?? []).map((s) => `  > ${s}`).join("\n"),
     ].join("\n");
   }, [faceResult]);
 
@@ -337,22 +337,22 @@ export default function FaceAnalysisPage() {
       photo: uploadedImage,
       brand: "ZERVEY",
       brandTag: "Measured like a tailor",
-      title: `${faceResult.facialShape} Face`,
-      subtitle: faceResult.styleProfile,
+      title: `${faceResult.facialShape ?? "Oval"} Face`,
+      subtitle: faceResult.styleProfile ?? "Everyman Appeal",
       overview: [
-        { label: "Face Shape", value: faceResult.facialShape },
-        { label: "Style Profile", value: faceResult.styleProfile },
-        { label: "Skin Tone", value: faceResult.skinTone },
-        { label: "Undertone", value: faceResult.undertone },
-        { label: "Symmetry", value: `${faceResult.symmetry.toFixed(1)}/10` },
-        { label: "Confidence", value: `${faceResult.analysisConfidence}%` },
+        { label: "Face Shape", value: faceResult.facialShape ?? "Oval" },
+        { label: "Style Profile", value: faceResult.styleProfile ?? "Everyman Appeal" },
+        { label: "Skin Tone", value: faceResult.skinTone ?? "—" },
+        { label: "Undertone", value: faceResult.undertone ?? "Neutral" },
+        { label: "Symmetry", value: `${(faceResult.symmetry ?? 5).toFixed(1)}/10` },
+        { label: "Confidence", value: `${faceResult.analysisConfidence ?? 80}%` },
       ],
-      scoreLabel: `${faceResult.overallRating} · FACEIQ`,
-      score: faceResult.overallScore.toFixed(1),
-      scoreSuffix: "/10 · " + faceResult.percentile.bracket,
+      scoreLabel: `${faceResult.overallRating ?? "—"} · FACEIQ`,
+      score: (faceResult.overallScore ?? 5).toFixed(1),
+      scoreSuffix: "/10 · " + (faceResult.percentile?.bracket ?? faceResult.grade ?? "—"),
       footer: "zervey.app · computed on-device",
-      fileName: `zervey-faceiq-${faceResult.overallScore.toFixed(1)}.png`,
-      shareText: `My ZERVEY FaceIQ: ${faceResult.overallScore.toFixed(1)}/10 (${faceResult.overallRating}) · ${faceResult.facialShape} face · ${faceResult.styleProfile}`,
+      fileName: `zervey-faceiq-${(faceResult.overallScore ?? 5).toFixed(1)}.png`,
+      shareText: `My ZERVEY FaceIQ: ${(faceResult.overallScore ?? 5).toFixed(1)}/10 (${faceResult.overallRating ?? "—"}) · ${faceResult.facialShape ?? "Oval"} face · ${faceResult.styleProfile ?? "Everyman Appeal"}`,
       demo: isDemoPhoto(uploadedImage),
     };
   }, [faceResult, uploadedImage]);
@@ -949,9 +949,9 @@ export default function FaceAnalysisPage() {
                   imageAspect={imageDims?.aspect}
                   facialShape={faceResult.facialShape}
                   measurements={{
-                    fwhr: faceResult.rawFwhr || undefined,
-                    canthalTilt: faceResult.rawCanthalTilt || undefined,
-                    eyeNoseRatio: faceResult.rawEyeNoseRatio || undefined,
+                    fwhr: faceResult.rawFwhr ?? undefined,
+                    canthalTilt: faceResult.rawCanthalTilt ?? undefined,
+                    eyeNoseRatio: faceResult.rawEyeNoseRatio ?? undefined,
                   }}
                 />
               )}

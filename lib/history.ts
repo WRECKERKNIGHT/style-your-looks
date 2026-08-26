@@ -1,6 +1,83 @@
 import type { FaceAnalysisResult, BodyAnalysisResult, ColorAnalysisResult, OutfitRecommendation } from "@/store/analysis-store";
 import type { AnalysisSource } from "@/store/analysis-store";
+import type { StructureProfileType } from "@/lib/ml/face-analyzer";
 import { isDemoPhoto } from "@/lib/demo/demo-analysis";
+import { scoreToPercentile, gradeFromPercentile, comparisonFromPercentile } from "@/lib/ml/calibration";
+
+function normalizeFaceResult(r: FaceAnalysisResult): FaceAnalysisResult {
+  if (!r) return r;
+  const faceIQ = r.faceIQ ?? (r.overallScore != null ? Math.round(r.overallScore * 10) : 50);
+  const { grade, label } = gradeFromPercentile(faceIQ);
+  const metricPercentiles = r.metricPercentiles ?? {
+    "Facial Symmetry": scoreToPercentile(r.symmetry),
+    "Golden Ratio Adherence": scoreToPercentile(r.goldenRatio),
+    "Jawline Definition": scoreToPercentile(r.jawline),
+    "Proportional Harmony": scoreToPercentile(r.proportions),
+    "Eye Spacing": scoreToPercentile(r.eyeSpacing),
+    "Skin Clarity": scoreToPercentile(r.skinClarity),
+    "Cheekbone Definition": scoreToPercentile(r.cheekboneDefinition),
+    "FWHR (Facial Width-to-Height)": scoreToPercentile(r.fwhr),
+    "Canthal Tilt": scoreToPercentile(r.canthalTilt),
+    "Horizontal Fifths": scoreToPercentile(r.horizontalFifths),
+    "Eye–Nose Ratio": scoreToPercentile(r.eyeNoseRatio),
+    "Nose–Chin Balance": scoreToPercentile(r.noseChinRatio),
+    "Midface Harmony": scoreToPercentile(r.midfaceRatio),
+    "Lip Proportion": scoreToPercentile(r.lipFullness),
+    "Nose Profile": scoreToPercentile(r.noseProfile),
+    "Forehead Balance": scoreToPercentile(r.foreheadBalance),
+  };
+  const gradeValue = grade;
+  const gradeLabelValue = label;
+  return {
+    ...r,
+    overallScore: r.overallScore ?? 5,
+    symmetry: r.symmetry ?? 5,
+    proportions: r.proportions ?? 5,
+    jawline: r.jawline ?? 5,
+    eyeSpacing: r.eyeSpacing ?? 5,
+    skinClarity: r.skinClarity ?? 5,
+    facialShape: r.facialShape ?? "Oval",
+    faceShapeProbabilities: r.faceShapeProbabilities ?? { Oval: 0.35, Round: 0.2, Square: 0.15 },
+    goldenRatio: r.goldenRatio ?? 5,
+    lipFullness: r.lipFullness ?? 5,
+    noseProfile: r.noseProfile ?? 5,
+    foreheadBalance: r.foreheadBalance ?? 5,
+    cheekboneDefinition: r.cheekboneDefinition ?? 5,
+    fwhr: r.fwhr ?? 5,
+    canthalTilt: r.canthalTilt ?? 5,
+    eyeNoseRatio: r.eyeNoseRatio ?? 5,
+    noseChinRatio: r.noseChinRatio ?? 5,
+    midfaceRatio: r.midfaceRatio ?? 5,
+    horizontalFifths: r.horizontalFifths ?? 5,
+    rawFwhr: r.rawFwhr ?? 0,
+    rawCanthalTilt: r.rawCanthalTilt ?? 0,
+    rawEyeNoseRatio: r.rawEyeNoseRatio ?? 0,
+    facialHarmony: r.facialHarmony ?? 5,
+    breakdown: r.breakdown ?? [],
+    overallRating: r.overallRating ?? gradeLabelValue,
+    detailedAnalysis: r.detailedAnalysis ?? `Your Face IQ is ${faceIQ}.`,
+    strengths: r.strengths ?? [],
+    improvements: r.improvements ?? [],
+    styleProfile: r.styleProfile ?? "Everyman Appeal",
+    blendshapes: r.blendshapes ?? { emotion: "Neutral", emotionConfidence: 0.5, eyeOpenness: 0.5, mouthOpenness: 0.3, browRaise: 0.5, smileIntensity: 0, headTilt: 0 },
+    percentile: r.percentile ?? { overall: faceIQ, symmetry: 50, goldenRatio: 50, jawline: 50, skinClarity: 50, harmony: 50, bracket: gradeValue, comparisonText: comparisonFromPercentile(faceIQ) },
+    beautyIndex: r.beautyIndex ?? faceIQ,
+    faceShapeDetails: r.faceShapeDetails ?? { description: "Your face shape is being analysed.", characteristics: [], idealHairstyles: [], idealGlasses: [] },
+    photoQualityScore: r.photoQualityScore ?? 8,
+    consistencyScore: r.consistencyScore ?? 8,
+    analysisConfidence: r.analysisConfidence ?? 80,
+    photoCount: r.photoCount ?? 1,
+    qualityGate: r.qualityGate,
+    symmetryAxis: r.symmetryAxis,
+    faceIQ,
+    grade: r.grade ?? gradeValue,
+    gradeLabel: r.gradeLabel ?? gradeLabelValue,
+    comparison: r.comparison ?? comparisonFromPercentile(faceIQ),
+    structureProfile: r.structureProfile ?? ("Balanced" as StructureProfileType),
+    youthfulness: r.youthfulness ?? 50,
+    metricPercentiles,
+  };
+}
 
 export interface AnalysisEntry {
   id: string;
@@ -23,7 +100,10 @@ export function getHistory(): AnalysisEntry[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
-    return JSON.parse(raw);
+    return JSON.parse(raw).map((e: AnalysisEntry) => ({
+      ...e,
+      faceResult: e.faceResult ? normalizeFaceResult(e.faceResult) : null,
+    }));
   } catch {
     return [];
   }
