@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useAnalysisStore } from "@/store/analysis-store";
 import { calculatePillarAnalysis } from "@/lib/ml/pillars";
+import type { FaceScoreResult } from "@/lib/ml/scoring";
 import { motion, AnimatePresence } from "framer-motion";
 import { ScrollReveal, ScrollRevealItem, ScrollProgress } from "@/components/shared/ScrollReveal";
 import { Target, TrendingUp, ArrowRight, Sparkles, Dumbbell, Scissors, Droplets, Shirt, Zap, ChevronDown } from "lucide-react";
@@ -113,7 +114,7 @@ export default function PillarAnalysisPage() {
 
   const analysis = useMemo(() => {
     if (!faceResult) return null;
-    return calculatePillarAnalysis(faceResult);
+    return calculatePillarAnalysis(faceResult as FaceScoreResult);
   }, [faceResult]);
 
   if (!faceResult || !analysis) {

@@ -531,6 +531,7 @@ export function buildDemoFaceResult(
     photoQualityScore: 90 + (person.id.length % 4) * 2,
     consistencyScore: 91 + (person.id.length % 5) * 2,
     analysisConfidence: 87 + (person.id.length % 3) * 3,
+    metricAvailability: ["Facial Symmetry", "Golden Ratio Adherence", "Jawline Definition", "Proportional Harmony", "Eye Spacing", "Texture Uniformity", "Cheekbone Definition", "FWHR (Facial Width-to-Height)", "Canthal Tilt", "Horizontal Fifths", "Eye–Nose Ratio", "Nose–Chin Balance", "Lip Proportion", "Nose Profile", "Nose Projection", "Lip Width Ratio", "Upper Lip Ratio", "Nose Bridge Angle", "Eye Tilt"],
     photoCount: 1,
     symmetryAxis: { angleDeg: (person.id.length % 3) - 1 },
     faceShapeProbabilities: { [f.facialShape]: 0.85 },

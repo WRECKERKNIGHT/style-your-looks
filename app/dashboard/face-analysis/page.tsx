@@ -68,7 +68,7 @@ function DiagnosticStrip({
   landmarks,
 }: {
   photoQuality: number;
-  consistency: number;
+  consistency?: number;
   confidence: number;
   headYaw?: number;
   headRoll?: number;
@@ -108,7 +108,7 @@ function DiagnosticStrip({
 
   const items = [
     { label: "PHOTO QUALITY", value: `${photoQuality.toFixed(1)}/10`, warn: photoQuality < 5 },
-    { label: "CROSS-PHOTO CONSISTENCY", value: `${consistency.toFixed(1)}/10`, warn: consistency < 5 },
+    { label: "CROSS-PHOTO CONSISTENCY", value: consistency != null ? `${consistency.toFixed(1)}/10` : "N/A (single photo)", warn: consistency != null && consistency < 5 },
     { label: "CONFIDENCE", value: `${confidence}%`, warn: confidence < 60 },
     {
       label: "HEAD YAW",

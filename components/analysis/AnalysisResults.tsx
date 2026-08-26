@@ -338,7 +338,7 @@ export function AnalysisResults() {
             { label: "Jaw Strength", value: faceResult.jawline, suffix: "", decimals: 1, hint: "/10" },
             { label: "Nose Projection", value: faceResult.noseProjection, suffix: "", decimals: 1, hint: "/10" },
             { label: "Harmony", value: faceResult.facialHarmony, suffix: "", decimals: 1, hint: "/10" },
-            { label: "Age Perception", value: faceResult.ageEstimation ?? 25, suffix: "", decimals: 0, hint: "yrs" },
+            { label: "Skin Texture Age", value: faceResult.ageEstimation ?? 25, suffix: "", decimals: 0, hint: `yrs (±${Math.round(((faceResult.ageConfidence ?? 0.15)) * 100)}%)` },
             {
               label: "M/F Balance",
               value: faceResult.genderProfile === "masculine"
@@ -548,7 +548,7 @@ export function AnalysisResults() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[
             { label: "Photo Quality", value: faceResult.photoQualityScore, hint: "/10", decimals: 1 },
-            { label: "Cross-Photo Consistency", value: faceResult.consistencyScore, hint: "/10", decimals: 1 },
+            { label: "Cross-Photo Consistency", value: faceResult.consistencyScore ?? 0, hint: faceResult.consistencyScore != null ? "/10" : " N/A", decimals: 1 },
             { label: "Analysis Confidence", value: faceResult.analysisConfidence, hint: "%", decimals: 0 },
           ].map((item) => (
             <div key={item.label} className="bg-light-base dark:bg-cosmic-elevated p-5 border border-light-border dark:border-cosmic-border rounded-[var(--radius-xs)]">
