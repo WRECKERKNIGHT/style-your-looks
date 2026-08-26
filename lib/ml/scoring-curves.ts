@@ -1,23 +1,68 @@
 /**
  * Population-calibrated scoring kernels.
  *
- * calibratedScore(): linear z-score mapping for directional metrics.
- *   z=0 → 5, z=1 → 7, z=2 → 9, z=-1 → 3, z=-2 → 1
+ * rangeScore(): PRIMARY — range-based scoring for bell-curve metrics.
+ *   Uses preferred/acceptable ranges instead of a single "ideal" point.
+ *   Normal variation (within 1σ) stays in 8-10 range. Only extreme
+ *   deviation (beyond 2σ) drops below 7. This prevents normal faces
+ *   from being punished for not matching one arbitrary reference.
  *
- * idealScore(): bell-curve scoring for "closer to ideal is better" metrics.
- *   Uses power-curve decay (not Gaussian) to spread scores across 1-10.
- *   At ideal: score=10. At 1σ away: ~7. At 2σ: ~4. At 3σ: ~1.
+ *   preferred: -0.5σ to +0.5σ → score 8.5-10
+ *   acceptable: -1.0σ to +1.0σ → score 6-10
+ *   beyond: penalty drops toward 0
  *
- * Both produce scores that span the full 1-10 range for real face data.
+ * idealScore(): LEGACY — kept for backward compatibility.
+ *   Too harsh for independent metric scoring. Replaced by rangeScore.
+ *
+ * calibratedScore(): LEGACY — linear z-score mapping.
  */
 
 /**
- * Score a directional metric (higher = better).
- * Linear z-score: maps population statistics directly to 1-10.
+ * Score a bell-curve measurement using preferred/acceptable ranges.
  *
- * @param value   measured value
- * @param mu      population mean
- * @param sigma   population standard deviation
+ * Instead of "120° = 10, 112° = worse", this says:
+ *   "116-124° is preferred (8.5-10), 112-128° is acceptable (6-10),
+ *    beyond that gets penalized."
+ *
+ * @param z        absolute z-score (how many σ from population mean)
+ * @param floor    minimum score (default 0)
+ * @param ceil     maximum score (default 10)
+ */
+export function rangeScore(
+  z: number,
+  floor = 0,
+  ceil = 10
+): number {
+  if (!Number.isFinite(z)) return (floor + ceil) / 2;
+  const az = Math.abs(z);
+  const range = ceil - floor;
+
+  // Within preferred range (0-0.5σ): score 8.5-10
+  if (az <= 0.5) {
+    return ceil - range * 0.15 * (az / 0.5);
+  }
+  // Within acceptable range (0.5-1.0σ): score 6-8.5
+  if (az <= 1.0) {
+    return (ceil - range * 0.15) - range * 0.25 * ((az - 0.5) / 0.5);
+  }
+  // Beyond acceptable (1.0-2.5σ): score 0-6
+  if (az <= 2.5) {
+    return (ceil - range * 0.40) - range * 0.60 * ((az - 1.0) / 1.5);
+  }
+  return floor;
+}
+
+/**
+ * Compute a z-score from a raw measurement.
+ */
+export function toZScore(value: number, mu: number, sigma: number): number {
+  if (sigma <= 0 || !Number.isFinite(value)) return 0;
+  return (value - mu) / sigma;
+}
+
+/**
+ * LEGACY: Score a directional metric (higher = better).
+ * Kept for backward compatibility with unmigrated callers.
  */
 export function calibratedScore(
   value: number,
@@ -33,17 +78,9 @@ export function calibratedScore(
 }
 
 /**
- * Score a "closer to ideal is better" metric.
- * Uses power-curve decay from the ideal value to spread scores across 1-10.
- *
- * At z=0 (at ideal): score = ceil (10)
- * At z=1 (1σ away): score ≈ 7
- * At z=2 (2σ away): score ≈ 4
- * At z=3 (3σ away): score ≈ 1
- *
- * @param value   measured ratio / angle / deviation
- * @param mu      aesthetic ideal from anthropometric literature
- * @param sigma   population spread — controls discrimination width
+ * LEGACY: Score a "closer to ideal is better" metric.
+ * Too harsh — normal variation (1σ) drops to 5.5. Replaced by rangeScore.
+ * Kept for backward compatibility with unmigrated callers.
  */
 export function idealScore(
   value: number,
@@ -57,13 +94,4 @@ export function idealScore(
   const range = ceil - floor;
   const raw = ceil - range * Math.min(1, z * 0.5);
   return Math.round(Math.max(floor, Math.min(ceil, raw)) * 10) / 10;
-}
-
-/**
- * Compute a z-score: how many standard deviations the measured value is
- * from the population mean. Used for percentile computation.
- */
-export function toZScore(value: number, mu: number, sigma: number): number {
-  if (sigma <= 0 || !Number.isFinite(value)) return 0;
-  return (value - mu) / sigma;
 }

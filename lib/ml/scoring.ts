@@ -1,6 +1,6 @@
 import type { FaceLandmarkerResult } from "@mediapipe/tasks-vision";
 import { createUprightAccessor } from "./face-geometry";
-import { calibratedScore, idealScore } from "./scoring-curves";
+import { rangeScore, toZScore, idealScore } from "./scoring-curves";
 import {
   getFaceSymmetry,
   getFaceSymmetryAxis,
@@ -24,6 +24,9 @@ import {
   getNoseBridgeAngleScore,
   getEyeTiltScore,
   type StructureProfileType,
+  computeRawGeometry,
+  type Measurement,
+  type RawGeometry,
 } from "./face-analyzer";
 import type { PhotoQualityReport } from "./face-quality";
 import { frontalityScore } from "./face-quality";
@@ -134,6 +137,100 @@ export interface FaceScoreResult {
   youthfulness: number;
   /** Per-metric percentiles for distribution bars. */
   metricPercentiles: Record<string, number>;
+  /** Domain-level scores (new architecture). */
+  domainScores?: DomainScores;
+  /** Raw geometry measurements (for measurement debugger). */
+  rawGeometry?: RawGeometry;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DOMAIN-BASED SCORING
+//
+// Instead of averaging 18 overlapping metrics, group into independent domains:
+//   Proportion (25%): vertical thirds, horizontal fifths, golden ratio, FWHR
+//   Symmetry   (20%): bilateral symmetry
+//   Structure  (20%): jaw geometry, cheekbone, chin
+//   Features   (20%): eyes, nose, lips (non-overlapping)
+//   Quality    (15%): skin clarity, photo quality
+//
+// Each domain is scored 0-10 using rangeScore(z) on its constituent measurements.
+// Face IQ is a weighted average of domain scores.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface DomainScores {
+  proportion: number;
+  symmetry: number;
+  structure: number;
+  features: number;
+  quality: number;
+  faceIQ: number;
+}
+
+const DOMAIN_WEIGHTS = {
+  proportion: 0.25,
+  symmetry:   0.20,
+  structure:  0.20,
+  features:   0.20,
+  quality:    0.15,
+};
+
+function domainScore(measurements: Measurement[]): number {
+  const valid = measurements.filter(m => m.confidence > 0 && Number.isFinite(m.z));
+  if (valid.length === 0) return 5;
+  const avg = valid.reduce((sum, m) => sum + rangeScore(m.z), 0) / valid.length;
+  return Math.round(Math.max(0, Math.min(10, avg)) * 10) / 10;
+}
+
+function computeDomainScores(
+  geo: RawGeometry,
+  skinClarity: number,
+  photoQuality: number
+): DomainScores {
+  const proportion = domainScore([
+    geo.verticalBalance,
+    geo.horizontalFifths,
+    geo.goldenRatio,
+    geo.fwhr,
+  ]);
+
+  const symmetryScore = domainScore([geo.symmetry]);
+
+  const structure = domainScore([
+    geo.jawRatio,
+    geo.gonialAngle,
+    geo.mandibularTaper,
+    geo.chinProjection,
+    geo.jawSymmetry,
+    geo.cheekboneDefinition,
+  ]);
+
+  const features = domainScore([
+    geo.eyeSpacing,
+    geo.canthalTilt,
+    geo.eyeTilt,
+    geo.noseWidthRatio,
+    geo.noseChinRatio,
+    geo.noseProjection,
+    geo.noseBridgeAngle,
+    geo.lipFullness,
+    geo.lipWidthRatio,
+    geo.upperLipRatio,
+  ]);
+
+  // Quality: skin clarity (0-10) + photo quality (0-10), normalized
+  const qSkin   = Math.max(0, Math.min(10, skinClarity));
+  const qPhoto  = Math.max(0, Math.min(10, photoQuality));
+  const quality = Math.round((qSkin * 0.6 + qPhoto * 0.4) * 10) / 10;
+
+  const faceIQ = Math.round(Math.max(0, Math.min(10,
+    proportion * DOMAIN_WEIGHTS.proportion +
+    symmetryScore * DOMAIN_WEIGHTS.symmetry +
+    structure * DOMAIN_WEIGHTS.structure +
+    features * DOMAIN_WEIGHTS.features +
+    quality * DOMAIN_WEIGHTS.quality
+  )) * 10) / 10;
+
+  return { proportion, symmetry: symmetryScore, structure, features, quality, faceIQ };
 }
 
 export interface FaceMetricScores {
@@ -548,6 +645,43 @@ function getStyleProfile(shape: string, scores: { symmetry: number; jawline: num
 
 export function computeFaceMetrics(result: FaceLandmarkerResult): FaceMetricScores {
   const shapeResult = getFacialShape(result);
+
+  // Try raw geometry engine first (single source of truth)
+  const rawGeo = computeRawGeometry(result);
+
+  const measurementToResult = (meas: import("./face-analyzer").Measurement | undefined): MetricResult => {
+    if (!meas || meas.confidence <= 0) return { score: null, confidence: 0, rawValue: meas?.raw };
+    // Convert z-score to 0-10 scale using rangeScore
+    const score = rangeScore(meas.z);
+    return { score: Math.round(score * 10) / 10, confidence: meas.confidence, rawValue: meas.raw };
+  };
+
+  if (rawGeo) {
+    return {
+      symmetry:       measurementToResult(rawGeo.symmetry),
+      proportions:    measurementToResult(rawGeo.verticalBalance),
+      jawline:        measurementToResult(rawGeo.jawRatio),
+      eyeSpacing:     measurementToResult(rawGeo.eyeSpacing),
+      goldenRatio:    measurementToResult(rawGeo.goldenRatio),
+      lipFullness:    measurementToResult(rawGeo.lipFullness),
+      noseProfile:    measurementToResult(rawGeo.noseWidthRatio),
+      cheekboneDefinition: measurementToResult(rawGeo.cheekboneDefinition),
+      fwhr:           measurementToResult(rawGeo.fwhr),
+      canthalTilt:    measurementToResult(rawGeo.canthalTilt),
+      eyeNoseRatio:   measurementToResult(rawGeo.eyeSpacing),  // Closest available
+      noseChinRatio:  measurementToResult(rawGeo.noseChinRatio),
+      horizontalFifths: measurementToResult(rawGeo.horizontalFifths),
+      noseProjection: measurementToResult(rawGeo.noseProjection),
+      lipWidthRatio:  measurementToResult(rawGeo.lipWidthRatio),
+      upperLipRatio:  measurementToResult(rawGeo.upperLipRatio),
+      noseBridgeAngle: measurementToResult(rawGeo.noseBridgeAngle),
+      eyeTilt:        measurementToResult(rawGeo.eyeTilt),
+      facialShape: shapeResult.primary,
+      faceShapeProbabilities: shapeResult.probabilities,
+    };
+  }
+
+  // Fallback to legacy scorers if raw geometry fails
   const safe = (fn: () => number): MetricResult => {
     try {
       const v = fn();
@@ -711,9 +845,21 @@ export function buildFaceScoreFromMetrics(
     availableMetrics.push(label);
   }
 
-  const faceIQ = availableWeight > 0
-    ? Math.round(Math.max(0, Math.min(100, weightedSum / availableWeight)))
-    : 50;
+  // ── Domain-based Face IQ ──
+  // Compute raw geometry from landmarks (single source of truth)
+  const rawGeometry = sourceResult ? computeRawGeometry(sourceResult) : undefined;
+
+  // Compute domain scores from raw geometry
+  const domainScores = rawGeometry
+    ? computeDomainScores(rawGeometry, skinClarityScore, photoQualityScore)
+    : undefined;
+
+  // Use domain-based faceIQ if available, otherwise fall back to legacy
+  const faceIQ = domainScores
+    ? Math.round(domainScores.faceIQ * 10)  // Convert 0-10 → 0-100
+    : availableWeight > 0
+      ? Math.round(Math.max(0, Math.min(100, weightedSum / availableWeight)))
+      : 50;
 
   const { grade, label: gradeLabel, comparison } = computeFaceIQ(metricPercentiles, weightMap);
 
@@ -983,6 +1129,8 @@ export function buildFaceScoreFromMetrics(
     structureProfile,
     youthfulness,
     metricPercentiles,
+    domainScores,
+    rawGeometry: rawGeometry ?? undefined,
   };
 }
 
