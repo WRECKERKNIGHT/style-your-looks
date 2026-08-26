@@ -151,7 +151,7 @@ export function calculatePillarAnalysis(faceResult: FaceScoreResult): PillarAnal
     [
       { label: "Feature Balance", score: faceResult.proportions, weight: 0.2 },
       { label: "Left/Right Asymmetry", score: faceResult.symmetry, weight: 0.3 },
-      { label: "Facial Thirds", score: faceResult.foreheadBalance, weight: 0.2 },
+      { label: "Nose–Lip Harmony", score: (faceResult.noseProjection + faceResult.upperLipRatio) / 2, weight: 0.2 },
       { label: "Proportionality", score: (faceResult.goldenRatio + faceResult.horizontalFifths) / 2, weight: 0.3 },
     ]
   );
@@ -163,7 +163,7 @@ export function calculatePillarAnalysis(faceResult: FaceScoreResult): PillarAnal
       { label: "Cheekbones", score: faceResult.cheekboneDefinition, weight: 0.28 },
       { label: "Jaw", score: faceResult.jawline, weight: 0.32 },
       { label: "Chin Balance", score: faceResult.noseChinRatio, weight: 0.15 },
-      { label: "Midface", score: faceResult.midfaceRatio, weight: 0.1 },
+      { label: "Nose Profile", score: faceResult.noseProfile, weight: 0.1 },
       { label: "Facial Width", score: faceResult.fwhr, weight: 0.15 },
     ]
   );
@@ -285,11 +285,11 @@ export function calculatePillarAnalysis(faceResult: FaceScoreResult): PillarAnal
     pillar: "Identity",
   });
 
-  if (faceResult.foreheadBalance < 6.5) {
+  if (faceResult.proportions < 6.5) {
     improvements.push({
       id: "hairstyle-balance",
       title: "Hairstyle for Facial Balance",
-      description: `Your ${faceResult.facialShape} face shape benefits from hairstyles that ${faceResult.foreheadBalance < 5 ? "add volume to the sides to balance your forehead" : "maintain your natural proportions"}. Consult the grooming tool for specific recommendations.`,
+      description: `Your ${faceResult.facialShape} face shape benefits from hairstyles that ${faceResult.proportions < 5 ? "add volume to underrepresented thirds" : "maintain your natural proportions"}. Consult the grooming tool for specific recommendations.`,
       impact: "medium",
       category: "grooming",
       effort: "easy",

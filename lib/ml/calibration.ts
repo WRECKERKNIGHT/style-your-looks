@@ -1,10 +1,10 @@
 /**
  * Population-calibrated facial metric scoring.
  *
- * Instead of arbitrary 2-10 scores clustered in the 5-6 band, each raw
- * measurement is compared against published anthropometric population
- * means (μ) and standard deviations (σ) to produce z-scores, which are
- * mapped to population percentiles via the cumulative normal distribution.
+ * Each raw measurement is compared against published anthropometric
+ * population means (μ) and standard deviations (σ) to produce z-scores,
+ * which are mapped to population percentiles via the cumulative normal
+ * distribution.
  *
  * Reference sources:
  *   - Farkas 1994 (Anthropometry of the Head and Face)
@@ -47,120 +47,59 @@ export type IntakeProfile = {
  * Population reference means (μ) and standard deviations (σ) for each
  * facial metric. Region-specific overrides are applied on top of these.
  *
- * σ values are deliberately set wider than textbook variance so that the
- * scoring kernel is *forgiving*: a σ of 0.3 on a ratio with real-world
- * spread of 0.2 means even 1.5 SD deviations still score ~6/10. This
- * prevents the common complaint that the engine is "too harsh".
+ * σ values are set to approximately HALF the real population spread so
+ * that the scoring kernel discriminates well: 1 SD = 2 points on the
+ * 1-10 scale, so a truly exceptional face (2 SD above mean) scores ~9.
  */
 interface MetricRef {
   mu: number;
   sigma: number;
+  /** If true, deviation from ideal penalizes (bell curve). If false, higher is better (linear z). */
+  bellCurve?: boolean;
   regionOverrides?: Partial<Record<EthnicRegion, { mu: number; sigma: number }>>;
   genderOverrides?: Partial<Record<string, { mu: number; sigma: number }>>;
 }
 
 const REFS: Record<string, MetricRef> = {
-  symmetry: {
-    mu: 9.2,
-    sigma: 0.8,
-    genderOverrides: {
-      masculine: { mu: 9.0, sigma: 0.9 },
-      feminine: { mu: 9.3, sigma: 0.7 },
-    },
-  },
-  goldenRatio: {
-    mu: 0.618,
-    sigma: 0.12,
-  },
-  jawline: {
-    mu: 0.78,
-    sigma: 0.08,
-    regionOverrides: {
-      african: { mu: 0.82, sigma: 0.09 },
-      east_asian: { mu: 0.74, sigma: 0.07 },
-      caucasian: { mu: 0.78, sigma: 0.08 },
-    },
-  },
-  fwhr: {
-    mu: 1.95,
-    sigma: 0.3,
-    genderOverrides: {
-      masculine: { mu: 2.05, sigma: 0.25 },
-      feminine: { mu: 1.85, sigma: 0.22 },
-    },
-  },
-  canthalTilt: {
-    mu: 5.0,
-    sigma: 4.5,
-    regionOverrides: {
-      east_asian: { mu: 3.5, sigma: 3.8 },
-      south_asian: { mu: 4.2, sigma: 4.0 },
-      caucasian: { mu: 5.5, sigma: 4.5 },
-      african: { mu: 4.0, sigma: 4.2 },
-    },
-  },
-  eyeNoseRatio: {
-    mu: 1.62,
-    sigma: 0.38,
-    regionOverrides: {
-      east_asian: { mu: 1.55, sigma: 0.35 },
-      south_asian: { mu: 1.58, sigma: 0.36 },
-      caucasian: { mu: 1.65, sigma: 0.38 },
-      african: { mu: 1.60, sigma: 0.40 },
-    },
-  },
-  noseChinRatio: {
-    mu: 0.30,
-    sigma: 0.06,
-  },
-  midfaceRatio: {
-    mu: 1.0,
-    sigma: 0.14,
-  },
-  horizontalFifths: {
-    mu: 0.0,
-    sigma: 0.3,
-  },
-  proportions: {
-    mu: 0.0,
-    sigma: 0.09,
-  },
-  lipFullness: {
-    mu: 0.55,
-    sigma: 0.15,
-    regionOverrides: {
-      african: { mu: 0.62, sigma: 0.14 },
-      south_asian: { mu: 0.56, sigma: 0.14 },
-      east_asian: { mu: 0.50, sigma: 0.13 },
-      caucasian: { mu: 0.55, sigma: 0.15 },
-    },
-  },
-  noseProfile: {
-    mu: 0.28,
-    sigma: 0.05,
-    regionOverrides: {
-      east_asian: { mu: 0.30, sigma: 0.05 },
-      african: { mu: 0.31, sigma: 0.05 },
-      caucasian: { mu: 0.27, sigma: 0.04 },
-    },
-  },
-  foreheadBalance: {
-    mu: 0.0,
-    sigma: 0.055,
-  },
-  cheekboneDefinition: {
-    mu: 1.07,
-    sigma: 0.09,
-  },
-  eyeSpacing: {
-    mu: 1.0,
-    sigma: 0.28,
-  },
+  // --- Geometry ratios (bell curve — closer to ideal is better) ---
+  jawRatio: { mu: 0.78, sigma: 0.08, bellCurve: true,
+    regionOverrides: { african: { mu: 0.82, sigma: 0.09 }, east_asian: { mu: 0.74, sigma: 0.07 } } },
+  gonialAngle: { mu: 120, sigma: 12, bellCurve: true },
+  mandibularTaper: { mu: 0.45, sigma: 0.12, bellCurve: true },
+  chinProjection: { mu: 0.0, sigma: 0.25, bellCurve: true },
+  jawSymmetry: { mu: 0.0, sigma: 0.06, bellCurve: true },
+  eyeSpacingRatio: { mu: 1.0, sigma: 0.20, bellCurve: true },
+  fwhr: { mu: 1.95, sigma: 0.25, bellCurve: true,
+    genderOverrides: { masculine: { mu: 2.05, sigma: 0.22 }, feminine: { mu: 1.85, sigma: 0.20 } } },
+  canthalTilt: { mu: 5.0, sigma: 3.5, bellCurve: true,
+    regionOverrides: { east_asian: { mu: 3.5, sigma: 3.0 }, caucasian: { mu: 5.5, sigma: 3.5 }, african: { mu: 4.0, sigma: 3.2 } } },
+  eyeNoseRatio: { mu: 1.62, sigma: 0.25, bellCurve: true,
+    regionOverrides: { east_asian: { mu: 1.55, sigma: 0.22 }, caucasian: { mu: 1.65, sigma: 0.25 } } },
+  noseChinRatio: { mu: 0.30, sigma: 0.045, bellCurve: true },
+  proportions: { mu: 0.0, sigma: 0.06, bellCurve: true },
+  lipFullness: { mu: 0.55, sigma: 0.12, bellCurve: true,
+    regionOverrides: { african: { mu: 0.62, sigma: 0.11 }, east_asian: { mu: 0.50, sigma: 0.10 }, caucasian: { mu: 0.55, sigma: 0.12 } } },
+  noseWidthRatio: { mu: 0.28, sigma: 0.04, bellCurve: true,
+    regionOverrides: { east_asian: { mu: 0.30, sigma: 0.04 }, african: { mu: 0.31, sigma: 0.04 } } },
+  cheekboneDefinition: { mu: 1.07, sigma: 0.07, bellCurve: true },
+  horizontalFifths: { mu: 0.0, sigma: 0.22, bellCurve: true },
+  noseProjection: { mu: 0.55, sigma: 0.10, bellCurve: true },
+  lipWidthRatio: { mu: 0.42, sigma: 0.08, bellCurve: true },
+  eyeTilt: { mu: 5.0, sigma: 3.5, bellCurve: true },
+  upperLipRatio: { mu: 0.38, sigma: 0.08, bellCurve: true },
+  noseBridgeAngle: { mu: 135, sigma: 10, bellCurve: true },
+
+  // --- Linear metrics (higher = better, z-score based) ---
+  symmetry: { mu: 8.5, sigma: 1.2,
+    genderOverrides: { masculine: { mu: 8.3, sigma: 1.3 }, feminine: { mu: 8.7, sigma: 1.1 } } },
+  goldenRatio: { mu: 7.0, sigma: 1.5 },
+  skinClarity: { mu: 6.5, sigma: 1.8 },
 };
 
 export interface ResolvedRef {
   mu: number;
   sigma: number;
+  bellCurve: boolean;
 }
 
 /**
@@ -173,7 +112,7 @@ export function resolveRef(
   genderProfile?: "masculine" | "feminine" | "neutral"
 ): ResolvedRef {
   const ref = REFS[metric];
-  if (!ref) return { mu: 5, sigma: 2 };
+  if (!ref) return { mu: 5, sigma: 2, bellCurve: true };
 
   let mu = ref.mu;
   let sigma = ref.sigma;
@@ -189,7 +128,7 @@ export function resolveRef(
     sigma = o.sigma;
   }
 
-  return { mu, sigma };
+  return { mu, sigma, bellCurve: ref.bellCurve ?? true };
 }
 
 /**
@@ -242,63 +181,55 @@ export interface MetricCalibration {
   sigma: number;
   z: number;
   percentile: number;
-  /** Score on a 2-10 scale using the Gaussian kernel, for backward compat */
+  /** Score on a 1-10 scale */
   gaussianScore: number;
 }
 
 /**
- * Calibrate a single raw measurement against the population reference.
- */
-export function calibrateMetric(
-  metric: string,
-  rawValue: number,
-  region?: EthnicRegion,
-  genderProfile?: "masculine" | "feminine" | "neutral",
-  floor = 2,
-  ceil = 10
-): MetricCalibration {
-  const ref = resolveRef(metric, region, genderProfile);
-  const z = zScore(rawValue, ref.mu, ref.sigma);
-  const pct = percentileFromZ(z);
-  // Convert percentile (0-100) to a 2-10 scale for backward compatibility
-  const gaussianScore = Math.round(Math.max(floor, Math.min(ceil,
-    floor + (ceil - floor) * (pct / 100)
-  )) * 10) / 10;
-  return {
-    rawValue,
-    mu: ref.mu,
-    sigma: ref.sigma,
-    z,
-    percentile: pct,
-    gaussianScore,
-  };
-}
-
-/**
- * Convert an idealScore-based metric (already 2-10) to a percentile.
- * Uses the idealScore value as the "raw" measurement against a neutral
- * reference (μ = 6, σ = 2 on the 2-10 scale) to produce a meaningful
- * distribution.
+ * Convert an idealScore-based metric (1-10 scale) to a population percentile.
  *
- * This is the bridge for metrics that still use idealScore() in their
- * calculation — instead of replacing every metric at once, we post-process
- * the 2-10 output through percentile normalization.
+ * For bell-curve metrics: uses the metric's own REFS data to compute the
+ * z-score of the underlying raw measurement, then maps to percentile.
+ *
+ * For linear metrics: uses the score directly as a z-score proxy.
+ *
+ * This replaces the old broken scoreToPercentile() which used a generic
+ * mu=6.0/sigma=1.8 mapping that compressed everything.
  */
-export function scoreToPercentile(score: number): number {
+export function scoreToPercentile(
+  score: number,
+  metricKey?: string,
+  rawValue?: number
+): number {
   if (!Number.isFinite(score)) return 50;
-  // Map the 2-10 score through a calibrated curve:
-  // μ = 6.0 (average score), σ = 1.8 (spreads the distribution)
-  const z = (score - 6.0) / 1.8;
+
+  // If we have the metric key and raw value, use the actual population reference
+  if (metricKey && rawValue !== undefined) {
+    const ref = resolveRef(metricKey);
+    if (ref.bellCurve) {
+      // For bell-curve metrics, compute z from the raw measurement
+      const z = zScore(rawValue, ref.mu, ref.sigma);
+      return percentileFromZ(z);
+    } else {
+      // For linear metrics, compute z from the score directly
+      const z = zScore(score, ref.mu, ref.sigma);
+      return percentileFromZ(z);
+    }
+  }
+
+  // Fallback: map 1-10 score through a calibrated distribution
+  // 5 = average (50th percentile), 7 = ~84th, 9 = ~98th
+  const z = (score - 5) / 2;
   return percentileFromZ(z);
 }
 
 /**
  * Compute the Face IQ: a 0-100 percentile-based score composed of weighted
- * metric percentiles. This replaces the broken `score × 10` calculation.
+ * metric percentiles.
  *
  * Each metric's percentile is weighted, summed, and clamped to 0-100.
- * The result IS a population percentile (not a rescaled score), so "Face IQ: 78"
- * literally means "better than 78% of faces".
+ * The result IS a population percentile, so "Face IQ: 78" literally means
+ * "better than 78% of faces".
  */
 export function computeFaceIQ(
   metricPercentiles: Record<string, number>,

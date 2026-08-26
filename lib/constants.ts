@@ -124,8 +124,11 @@ export const SCORE_METRICS = {
     { key: "eyeNoseRatio", label: "Eye–Nose Ratio", description: "Eye width to nose width", weight: 0.04 },
     { key: "lipFullness", label: "Lip Proportion", description: "Upper-to-lower lip ratio and fullness", weight: 0.05 },
     { key: "noseProfile", label: "Nose Profile", description: "Nose width relative to face width", weight: 0.05 },
-    { key: "foreheadBalance", label: "Forehead Balance", description: "Vertical thirds evenness", weight: 0.03 },
+    { key: "noseProjection", label: "Nose Projection", description: "Nose prominence relative to facial plane", weight: 0.03 },
+    { key: "lipWidthRatio", label: "Lip Width Ratio", description: "Lip width relative to nose width", weight: 0.02 },
+    { key: "upperLipRatio", label: "Upper Lip Ratio", description: "Upper lip thickness relative to lower lip", weight: 0.02 },
+    { key: "noseBridgeAngle", label: "Nose Bridge Angle", description: "Angle of the nasal bridge", weight: 0.02 },
+    { key: "eyeTilt", label: "Eye Tilt", description: "Canthal tilt angle of the eyes", weight: 0.01 },
     { key: "noseChinRatio", label: "Nose–Chin Balance", description: "Nose length to facial height", weight: 0.02 },
-    { key: "midfaceRatio", label: "Midface Harmony", description: "Upper-midface to lower face height", weight: 0.01 },
   ],
 } as const;

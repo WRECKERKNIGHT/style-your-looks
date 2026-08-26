@@ -1,8 +1,8 @@
 import { FaceLandmarker, FilesetResolver, type FaceLandmarkerResult } from "@mediapipe/tasks-vision";
 import { prepareCanvas } from "./preprocessing";
 import { resolveModelUrl, resolveWasmBase, invalidateAssetResolution, MODEL_SOURCES } from "./engine-assets";
-import { calculateSymmetryScore, calculateFaceShape, calculateSymmetryAxis, createUprightAccessor, type FaceShapeClassification } from "./face-geometry";
-import { idealScore } from "./scoring-curves";
+import { calculateSymmetryScore, calculateFaceShape, calculateSymmetryAxis, createUprightAccessor, calculateMandibularAngle, calculateNoseProjection, calculateLipWidthRatio, calculateUpperLipRatio, calculateNoseBridgeAngle, calculateEyeTilt, type FaceShapeClassification } from "./face-geometry";
+import { calibratedScore, idealScore } from "./scoring-curves";
 
 let faceLandmarker: FaceLandmarker | null = null;
 let landmarkerInitPromise: Promise<FaceLandmarker> | null = null;
@@ -173,19 +173,17 @@ export function getFaceSymmetryAxis(result: FaceLandmarkerResult) {
 }
 
 export function getFaceProportions(result: FaceLandmarkerResult): number {
-  if (!result.faceLandmarks || result.faceLandmarks.length === 0) return 0;
+  if (!result.faceLandmarks || result.faceLandmarks.length === 0) return 5;
 
-  // Vertical thirds are measured in the upright frame so a rolled head
-  // doesn't shrink the face-length denominator by cos(tilt).
   const U = createUprightAccessor(result.faceLandmarks[0]);
   const forehead = U.pt(10);
   const chin = U.pt(152);
   const browLine = U.pt(9);
   const noseBottom = U.pt(2);
-  if (!forehead || !chin || !browLine || !noseBottom) return 0;
+  if (!forehead || !chin || !browLine || !noseBottom) return 5;
 
   const faceLength = chin.y - forehead.y;
-  if (faceLength === 0) return 0;
+  if (faceLength === 0) return 5;
 
   const upperThird = (browLine.y - forehead.y) / faceLength;
   const middleThird = (noseBottom.y - browLine.y) / faceLength;
@@ -197,7 +195,7 @@ export function getFaceProportions(result: FaceLandmarkerResult): number {
     Math.abs(middleThird - idealRatio) +
     Math.abs(lowerThird - idealRatio);
 
-  return idealScore(deviation, 0, 0.09);
+  return idealScore(deviation, 0, 0.06, 1, 10);
 }
 
 /**
@@ -214,7 +212,7 @@ export function getFaceProportions(result: FaceLandmarkerResult): number {
  *   5. Jaw symmetry (levelness between left and right jaw corners)
  */
 export function getJawlineScore(result: FaceLandmarkerResult): number {
-  if (!result.faceLandmarks || result.faceLandmarks.length === 0) return 0;
+  if (!result.faceLandmarks || result.faceLandmarks.length === 0) return 5;
 
   const U = createUprightAccessor(result.faceLandmarks[0]);
   const leftJaw1 = U.pt(127);
@@ -226,41 +224,38 @@ export function getJawlineScore(result: FaceLandmarkerResult): number {
   const leftCheek = U.pt(234);
   const rightCheek = U.pt(454);
   const chinTip = U.pt(152);
-  if (!leftJaw1 || !leftJaw2 || !rightJaw1 || !rightJaw2 || !chin || !top || !leftCheek || !rightCheek || !chinTip) return 0;
+  if (!leftJaw1 || !leftJaw2 || !rightJaw1 || !rightJaw2 || !chin || !top || !leftCheek || !rightCheek || !chinTip) return 5;
 
-  // 1. Jaw-to-face ratio
+  // 1. Jaw-to-face ratio — sharper sigma for better discrimination
   const jawWidth = Math.hypot(rightJaw1.x - leftJaw1.x, rightJaw1.y - leftJaw1.y);
   const faceLength = Math.hypot(top.x - chin.x, top.y - chin.y);
   const jawRatio = jawWidth / faceLength;
-  const s1 = idealScore(jawRatio, 0.78, 0.10);
+  const s1 = idealScore(jawRatio, 0.78, 0.08);
 
-  // 2. Gonial angle proxy (angle between jaw corner and chin)
+  // 2. Gonial angle — the actual angle at the jaw corner
   const leftAngle = Math.abs(
     Math.atan2(leftJaw2.y - chin.y, leftJaw2.x - chin.x) -
     Math.atan2(rightJaw2.y - chin.y, rightJaw2.x - chin.x)
   ) * (180 / Math.PI);
-  // Ideal gonial angle ~120° for balanced jaw
-  const s2 = idealScore(leftAngle, 120, 18);
+  const s2 = idealScore(leftAngle, 120, 12);
 
-  // 3. Mandibular taper (jaw narrows toward chin — higher = more tapered)
+  // 3. Mandibular taper — how much the jaw narrows from gonion to chin
   const cheekWidth = Math.abs(rightCheek.x - leftCheek.x);
   const taper = cheekWidth > 0 ? (cheekWidth - jawWidth) / cheekWidth : 0.5;
-  // Ideal taper ~0.45 (jaw is ~55% of cheek width)
-  const s3 = idealScore(taper, 0.45, 0.15);
+  const s3 = idealScore(taper, 0.45, 0.12);
 
-  // 4. Chin projection (chin position relative to jaw — closer to center = more projected)
+  // 4. Chin projection — chin centering in the jaw frame
   const chinCenter = Math.abs(chinTip.x - (leftJaw1.x + rightJaw1.x) / 2);
   const chinProjection = jawWidth > 0 ? chinCenter / (jawWidth / 2) : 0.5;
-  // Lower chinCenter = more centered = better projection
-  const s4 = idealScore(chinProjection, 0.0, 0.3);
+  const s4 = idealScore(chinProjection, 0.0, 0.25);
 
-  // 5. Jaw symmetry (levelness between left and right jaw corners)
-  const asymmetry = Math.abs(leftJaw1.y - rightJaw1.y) * (180 / Math.PI) / faceLength;
-  const s5 = idealScore(asymmetry, 0, 0.08);
+  // 5. Jaw symmetry — levelness between left and right jaw corners
+  const asymmetry = Math.abs(leftJaw1.y - rightJaw1.y) / faceLength;
+  const s5 = idealScore(asymmetry, 0, 0.06);
 
-  // Weighted average: ratio and gonial are most important
+  // Weighted average: gonial angle and ratio are most important
   const score = s1 * 0.25 + s2 * 0.30 + s3 * 0.15 + s4 * 0.15 + s5 * 0.15;
-  return Math.min(10, Math.max(0, Math.round(score * 10) / 10));
+  return Math.min(10, Math.max(1, Math.round(score * 10) / 10));
 }
 
 /**
@@ -488,21 +483,23 @@ export function getYouthfulness(
 }
 
 export function getEyeSpacingScore(result: FaceLandmarkerResult): number {
-  if (!result.faceLandmarks || result.faceLandmarks.length === 0) return 0;
+  if (!result.faceLandmarks || result.faceLandmarks.length === 0) return 5;
 
   const U = createUprightAccessor(result.faceLandmarks[0]);
   const leftEyeInner = U.pt(133);
   const rightEyeInner = U.pt(362);
   const leftEyeOuter = U.pt(33);
-  if (!leftEyeInner || !rightEyeInner || !leftEyeOuter) return 5;
+  const rightEyeOuter = U.pt(263);
+  if (!leftEyeInner || !rightEyeInner || !leftEyeOuter || !rightEyeOuter) return 5;
 
-  const eyeWidth = Math.hypot(leftEyeOuter.x - leftEyeInner.x, leftEyeOuter.y - leftEyeInner.y);
+  const leftEyeWidth = Math.hypot(leftEyeOuter.x - leftEyeInner.x, leftEyeOuter.y - leftEyeInner.y);
+  const rightEyeWidth = Math.hypot(rightEyeOuter.x - rightEyeInner.x, rightEyeOuter.y - rightEyeInner.y);
   const eyeGap = Math.hypot(rightEyeInner.x - leftEyeInner.x, rightEyeInner.y - leftEyeInner.y);
+  const avgEyeWidth = (leftEyeWidth + rightEyeWidth) / 2;
+  if (avgEyeWidth <= 0) return 5;
 
-  const ratio = eyeGap / eyeWidth;
-
-  // Ideal spacing ≈ one eye-width; σ calibrated to typical population spread.
-  return idealScore(ratio, 1.0, 0.28);
+  const ratio = eyeGap / avgEyeWidth;
+  return idealScore(ratio, 1.0, 0.20, 1, 10);
 }
 
 function dist2(ax: number, ay: number, bx: number, by: number): number {
@@ -524,8 +521,7 @@ export function getFwhrScore(result: FaceLandmarkerResult): number {
   if (bizygomaticWidth === 0 || browToLip === 0) return 5;
 
   const fwhr = bizygomaticWidth / browToLip;
-  // Researched attractive centre ≈ 1.95; σ ≈ half the real FWHR spread.
-  return idealScore(fwhr, 1.95, 0.22);
+  return idealScore(fwhr, 1.95, 0.22, 1, 10);
 }
 
 /** Raw FWHR value (for display) — 1.8–2.1 is the researched attractive range. */
@@ -565,7 +561,7 @@ export function getCanthalTiltScore(result: FaceLandmarkerResult): number {
   const avgTilt = (leftTilt + rightTilt) / 2 - U.correctedByDeg;
 
   // Positive tilt reads alert/attractive; population mode ≈ +5°.
-  return idealScore(avgTilt, 5, 4.5);
+  return idealScore(avgTilt, 5, 3.5, 1, 10);
 }
 
 /** Raw canthal tilt in degrees (display value), roll-corrected. */
@@ -615,7 +611,7 @@ export function getHorizontalFifthsScore(result: FaceLandmarkerResult): number {
     deviation += Math.abs(f - ideal) / ideal;
   }
 
-  return idealScore(deviation, 0, 0.3);
+  return idealScore(deviation, 0, 0.22, 1, 10);
 }
 
 /** Eye width to nose width ratio (golden ideal ~1.618). */
@@ -633,7 +629,7 @@ export function getEyeNoseRatioScore(result: FaceLandmarkerResult): number {
   if (eyeWidth === 0 || noseWidth === 0) return 5;
 
   const ratio = eyeWidth / noseWidth;
-  return idealScore(ratio, 1.618, 0.38);
+  return idealScore(ratio, 1.618, 0.25, 1, 10);
 }
 
 /** Raw eye/nose ratio for display. */
@@ -666,31 +662,54 @@ export function getNoseChinRatioScore(result: FaceLandmarkerResult): number {
   if (noseLength === 0 || faceLength === 0) return 5;
 
   const ratio = noseLength / faceLength;
-  return idealScore(ratio, 0.3, 0.06);
+  return idealScore(ratio, 0.3, 0.045, 1, 10);
 }
 
-/** Midface ratio — glabella-to-subnasale over subnasale-to-menton, ideal ~1.0. */
-export function getMidfaceRatioScore(result: FaceLandmarkerResult): number {
+/** Nose projection — ratio of nose tip protrusion to nose length. */
+export function getNoseProjectionScore(result: FaceLandmarkerResult): number {
   if (!result.faceLandmarks || result.faceLandmarks.length === 0) return 5;
-  const U = createUprightAccessor(result.faceLandmarks[0]);
-  const browLine = U.pt(9);
-  const noseBase = U.pt(2);
-  const chin = U.pt(152);
-  if (!browLine || !noseBase || !chin) return 5;
+  const projection = calculateNoseProjection(result.faceLandmarks[0]);
+  if (projection === null) return 5;
+  return idealScore(projection, 0.55, 0.10, 1, 10);
+}
 
-  const upper = Math.abs(browLine.y - noseBase.y);
-  const lower = Math.abs(noseBase.y - chin.y);
-  if (upper === 0 || lower === 0) return 5;
+/** Lip width ratio — mouth width relative to face width. */
+export function getLipWidthRatioScore(result: FaceLandmarkerResult): number {
+  if (!result.faceLandmarks || result.faceLandmarks.length === 0) return 5;
+  const ratio = calculateLipWidthRatio(result.faceLandmarks[0]);
+  if (ratio === null) return 5;
+  return idealScore(ratio, 0.42, 0.08, 1, 10);
+}
 
-  const ratio = upper / lower;
-  return idealScore(ratio, 1.0, 0.14);
+/** Upper lip ratio — upper lip height relative to total lip height. */
+export function getUpperLipRatioScore(result: FaceLandmarkerResult): number {
+  if (!result.faceLandmarks || result.faceLandmarks.length === 0) return 5;
+  const ratio = calculateUpperLipRatio(result.faceLandmarks[0]);
+  if (ratio === null) return 5;
+  return idealScore(ratio, 0.38, 0.08, 1, 10);
+}
+
+/** Nose bridge angle — straightness of the nose bridge. */
+export function getNoseBridgeAngleScore(result: FaceLandmarkerResult): number {
+  if (!result.faceLandmarks || result.faceLandmarks.length === 0) return 5;
+  const angle = calculateNoseBridgeAngle(result.faceLandmarks[0]);
+  if (angle === null) return 5;
+  return idealScore(angle, 135, 10, 1, 10);
+}
+
+/** Eye tilt — angle of the eye's long axis (positive = outer corner raised). */
+export function getEyeTiltScore(result: FaceLandmarkerResult): number {
+  if (!result.faceLandmarks || result.faceLandmarks.length === 0) return 5;
+  const tilt = calculateEyeTilt(result.faceLandmarks[0]);
+  if (tilt === null) return 5;
+  return idealScore(tilt, 5, 3.5, 1, 10);
 }
 
 export function getSkinClarity(
   canvas: HTMLCanvasElement,
   result: FaceLandmarkerResult
 ): number {
-  if (!result.faceLandmarks || result.faceLandmarks.length === 0) return 0;
+  if (!result.faceLandmarks || result.faceLandmarks.length === 0) return 5;
 
   const ctx = canvas.getContext("2d");
   if (!ctx) return 5;

@@ -336,7 +336,7 @@ export function AnalysisResults() {
             { label: "Eye Spacing", value: faceResult.eyeSpacing, suffix: "", decimals: 1, hint: "/10" },
             { label: "Nose Harmony", value: faceResult.noseProfile, suffix: "", decimals: 1, hint: "/10" },
             { label: "Jaw Strength", value: faceResult.jawline, suffix: "", decimals: 1, hint: "/10" },
-            { label: "Facial Thirds", value: faceResult.foreheadBalance, suffix: "", decimals: 1, hint: "/10" },
+            { label: "Nose Projection", value: faceResult.noseProjection, suffix: "", decimals: 1, hint: "/10" },
             { label: "Harmony", value: faceResult.facialHarmony, suffix: "", decimals: 1, hint: "/10" },
             { label: "Age Perception", value: faceResult.ageEstimation ?? 25, suffix: "", decimals: 0, hint: "yrs" },
             {
@@ -512,7 +512,7 @@ export function AnalysisResults() {
               { label: "Golden Ratio Adherence", value: faceResult.goldenRatio },
               { label: "Lip Proportion", value: faceResult.lipFullness },
               { label: "Nose Profile", value: faceResult.noseProfile },
-              { label: "Forehead Balance", value: faceResult.foreheadBalance },
+              { label: "Nose Projection", value: faceResult.noseProjection },
               { label: "Cheekbone Definition", value: faceResult.cheekboneDefinition },
             ].map((item) => (
               <motion.div
