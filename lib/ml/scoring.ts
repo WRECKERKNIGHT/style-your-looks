@@ -218,8 +218,8 @@ function getGoldenRatio(result: FaceLandmarkerResult): number {
 
   const idealRatio = 0.618;
   // φ adherence blends width-to-length (heavily) with mouth-to-width.
-  const wtl = idealScore(widthToLength, idealRatio, 0.08, 1, 10);
-  const mtw = idealScore(mouthToFaceWidth, 0.6, 0.07, 1, 10);
+  const wtl = idealScore(widthToLength, idealRatio, 0.05, 1, 10);
+  const mtw = idealScore(mouthToFaceWidth, 0.6, 0.04, 1, 10);
   return Math.max(1, Math.min(10, Math.round((wtl * 0.65 + mtw * 0.35) * 100) / 100));
 }
 
@@ -241,7 +241,7 @@ function getLipFullness(result: FaceLandmarkerResult): number {
   const ratio = lipHeight / mouthHeight;
 
   const idealRatio = 0.55;
-  return idealScore(ratio, idealRatio, 0.15, 2, 9.5);
+  return idealScore(ratio, idealRatio, 0.08, 2, 9.5);
 }
 
 function getNoseProfile(result: FaceLandmarkerResult): number {
@@ -261,7 +261,7 @@ function getNoseProfile(result: FaceLandmarkerResult): number {
   const noseToFace = noseWidth / faceWidth;
 
   const idealNoseRatio = 0.28;
-  return idealScore(noseToFace, idealNoseRatio, 0.05, 2, 9.5);
+  return idealScore(noseToFace, idealNoseRatio, 0.03, 2, 9.5);
 }
 
 function getForeheadBalance(result: FaceLandmarkerResult): number {
@@ -285,7 +285,7 @@ function getForeheadBalance(result: FaceLandmarkerResult): number {
     (Math.abs(upperThird - avg) + Math.abs(middleThird - avg) + Math.abs(lowerThird - avg)) /
     (avg * 3);
 
-  return idealScore(deviation, 0, 0.055, 2, 10);
+  return idealScore(deviation, 0, 0.035, 2, 10);
 }
 
 function getCheekboneDefinition(result: FaceLandmarkerResult): number {
@@ -305,7 +305,7 @@ function getCheekboneDefinition(result: FaceLandmarkerResult): number {
   const cheekToJaw = cheekWidth / jawWidth;
 
   // High cheek-to-jaw ratios read angular/editorial; mode ≈ 1.07.
-  return idealScore(cheekToJaw, 1.07, 0.09, 2, 9.5);
+  return idealScore(cheekToJaw, 1.07, 0.05, 2, 9.5);
 }
 
 function analyzeBlendshapes(result: FaceLandmarkerResult): BlendshapeAnalysis {
