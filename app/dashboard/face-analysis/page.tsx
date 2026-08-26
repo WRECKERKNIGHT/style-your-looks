@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef, Fragment, useMemo, useEffect } from "react";
+import { useState, useCallback, useRef, Fragment, useMemo, useEffect, Component, type ReactNode } from "react";
 import { ImageUploader } from "@/components/shared/ImageUploader";
 import { AnalysisResults } from "@/components/analysis/AnalysisResults";
 import { FaceSkeletonOverlay } from "@/components/analysis/FaceSkeletonOverlay";
@@ -27,6 +27,27 @@ import { SymmetrySplit } from "@/components/analysis/SymmetrySplit";
 import { LaserScanOverlay } from "@/components/analysis/LaserScanOverlay";
 import { ShareCardModal, type ShareCardData } from "@/components/shared/ShareCardModal";
 import { ShareToCommunity } from "@/components/community/ShareToCommunity";
+
+class ResultsBoundary extends Component<
+  { children: ReactNode; fallback?: ReactNode },
+  { error: Error | null }
+> {
+  state = { error: null as Error | null };
+  static getDerivedStateFromError(error: Error) { return { error }; }
+  render() {
+    if (this.state.error) {
+      return (
+        this.props.fallback ?? (
+          <div className="bg-red-500/10 border border-red-500/30 p-6 space-y-3">
+            <p className="text-sm font-bold text-red-400 font-body">Results rendering error</p>
+            <p className="text-xs text-red-400/80 font-mono break-all">{this.state.error.message}</p>
+          </div>
+        )
+      );
+    }
+    return this.props.children;
+  }
+}
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -768,6 +789,7 @@ export default function FaceAnalysisPage() {
 
       {faceResult && (
         <ScrollBlur blur={0} minOpacity={0.9}>
+        <ResultsBoundary>
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -1015,6 +1037,7 @@ export default function FaceAnalysisPage() {
             Analyse Another Set of Photos
           </motion.button>
         </motion.div>
+        </ResultsBoundary>
         </ScrollBlur>
       )}
 

@@ -156,6 +156,7 @@ function buildStoreFaceResult(
     consistencyScore: scoreResult.consistencyScore,
     analysisConfidence: scoreResult.analysisConfidence,
     photoCount: scoreResult.photoCount,
+    symmetryAxis: scoreResult.symmetryAxis,
     faceIQ: scoreResult.faceIQ,
     grade: scoreResult.grade,
     gradeLabel: scoreResult.gradeLabel,
