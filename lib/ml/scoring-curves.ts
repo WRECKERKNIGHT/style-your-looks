@@ -21,7 +21,7 @@
  * Score a bell-curve measurement using preferred/acceptable ranges.
  *
  * Instead of "120° = 10, 112° = worse", this says:
- *   "116-124° is preferred (8.5-10), 112-128° is acceptable (6-10),
+ *   "116-124° is preferred (9-10), 112-128° is acceptable (7-10),
  *    beyond that gets penalized."
  *
  * @param z        absolute z-score (how many σ from population mean)
@@ -37,17 +37,17 @@ export function rangeScore(
   const az = Math.abs(z);
   const range = ceil - floor;
 
-  // Within preferred range (0-0.5σ): score 8.5-10
+  // Within preferred range (0-0.5σ): score 9-10
   if (az <= 0.5) {
-    return ceil - range * 0.15 * (az / 0.5);
+    return ceil - range * 0.10 * (az / 0.5);
   }
-  // Within acceptable range (0.5-1.0σ): score 6-8.5
+  // Within acceptable range (0.5-1.0σ): score 7-9
   if (az <= 1.0) {
-    return (ceil - range * 0.15) - range * 0.25 * ((az - 0.5) / 0.5);
+    return (ceil - range * 0.10) - range * 0.20 * ((az - 0.5) / 0.5);
   }
-  // Beyond acceptable (1.0-2.5σ): score 0-6
+  // Beyond acceptable (1.0-2.5σ): score 0-7
   if (az <= 2.5) {
-    return (ceil - range * 0.40) - range * 0.60 * ((az - 1.0) / 1.5);
+    return (ceil - range * 0.30) - range * 0.70 * ((az - 1.0) / 1.5);
   }
   return floor;
 }
