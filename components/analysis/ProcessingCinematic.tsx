@@ -23,7 +23,7 @@ const PHASES = [
   { label: "COMPLETE", threshold: 100 },
 ];
 
-const TOTAL_DURATION = 4;
+const TOTAL_DURATION = 6;
 
 const OVAL_INDICES = [
   10, 338, 297, 332, 284, 251, 389, 356, 454, 323, 361, 288,
@@ -112,6 +112,12 @@ export function ProcessingCinematic() {
   const startTimeRef = useRef<number | null>(null);
   const [phaseProgress, setPhaseProgress] = useState(0);
 
+  // Hold the screen on screen for at least TOTAL_DURATION even if the compute
+  // finishes faster, so the scan is actually visible instead of blinking past
+  // in a fraction of a second. `active` is the local truth (isAnalyzing | hold).
+  const [active, setActive] = useState(false);
+  const holdTimeoutRef = useRef<number | null>(null);
+
   const handleImageLoad = useCallback(() => {
     const img = containerRef.current?.querySelector("img");
     if (img && img.naturalWidth > 0) {
@@ -121,21 +127,34 @@ export function ProcessingCinematic() {
   }, []);
 
   useEffect(() => {
-    startTimeRef.current = null;
-    timerRef.current = 0;
-    setPhaseProgress(0);
-    setDims(null);
-    setImageAspect(undefined);
-  }, [previewImage]);
-
-  const currentPhaseIdx = useMemo(
-    () => PHASES.findIndex((p) => progress < p.threshold),
-    [progress],
-  );
-  const activePhase = currentPhaseIdx >= 0 ? currentPhaseIdx : PHASES.length - 1;
+    if (isAnalyzing) {
+      if (holdTimeoutRef.current !== null) {
+        clearTimeout(holdTimeoutRef.current);
+        holdTimeoutRef.current = null;
+      }
+      startTimeRef.current = null;
+      timerRef.current = 0;
+      setPhaseProgress(0);
+      setDims(null);
+      setImageAspect(undefined);
+      setActive(true);
+    } else if (active && holdTimeoutRef.current === null) {
+      // Waiting for the minimum display time to elapse before hiding.
+      let held = 0;
+      if (startTimeRef.current !== null) {
+        held = (performance.now() - startTimeRef.current) / 1000;
+      }
+      const remaining = Math.max(150, (TOTAL_DURATION - held) * 1000 + 150);
+      holdTimeoutRef.current = window.setTimeout(() => {
+        holdTimeoutRef.current = null;
+        setActive(false);
+      }, remaining);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAnalyzing]);
 
   useEffect(() => {
-    if (!isAnalyzing) return;
+    if (!active) return;
     let raf = 0;
     const tick = (now: number) => {
       if (startTimeRef.current === null) startTimeRef.current = now;
@@ -147,11 +166,23 @@ export function ProcessingCinematic() {
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [isAnalyzing, previewImage]);
+  }, [active, previewImage]);
+
+  useEffect(() => {
+    return () => {
+      if (holdTimeoutRef.current !== null) clearTimeout(holdTimeoutRef.current);
+    };
+  }, []);
+
+  const currentPhaseIdx = useMemo(
+    () => PHASES.findIndex((p) => phaseProgress * 100 < p.threshold),
+    [phaseProgress],
+  );
+  const activePhase = currentPhaseIdx >= 0 ? currentPhaseIdx : PHASES.length - 1;
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas || !dims || !isAnalyzing) return;
+    if (!canvas || !dims || !active) return;
     const { w, h } = dims;
     if (w <= 0 || h <= 0) return;
     const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
@@ -423,13 +454,13 @@ export function ProcessingCinematic() {
       running = false;
       cancelAnimationFrame(raf);
     };
-  }, [dims, landmarks, imageAspect, isAnalyzing]);
+  }, [dims, landmarks, imageAspect, active]);
 
   const hasLandmarks = landmarks.length >= 478;
 
   return (
     <AnimatePresence>
-      {isAnalyzing && (
+      {active && (
         <motion.div
           key="cinematic"
           ref={containerRef}
