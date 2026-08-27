@@ -169,7 +169,7 @@ function buildStoreFaceResult(
     youthfulness: scoreResult.youthfulness,
     metricPercentiles: scoreResult.metricPercentiles,
     rawGeometry: scoreResult.rawGeometry,
-    domainScores: scoreResult.domainScores,
+    faceProfile: scoreResult.faceProfile,
     qualityGate: quality
       ? {
           brightness: quality.brightness,

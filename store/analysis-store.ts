@@ -124,7 +124,7 @@ export interface FaceAnalysisResult {
   /** Raw geometry measurements (for measurement debugger). */
   rawGeometry?: RawGeometry;
   /** Domain-level scores. */
-  domainScores?: { proportion: number; symmetry: number; structure: number; features: number; quality: number; faceIQ: number };
+  faceProfile?: { geometry: number; symmetry: number; structure: number; eyes: number; nasal: number; confidence: number };
 }
 
 export interface IntakeProfile {

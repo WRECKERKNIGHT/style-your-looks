@@ -1004,15 +1004,16 @@ export function AnalysisResults() {
             </div>
 
             <h4 className="text-[0.65rem] font-mono font-bold text-aurum-500 tracking-widest uppercase mt-4">
-              Derived Measurements (raw / z-score / confidence)
+              Measurements (raw / reference / deviation / confidence)
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {Object.entries(faceResult.rawGeometry!)
                 .filter(([_, v]) => v && typeof v === "object" && "raw" in v && "z" in v)
                 .map(([key, m]) => {
-                  const meas = m as { raw: number; z: number; confidence: number; label: string; unit: string };
+                  const meas = m as { raw: number; z: number; confidence: number; label: string; unit: string; mu: number; sigma: number };
                   const zAbs = Math.abs(meas.z);
                   const zColor = zAbs <= 0.5 ? "text-green-400" : zAbs <= 1.0 ? "text-aurum-500" : zAbs <= 2.0 ? "text-amber-400" : "text-red-400";
+                  const deviationSign = meas.z >= 0 ? "+" : "";
                   return (
                     <div key={key} className="bg-light-base dark:bg-cosmic-elevated p-2.5 border border-light-border dark:border-cosmic-border rounded-[var(--radius-xs)]">
                       <div className="flex items-center justify-between">
@@ -1023,39 +1024,51 @@ export function AnalysisResults() {
                           {meas.unit}
                         </span>
                       </div>
-                      <div className="flex gap-3 mt-1 font-mono text-xs">
-                        <span className="text-nexus-800 dark:text-white">
-                          {meas.raw.toFixed(4)}
-                        </span>
-                        <span className={zColor}>
-                          z={meas.z >= 0 ? "+" : ""}{meas.z.toFixed(2)}
-                        </span>
-                        <span className="text-nexus-400 dark:text-cosmic-muted">
-                          {(meas.confidence * 100).toFixed(0)}%
-                        </span>
+                      <div className="grid grid-cols-4 gap-1 mt-1 font-mono text-[0.65rem]">
+                        <div>
+                          <span className="text-nexus-400/50 dark:text-cosmic-muted/50 text-[0.5rem]">RAW</span>
+                          <p className="text-nexus-800 dark:text-white">{meas.unit === "degrees" ? `${meas.raw.toFixed(1)}°` : meas.raw.toFixed(3)}</p>
+                        </div>
+                        <div>
+                          <span className="text-nexus-400/50 dark:text-cosmic-muted/50 text-[0.5rem]">REFERENCE</span>
+                          <p className="text-nexus-400 dark:text-cosmic-muted">
+                            {meas.unit === "degrees" ? `${meas.mu.toFixed(0)}°±${meas.sigma.toFixed(0)}°` : `${meas.mu.toFixed(3)}±${meas.sigma.toFixed(3)}`}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-nexus-400/50 dark:text-cosmic-muted/50 text-[0.5rem]">DEVIATION</span>
+                          <p className={zColor}>{deviationSign}{meas.z.toFixed(2)}σ</p>
+                        </div>
+                        <div>
+                          <span className="text-nexus-400/50 dark:text-cosmic-muted/50 text-[0.5rem]">CONFIDENCE</span>
+                          <p className="text-nexus-800 dark:text-white">{(meas.confidence * 100).toFixed(0)}%</p>
+                        </div>
                       </div>
                     </div>
                   );
                 })}
             </div>
 
-            {faceResult.domainScores && (
+            {faceResult.faceProfile && (
               <>
                 <h4 className="text-[0.65rem] font-mono font-bold text-aurum-500 tracking-widest uppercase mt-4">
-                  Domain Scores
+                  Face Profile
                 </h4>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
                   {([
-                    ["proportion", "Proportion"],
+                    ["geometry", "Geometry"],
                     ["symmetry", "Symmetry"],
                     ["structure", "Structure"],
-                    ["features", "Features"],
-                    ["quality", "Quality"],
+                    ["eyes", "Eyes"],
+                    ["nasal", "Nasal"],
+                    ["confidence", "Confidence"],
                   ] as const).map(([key, label]) => (
                     <div key={key} className="bg-light-base dark:bg-cosmic-elevated p-2.5 border border-light-border dark:border-cosmic-border rounded-[var(--radius-xs)] text-center">
                       <span className="text-[0.55rem] font-mono tracking-widest text-nexus-400/70 dark:text-cosmic-muted/70 uppercase">{label}</span>
                       <p className="font-mono font-bold text-nexus-800 dark:text-white text-lg mt-0.5">
-                        {faceResult.domainScores![key as keyof typeof faceResult.domainScores]?.toFixed(1) ?? "—"}
+                        {key === "confidence"
+                          ? `${faceResult.faceProfile!.confidence}%`
+                          : faceResult.faceProfile![key as keyof Omit<typeof faceResult.faceProfile, "confidence">] ?? "—"}
                       </p>
                     </div>
                   ))}

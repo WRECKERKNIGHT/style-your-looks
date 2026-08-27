@@ -778,6 +778,10 @@ export interface Measurement {
   confidence: number;
   unit: MeasurementUnit;
   label: string;
+  /** Population reference mean (for UI to display reference range). */
+  mu: number;
+  /** Population reference std dev (for UI to display reference range). */
+  sigma: number;
 }
 
 export interface RawGeometry {
@@ -793,7 +797,7 @@ export interface RawGeometry {
   noseLength: number;
   mouthWidth: number;
 
-  // Derived ratios
+  // Derived ratios — Face Geometry
   faceRatio: Measurement;
   upperThird: Measurement;
   middleThird: Measurement;
@@ -805,14 +809,18 @@ export interface RawGeometry {
 
   // Eyes
   eyeSpacing: Measurement;
+  eyeAspectRatio: Measurement;
   canthalTilt: Measurement;
   eyeTilt: Measurement;
+  browTilt: Measurement;
+  browLengthRatio: Measurement;
 
   // Nose
   noseWidthRatio: Measurement;
   noseChinRatio: Measurement;
   noseProjection: Measurement;
   noseBridgeAngle: Measurement;
+  alarAngle: Measurement;
 
   // Lips
   lipFullness: Measurement;
@@ -842,12 +850,16 @@ const REFS: Record<string, { mu: number; sigma: number }> = {
   goldenRatio:     { mu: 0.618, sigma: 0.06 },
   fwhr:            { mu: 1.95, sigma: 0.15 },
   eyeSpacing:      { mu: 1.0,  sigma: 0.12 },
+  eyeAspectRatio:  { mu: 0.33, sigma: 0.06 },
   canthalTilt:     { mu: 5.0,  sigma: 3.0 },
   eyeTilt:         { mu: 5.0,  sigma: 3.0 },
+  browTilt:        { mu: 8.0,  sigma: 4.0 },
+  browLengthRatio: { mu: 0.40, sigma: 0.06 },
   noseWidthRatio:  { mu: 0.28, sigma: 0.03 },
   noseChinRatio:   { mu: 0.30, sigma: 0.035 },
   noseProjection:  { mu: 0.55, sigma: 0.07 },
   noseBridgeAngle: { mu: 135,  sigma: 8 },
+  alarAngle:       { mu: 85,   sigma: 10 },
   lipFullness:     { mu: 0.55, sigma: 0.08 },
   lipWidthRatio:   { mu: 0.42, sigma: 0.05 },
   upperLipRatio:   { mu: 0.38, sigma: 0.05 },
@@ -868,7 +880,7 @@ function m(
   unit: MeasurementUnit = "ratio"
 ): Measurement {
   if (!Number.isFinite(raw) || ref.sigma <= 0) {
-    return { raw: 0, z: 0, confidence: 0, unit, label };
+    return { raw: 0, z: 0, confidence: 0, unit, label, mu: ref.mu, sigma: ref.sigma };
   }
   return {
     raw: Math.round(raw * 10000) / 10000,
@@ -876,6 +888,8 @@ function m(
     confidence: Math.round(confidence * 100) / 100,
     unit,
     label,
+    mu: ref.mu,
+    sigma: ref.sigma,
   };
 }
 
@@ -1016,6 +1030,18 @@ export function computeRawGeometry(result: FaceLandmarkerResult): RawGeometry | 
   // ── Eyes ──
   const eyeSpacingRatio = avgEyeWidth > 0 ? eyeGap / avgEyeWidth : 1;
 
+  // Eye aspect ratio: vertical opening / horizontal width
+  const leftEyeTop = pt(159);
+  const leftEyeBot = pt(145);
+  const rightEyeTop = pt(386);
+  const rightEyeBot = pt(374);
+  const eyeAspectRatioVal = (() => {
+    if (!leftEyeTop || !leftEyeBot || !rightEyeTop || !rightEyeBot || avgEyeWidth <= 0) return 0.33;
+    const leftH = Math.abs(leftEyeTop.y - leftEyeBot.y);
+    const rightH = Math.abs(rightEyeTop.y - rightEyeBot.y);
+    return ((leftH + rightH) / 2) / avgEyeWidth;
+  })();
+
   const leftTiltFn = () => Math.atan2(lei.y - leo.y, leo.x - lei.x) * (180 / Math.PI);
   const rightTiltFn = () => Math.atan2(rei.y - reo.y, reo.x - rei.x) * (180 / Math.PI);
   const canthal = (leftTiltFn() + rightTiltFn()) / 2 - U.correctedByDeg;
@@ -1023,6 +1049,24 @@ export function computeRawGeometry(result: FaceLandmarkerResult): RawGeometry | 
   const rawLeftTilt  = Math.atan2(p(468).y - p(33).y, p(33).x - p(468).x) * (180 / Math.PI);
   const rawRightTilt = Math.atan2(p(278).y - p(263).y, p(263).x - p(278).x) * (180 / Math.PI);
   const eyeTiltVal = (rawLeftTilt + rawRightTilt) / 2 - U.correctedByDeg;
+
+  // Brow metrics
+  const leftBrowOuter = pt(46);
+  const leftBrowInner = pt(107);
+  const rightBrowOuter = pt(276);
+  const rightBrowInner = pt(334);
+  const browTiltVal = (() => {
+    if (!leftBrowOuter || !leftBrowInner || !rightBrowOuter || !rightBrowInner) return 8;
+    const leftAngle = Math.atan2(leftBrowInner.y - leftBrowOuter.y, leftBrowInner.x - leftBrowOuter.x) * (180 / Math.PI);
+    const rightAngle = Math.atan2(rightBrowInner.y - rightBrowOuter.y, rightBrowInner.x - rightBrowOuter.x) * (180 / Math.PI);
+    return ((-leftAngle) + rightAngle) / 2 - U.correctedByDeg;
+  })();
+  const browLengthRatioVal = (() => {
+    if (!leftBrowOuter || !leftBrowInner || !rightBrowOuter || !rightBrowInner || faceWidth <= 0) return 0.40;
+    const leftLen = Math.hypot(leftBrowInner.x - leftBrowOuter.x, leftBrowInner.y - leftBrowOuter.y);
+    const rightLen = Math.hypot(rightBrowInner.x - rightBrowOuter.x, rightBrowInner.y - rightBrowOuter.y);
+    return ((leftLen + rightLen) / 2) / faceWidth;
+  })();
 
   // ── Nose ──
   const noseWidthRatioVal = faceWidth > 0 ? noseW / faceWidth : 0.28;
@@ -1043,6 +1087,14 @@ export function computeRawGeometry(result: FaceLandmarkerResult): RawGeometry | 
     const dot = v1x * v2x + v1y * v2y;
     const mag = Math.hypot(v1x, v1y) * Math.hypot(v2x, v2y);
     return mag > 0 ? Math.acos(Math.max(-1, Math.min(1, dot / mag))) * (180 / Math.PI) : 135;
+  })();
+
+  // Alar angle: angle of nostril flare from nose tip to alar base
+  const alarAngleVal = (() => {
+    if (!noseBaseL || !noseBaseR) return 85;
+    const leftAlar = Math.atan2(noseBaseL.y - nt.y, noseBaseL.x - nt.x) * (180 / Math.PI);
+    const rightAlar = Math.atan2(noseBaseR.y - nt.y, noseBaseR.x - nt.x) * (180 / Math.PI);
+    return Math.abs(leftAlar - rightAlar);
   })();
 
   // ── Lips ──
@@ -1098,13 +1150,17 @@ export function computeRawGeometry(result: FaceLandmarkerResult): RawGeometry | 
     fwhr:           m("FWHR", fwhrVal, REFS.fwhr, 1),
 
     eyeSpacing:     m("Eye Spacing", eyeSpacingRatio, REFS.eyeSpacing, 1),
+    eyeAspectRatio: m("Eye Aspect Ratio", eyeAspectRatioVal, REFS.eyeAspectRatio, 1),
     canthalTilt:    m("Canthal Tilt", canthal, REFS.canthalTilt, 1, "degrees"),
     eyeTilt:        m("Eye Tilt", eyeTiltVal, REFS.eyeTilt, 1, "degrees"),
+    browTilt:       m("Brow Tilt", browTiltVal, REFS.browTilt, 1, "degrees"),
+    browLengthRatio:m("Brow Length Ratio", browLengthRatioVal, REFS.browLengthRatio, 1),
 
     noseWidthRatio: m("Nose Width Ratio", noseWidthRatioVal, REFS.noseWidthRatio, 1),
     noseChinRatio:  m("Nose–Chin Ratio", noseChinRatioVal, REFS.noseChinRatio, 1),
     noseProjection: m("Nose Projection", noseProjectionVal, REFS.noseProjection, 1),
     noseBridgeAngle:m("Nose Bridge Angle", noseBridgeAngleVal, REFS.noseBridgeAngle, 1, "degrees"),
+    alarAngle:      m("Alar Angle", alarAngleVal, REFS.alarAngle, 1, "degrees"),
 
     lipFullness:    m("Lip Fullness", lipFull, REFS.lipFullness, 1),
     lipWidthRatio:  m("Lip Width Ratio", lipWR, REFS.lipWidthRatio, 1),

@@ -23,7 +23,7 @@ const PHASES = [
   { label: "COMPLETE", threshold: 100 },
 ];
 
-const TOTAL_DURATION = 8;
+const TOTAL_DURATION = 4;
 
 const OVAL_INDICES = [
   10, 338, 297, 332, 284, 251, 389, 356, 454, 323, 361, 288,
@@ -386,18 +386,18 @@ export function ProcessingCinematic() {
           }
         }
 
-        // Left/right flash
+        // Left/right flash — subtle alternating overlay
         if (symT > 0.3 && symT < 0.8) {
           const flashCycle = ((symT - 0.3) * 10) % 2;
           if (flashCycle < 1) {
             ctx.save();
-            ctx.globalAlpha = 0.08;
+            ctx.globalAlpha = 0.04;
             ctx.fillStyle = "#E8C88A";
             ctx.fillRect(0, 0, w / 2, h);
             ctx.restore();
           } else {
             ctx.save();
-            ctx.globalAlpha = 0.08;
+            ctx.globalAlpha = 0.04;
             ctx.fillStyle = "#E8C88A";
             ctx.fillRect(w / 2, 0, w / 2, h);
             ctx.restore();
@@ -405,20 +405,9 @@ export function ProcessingCinematic() {
         }
       }
 
-      // Phase 7: Bright pulse before dissolve
-      if (tp > 0.88 && tp < 0.96) {
-        const pulseT = (tp - 0.88) / 0.08;
-        const intensity = Math.sin(pulseT * Math.PI) * 0.12;
-        ctx.save();
-        ctx.globalAlpha = intensity;
-        ctx.fillStyle = "#E8C88A";
-        ctx.fillRect(0, 0, w, h);
-        ctx.restore();
-      }
-
       // Dissolve: fade canvas content
-      if (tp > 0.92) {
-        const fadeT = (tp - 0.92) / 0.08;
+      if (tp > 0.90) {
+        const fadeT = (tp - 0.90) / 0.10;
         ctx.save();
         ctx.globalAlpha = fadeT * 0.95;
         ctx.fillStyle = "black";
