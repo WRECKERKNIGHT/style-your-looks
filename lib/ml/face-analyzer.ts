@@ -20,7 +20,6 @@ import {
   calculateLipWidthRatio,
   calculateUpperLipRatio,
   calculateNoseBridgeAngle,
-  calculateEyeTilt,
   type FaceShapeClassification,
   type Point2D,
 } from './face-geometry';
@@ -620,12 +619,14 @@ export function getCanthalTiltScore(result: FaceLandmarkerResult): number {
     const a = U.pt(inner);
     const b = U.pt(outer);
     if (!a || !b) return 0;
-    return Math.atan2(a.y - b.y, b.x - a.x) * (180 / Math.PI);
+    const dx = Math.abs(a.x - b.x);
+    if (dx <= 0) return 0;
+    return -Math.atan2(b.y - a.y, dx) * (180 / Math.PI);
   };
 
   const leftTilt = tilt(133, 33);
   const rightTilt = tilt(362, 263);
-  const avgTilt = (leftTilt + rightTilt) / 2 - U.correctedByDeg;
+  const avgTilt = (leftTilt + rightTilt) / 2;
 
   // Positive tilt reads alert/attractive; population mode ≈ +5°.
   return idealScore(avgTilt, 5, 3.0, 1, 10);
@@ -640,9 +641,11 @@ export function getRawCanthalTilt(result: FaceLandmarkerResult): number {
     const a = U.pt(inner);
     const b = U.pt(outer);
     if (!a || !b) return 0;
-    return Math.atan2(a.y - b.y, b.x - a.x) * (180 / Math.PI);
+    const dx = Math.abs(a.x - b.x);
+    if (dx <= 0) return 0;
+    return -Math.atan2(b.y - a.y, dx) * (180 / Math.PI);
   };
-  const avg = (tilt(133, 33) + tilt(362, 263)) / 2 - U.correctedByDeg;
+  const avg = (tilt(133, 33) + tilt(362, 263)) / 2;
   return Math.round(avg * 10) / 10;
 }
 
@@ -766,10 +769,7 @@ export function getNoseBridgeAngleScore(result: FaceLandmarkerResult): number {
 
 /** Eye tilt — angle of the eye's long axis (positive = outer corner raised). */
 export function getEyeTiltScore(result: FaceLandmarkerResult): number {
-  if (!result.faceLandmarks || result.faceLandmarks.length === 0) return 5;
-  const tilt = calculateEyeTilt(result.faceLandmarks[0]);
-  if (tilt === null) return 5;
-  return idealScore(tilt, 5, 3.0, 1, 10);
+  return getCanthalTiltScore(result);
 }
 
 export function getSkinClarity(canvas: HTMLCanvasElement, result: FaceLandmarkerResult): number {
@@ -878,6 +878,7 @@ export interface RawGeometry {
 
   // Nose
   noseWidthRatio: Measurement;
+  eyeNoseRatio: Measurement;
   noseChinRatio: Measurement;
   noseProjection: Measurement;
   noseBridgeAngle: Measurement;
@@ -905,31 +906,32 @@ export interface RawGeometry {
 
 /** Reference distributions: population mean (mu) and standard deviation (sigma). */
 const REFS: Record<string, { mu: number; sigma: number }> = {
-  faceRatio: { mu: 0.68, sigma: 0.06 },
-  verticalBalance: { mu: 0.0, sigma: 0.04 },
-  horizontalFifths: { mu: 0.0, sigma: 0.12 },
-  goldenRatio: { mu: 0.13, sigma: 0.045 },
+  faceRatio: { mu: 0.78, sigma: 0.05 },
+  verticalBalance: { mu: 0.06, sigma: 0.04 },
+  horizontalFifths: { mu: 0.9, sigma: 0.25 },
+  goldenRatio: { mu: 0.12, sigma: 0.08 },
   fwhr: { mu: 1.95, sigma: 0.15 },
-  eyeSpacing: { mu: 1.0, sigma: 0.12 },
+  eyeSpacing: { mu: 1.1, sigma: 0.12 },
   eyeAspectRatio: { mu: 0.33, sigma: 0.06 },
   canthalTilt: { mu: 5.0, sigma: 3.0 },
   eyeTilt: { mu: 5.0, sigma: 3.0 },
   browTilt: { mu: 8.0, sigma: 4.0 },
-  browLengthRatio: { mu: 0.4, sigma: 0.06 },
-  noseWidthRatio: { mu: 0.28, sigma: 0.03 },
+  browLengthRatio: { mu: 0.34, sigma: 0.05 },
+  noseWidthRatio: { mu: 0.26, sigma: 0.03 },
   noseChinRatio: { mu: 0.3, sigma: 0.035 },
+  eyeNoseRatio: { mu: 0.88, sigma: 0.1 },
   noseProjection: { mu: 0.55, sigma: 0.07 },
   noseBridgeAngle: { mu: 0, sigma: 8 },
   alarAngle: { mu: 85, sigma: 10 },
   lipFullness: { mu: 0.55, sigma: 0.08 },
-  lipWidthRatio: { mu: 0.42, sigma: 0.05 },
+  lipWidthRatio: { mu: 0.47, sigma: 0.05 },
   upperLipRatio: { mu: 0.38, sigma: 0.05 },
-  jawRatio: { mu: 0.78, sigma: 0.05 },
-  gonialAngle: { mu: 120, sigma: 8 },
-  mandibularTaper: { mu: 0.45, sigma: 0.08 },
+  jawRatio: { mu: 0.6, sigma: 0.05 },
+  gonialAngle: { mu: 62, sigma: 9 },
+  mandibularTaper: { mu: 0.18, sigma: 0.05 },
   chinProjection: { mu: 0.0, sigma: 0.15 },
   jawSymmetry: { mu: 0.0, sigma: 0.04 },
-  cheekboneDefinition: { mu: 1.07, sigma: 0.05 },
+  cheekboneDefinition: { mu: 1.18, sigma: 0.06 },
   symmetry: { mu: 0.0, sigma: 0.03 },
 };
 
@@ -1104,9 +1106,18 @@ export function computeRawGeometry(result: FaceLandmarkerResult): RawGeometry | 
   const hFifths =
     ideal5 > 0 ? fifths.reduce((sum, f) => sum + Math.abs(f - ideal5) / ideal5, 0) : 0;
 
-  const widthToLength = faceLength > 0 ? faceWidth / faceLength : 1;
-  const mouthToFaceW = faceWidth > 0 ? mouthW / faceWidth : 0.5;
-  const goldenAdherence = Math.abs(widthToLength - 0.618) + Math.abs(mouthToFaceW - 0.6) * 0.35;
+  // Golden-ratio (φ) adherence as a composite of genuinely φ-consistent,
+  // *independent* facial ratios. A face has many proportions; the old code
+  // compared faceWidth/faceLength (~0.45, the FWHR's inverse) against 0.618,
+  // which reads ~30σ off for every face and floors the whole metric. Instead
+  // measure ratios that actually sit near φ for real faces:
+  //   face length / face width ≈ φ (1.618)
+  //   mouth width / nose width  ≈ φ
+  // Lower value = closer to the ideal; this is an honest deviation score.
+  const phi = 1.618;
+  const faceLenToW = faceLength > 0 && faceWidth > 0 ? faceLength / faceWidth : phi;
+  const mouthToNose = noseW > 0 ? mouthW / noseW : phi;
+  const goldenAdherence = Math.abs(faceLenToW - phi) * 0.6 + Math.abs(mouthToNose - phi) * 0.4;
 
   const browToLip = Math.abs(ul.y - bl.y);
   const fwhrVal = browToLip > 0 ? cheekWidth / browToLip : 1.95;
@@ -1179,6 +1190,7 @@ export function computeRawGeometry(result: FaceLandmarkerResult): RawGeometry | 
   // ── Nose ──
   const noseWidthRatioVal = faceWidth > 0 ? noseW / faceWidth : 0.28;
   const noseChinRatioVal = faceLength > 0 ? noseL / faceLength : 0.3;
+  const eyeNoseRatioVal = noseW > 0 ? avgEyeWidth / noseW : 1.62;
 
   const noseProjectionVal = (() => {
     const noseBaseWidth = Math.abs(noseRight.x - noseLeft.x);
@@ -1266,6 +1278,22 @@ export function computeRawGeometry(result: FaceLandmarkerResult): RawGeometry | 
   };
   const coreConf = Math.round(poseFactor * 100) / 100;
 
+  // View gating for 3D-projection and profile-only measurements.
+  // Nasal projection, bridge angle and alar flare are fundamentally 3D /
+  // profile quantities: from a frontal 2D image the plane-proxy is not an
+  // anatomical measurement. When the face is frontal-ish (nose tip near the
+  // facial midline) we report these as UNMEASURABLE (confidence 0) rather than
+  // fabricate a confident projection number. Only a genuine side/profile view
+  // (nose tip well off-midline) lets them pass.
+  const faceCenterX = (lc.x + rc.x) / 2;
+  const halfFaceW = Math.abs(rc.x - lc.x) / 2 || 1;
+  const noseMidlineOffset = Math.abs(nt.x - faceCenterX) / halfFaceW;
+  const isFrontalView = noseMidlineOffset < 0.4;
+  const viewConstrainedConf = (indices: number[]): number => {
+    if (isFrontalView) return 0;
+    return conf(indices);
+  };
+
   return {
     faceWidth,
     faceLength,
@@ -1305,16 +1333,33 @@ export function computeRawGeometry(result: FaceLandmarkerResult): RawGeometry | 
     ),
 
     noseWidthRatio: m('Nose Width Ratio', noseWidthRatioVal, REFS.noseWidthRatio, conf([458, 468])),
+    eyeNoseRatio: m(
+      'Eye–Nose Ratio',
+      eyeNoseRatioVal,
+      REFS.eyeNoseRatio,
+      conf([133, 362, 33, 263, 458, 468]),
+    ),
     noseChinRatio: m('Nose–Chin Ratio', noseChinRatioVal, REFS.noseChinRatio, coreConf),
-    noseProjection: m('Nose Projection', noseProjectionVal, REFS.noseProjection, conf([458, 468])),
+    noseProjection: m(
+      'Nose Projection',
+      noseProjectionVal,
+      REFS.noseProjection,
+      viewConstrainedConf([458, 468]),
+    ),
     noseBridgeAngle: m(
       'Nose Bridge Angle',
       noseBridgeAngleVal,
       REFS.noseBridgeAngle,
-      conf([1, 168]),
+      viewConstrainedConf([1, 168]),
       'degrees',
     ),
-    alarAngle: m('Alar Angle', alarAngleVal, REFS.alarAngle, conf([94, 278]), 'degrees'),
+    alarAngle: m(
+      'Alar Angle',
+      alarAngleVal,
+      REFS.alarAngle,
+      viewConstrainedConf([94, 278]),
+      'degrees',
+    ),
 
     lipFullness: m('Lip Fullness', lipFull, REFS.lipFullness, coreConf),
     lipWidthRatio: m('Lip Width Ratio', lipWR, REFS.lipWidthRatio, coreConf),
