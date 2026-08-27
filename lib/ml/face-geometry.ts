@@ -3,7 +3,7 @@ export interface Point2D {
   y: number;
 }
 
-import { classifyFaceShape } from "./calibration";
+import { classifyFaceShape } from './calibration';
 
 export interface LandmarkPoint {
   x: number;
@@ -199,12 +199,10 @@ export function calculateSymmetryScore(landmarks: LandmarkList): number {
     const tR = axisOffset(axis, rp);
 
     const sideSpan = Math.abs(sL) + Math.abs(sR);
-    const perpendicular =
-      sideSpan > 0 ? 1 - Math.abs(sL + sR) / sideSpan : 1;
+    const perpendicular = sideSpan > 0 ? 1 - Math.abs(sL + sR) / sideSpan : 1;
 
     const heightSpan = Math.abs(tL) + Math.abs(tR);
-    const along =
-      heightSpan > 0 ? 1 - Math.abs(tL - tR) / heightSpan : 1;
+    const along = heightSpan > 0 ? 1 - Math.abs(tL - tR) / heightSpan : 1;
 
     total += perpendicular * 0.7 + along * 0.3;
     count++;
@@ -270,8 +268,8 @@ export function calculateFaceShape(landmarks: LandmarkList): FaceShapeClassifica
   const chin = U.pt(152);
   const m1 = U.pt(127);
   const m2 = U.pt(363);
-  if (!fw || !fw2 || !c1 || !c2 || !j1 || !j2 || !top || !chin) {
-    return { primary: "Oval", probabilities: { Oval: 1.0 } };
+  if (!fw || !fw2 || !c1 || !c2 || !j1 || !j2 || !top || !chin || !m1 || !m2) {
+    return { primary: 'Unknown', probabilities: {} };
   }
 
   const foreheadWidth = Math.abs(fw.x - fw2.x);
@@ -280,8 +278,8 @@ export function calculateFaceShape(landmarks: LandmarkList): FaceShapeClassifica
   const faceLength = Math.hypot(top.x - chin.x, top.y - chin.y);
   const mandibleWidth = m1 && m2 ? Math.abs(m1.x - m2.x) : jawWidth;
 
-  if (cheekWidth <= 0 || faceLength <= 0) {
-    return { primary: "Oval", probabilities: { Oval: 1.0 } };
+  if (foreheadWidth <= 0 || cheekWidth <= 0 || jawWidth <= 0 || faceLength <= 0) {
+    return { primary: 'Unknown', probabilities: {} };
   }
 
   // 10 ratios for classification
@@ -321,14 +319,11 @@ export function calculateMandibularAngle(landmarks: LandmarkList): number | null
   if (!gonion || !chin || !temple) return null;
 
   // Use average of left and right for robustness
-  const g = gonionR
-    ? { x: (gonion.x + gonionR.x) / 2, y: (gonion.y + gonionR.y) / 2 }
-    : gonion;
+  const g = gonionR ? { x: (gonion.x + gonionR.x) / 2, y: (gonion.y + gonionR.y) / 2 } : gonion;
 
-  const angle = Math.abs(
-    Math.atan2(temple.y - g.y, temple.x - g.x) -
-    Math.atan2(chin.y - g.y, chin.x - g.x)
-  ) * (180 / Math.PI);
+  const angle =
+    Math.abs(Math.atan2(temple.y - g.y, temple.x - g.x) - Math.atan2(chin.y - g.y, chin.x - g.x)) *
+    (180 / Math.PI);
 
   // Normalize to 0-180 range
   return Math.min(180, Math.max(0, angle));
@@ -403,10 +398,11 @@ export function calculateNoseBridgeAngle(landmarks: LandmarkList): number | null
   const tip = U.pt(4); // lower bridge
   if (!bridge || !mid || !tip) return null;
 
-  const angle = Math.abs(
-    Math.atan2(mid.y - bridge.y, mid.x - bridge.x) -
-    Math.atan2(tip.y - mid.y, tip.x - mid.x)
-  ) * (180 / Math.PI);
+  const angle =
+    Math.abs(
+      Math.atan2(mid.y - bridge.y, mid.x - bridge.x) - Math.atan2(tip.y - mid.y, tip.x - mid.x),
+    ) *
+    (180 / Math.PI);
 
   return Math.min(180, Math.max(0, angle));
 }
@@ -423,11 +419,18 @@ export function calculateEyeTilt(landmarks: LandmarkList): number | null {
   const rightOuter = U.pt(263);
   if (!leftInner || !leftOuter || !rightInner || !rightOuter) return null;
 
-  const leftTilt = Math.atan2(leftOuter.y - leftInner.y, leftOuter.x - leftInner.x) * (180 / Math.PI);
-  const rightTilt = Math.atan2(rightOuter.y - rightInner.y, rightOuter.x - rightInner.x) * (180 / Math.PI);
+  // Positive = outer canthus raised. Use |Δx| (not signed Δx) so the left eye
+  // (outer is to the *left* of the inner canthus) does not jump into the
+  // ~180° atan2 branch — the old signed-Δx form averaged to ~90° for everyone.
+  const tilt = (inner: Point2D, outer: Point2D): number => {
+    const dx = Math.abs(inner.x - outer.x);
+    if (dx <= 0) return 0;
+    return -Math.atan2(outer.y - inner.y, dx) * (180 / Math.PI);
+  };
+  const leftTilt = tilt(leftInner, leftOuter);
+  const rightTilt = tilt(rightInner, rightOuter);
 
-  // Average tilt (right eye is mirrored)
-  return (leftTilt + (-rightTilt)) / 2;
+  return (leftTilt + rightTilt) / 2;
 }
 
 /** Legacy wrapper for code that still expects a plain string.
