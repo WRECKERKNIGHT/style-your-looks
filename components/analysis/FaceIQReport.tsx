@@ -41,8 +41,11 @@ function scoreWord(score: number): { word: string; tone: string } {
 
 function MetricBar({ metric, accent }: { metric: ReportMetric; accent: string }) {
   const [open, setOpen] = useState(false);
-  const w = Math.max(0, Math.min(100, metric.score * 10));
-  const lbl = scoreWord(metric.score);
+  const w = metric.score !== null ? Math.max(0, Math.min(100, metric.score * 10)) : 0;
+  const lbl =
+    metric.score !== null
+      ? scoreWord(metric.score)
+      : { word: 'NOT MEASURED', tone: 'text-[var(--text-muted)]' };
 
   return (
     <div className="border border-[var(--border-primary)] bg-[var(--bg-tertiary)]">
@@ -71,14 +74,17 @@ function MetricBar({ metric, accent }: { metric: ReportMetric; accent: string })
               className="h-full rounded-full"
               style={{
                 width: `${w}%`,
-                background: `linear-gradient(90deg, ${accent}, ${barColor(metric.score)})`,
+                background:
+                  metric.score !== null
+                    ? `linear-gradient(90deg, ${accent}, ${barColor(metric.score)})`
+                    : 'transparent',
               }}
             />
           </div>
         </div>
         <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
           <span className={`font-display font-bold text-lg ${lbl.tone}`}>
-            {metric.score.toFixed(1)}
+            {metric.score !== null ? metric.score.toFixed(1) : '—'}
           </span>
           <span className="type-mono text-[0.45rem] text-[var(--text-muted)] tracking-widest">
             {lbl.word}
@@ -148,7 +154,7 @@ function MetricBar({ metric, accent }: { metric: ReportMetric; accent: string })
 
 function PillarCard({ pillar, index }: { pillar: Pillar; index: number }) {
   const accent = PILLAR_ACCENT[pillar.id] ?? '#C8963E';
-  const w = Math.max(0, Math.min(100, pillar.score * 10));
+  const w = pillar.score !== null ? Math.max(0, Math.min(100, pillar.score * 10)) : 0;
 
   return (
     <motion.div
@@ -172,10 +178,12 @@ function PillarCard({ pillar, index }: { pillar: Pillar; index: number }) {
         </div>
         <div className="flex items-baseline gap-1.5">
           <span className="font-display font-bold text-2xl text-[var(--text-primary)]">
-            {pillar.score.toFixed(1)}
+            {pillar.score !== null ? pillar.score.toFixed(1) : '—'}
           </span>
           <span className="type-mono text-[0.45rem] text-[var(--text-muted)]">
-            /10 · p{pillar.percentile.toFixed(0)}
+            {pillar.score !== null
+              ? `/10 · p${pillar.percentile !== null ? pillar.percentile.toFixed(0) : '—'}`
+              : 'not measured'}
           </span>
         </div>
       </div>
@@ -188,7 +196,10 @@ function PillarCard({ pillar, index }: { pillar: Pillar; index: number }) {
           className="h-full rounded-full"
           style={{
             width: `${w}%`,
-            background: `linear-gradient(90deg, ${accent}, ${barColor(pillar.score)})`,
+            background:
+              pillar.score !== null
+                ? `linear-gradient(90deg, ${accent}, ${barColor(pillar.score)})`
+                : 'transparent',
           }}
         />
       </div>
@@ -211,8 +222,11 @@ function PillarCard({ pillar, index }: { pillar: Pillar; index: number }) {
 export function FaceIQReportView({ report }: { report: FaceIQReport }) {
   const [showAll, setShowAll] = useState(false);
   const hero = report.hero;
-  const heroW = Math.max(2, Math.min(100, hero.score * 10));
-  const word = scoreWord(hero.score);
+  const heroW = hero.score !== null ? Math.max(2, Math.min(100, hero.score * 10)) : 0;
+  const word =
+    hero.score !== null
+      ? scoreWord(hero.score)
+      : { word: 'Not enough data', tone: 'text-[var(--text-muted)]' };
 
   return (
     <div className="space-y-6">
@@ -255,7 +269,7 @@ export function FaceIQReportView({ report }: { report: FaceIQReport }) {
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
                 <span className={`font-display font-bold text-4xl sm:text-5xl ${word.tone}`}>
-                  {hero.score.toFixed(1)}
+                  {hero.score !== null ? hero.score.toFixed(1) : '—'}
                 </span>
                 <span className="type-mono text-[0.5rem] text-[var(--text-muted)] tracking-[0.25em] mt-1">
                   {hero.gradeLabel.toUpperCase()}
@@ -278,7 +292,9 @@ export function FaceIQReportView({ report }: { report: FaceIQReport }) {
               {word.word} <span className="text-gradient-aurum">facial harmony</span>
             </h2>
             <p className="text-sm text-[var(--text-muted)] font-body mt-2 max-w-xl mx-auto lg:mx-0 leading-relaxed">
-              Better than ~{hero.percentile}% of faces analysed. {hero.comparison}.
+              {hero.percentile !== null
+                ? `Better than ~${hero.percentile}% of faces analysed. ${hero.comparison}.`
+                : 'Insufficient measurable data from this photo to rank against others.'}
             </p>
 
             <div className="grid grid-cols-3 gap-3 mt-5 max-w-md mx-auto lg:mx-0">
@@ -287,7 +303,7 @@ export function FaceIQReportView({ report }: { report: FaceIQReport }) {
                   BEAUTY INDEX
                 </p>
                 <p className="font-display font-bold text-lg text-[var(--text-primary)] mt-0.5">
-                  {hero.beautyIndex}
+                  {hero.beautyIndex !== null ? hero.beautyIndex : '—'}
                 </p>
               </div>
               <div className="border border-[var(--border-primary)] bg-[var(--bg-tertiary)] p-3 text-center">
@@ -295,7 +311,7 @@ export function FaceIQReportView({ report }: { report: FaceIQReport }) {
                   STRUCTURE
                 </p>
                 <p className="font-display font-bold text-lg text-[var(--text-primary)] mt-0.5">
-                  {report.structuralScore.toFixed(1)}
+                  {report.structuralScore !== null ? report.structuralScore.toFixed(1) : '—'}
                 </p>
               </div>
               <div className="border border-[var(--border-primary)] bg-[var(--bg-tertiary)] p-3 text-center">
@@ -303,7 +319,7 @@ export function FaceIQReportView({ report }: { report: FaceIQReport }) {
                   CONDITION
                 </p>
                 <p className="font-display font-bold text-lg text-[var(--text-primary)] mt-0.5">
-                  {report.softScore.toFixed(1)}
+                  {report.softScore !== null ? report.softScore.toFixed(1) : '—'}
                 </p>
               </div>
             </div>
@@ -421,7 +437,7 @@ export function FaceIQReportView({ report }: { report: FaceIQReport }) {
                     {m.label}
                   </p>
                   <p className="text-[0.6rem] type-mono text-emerald-300/80">
-                    {m.score.toFixed(1)}/10
+                    {m.score !== null ? `${m.score.toFixed(1)}/10` : '—'}
                   </p>
                 </div>
               </div>

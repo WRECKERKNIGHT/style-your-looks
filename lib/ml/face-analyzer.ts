@@ -833,6 +833,16 @@ export function getSkinClarity(canvas: HTMLCanvasElement, result: FaceLandmarker
 
 export type MeasurementUnit = 'ratio' | 'degrees' | 'px_ratio' | 'score';
 
+/**
+ * Measurement provenance/status.
+ *  - "valid": a real, trustworthy measurement of this photo.
+ *  - "low_confidence": measured but with reduced certainty (e.g. strong head
+ *    roll or a missing auxiliary landmark) — not precise enough to trust fully.
+ *  - "unavailable": genuinely not measurable from this view/photo (e.g. a 3D
+ *    /profile quantity from a frontal image). NEVER given a fabricated score.
+ */
+export type MeasurementStatus = 'valid' | 'low_confidence' | 'unavailable';
+
 export interface Measurement {
   raw: number;
   z: number;
@@ -843,7 +853,15 @@ export interface Measurement {
   mu: number;
   /** Population reference std dev (for UI to display reference range). */
   sigma: number;
+  /**
+   * Status of this measurement. "unavailable" means it must NOT be scored or
+   * displayed as if it were a real value.
+   */
+  status: MeasurementStatus;
 }
+
+/** Confidence below this is too uncertain to trust for scoring. */
+export const LOW_CONFIDENCE_THRESHOLD = 0.5;
 
 export interface RawGeometry {
   // Raw pixel measurements
@@ -908,8 +926,8 @@ export interface RawGeometry {
 const REFS: Record<string, { mu: number; sigma: number }> = {
   faceRatio: { mu: 0.78, sigma: 0.05 },
   verticalBalance: { mu: 0.06, sigma: 0.04 },
-  horizontalFifths: { mu: 0.9, sigma: 0.25 },
-  goldenRatio: { mu: 0.12, sigma: 0.08 },
+  horizontalFifths: { mu: 0.55, sigma: 0.2 },
+  goldenRatio: { mu: 0.18, sigma: 0.12 },
   fwhr: { mu: 1.95, sigma: 0.15 },
   eyeSpacing: { mu: 1.1, sigma: 0.12 },
   eyeAspectRatio: { mu: 0.33, sigma: 0.06 },
@@ -927,7 +945,7 @@ const REFS: Record<string, { mu: number; sigma: number }> = {
   lipWidthRatio: { mu: 0.47, sigma: 0.05 },
   upperLipRatio: { mu: 0.38, sigma: 0.05 },
   jawRatio: { mu: 0.6, sigma: 0.05 },
-  gonialAngle: { mu: 62, sigma: 9 },
+  gonialAngle: { mu: 112, sigma: 10 },
   mandibularTaper: { mu: 0.18, sigma: 0.05 },
   chinProjection: { mu: 0.0, sigma: 0.15 },
   jawSymmetry: { mu: 0.0, sigma: 0.04 },
@@ -942,17 +960,30 @@ function m(
   confidence: number,
   unit: MeasurementUnit = 'ratio',
 ): Measurement {
+  const conf = Math.round(confidence * 100) / 100;
   if (!Number.isFinite(raw) || ref.sigma <= 0) {
-    return { raw: 0, z: 0, confidence: 0, unit, label, mu: ref.mu, sigma: ref.sigma };
+    return {
+      raw: 0,
+      z: 0,
+      confidence: 0,
+      unit,
+      label,
+      mu: ref.mu,
+      sigma: ref.sigma,
+      status: 'unavailable',
+    };
   }
+  const status: MeasurementStatus =
+    conf <= 0 ? 'unavailable' : conf < LOW_CONFIDENCE_THRESHOLD ? 'low_confidence' : 'valid';
   return {
     raw: Math.round(raw * 10000) / 10000,
     z: Math.round(((raw - ref.mu) / ref.sigma) * 1000) / 1000,
-    confidence: Math.round(confidence * 100) / 100,
+    confidence: conf,
     unit,
     label,
     mu: ref.mu,
     sigma: ref.sigma,
+    status,
   };
 }
 

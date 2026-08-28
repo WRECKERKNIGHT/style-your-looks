@@ -1,71 +1,175 @@
-"use client";
+'use client';
 
-import { useMemo, useState } from "react";
-import { motion } from "framer-motion";
-import { Sparkles, Check, Wrench, HeartPulse } from "lucide-react";
-import type { FaceIQReport, ReportMetric } from "@/lib/ml/report/faceiq-report";
+import { useMemo, useState } from 'react';
+import { motion } from 'framer-motion';
+import { Sparkles, Check, Wrench, HeartPulse } from 'lucide-react';
+import type { FaceIQReport, ReportMetric } from '@/lib/ml/report/faceiq-report';
 
 /** Curated, plain-language metrics shown to the user (real scores underneath). */
-const PLAIN: Record<
-  string,
-  { label: string; plain: string; blurb: string }
-> = {
-  symmetry: { label: "Facial Symmetry", plain: "Face symmetry", blurb: "how evenly the two sides of your face match." },
-  goldenRatio: { label: "Golden Ratio", plain: "Facial balance", blurb: "how well your features sit in balanced proportions." },
-  faceRatio: { label: "Face Length / Width", plain: "Face proportions", blurb: "the overall length-to-width balance of your face." },
-  fwhr: { label: "FWHR (Width-to-Height)", plain: "Face proportions", blurb: "the width-to-height balance of your face." },
-  verticalBalance: { label: "Facial Thirds Balance", plain: "Facial thirds", blurb: "how evenly your forehead, nose and jaw divide your face." },
-  horizontalFifths: { label: "Horizontal Fifths", plain: "Feature spacing", blurb: "how evenly your features are spaced side to side." },
-  eyeSpacing: { label: "Eye Spacing", plain: "Eye spacing", blurb: "the distance between your eyes." },
-  eyeNoseRatio: { label: "Eye–Nose Ratio", plain: "Nose size", blurb: "how big your nose is compared with your eyes." },
-  noseChinRatio: { label: "Nose–Chin Balance", plain: "Nose & chin balance", blurb: "how your nose and chin balance each other." },
-  lipWidthRatio: { label: "Lip Width Ratio", plain: "Lip width", blurb: "how wide your mouth is compared with your face." },
-  jawRatio: { label: "Jawline Definition", plain: "Jawline", blurb: "how defined and structured your jaw looks." },
-  gonialAngle: { label: "Gonial Angle", plain: "Jaw shape", blurb: "the shape and angle of your jaw corners." },
-  mandibularTaper: { label: "Mandibular Taper", plain: "Jaw taper", blurb: "how much your lower face narrows toward the chin." },
-  cheekboneDefinition: { label: "Cheekbone Definition", plain: "Cheekbones", blurb: "how defined your cheekbones are." },
-  chinProjection: { label: "Chin Projection", plain: "Chin", blurb: "how well your chin projects forward." },
-  browTilt: { label: "Brow Tilt", plain: "Eyebrow shape", blurb: "the angle and arch of your eyebrows." },
-  upperLipRatio: { label: "Upper Lip Ratio", plain: "Upper lip", blurb: "the balance between your upper and lower lips." },
-  lipFullness: { label: "Lip Fullness", plain: "Lip fullness", blurb: "how full your lips are." },
-  canthalTilt: { label: "Canthal Tilt", plain: "Eye lift", blurb: "the tilt of your eyes at the outer corners." },
-  eyeAspectRatio: { label: "Eye Aspect Ratio", plain: "Eye shape", blurb: "the openness and shape of your eyes." },
-  eyeTilt: { label: "Eye Tilt", plain: "Eye tilt", blurb: "the average tilt of both eyes." },
-  alarAngle: { label: "Nose Base Angle", plain: "Nose width", blurb: "the width of the base of your nose." },
-  noseBridgeAngle: { label: "Nose Bridge Straightness", plain: "Nose bridge", blurb: "how straight the bridge of your nose is." },
-  skinClarity: { label: "Skin Clarity", plain: "Skin clarity", blurb: "how clear and even your skin looks." },
+const PLAIN: Record<string, { label: string; plain: string; blurb: string }> = {
+  symmetry: {
+    label: 'Facial Symmetry',
+    plain: 'Face symmetry',
+    blurb: 'how evenly the two sides of your face match.',
+  },
+  goldenRatio: {
+    label: 'Golden Ratio',
+    plain: 'Facial balance',
+    blurb: 'how well your features sit in balanced proportions.',
+  },
+  faceRatio: {
+    label: 'Face Length / Width',
+    plain: 'Face proportions',
+    blurb: 'the overall length-to-width balance of your face.',
+  },
+  fwhr: {
+    label: 'FWHR (Width-to-Height)',
+    plain: 'Face proportions',
+    blurb: 'the width-to-height balance of your face.',
+  },
+  verticalBalance: {
+    label: 'Facial Thirds Balance',
+    plain: 'Facial thirds',
+    blurb: 'how evenly your forehead, nose and jaw divide your face.',
+  },
+  horizontalFifths: {
+    label: 'Horizontal Fifths',
+    plain: 'Feature spacing',
+    blurb: 'how evenly your features are spaced side to side.',
+  },
+  eyeSpacing: {
+    label: 'Eye Spacing',
+    plain: 'Eye spacing',
+    blurb: 'the distance between your eyes.',
+  },
+  eyeNoseRatio: {
+    label: 'Eye–Nose Ratio',
+    plain: 'Nose size',
+    blurb: 'how big your nose is compared with your eyes.',
+  },
+  noseChinRatio: {
+    label: 'Nose–Chin Balance',
+    plain: 'Nose & chin balance',
+    blurb: 'how your nose and chin balance each other.',
+  },
+  lipWidthRatio: {
+    label: 'Lip Width Ratio',
+    plain: 'Lip width',
+    blurb: 'how wide your mouth is compared with your face.',
+  },
+  jawRatio: {
+    label: 'Jawline Definition',
+    plain: 'Jawline',
+    blurb: 'how defined and structured your jaw looks.',
+  },
+  gonialAngle: {
+    label: 'Gonial Angle',
+    plain: 'Jaw shape',
+    blurb: 'the shape and angle of your jaw corners.',
+  },
+  mandibularTaper: {
+    label: 'Mandibular Taper',
+    plain: 'Jaw taper',
+    blurb: 'how much your lower face narrows toward the chin.',
+  },
+  cheekboneDefinition: {
+    label: 'Cheekbone Definition',
+    plain: 'Cheekbones',
+    blurb: 'how defined your cheekbones are.',
+  },
+  chinProjection: {
+    label: 'Chin Projection',
+    plain: 'Chin',
+    blurb: 'how well your chin projects forward.',
+  },
+  browTilt: {
+    label: 'Brow Tilt',
+    plain: 'Eyebrow shape',
+    blurb: 'the angle and arch of your eyebrows.',
+  },
+  upperLipRatio: {
+    label: 'Upper Lip Ratio',
+    plain: 'Upper lip',
+    blurb: 'the balance between your upper and lower lips.',
+  },
+  lipFullness: { label: 'Lip Fullness', plain: 'Lip fullness', blurb: 'how full your lips are.' },
+  canthalTilt: {
+    label: 'Canthal Tilt',
+    plain: 'Eye lift',
+    blurb: 'the tilt of your eyes at the outer corners.',
+  },
+  eyeAspectRatio: {
+    label: 'Eye Aspect Ratio',
+    plain: 'Eye shape',
+    blurb: 'the openness and shape of your eyes.',
+  },
+  eyeTilt: { label: 'Eye Tilt', plain: 'Eye tilt', blurb: 'the average tilt of both eyes.' },
+  alarAngle: {
+    label: 'Nose Base Angle',
+    plain: 'Nose width',
+    blurb: 'the width of the base of your nose.',
+  },
+  noseBridgeAngle: {
+    label: 'Nose Bridge Straightness',
+    plain: 'Nose bridge',
+    blurb: 'how straight the bridge of your nose is.',
+  },
+  skinClarity: {
+    label: 'Skin Clarity',
+    plain: 'Skin clarity',
+    blurb: 'how clear and even your skin looks.',
+  },
 };
 
 const CURATED_ORDER = [
-  "symmetry",
-  "goldenRatio",
-  "fwhr",
-  "jawRatio",
-  "eyeSpacing",
-  "noseChinRatio",
-  "canthalTilt",
-  "lipFullness",
-  "cheekboneDefinition",
-  "upperLipRatio",
-  "skinClarity",
+  'symmetry',
+  'goldenRatio',
+  'fwhr',
+  'jawRatio',
+  'eyeSpacing',
+  'noseChinRatio',
+  'canthalTilt',
+  'lipFullness',
+  'cheekboneDefinition',
+  'upperLipRatio',
+  'skinClarity',
 ];
 
 function verdict(score: number): { tag: string; color: string } {
-  if (score >= 7.5) return { tag: "Strong", color: "#7FB77E" };
-  if (score >= 5) return { tag: "Average", color: "#C8963E" };
-  return { tag: "Needs attention", color: "#C05B5B" };
+  if (score >= 7.5) return { tag: 'Strong', color: '#7FB77E' };
+  if (score >= 5) return { tag: 'Average', color: '#C8963E' };
+  return { tag: 'Needs attention', color: '#C05B5B' };
 }
 
 function heroWord(score: number): string {
-  if (score >= 8.5) return "Outstanding";
-  if (score >= 7.5) return "Very good";
-  if (score >= 6) return "Well balanced";
-  if (score >= 4.5) return "Average";
-  return "A work in progress";
+  if (score >= 8.5) return 'Outstanding';
+  if (score >= 7.5) return 'Very good';
+  if (score >= 6) return 'Well balanced';
+  if (score >= 4.5) return 'Average';
+  return 'A work in progress';
 }
 
 function Bar({ metric }: { metric: ReportMetric }) {
-  const info = PLAIN[metric.key] ?? { label: metric.label, plain: metric.label, blurb: "" };
+  const info = PLAIN[metric.key] ?? { label: metric.label, plain: metric.label, blurb: '' };
+  if (metric.score === null) {
+    const reason =
+      metric.status === 'unavailable'
+        ? 'Not measurable from this photo'
+        : 'Not reliable for this photo';
+    return (
+      <div className="flex items-center gap-3 sm:gap-4">
+        <div className="w-28 sm:w-36 flex-shrink-0">
+          <p className="text-xs sm:text-sm font-body font-semibold text-[var(--text-primary)]">
+            {info.plain}
+          </p>
+        </div>
+        <div className="flex-1 h-2.5 bg-white/[0.03] rounded-full overflow-hidden" />
+        <span className="w-28 sm:w-32 text-right text-[0.6rem] sm:text-xs type-mono tracking-widest flex-shrink-0 text-[var(--text-muted)]">
+          {reason.toUpperCase()}
+        </span>
+      </div>
+    );
+  }
   const v = verdict(metric.score);
   const w = Math.max(4, Math.min(100, metric.score * 10));
   return (
@@ -100,21 +204,30 @@ export function FaceSimpleResults({ report }: { report: FaceIQReport }) {
   const metrics = useMemo(() => {
     const all = report.pillars.flatMap((p) => p.metrics);
     const byKey = new Map<string, ReportMetric>();
-    for (const m of all) if (m.confidence > 0) byKey.set(m.key, m);
-    const ordered = CURATED_ORDER.map((k) => byKey.get(k)).filter(
-      (m): m is ReportMetric => Boolean(m),
+    for (const m of all) byKey.set(m.key, m);
+    const ordered = CURATED_ORDER.map((k) => byKey.get(k)).filter((m): m is ReportMetric =>
+      Boolean(m),
     );
     const rest = Array.from(byKey.values()).filter((m) => !CURATED_ORDER.includes(m.key));
     return [...ordered, ...rest];
   }, [report]);
 
-  const top = useMemo(
-    () => [...metrics].filter((m) => m.confidence > 0).sort((a, b) => b.score - a.score).slice(0, 3),
+  const scoredMetrics = useMemo(
+    () => [...metrics].filter((m): m is ReportMetric & { score: number } => m.score !== null),
     [metrics],
   );
+
+  const top = useMemo(
+    () => [...scoredMetrics].sort((a, b) => b.score - a.score).slice(0, 3),
+    [scoredMetrics],
+  );
   const bottom = useMemo(
-    () => [...metrics].filter((m) => m.confidence > 0 && m.score < 7).sort((a, b) => a.score - b.score).slice(0, 3),
-    [metrics],
+    () =>
+      [...scoredMetrics]
+        .filter((m) => m.score < 7)
+        .sort((a, b) => a.score - b.score)
+        .slice(0, 3),
+    [scoredMetrics],
   );
   const tips = useMemo(() => {
     const list = [...bottom, ...top];
@@ -148,15 +261,21 @@ export function FaceSimpleResults({ report }: { report: FaceIQReport }) {
           </span>
         </div>
         <div className="font-display font-bold text-6xl sm:text-7xl text-[var(--text-primary)]">
-          {report.hero.score.toFixed(1)}
-          <span className="text-2xl text-[var(--text-muted)] align-top ml-1">/10</span>
+          {report.hero.score !== null ? (
+            <>
+              {report.hero.score.toFixed(1)}
+              <span className="text-2xl text-[var(--text-muted)] align-top ml-1">/10</span>
+            </>
+          ) : (
+            <span className="text-3xl sm:text-4xl text-[var(--text-muted)]">—</span>
+          )}
         </div>
         <p className="mt-2 font-display text-xl sm:text-2xl text-gradient-aurum">
-          {heroWord(report.hero.score)}
+          {report.hero.score !== null ? heroWord(report.hero.score) : 'Not enough data'}
         </p>
         <p className="text-sm text-[var(--text-muted)] font-body mt-3 max-w-lg mx-auto">
-          Measured from your photo — a higher score means a more balanced face on
-          average. It&apos;s about how your features sit together, not how much you&apos;re worth.
+          Measured from your photo — a higher score means a more balanced face on average. It&apos;s
+          about how your features sit together, not how much you&apos;re worth.
         </p>
 
         {report.signatureStrengths.length > 0 && (
@@ -207,11 +326,11 @@ export function FaceSimpleResults({ report }: { report: FaceIQReport }) {
             className="mt-5 border border-[var(--border-primary)] bg-[var(--bg-tertiary)] p-4"
           >
             <p className="text-xs font-body text-[var(--text-primary)] leading-relaxed">
-              <span className="font-semibold">
-                {PLAIN[active.key]?.plain ?? active.label}:{" "}
-              </span>
-              {PLAIN[active.key]?.blurb ?? active.description} Your measurement was{" "}
-              {verdict(active.score).tag.toLowerCase()}.
+              <span className="font-semibold">{PLAIN[active.key]?.plain ?? active.label}: </span>
+              {PLAIN[active.key]?.blurb ?? active.description}{' '}
+              {active.score !== null
+                ? `Your measurement was ${verdict(active.score).tag.toLowerCase()}.`
+                : "This wasn't reliably measurable from your photo."}
             </p>
             <p className="text-xs font-body text-[var(--text-muted)] leading-relaxed mt-2 border-t border-[var(--border-primary)] pt-2">
               {active.tip}
@@ -233,10 +352,13 @@ export function FaceSimpleResults({ report }: { report: FaceIQReport }) {
           </h4>
           <ul className="space-y-2.5">
             {top.map((m) => (
-              <li key={m.key} className="flex items-start gap-2 text-sm text-[var(--text-primary)] font-body">
+              <li
+                key={m.key}
+                className="flex items-start gap-2 text-sm text-[var(--text-primary)] font-body"
+              >
                 <Check className="w-4 h-4 text-emerald-300 flex-shrink-0 mt-0.5" />
                 <span>
-                  <span className="font-semibold">{PLAIN[m.key]?.plain ?? m.label}</span> —{" "}
+                  <span className="font-semibold">{PLAIN[m.key]?.plain ?? m.label}</span> —{' '}
                   {PLAIN[m.key]?.blurb ?? m.description}
                 </span>
               </li>
@@ -256,10 +378,13 @@ export function FaceSimpleResults({ report }: { report: FaceIQReport }) {
           {bottom.length > 0 ? (
             <ul className="space-y-2.5">
               {bottom.map((m) => (
-                <li key={m.key} className="flex items-start gap-2 text-sm text-[var(--text-primary)] font-body">
+                <li
+                  key={m.key}
+                  className="flex items-start gap-2 text-sm text-[var(--text-primary)] font-body"
+                >
                   <Wrench className="w-4 h-4 text-amber-300 flex-shrink-0 mt-0.5" />
                   <span>
-                    <span className="font-semibold">{PLAIN[m.key]?.plain ?? m.label}</span> —{" "}
+                    <span className="font-semibold">{PLAIN[m.key]?.plain ?? m.label}</span> —{' '}
                     {PLAIN[m.key]?.blurb ?? m.description}
                   </span>
                 </li>
@@ -287,7 +412,9 @@ export function FaceSimpleResults({ report }: { report: FaceIQReport }) {
         <div className="space-y-3">
           {tips.map((t, i) => (
             <div key={i} className="flex items-start gap-3">
-              <span className="font-mono text-sm text-[var(--accent-aurum)] w-5 flex-shrink-0">{i + 1}</span>
+              <span className="font-mono text-sm text-[var(--accent-aurum)] w-5 flex-shrink-0">
+                {i + 1}
+              </span>
               <p className="text-sm text-[var(--text-muted)] font-body leading-relaxed">
                 <span className="font-semibold text-[var(--text-primary)]">{t.label}:</span> {t.tip}
               </p>
@@ -295,7 +422,8 @@ export function FaceSimpleResults({ report }: { report: FaceIQReport }) {
           ))}
         </div>
         <p className="mt-5 text-[0.6rem] text-[var(--text-muted)] font-body border-t border-[var(--border-primary)] pt-3">
-          Every bar comes from a real measurement of your photo compared with typical faces. It&apos;s guidance, not a verdict.
+          Every bar comes from a real measurement of your photo compared with typical faces.
+          It&apos;s guidance, not a verdict.
         </p>
       </motion.div>
     </div>
