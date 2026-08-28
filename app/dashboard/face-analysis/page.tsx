@@ -31,7 +31,7 @@ import {
 import type { DemoPerson } from '@/lib/demo/demo-analysis';
 import { detectFaceLandmarksOnly } from '@/lib/ml/face-analyzer';
 import { buildFaceIQReport } from '@/lib/ml/report/faceiq-report';
-import { FaceIQReportView } from '@/components/analysis/FaceIQReport';
+import { FaceSimpleResults } from '@/components/analysis/FaceSimpleResults';
 import { useAnalysisStore } from '@/store/analysis-store';
 import { useMediaPipe, AnalysisCancelledError } from '@/hooks/useMediaPipe';
 import { useWebcam } from '@/hooks/useWebcam';
@@ -452,7 +452,7 @@ export default function FaceAnalysisPage() {
     });
   }, [faceResult]);
 
-  const [reportStyle, setReportStyle] = useState<'faceiq' | 'classic'>('faceiq');
+  const [reportStyle, setReportStyle] = useState<'simple' | 'classic'>('simple');
 
   const handleAnalyze = useCallback(async () => {
     if (photos.length < MIN_PHOTOS) {
@@ -1157,14 +1157,14 @@ export default function FaceAnalysisPage() {
                   </h3>
                   <div className="flex items-center gap-1 border border-[var(--border-primary)]">
                     <button
-                      onClick={() => setReportStyle('faceiq')}
+                      onClick={() => setReportStyle('simple')}
                       className={`px-3 py-1.5 text-[0.6rem] type-mono tracking-widest transition-colors ${
-                        reportStyle === 'faceiq'
+                        reportStyle === 'simple'
                           ? 'bg-[var(--accent-aurum)] text-[var(--bg-primary)]'
                           : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
                       }`}
                     >
-                      FACEIQ
+                      SIMPLE
                     </button>
                     <button
                       onClick={() => setReportStyle('classic')}
@@ -1179,8 +1179,8 @@ export default function FaceAnalysisPage() {
                   </div>
                 </div>
 
-                {reportStyle === 'faceiq' && faceIQReport ? (
-                  <FaceIQReportView report={faceIQReport} />
+                {reportStyle === 'simple' && faceIQReport ? (
+                  <FaceSimpleResults report={faceIQReport} />
                 ) : (
                   <AnalysisResults />
                 )}
