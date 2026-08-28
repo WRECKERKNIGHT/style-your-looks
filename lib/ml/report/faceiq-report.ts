@@ -1,4 +1,4 @@
-import type { RawGeometry, Measurement } from '../face-analyzer';
+import type { RawGeometry, Measurement, MeasurementStatus } from '../face-analyzer';
 import { percentileFromZ, gradeFromPercentile, comparisonFromPercentile } from '../calibration';
 import { rangeScore } from '../scoring-curves';
 
@@ -19,10 +19,13 @@ export interface ReportMetric {
   key: string;
   label: string;
   pillar: PillarId;
-  /** 0-10 score (higher = closer to preferred population band). */
-  score: number;
-  /** Population percentile 0-100. */
-  percentile: number;
+  /**
+   * 0-10 score (higher = closer to preferred population band). null when the
+   * measurement is unavailable (must never be shown as a fabricated 3.0/9.9).
+   */
+  score: number | null;
+  /** Population percentile 0-100. null when unavailable. */
+  percentile: number | null;
   raw: number | null;
   /** Engineering unit of the raw value, e.g. ratio / degrees. */
   unit: string;
@@ -31,6 +34,8 @@ export interface ReportMetric {
   z: number | null;
   /** 0-1 how confident this measurement is (0 = not available for this view). */
   confidence: number;
+  /** valid | low_confidence | unavailable — provenance of this measurement. */
+  status: MeasurementStatus;
   /** Reference range the measurement is compared against. */
   refRange: string;
   description: string;
@@ -47,10 +52,10 @@ export interface Pillar {
   label: string;
   short: string;
   description: string;
-  /** 0-10 score. */
-  score: number;
-  /** 0-100 percentile. */
-  percentile: number;
+  /** 0-10 score. null when no valid (scored) metrics available for this pillar. */
+  score: number | null;
+  /** 0-100 percentile. null when unavailable. */
+  percentile: number | null;
   metrics: ReportMetric[];
   weight: number;
 }
@@ -72,12 +77,12 @@ export interface ActionItem {
 
 export interface FaceIQReport {
   hero: {
-    score: number;
-    percentile: number;
+    score: number | null;
+    percentile: number | null;
     grade: string;
     gradeLabel: string;
     comparison: string;
-    beautyIndex: number;
+    beautyIndex: number | null;
   };
   pillars: Pillar[];
   actions: ActionItem[];
@@ -90,9 +95,9 @@ export interface FaceIQReport {
   metricsAvailable: number;
   metricsTotal: number;
   confidence: number;
-  /** structural vs soft split (0-10 each) */
-  structuralScore: number;
-  softScore: number;
+  /** structural vs soft split (0-10 each; null when no scored metrics) */
+  structuralScore: number | null;
+  softScore: number | null;
 }
 
 /** Gender-specific reference overrides for dimorphic metrics. */
@@ -394,6 +399,7 @@ const SKIN_METRIC: Omit<ReportMetric, 'score' | 'percentile' | 'potential'> = {
   sigma: null,
   z: null,
   confidence: 1,
+  status: 'valid',
   refRange: '—',
   description:
     'Evenness and clarity of the skin across the face. This is a condition metric, not bone structure.',
@@ -432,7 +438,38 @@ function buildMetric(
   }
 
   const m = spec.get(raw);
-  if (!m || m.confidence <= 0 || m.sigma <= 0) return null;
+
+  // Genuinely not measurable from this view/photo — surface it as unavailable
+  // rather than fabricating a 3.0/9.9 score. It is excluded from all scoring
+  // but stays visible so the user sees WHY a metric is missing.
+  const unscored = (status: MeasurementStatus): ReportMetric => ({
+    key: spec.key,
+    label: spec.label,
+    pillar: spec.pillar,
+    score: null,
+    percentile: null,
+    raw: m?.raw ?? null,
+    unit: m ? unitOf(m) : RATIO_LABEL,
+    mu: m?.mu ?? null,
+    sigma: m?.sigma ?? null,
+    z: null,
+    confidence: m?.confidence ?? 0,
+    status,
+    refRange: m ? fmtRange(m.mu, m.sigma, m.unit) : '—',
+    description: spec.description,
+    tip: spec.tip,
+    changeable: spec.changeable ?? false,
+    potential: 0,
+    genderSensitive: spec.genderSensitive ?? false,
+  });
+
+  if (!m) return unscored('unavailable');
+  if (m.status === 'unavailable' || m.confidence <= 0) return unscored('unavailable');
+  if (m.status === 'low_confidence') {
+    // Measured but not trustworthy enough to score precisely. Reported as
+    // low_confidence and excluded from aggregate scoring.
+    return unscored('low_confidence');
+  }
 
   // Gender-adjusted reference for dimorphic metrics.
   const genderRef = GENDER_REFS[profile][spec.key];
@@ -460,6 +497,7 @@ function buildMetric(
     sigma,
     z: Math.round(z * 1000) / 1000,
     confidence: m.confidence,
+    status: 'valid',
     refRange,
     description: spec.description,
     tip: spec.tip,
@@ -476,6 +514,17 @@ function scoreToPercentileLinear(score: number): number {
 
 function fmtNum(n: number): string {
   return n >= 100 ? String(Math.round(n)) : n.toFixed(2);
+}
+
+function fmtRange(mu: number, sigma: number, unit: string): string {
+  const lower = FormatUnit(mu - sigma, unit);
+  const upper = FormatUnit(mu + sigma, unit);
+  return `${lower}–${upper}`;
+}
+
+function FormatUnit(n: number, unit: string): string {
+  const v = Math.round(n * 100) / 100;
+  return unit === DEG_LABEL ? `${Math.round(v)}${DEG_LABEL}` : String(v);
 }
 
 function fmtRaw(m: ReportMetric): string {
@@ -531,7 +580,7 @@ export function buildFaceIQReport(
     if (skin) allMetrics.push(skin);
   }
 
-  const totalAvailable = allMetrics.length;
+  const totalAvailable = allMetrics.filter((m) => m.status !== 'unavailable').length;
 
   // Pillar definitions with membership + relative weights.
   const pillarDefs: {
@@ -597,18 +646,25 @@ export function buildFaceIQReport(
     },
   ];
 
+  const scored = (m: ReportMetric) =>
+    m.status === 'valid' && m.score !== null && m.percentile !== null;
+
   const pillars: Pillar[] = pillarDefs.map((def) => {
     const metrics = allMetrics.filter((m) => def.keys.includes(m.key));
+    const scoredMetrics = metrics.filter(scored);
     let sum = 0;
-    let n = 0;
-    for (const m of metrics) {
-      sum += m.score;
-      n++;
-    }
-    const score = n > 0 ? Math.round((sum / n) * 10) / 10 : 0;
+    for (const m of scoredMetrics) sum += m.score as number;
+    const score =
+      scoredMetrics.length > 0 ? Math.round((sum / scoredMetrics.length) * 10) / 10 : null;
     const percentile =
-      n > 0 ? Math.round((metrics.reduce((a, m) => a + m.percentile, 0) / n) * 10) / 10 : 0;
-    const weight = metrics.length > 0 ? def.weight : 0;
+      scoredMetrics.length > 0
+        ? Math.round(
+            (scoredMetrics.reduce((a, m) => a + (m.percentile as number), 0) /
+              scoredMetrics.length) *
+              10,
+          ) / 10
+        : null;
+    const weight = scoredMetrics.length > 0 ? def.weight : 0;
     return {
       id: def.id,
       label: def.label,
@@ -621,35 +677,42 @@ export function buildFaceIQReport(
     };
   });
 
-  const availablePillars = pillars.filter((p) => p.metrics.length > 0);
+  const availablePillars = pillars.filter((p) => p.score !== null && p.weight > 0);
   const totalWeight = availablePillars.reduce((a, p) => a + p.weight, 0);
   const heroScore =
     totalWeight > 0
       ? Math.round(
-          (availablePillars.reduce((a, p) => a + p.score * p.weight, 0) / totalWeight) * 10,
+          (availablePillars.reduce((a, p) => a + (p.score as number) * p.weight, 0) / totalWeight) *
+            10,
         ) / 10
-      : 0;
+      : null;
 
   // Hero percentile: weighted average of pillar percentiles → then grade.
   const heroPercentile =
-    totalWeight > 0
-      ? Math.round(availablePillars.reduce((a, p) => a + p.percentile * p.weight, 0) / totalWeight)
-      : 0;
-  const { grade, label: gradeLabel } = gradeFromPercentile(heroPercentile);
-  const beautyIndex = Math.round(heroPercentile);
+    totalWeight > 0 && availablePillars.every((p) => p.percentile !== null)
+      ? Math.round(
+          availablePillars.reduce((a, p) => a + (p.percentile as number) * p.weight, 0) /
+            totalWeight,
+        )
+      : null;
+  const { grade, label: gradeLabel } =
+    heroPercentile !== null
+      ? gradeFromPercentile(heroPercentile)
+      : { grade: '—', label: 'Not scored' };
+  const beautyIndex = heroPercentile !== null ? Math.round(heroPercentile) : null;
 
-  // Signature strengths: top 3 by score among confident metrics.
+  // Signature strengths: top 3 by score among valid (scored) metrics only.
   const signatureStrengths = [...allMetrics]
-    .filter((m) => m.confidence > 0 && m.score >= 7.5)
-    .sort((a, b) => b.score - a.score)
+    .filter(scored)
+    .sort((a, b) => (b.score as number) - (a.score as number))
     .slice(0, 3);
 
   // Action plan: biggest deviation (lowest score) first, weighted by how
   // changeable the metric is (structural metrics rank lower for action).
-  const actions: ActionItem[] = [...allMetrics]
-    .filter((m) => m.confidence > 0 && m.score < 7.5)
+  const actions: ActionItem[] = allMetrics
+    .filter((m) => scored(m) && (m.score as number) < 7.5)
     .map((m) => {
-      const uplift = Math.round((7.5 - m.score) * 10) / 10;
+      const uplift = Math.round((7.5 - (m.score as number)) * 10) / 10;
       const priority =
         Math.round((m.changeable ? 1.6 : 0.6) * Math.max(0.5, m.potential) * 10) / 10;
       return {
@@ -671,15 +734,17 @@ export function buildFaceIQReport(
 
   // Structural (bone) vs soft (condition) split.
   const structural = allMetrics.filter(
-    (m) => m.confidence > 0 && !m.changeable && m.key !== 'skinClarity',
+    (m) => scored(m) && !m.changeable && m.key !== 'skinClarity',
   );
-  const soft = allMetrics.filter((m) => m.confidence > 0 && m.changeable);
+  const soft = allMetrics.filter((m) => scored(m) && m.changeable);
   const structuralScore = structural.length
-    ? Math.round((structural.reduce((a, m) => a + m.score, 0) / structural.length) * 10) / 10
-    : 0;
+    ? Math.round(
+        (structural.reduce((a, m) => a + (m.score as number), 0) / structural.length) * 10,
+      ) / 10
+    : null;
   const softScore = soft.length
-    ? Math.round((soft.reduce((a, m) => a + m.score, 0) / soft.length) * 10) / 10
-    : 0;
+    ? Math.round((soft.reduce((a, m) => a + (m.score as number), 0) / soft.length) * 10) / 10
+    : null;
 
   const metricsTotal = SPECS.length + 1; // + skin clarity
   const confidence = opts.confidenceOverride ?? Math.round((totalAvailable / metricsTotal) * 100);
@@ -690,7 +755,10 @@ export function buildFaceIQReport(
       percentile: heroPercentile,
       grade,
       gradeLabel,
-      comparison: comparisonFromPercentile(heroPercentile),
+      comparison:
+        heroPercentile !== null
+          ? comparisonFromPercentile(heroPercentile)
+          : 'Insufficient data to rank',
       beautyIndex,
     },
     pillars,
