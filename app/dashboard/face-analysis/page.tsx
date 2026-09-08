@@ -108,7 +108,7 @@ function DiagnosticStrip({
   axisAngle,
   landmarks,
 }: {
-  photoQuality: number;
+  photoQuality: number | null;
   consistency?: number;
   confidence: number;
   headYaw?: number;
@@ -147,7 +147,7 @@ function DiagnosticStrip({
     (typeof headPitch === 'number' && Math.abs(headPitch) > 15);
 
   const items = [
-    { label: 'PHOTO QUALITY', value: `${photoQuality.toFixed(1)}/10`, warn: photoQuality < 5 },
+    { label: 'PHOTO QUALITY', value: photoQuality != null ? `${photoQuality.toFixed(1)}/10` : '—', warn: photoQuality != null && photoQuality < 5 },
     {
       label: 'CROSS-PHOTO CONSISTENCY',
       value: consistency != null ? `${consistency.toFixed(1)}/10` : 'N/A (single photo)',
@@ -306,9 +306,9 @@ export default function FaceAnalysisPage() {
     return [
       'ZERVEY — FACEIQ ANALYSIS REPORT',
       '=================================',
-      `FaceIQ Score:  ${faceResult.overallScore.toFixed(1)}/10  (${faceResult.overallRating ?? '—'})`,
+      `FaceIQ Score:  ${faceResult.overallScore != null ? `${faceResult.overallScore.toFixed(1)}/10` : 'not measured'}  (${faceResult.overallRating ?? '—'})`,
       `Facial Harmony: ${faceResult.facialHarmony != null ? `${faceResult.facialHarmony.toFixed(1)}/10` : 'not measured'}`,
-      `Beauty Index:  ${faceResult.beautyIndex}/100`,
+      `Beauty Index:  ${faceResult.beautyIndex != null ? `${faceResult.beautyIndex}/100` : 'not measured'}`,
       `Face Shape:    ${faceResult.facialShape}`,
       `Style Profile: ${faceResult.styleProfile}`,
       `Confidence:    ${faceResult.analysisConfidence}%  (${faceResult.photoCount} photo(s))`,
@@ -463,11 +463,11 @@ export default function FaceAnalysisPage() {
         { label: 'Confidence', value: `${faceResult.analysisConfidence}%` },
       ],
       scoreLabel: `${faceResult.overallRating ?? '—'} · FACEIQ`,
-      score: faceResult.overallScore.toFixed(1),
+      score: faceResult.overallScore != null ? faceResult.overallScore.toFixed(1) : '—',
       scoreSuffix: '/10 · ' + (faceResult.percentile?.bracket ?? faceResult.grade ?? '—'),
       footer: 'zervey.app · computed on-device',
-      fileName: `zervey-faceiq-${faceResult.overallScore.toFixed(1)}.png`,
-      shareText: `My ZERVEY FaceIQ: ${faceResult.overallScore.toFixed(1)}/10 (${faceResult.overallRating ?? '—'}) · ${faceResult.facialShape} face · ${faceResult.styleProfile}`,
+      fileName: `zervey-faceiq-${faceResult.overallScore != null ? faceResult.overallScore.toFixed(1) : 'na'}.png`,
+      shareText: `My ZERVEY FaceIQ: ${faceResult.overallScore != null ? `${faceResult.overallScore.toFixed(1)}` : 'not measured'}/10 (${faceResult.overallRating ?? '—'}) · ${faceResult.facialShape} face · ${faceResult.styleProfile}`,
       demo: isDemoPhoto(uploadedImage),
     };
   }, [faceResult, uploadedImage]);
@@ -1260,8 +1260,10 @@ export default function FaceAnalysisPage() {
                     ZERVEY — FULL ANALYSIS REPORT
                   </p>
                   <p className="text-xs font-mono text-aurum-500 mt-0.5">
-                    FaceIQ {faceResult.overallScore.toFixed(1)}/10 · Beauty Index{' '}
-                    {faceResult.beautyIndex}/100
+                    FaceIQ{' '}
+                    {faceResult.overallScore != null ? `${faceResult.overallScore.toFixed(1)}` : '—'}
+                    /10 · Beauty Index {faceResult.beautyIndex != null ? `${faceResult.beautyIndex}` : '—'}
+                    /100
                   </p>
                 </div>
                 <button
@@ -1308,7 +1310,7 @@ export default function FaceAnalysisPage() {
         photo={uploadedImage}
         landmarks={faceResult?.landmarks ?? []}
         defaultCategory="face"
-        summary={`${faceResult?.facialShape ?? 'Face'} · ${faceResult?.overallRating ?? 'FaceIQ'} ${faceResult ? faceResult.overallScore.toFixed(1) : ''}/10`}
+        summary={`${faceResult?.facialShape ?? 'Face'} · ${faceResult?.overallRating ?? 'FaceIQ'} ${faceResult?.overallScore != null ? faceResult.overallScore.toFixed(1) : ''}/10`}
       />
     </div>
   );
