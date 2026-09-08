@@ -1,7 +1,7 @@
 import type { FaceLandmarkerResult } from "@mediapipe/tasks-vision";
 
 export interface AgeEstimate {
-  age: number;
+  age: number | null;
   confidence: number;
   basis: string;
 }
@@ -93,7 +93,7 @@ export function estimateAgeFromFace(
   const ctx = canvas.getContext("2d");
   const lm = faceResult.faceLandmarks?.[0];
   if (!ctx || !lm) {
-    return { age: 25, confidence: 0.15, basis: "No landmarks — default estimate" };
+    return { age: null, confidence: 0, basis: "Not measurable — no landmarks detected" };
   }
 
   const w = canvas.width;
