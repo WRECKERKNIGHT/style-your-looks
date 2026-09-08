@@ -79,9 +79,9 @@ export interface FaceIQReport {
   hero: {
     score: number | null;
     percentile: number | null;
-    grade: string;
-    gradeLabel: string;
-    comparison: string;
+    grade: string | null;
+    gradeLabel: string | null;
+    comparison: string | null;
     beautyIndex: number | null;
   };
   pillars: Pillar[];
@@ -383,8 +383,9 @@ const SPECS: MetricSpec[] = [
     label: 'Nose Base Angle',
     pillar: 'features',
     get: (g) => g.alarAngle,
+    twoSided: true,
     description:
-      'Angle of the nose base. Balanced alar width keeps the nose integrated with the face.',
+      'Symmetry of the nose base. A smaller side-to-side flare difference reads as a balanced nose.',
     tip: 'Nose width ratio is structural; contouring can soften perceived width.',
   },
 ];
@@ -425,7 +426,7 @@ function buildMetric(
   raw: RawGeometry,
   profile: ReportProfile,
   skinClarityScore: number | null,
-  photoQualityScore: number,
+  photoQualityScore: number | null,
 ): ReportMetric | null {
   if (spec.key === 'skinClarity') {
     // Skin clarity is gated before this point: a score only exists when the
@@ -502,7 +503,16 @@ function buildMetric(
   const sigma = genderRef?.sigma ?? m.sigma;
   const z = m.sigma > 0 ? (m.raw - mu) / sigma : 0;
 
-  const absZ = spec.twoSided ? Math.abs(z) : Math.abs((m.raw - m.mu) / (m.sigma || 1));
+  // Score against the same (gender-adjusted) reference used for the reported
+  // z — previously non-gender-sensitive metrics were compared against the raw
+  // population reference only, ignoring the benchmark shown to the user.
+  const absZ = m.sigma > 0 ? Math.abs(z) : 0;
+
+  // Same calibration gate as the measurement layer: when a value falls so far
+  // outside the reference band that the reference/diagram combination is
+  // clearly incompatible, report "not reliable" instead of flooring at 1.5.
+  if (absZ > 3.2) return unscored('low_confidence');
+
   const score = Math.round(rangeScore(absZ) * 10) / 10;
   const percentile = spec.twoSided ? percentileFromZ(-absZ * 1.2) : percentileFromZ(-absZ);
 
@@ -566,7 +576,7 @@ export function buildFaceIQReport(
   opts: {
     profile: ReportProfile;
     skinClarityScore: number | null;
-    photoQualityScore: number;
+    photoQualityScore: number | null;
     shape: string;
     shapeProbabilities: Record<string, number>;
     confidenceOverride?: number;
