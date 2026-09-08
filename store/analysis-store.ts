@@ -27,19 +27,19 @@ export interface BlendshapeAnalysis {
 }
 
 export interface PercentileRanking {
-  overall: number;
+  overall: number | null;
   symmetry: number | null;
   goldenRatio: number | null;
   jawline: number | null;
   skinClarity: number | null;
   harmony: number | null;
-  bracket: string;
-  comparisonText: string;
+  bracket: string | null;
+  comparisonText: string | null;
 }
 
 export interface PhotoQualityGate {
-  brightness: number;
-  sharpness: number;
+  brightness: number | null;
+  sharpness: number | null;
   faceSizeRatio: number;
   headYaw: number;
   headRoll: number;
@@ -49,7 +49,7 @@ export interface PhotoQualityGate {
 }
 
 export interface FaceAnalysisResult {
-  overallScore: number;
+  overallScore: number | null;
   /** Per-metric 1-10 scores; `null` = not measurable from the supplied photos. */
   symmetry: number | null;
   proportions: number | null;
@@ -63,7 +63,7 @@ export interface FaceAnalysisResult {
   skinToneScaleId?: number;
   skinToneITA?: number;
   undertone: string;
-  ageEstimation: number;
+  ageEstimation: number | null;
   ageConfidence?: number;
   ageBasis?: string;
   genderEstimation: string;
@@ -98,9 +98,9 @@ export interface FaceAnalysisResult {
   styleProfile: string;
   blendshapes: BlendshapeAnalysis | null;
   percentile: PercentileRanking;
-  beautyIndex: number;
+  beautyIndex: number | null;
   faceShapeDetails: { description: string; characteristics: string[]; idealHairstyles: string[]; idealGlasses: string[] };
-  photoQualityScore: number;
+  photoQualityScore: number | null;
   consistencyScore?: number;
   analysisConfidence: number;
   metricAvailability: string[];
@@ -108,14 +108,14 @@ export interface FaceAnalysisResult {
   qualityGate?: PhotoQualityGate;
   /** Pose-aware symmetry axis tilt (degrees from vertical) for overlays. */
   symmetryAxis?: { angleDeg: number };
-  /** Population-calibrated Face IQ (0-100). */
-  faceIQ: number;
+  /** Population-calibrated Face IQ (0-100); `null` when no measurable data. */
+  faceIQ: number | null;
   /** Letter grade from percentile. */
-  grade: string;
+  grade: string | null;
   /** Descriptive label for the grade. */
-  gradeLabel: string;
+  gradeLabel: string | null;
   /** Human-readable comparison. */
-  comparison: string;
+  comparison: string | null;
   /** Structure profile descriptor (Soft/Balanced/Defined/Sharp) or null when not measurable. */
   structureProfile: StructureProfileType | null;
   /** Youthfulness score (0-100); `null` when not measurable. */
@@ -125,7 +125,14 @@ export interface FaceAnalysisResult {
   /** Raw geometry measurements (for measurement debugger). */
   rawGeometry?: RawGeometry;
   /** Domain-level scores. */
-  faceProfile?: { geometry: number; symmetry: number; structure: number; eyes: number; nasal: number; confidence: number };
+  faceProfile?: {
+    geometry: number | null;
+    symmetry: number | null;
+    structure: number | null;
+    eyes: number | null;
+    nasal: number | null;
+    confidence: number;
+  };
 }
 
 export interface IntakeProfile {
