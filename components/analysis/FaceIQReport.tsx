@@ -272,12 +272,12 @@ export function FaceIQReportView({ report }: { report: FaceIQReport }) {
                   {hero.score !== null ? hero.score.toFixed(1) : '—'}
                 </span>
                 <span className="type-mono text-[0.5rem] text-[var(--text-muted)] tracking-[0.25em] mt-1">
-                  {hero.gradeLabel.toUpperCase()}
+                  {(hero.gradeLabel ?? '—').toUpperCase()}
                 </span>
               </div>
             </div>
             <span className="mt-3 type-mono text-[0.5rem] text-[var(--accent-aurum)] tracking-[0.3em]">
-              {hero.grade} · FACEIQ
+              {hero.grade ?? '—'} · FACEIQ
             </span>
           </div>
 
