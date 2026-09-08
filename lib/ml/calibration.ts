@@ -44,93 +44,18 @@ export type IntakeProfile = {
 };
 
 /**
- * Population reference means (μ) and standard deviations (σ) for each
- * facial metric. Region-specific overrides are applied on top of these.
+ * A single documented population mapping for the score-to-percentile kernel.
  *
- * σ values are set to approximately HALF the real population spread so
- * that the scoring kernel discriminates well: 1 SD = 2 points on the
- * 1-10 scale, so a truly exceptional face (2 SD above mean) scores ~9.
+ * NOTE ON SCOPE: this module holds the scoring CORE — how a 1-10 metric score
+ * maps to a population percentile. The per-metric RAW distribution means and
+ * sigmas used by measurement-based metrics live alongside the measurements
+ * themselves in lib/ml/face-analyzer.ts (the `Measurement.mu/sigma` fields),
+ * which is the single source of truth for raw values. A previous revision kept
+ * a second, divergent copy of those references here (e.g. eyeNoseRatio μ 1.62
+ * vs the measured 0.88). Keeping two sources is how percentiles silently
+ * drift — the authoritative measurement references are now not duplicated
+ * here, and the mapping below is the only calibration surface.
  */
-interface MetricRef {
-  mu: number;
-  sigma: number;
-  /** If true, deviation from ideal penalizes (bell curve). If false, higher is better (linear z). */
-  bellCurve?: boolean;
-  regionOverrides?: Partial<Record<EthnicRegion, { mu: number; sigma: number }>>;
-  genderOverrides?: Partial<Record<string, { mu: number; sigma: number }>>;
-}
-
-const REFS: Record<string, MetricRef> = {
-  // --- Geometry ratios (bell curve — closer to ideal is better) ---
-  // Sigma = real population spread. Tighter sigma = more discrimination.
-  jawRatio: { mu: 0.78, sigma: 0.05, bellCurve: true,
-    regionOverrides: { african: { mu: 0.82, sigma: 0.05 }, east_asian: { mu: 0.74, sigma: 0.04 } } },
-  gonialAngle: { mu: 120, sigma: 8, bellCurve: true },
-  mandibularTaper: { mu: 0.45, sigma: 0.08, bellCurve: true },
-  chinProjection: { mu: 0.0, sigma: 0.15, bellCurve: true },
-  jawSymmetry: { mu: 0.0, sigma: 0.04, bellCurve: true },
-  eyeSpacingRatio: { mu: 1.0, sigma: 0.12, bellCurve: true },
-  fwhr: { mu: 1.95, sigma: 0.15, bellCurve: true,
-    genderOverrides: { masculine: { mu: 2.05, sigma: 0.14 }, feminine: { mu: 1.85, sigma: 0.13 } } },
-  canthalTilt: { mu: 5.0, sigma: 3.0, bellCurve: true,
-    regionOverrides: { east_asian: { mu: 3.5, sigma: 2.5 }, caucasian: { mu: 5.5, sigma: 3.0 }, african: { mu: 4.0, sigma: 2.8 } } },
-  eyeNoseRatio: { mu: 1.62, sigma: 0.15, bellCurve: true,
-    regionOverrides: { east_asian: { mu: 1.55, sigma: 0.13 }, caucasian: { mu: 1.65, sigma: 0.15 } } },
-  noseChinRatio: { mu: 0.30, sigma: 0.035, bellCurve: true },
-  proportions: { mu: 0.0, sigma: 0.04, bellCurve: true },
-  lipFullness: { mu: 0.55, sigma: 0.08, bellCurve: true,
-    regionOverrides: { african: { mu: 0.62, sigma: 0.07 }, east_asian: { mu: 0.50, sigma: 0.07 }, caucasian: { mu: 0.55, sigma: 0.08 } } },
-  noseWidthRatio: { mu: 0.28, sigma: 0.03, bellCurve: true,
-    regionOverrides: { east_asian: { mu: 0.30, sigma: 0.03 }, african: { mu: 0.31, sigma: 0.03 } } },
-  cheekboneDefinition: { mu: 1.07, sigma: 0.05, bellCurve: true },
-  horizontalFifths: { mu: 0.0, sigma: 0.12, bellCurve: true },
-  noseProjection: { mu: 0.55, sigma: 0.07, bellCurve: true },
-  lipWidthRatio: { mu: 0.42, sigma: 0.05, bellCurve: true },
-  eyeTilt: { mu: 5.0, sigma: 3.0, bellCurve: true },
-  upperLipRatio: { mu: 0.38, sigma: 0.05, bellCurve: true },
-  noseBridgeAngle: { mu: 135, sigma: 8, bellCurve: true },
-
-  // --- Linear metrics (higher = better, z-score based) ---
-  symmetry: { mu: 8.5, sigma: 1.0,
-    genderOverrides: { masculine: { mu: 8.3, sigma: 1.1 }, feminine: { mu: 8.7, sigma: 0.9 } } },
-  goldenRatio: { mu: 7.0, sigma: 1.2 },
-  skinClarity: { mu: 6.5, sigma: 1.5 },
-};
-
-export interface ResolvedRef {
-  mu: number;
-  sigma: number;
-  bellCurve: boolean;
-}
-
-/**
- * Resolve population reference values for a given metric, region, and gender
- * profile. Falls back to the global default when no override exists.
- */
-export function resolveRef(
-  metric: string,
-  region?: EthnicRegion,
-  genderProfile?: "masculine" | "feminine" | "neutral"
-): ResolvedRef {
-  const ref = REFS[metric];
-  if (!ref) return { mu: 5, sigma: 2, bellCurve: true };
-
-  let mu = ref.mu;
-  let sigma = ref.sigma;
-
-  if (region && ref.regionOverrides?.[region]) {
-    const o = ref.regionOverrides[region]!;
-    mu = o.mu;
-    sigma = o.sigma;
-  }
-  if (genderProfile && genderProfile !== "neutral" && ref.genderOverrides?.[genderProfile]) {
-    const o = ref.genderOverrides[genderProfile]!;
-    mu = o.mu;
-    sigma = o.sigma;
-  }
-
-  return { mu, sigma, bellCurve: ref.bellCurve ?? true };
-}
 
 /**
  * Compute z-score: how many standard deviations the measured value is from
@@ -187,38 +112,20 @@ export interface MetricCalibration {
 }
 
 /**
- * Convert an idealScore-based metric (1-10 scale) to a population percentile.
+ * Convert a 1-10 metric score to a population percentile.
  *
- * For bell-curve metrics: uses the metric's own REFS data to compute the
- * z-score of the underlying raw measurement, then maps to percentile.
+ * Mapping: score 5 = average (50th percentile), 7 ≈ 84th, 9 ≈ 98th.
+ * Uses a calibrated z-mapping (score − 5) / 2 through the normal CDF, the
+ * same shape used across scoring, history backfill, and reporting.
  *
- * For linear metrics: uses the score directly as a z-score proxy.
- *
- * This replaces the old broken scoreToPercentile() which used a generic
- * mu=6.0/sigma=1.8 mapping that compressed everything.
+ * Per-metric raw distributions are NOT modelled here — they live with the
+ * measurements in lib/ml/face-analyzer.ts (Measurement.mu/sigma) and are
+ * applied where raw values are z-scored. Scores already account for those.
  */
-export function scoreToPercentile(
-  score: number,
-  metricKey?: string,
-  rawValue?: number
-): number {
+export function scoreToPercentile(score: number): number {
   if (!Number.isFinite(score)) return 50;
 
-  // If we have the metric key and raw value, use the actual population reference
-  if (metricKey && rawValue !== undefined) {
-    const ref = resolveRef(metricKey);
-    if (ref.bellCurve) {
-      // For bell-curve metrics, compute z from the raw measurement
-      const z = zScore(rawValue, ref.mu, ref.sigma);
-      return percentileFromZ(z);
-    } else {
-      // For linear metrics, compute z from the score directly
-      const z = zScore(score, ref.mu, ref.sigma);
-      return percentileFromZ(z);
-    }
-  }
-
-  // Fallback: map 1-10 score through a calibrated distribution
+  // Map 1-10 score through a calibrated distribution
   // 5 = average (50th percentile), 7 = ~84th, 9 = ~98th
   const z = (score - 5) / 2;
   return percentileFromZ(z);
