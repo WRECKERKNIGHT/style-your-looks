@@ -1,41 +1,9 @@
 import type { FaceLandmarkerResult } from '@mediapipe/tasks-vision';
-import { createUprightAccessor } from './face-geometry';
-import { rangeScore, toZScore, idealScore, domainToIndex } from './scoring-curves';
-import {
-  getFaceSymmetry,
-  getFaceSymmetryAxis,
-  getFaceProportions,
-  getJawlineScore,
-  getEyeSpacingScore,
-  getFacialShape,
-  getFwhrScore,
-  getCanthalTiltScore,
-  getHorizontalFifthsScore,
-  getEyeNoseRatioScore,
-  getNoseChinRatioScore,
-  getStructureProfile,
-  getYouthfulness,
-  getNoseProjectionScore,
-  getLipWidthRatioScore,
-  getUpperLipRatioScore,
-  getNoseBridgeAngleScore,
-  getEyeTiltScore,
-  type StructureProfileType,
-  computeRawGeometry,
-  type Measurement,
-  type RawGeometry,
-} from './face-analyzer';
+import { rangeScore, domainToIndex } from './scoring-curves';
+import { getFaceSymmetryAxis, getFacialShape, type StructureProfileType, computeRawGeometry, type Measurement, type RawGeometry } from './face-analyzer';
 import type { PhotoQualityReport } from './face-quality';
 import { frontalityScore } from './face-quality';
-import {
-  scoreToPercentile,
-  computeFaceIQ,
-  gradeFromPercentile,
-  comparisonFromPercentile,
-  percentileFromZ,
-  zScore,
-  type EthnicRegion,
-} from './calibration';
+import { scoreToPercentile, computeFaceIQ } from './calibration';
 
 export interface MetricResult {
   score: number | null;
@@ -65,18 +33,18 @@ export interface BlendshapeAnalysis {
 }
 
 export interface PercentileRanking {
-  overall: number;
+  overall: number | null;
   symmetry: number | null;
   goldenRatio: number | null;
   jawline: number | null;
   skinClarity: number | null;
   harmony: number | null;
-  bracket: string;
-  comparisonText: string;
+  bracket: string | null;
+  comparisonText: string | null;
 }
 
 export interface FaceScoreResult {
-  overallScore: number;
+  overallScore: number | null;
   /** Per-metric 1-10 scores. `null` = the aspect could not be measured
    *  from the supplied photos (e.g. nose projection from a frontal view). */
   symmetry: number | null;
@@ -112,28 +80,29 @@ export interface FaceScoreResult {
   styleProfile: string;
   blendshapes: BlendshapeAnalysis | null;
   percentile: PercentileRanking;
-  beautyIndex: number;
+  beautyIndex: number | null;
   faceShapeDetails: {
     description: string;
     characteristics: string[];
     idealHairstyles: string[];
     idealGlasses: string[];
   };
-  photoQualityScore: number;
+  photoQualityScore: number | null;
   consistencyScore?: number;
   analysisConfidence: number;
   metricAvailability: string[];
   photoCount: number;
   /** Pose-aware symmetry axis tilt (degrees from vertical) for overlays. */
   symmetryAxis?: { angleDeg: number };
-  /** Population-calibrated Face IQ (0-100). Higher = more rare/attractive. */
-  faceIQ: number;
-  /** Letter grade from percentile. */
-  grade: string;
+  /** Population-calibrated Face IQ (0-100). Higher = more rare/attractive.
+   *  `null` when no reliable measurement could be made. */
+  faceIQ: number | null;
+  /** Letter grade from percentile; `null` when nothing was measured. */
+  grade: string | null;
   /** Descriptive label for the grade. */
-  gradeLabel: string;
+  gradeLabel: string | null;
   /** Human-readable comparison. */
-  comparison: string;
+  comparison: string | null;
   /** Structure profile descriptor (Soft/Balanced/Defined/Sharp) or null when
    *  no reliable measurement was possible. */
   structureProfile: StructureProfileType | null;
@@ -162,11 +131,11 @@ export interface FaceScoreResult {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface FaceProfile {
-  geometry: number;
-  symmetry: number;
-  structure: number;
-  eyes: number;
-  nasal: number;
+  geometry: number | null;
+  symmetry: number | null;
+  structure: number | null;
+  eyes: number | null;
+  nasal: number | null;
   confidence: number;
 }
 
@@ -178,11 +147,15 @@ const DOMAIN_WEIGHTS = {
   nasal: 0.15,
 };
 
-function domainScore(measurements: Measurement[]): number {
+function domainScore(measurements: Measurement[]): number | null {
   const valid = measurements.filter(
-    (m) => m.confidence > 0 && Number.isFinite(m.z) && Number.isFinite(m.raw),
+    (m) =>
+      m.status === 'valid' &&
+      m.confidence > 0 &&
+      Number.isFinite(m.z) &&
+      Number.isFinite(m.raw),
   );
-  if (valid.length === 0) return 0;
+  if (valid.length === 0) return null;
   const avg = valid.reduce((sum, m) => sum + rangeScore(m.z), 0) / valid.length;
   return Math.round(Math.min(10, avg) * 10) / 10;
 }
@@ -190,7 +163,7 @@ function domainScore(measurements: Measurement[]): number {
 function computeDomainScores(
   geo: RawGeometry,
   skinClarity: number | null,
-  photoQuality: number,
+  _photoQuality: number | null,
 ): FaceProfile {
   const geometry = domainScore([
     geo.verticalBalance,
@@ -253,15 +226,15 @@ function computeDomainScores(
     geo.noseBridgeAngle,
     geo.alarAngle,
   ];
-  const validCount = allMeasurements.filter((m) => m.confidence > 0 && Number.isFinite(m.z)).length;
+  const validCount = allMeasurements.filter((m) => m.status === 'valid' && Number.isFinite(m.z)).length;
   const confidence = Math.round((validCount / allMeasurements.length) * 100);
 
   return {
-    geometry: domainToIndex(geometry),
-    symmetry: domainToIndex(symmetryScore),
-    structure: domainToIndex(structure),
-    eyes: domainToIndex(eyes),
-    nasal: domainToIndex(nasal),
+    geometry: geometry === null ? null : domainToIndex(geometry),
+    symmetry: symmetryScore === null ? null : domainToIndex(symmetryScore),
+    structure: structure === null ? null : domainToIndex(structure),
+    eyes: eyes === null ? null : domainToIndex(eyes),
+    nasal: nasal === null ? null : domainToIndex(nasal),
     confidence,
   };
 }
@@ -327,119 +300,6 @@ function scoreToDetailedLabel(score: number): string {
   if (score >= 4)
     return `A ${score.toFixed(1)}/10 result — below average. Individual metric tips outline where to focus.`;
   return `A ${score.toFixed(1)}/10 result — the improvements section lists the highest-impact next steps.`;
-}
-
-function getGoldenRatio(result: FaceLandmarkerResult): number | null {
-  const landmarks = result.faceLandmarks?.[0];
-  if (!landmarks || landmarks.length < 468) return null;
-
-  const U = createUprightAccessor(landmarks);
-  const leftEye = U.pt(33);
-  const rightEye = U.pt(263);
-  const chin = U.pt(152);
-  const top = U.pt(10);
-  const leftMouth = U.pt(61);
-  const rightMouth = U.pt(291);
-  if (!leftEye || !rightEye || !chin || !top || !leftMouth || !rightMouth) return null;
-
-  const faceWidth = Math.abs(rightEye.x - leftEye.x);
-  const faceLength = Math.hypot(chin.x - top.x, chin.y - top.y);
-  if (faceWidth === 0 || faceLength === 0) return null;
-  const widthToLength = faceWidth / faceLength;
-
-  const mouthWidth = Math.abs(rightMouth.x - leftMouth.x);
-  const mouthToFaceWidth = mouthWidth / faceWidth;
-
-  const idealRatio = 0.618;
-  // φ adherence blends width-to-length (heavily) with mouth-to-width.
-  const wtl = idealScore(widthToLength, idealRatio, 0.05, 1, 10);
-  const mtw = idealScore(mouthToFaceWidth, 0.6, 0.04, 1, 10);
-  return Math.max(1, Math.min(10, Math.round((wtl * 0.65 + mtw * 0.35) * 100) / 100));
-}
-
-function getLipFullness(result: FaceLandmarkerResult): number | null {
-  const landmarks = result.faceLandmarks?.[0];
-  if (!landmarks || landmarks.length < 468) return null;
-
-  // Vertical measurement — upright frame keeps it honest under head tilt.
-  const U = createUprightAccessor(landmarks);
-  const upperLip = U.pt(13);
-  const lowerLip = U.pt(14);
-  const mouthTop = U.pt(0);
-  const mouthBottom = U.pt(17);
-  if (!upperLip || !lowerLip || !mouthTop || !mouthBottom) return null;
-
-  const lipHeight = Math.abs(lowerLip.y - upperLip.y);
-  const mouthHeight = Math.abs(mouthBottom.y - mouthTop.y);
-  if (mouthHeight === 0) return null;
-  const ratio = lipHeight / mouthHeight;
-
-  const idealRatio = 0.55;
-  return idealScore(ratio, idealRatio, 0.08, 2, 9.5);
-}
-
-function getNoseProfile(result: FaceLandmarkerResult): number | null {
-  const landmarks = result.faceLandmarks?.[0];
-  if (!landmarks || landmarks.length < 478) return null;
-
-  const U = createUprightAccessor(landmarks);
-  const ln = U.pt(458);
-  const rn = U.pt(468);
-  const lc = U.pt(234);
-  const rc = U.pt(454);
-  if (!ln || !rn || !lc || !rc) return null;
-
-  const noseWidth = Math.abs(rn.x - ln.x);
-  const faceWidth = Math.abs(rc.x - lc.x);
-  if (faceWidth === 0 || noseWidth === 0) return null;
-  const noseToFace = noseWidth / faceWidth;
-
-  const idealNoseRatio = 0.28;
-  return idealScore(noseToFace, idealNoseRatio, 0.03, 2, 9.5);
-}
-
-function getForeheadBalance(result: FaceLandmarkerResult): number {
-  const landmarks = result.faceLandmarks?.[0];
-  if (!landmarks || landmarks.length < 468) return 5;
-
-  const U = createUprightAccessor(landmarks);
-  const hairline = U.pt(10);
-  const browLine = U.pt(9);
-  const noseBase = U.pt(2);
-  const chin = U.pt(152);
-  if (!hairline || !browLine || !noseBase || !chin) return 5;
-
-  const upperThird = Math.abs(browLine.y - hairline.y);
-  const middleThird = Math.abs(noseBase.y - browLine.y);
-  const lowerThird = Math.abs(chin.y - noseBase.y);
-
-  const avg = (upperThird + middleThird + lowerThird) / 3;
-  if (avg === 0) return 5;
-  const deviation =
-    (Math.abs(upperThird - avg) + Math.abs(middleThird - avg) + Math.abs(lowerThird - avg)) /
-    (avg * 3);
-
-  return idealScore(deviation, 0, 0.035, 2, 10);
-}
-
-function getCheekboneDefinition(result: FaceLandmarkerResult): number | null {
-  const landmarks = result.faceLandmarks?.[0];
-  if (!landmarks || landmarks.length < 468) return null;
-
-  const U = createUprightAccessor(landmarks);
-  const leftCheek = U.pt(234);
-  const rightCheek = U.pt(454);
-  const leftJaw = U.pt(172);
-  const rightJaw = U.pt(397);
-  if (!leftCheek || !rightCheek || !leftJaw || !rightJaw) return null;
-
-  const cheekWidth = Math.abs(rightCheek.x - leftCheek.x);
-  const jawWidth = Math.abs(rightJaw.x - leftJaw.x);
-  if (jawWidth === 0 || cheekWidth === 0) return null;
-  const cheekToJaw = cheekWidth / jawWidth;
-
-  // High cheek-to-jaw ratios read angular/editorial; mode ≈ 1.07.
-  return idealScore(cheekToJaw, 1.07, 0.05, 2, 9.5);
 }
 
 function analyzeBlendshapes(result: FaceLandmarkerResult): BlendshapeAnalysis | null {
@@ -699,6 +559,8 @@ function getStyleProfile(
   return 'Everyman Appeal';
 }
 
+const nullResult = (): MetricResult => ({ score: null, confidence: 0 });
+
 export function computeFaceMetrics(result: FaceLandmarkerResult): FaceMetricScores {
   const shapeResult = getFacialShape(result);
 
@@ -708,7 +570,8 @@ export function computeFaceMetrics(result: FaceLandmarkerResult): FaceMetricScor
   const measurementToResult = (
     meas: import('./face-analyzer').Measurement | undefined,
   ): MetricResult => {
-    if (!meas || meas.confidence <= 0) return { score: null, confidence: 0, rawValue: meas?.raw };
+    if (!meas || meas.confidence <= 0 || meas.status !== 'valid')
+      return { score: null, confidence: 0, rawValue: meas?.raw };
     if (!Number.isFinite(meas.z)) return { score: null, confidence: 0, rawValue: meas?.raw };
     // Convert z-score to 0-10 scale using rangeScore
     const score = rangeScore(meas.z);
@@ -743,49 +606,36 @@ export function computeFaceMetrics(result: FaceLandmarkerResult): FaceMetricScor
       faceShapeProbabilities: shapeResult.probabilities,
     };
   }
-
-  // Fallback to legacy scorers if raw geometry fails.
-  // These return null when a measurement genuinely can't be made, so a metric
-  // is never silently set to a middle score.
-  const safe = (fn: () => number | null): MetricResult => {
-    try {
-      const v = fn();
-      if (v == null || !Number.isFinite(v)) return { score: null, confidence: 0 };
-      return { score: v, confidence: 1 };
-    } catch {
-      return { score: null, confidence: 0 };
-    }
-  };
   return {
-    symmetry: safe(() => getFaceSymmetry(result)),
-    proportions: safe(() => getFaceProportions(result)),
-    jawline: safe(() => getJawlineScore(result)),
-    eyeSpacing: safe(() => getEyeSpacingScore(result)),
-    eyeAspectRatio: { score: null, confidence: 0 },
-    goldenRatio: safe(() => getGoldenRatio(result)),
-    lipFullness: safe(() => getLipFullness(result)),
-    noseProfile: safe(() => getNoseProfile(result)),
-    cheekboneDefinition: safe(() => getCheekboneDefinition(result)),
-    fwhr: safe(() => getFwhrScore(result)),
-    canthalTilt: safe(() => getCanthalTiltScore(result)),
-    eyeTilt: safe(() => getEyeTiltScore(result)),
-    browTilt: { score: null, confidence: 0 },
-    browLengthRatio: { score: null, confidence: 0 },
-    eyeNoseRatio: safe(() => getEyeNoseRatioScore(result)),
-    noseChinRatio: safe(() => getNoseChinRatioScore(result)),
-    horizontalFifths: safe(() => getHorizontalFifthsScore(result)),
-    noseProjection: safe(() => getNoseProjectionScore(result)),
-    noseBridgeAngle: safe(() => getNoseBridgeAngleScore(result)),
-    alarAngle: { score: null, confidence: 0 },
-    lipWidthRatio: safe(() => getLipWidthRatioScore(result)),
-    upperLipRatio: safe(() => getUpperLipRatioScore(result)),
+    symmetry: nullResult(),
+    proportions: nullResult(),
+    jawline: nullResult(),
+    eyeSpacing: nullResult(),
+    eyeAspectRatio: nullResult(),
+    goldenRatio: nullResult(),
+    lipFullness: nullResult(),
+    noseProfile: nullResult(),
+    cheekboneDefinition: nullResult(),
+    fwhr: nullResult(),
+    canthalTilt: nullResult(),
+    eyeTilt: nullResult(),
+    browTilt: nullResult(),
+    browLengthRatio: nullResult(),
+    eyeNoseRatio: nullResult(),
+    noseChinRatio: nullResult(),
+    horizontalFifths: nullResult(),
+    noseProjection: nullResult(),
+    noseBridgeAngle: nullResult(),
+    alarAngle: nullResult(),
+    lipWidthRatio: nullResult(),
+    upperLipRatio: nullResult(),
     facialShape: shapeResult.primary,
     faceShapeProbabilities: shapeResult.probabilities,
   };
 }
 
 export interface BuildOptions {
-  photoQualityScore?: number;
+  photoQualityScore?: number | null;
   consistencyScore?: number;
   analysisConfidence?: number;
   photoCount?: number;
@@ -801,7 +651,7 @@ export function buildFaceScoreFromMetrics(
   structureProfileOverride?: StructureProfileType | null,
 ): FaceScoreResult {
   const {
-    photoQualityScore = 8,
+    photoQualityScore,
     consistencyScore: consistencyScoreIn,
     analysisConfidence: analysisConfidenceIn,
     photoCount = 1,
@@ -923,24 +773,44 @@ export function buildFaceScoreFromMetrics(
 
   // Compute domain scores from raw geometry
   const faceProfile = rawGeometry
-    ? computeDomainScores(rawGeometry, skinClarityScore, photoQualityScore)
+    ? computeDomainScores(rawGeometry, skinClarityScore, photoQualityScore ?? null)
     : undefined;
 
-  // Overall score: weighted average of domain indices. A face that was
-  // detected but yielded no measurable facet falls back to the neutral middle
-  // of the scale — in practice this only happens when a face is present yet
-  // every measurement failed (occlusion, extreme lighting).
-  const faceIQ = faceProfile
-    ? Math.round(
-        faceProfile.geometry * DOMAIN_WEIGHTS.geometry +
-          faceProfile.symmetry * DOMAIN_WEIGHTS.symmetry +
-          faceProfile.structure * DOMAIN_WEIGHTS.structure +
-          faceProfile.eyes * DOMAIN_WEIGHTS.eyes +
-          faceProfile.nasal * DOMAIN_WEIGHTS.nasal,
-      )
-    : availableWeight > 0
-      ? Math.round(Math.max(0, Math.min(100, weightedSum / availableWeight)))
-      : 50;
+  // Overall score: weighted average of measured domains only. A domain with no
+  // valid measurement is excluded (never counted as a shameful 0), and when
+  // nothing at all could be measured the Face IQ is `null` — the UI renders it
+  // as "not measured" instead of a fabricated middle number.
+  const domainEntries: { value: number; weight: number }[] = [];
+  if (faceProfile) {
+    const domains: [keyof typeof DOMAIN_WEIGHTS, number | null][] = [
+      ['geometry', faceProfile.geometry],
+      ['symmetry', faceProfile.symmetry],
+      ['structure', faceProfile.structure],
+      ['eyes', faceProfile.eyes],
+      ['nasal', faceProfile.nasal],
+    ];
+    for (const [key, value] of domains) {
+      if (value != null) domainEntries.push({ value, weight: DOMAIN_WEIGHTS[key] });
+    }
+  } else if (availableWeight > 0) {
+    domainEntries.push({
+      value: weightedSum / availableWeight,
+      weight: 1,
+    });
+  }
+  const faceIQ =
+    domainEntries.length === 0
+      ? null
+      : Math.round(
+          Math.max(
+            0,
+            Math.min(
+              100,
+              domainEntries.reduce((sum, d) => sum + d.value * d.weight, 0) /
+                domainEntries.reduce((sum, d) => sum + d.weight, 0),
+            ),
+          ),
+        );
 
   const { grade, label: gradeLabel, comparison } = computeFaceIQ(metricPercentiles, weightMap);
 
@@ -1190,7 +1060,8 @@ export function buildFaceScoreFromMetrics(
       };
     });
 
-  const roundedScore = Math.round(((faceIQ / 100) * 8 + 2) * 10) / 10;
+  const roundedScore =
+    faceIQ == null ? null : Math.round(((faceIQ / 100) * 8 + 2) * 10) / 10;
 
   const strengths: string[] = [];
   const improvements: string[] = [];
@@ -1209,7 +1080,10 @@ export function buildFaceScoreFromMetrics(
     cheekbone: cheekboneDefinition.score,
   });
 
-  const detailedAnalysis = scoreToDetailedLabel(roundedScore);
+  const detailedAnalysis =
+    roundedScore == null
+      ? 'Could not be estimated — no reliable measurements from these photos.'
+      : scoreToDetailedLabel(roundedScore);
   const blendshapes = sourceResult
     ? analyzeBlendshapes(sourceResult)
     : {
@@ -1265,7 +1139,7 @@ export function buildFaceScoreFromMetrics(
     rawEyeNoseRatio: rawEyeNoseRatio ?? null,
     facialHarmony: facialHarmony == null ? null : Math.round(facialHarmony * 10) / 10,
     breakdown,
-    overallRating: gradeLabel,
+    overallRating: gradeLabel ?? 'Not Measured',
     detailedAnalysis,
     strengths,
     improvements,
@@ -1274,7 +1148,8 @@ export function buildFaceScoreFromMetrics(
     percentile,
     beautyIndex,
     faceShapeDetails,
-    photoQualityScore: Math.round(photoQualityScore * 10) / 10,
+    photoQualityScore:
+      photoQualityScore == null ? null : Math.round(photoQualityScore * 10) / 10,
     consistencyScore:
       consistencyScoreIn !== undefined ? Math.round(consistencyScoreIn * 10) / 10 : undefined,
     analysisConfidence: Math.round(analysisConfidence),
@@ -1331,7 +1206,7 @@ export function recomputeFaceIQFromScores(metrics: {
   upperLipRatio: number | null;
   noseBridgeAngle: number | null;
   eyeTilt: number | null;
-}): number {
+}): number | null {
   const entries: [string, number | null][] = [
     ['symmetry', metrics.symmetry],
     ['goldenRatio', metrics.goldenRatio],
@@ -1364,7 +1239,7 @@ export function recomputeFaceIQFromScores(metrics: {
   }
   return availableWeight > 0
     ? Math.round(Math.max(0, Math.min(100, weightedSum / availableWeight)))
-    : 50;
+    : null;
 }
 
 function median(values: number[]): number {
@@ -1471,7 +1346,10 @@ export function mergeFaceScores(
     .map((s) => s.skinClarity)
     .filter((v): v is number => v !== null && v !== undefined && Number.isFinite(v));
   const skinClarity = skinClarityValues.length > 0 ? median(skinClarityValues) : null;
-  const photoQuality = median(samples.map((s) => s.quality.score));
+  const photoQualityValues = samples
+    .map((s) => s.quality.score)
+    .filter((v): v is number => typeof v === 'number' && Number.isFinite(v));
+  const photoQuality = photoQualityValues.length > 0 ? median(photoQualityValues) : null;
 
   const cvList = MERGE_KEYS.map((key) => {
     const vals = samples
@@ -1497,21 +1375,24 @@ export function mergeFaceScores(
   // best captures were. A turned head makes bilateral numbers unreliable even
   // when the photo is crisp and bright — confidence has to say so.
   const frontality = mean(samples.map((s) => frontalityScore(s.quality)));
+  const qualityComponent = photoQuality ?? 0;
   const analysisConfidence =
     samples.length === 1
-      ? Math.round((photoQuality * 0.6 + frontality * 0.4) * 10)
+      ? Math.round((qualityComponent * 0.6 + frontality * 0.4) * 10)
       // Multiple photos were captured, so consistencyScore is always defined here.
       : Math.round(
           Math.max(
             1,
             Math.min(
               10,
-              (consistencyScore as number) * 0.45 + photoQuality * 0.35 + frontality * 0.2,
+              (consistencyScore as number) * 0.45 + qualityComponent * 0.35 + frontality * 0.2,
             ),
           ) * 10,
         );
 
-  const bestSample = [...samples].sort((a, b) => b.quality.score - a.quality.score)[0];
+  const bestSample = [...samples].sort(
+    (a, b) => (b.quality.score ?? -1) - (a.quality.score ?? -1),
+  )[0];
 
   // Merge youthfulness and structure profile across samples. If no sample
   // produced a measurement, the result stays null (rendered as "not measured")
