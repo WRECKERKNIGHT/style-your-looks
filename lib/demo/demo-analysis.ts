@@ -249,36 +249,6 @@ export function isDemoPhoto(url: string | null | undefined): boolean {
   return url != null && DEMO_MEDIA.includes(url);
 }
 
-/** Deterministic per-person synthetic mesh so every carousel slide scans differently. */
-export function generateDemoLandmarks(variant = 0): number[][] {
-  const rings: [number, number, number, number, number, number][] = [
-    [0.5, 0.55, 0.26, 0.33, 96, 0],
-    [0.5, 0.51, 0.19, 0.24, 88, 0.4],
-    [0.5, 0.5, 0.12, 0.15, 92, 1.2],
-    [0.5, 0.5, 0.06, 0.075, 96, 2.1],
-    [0.5, 0.5, 0.028, 0.03, 78, 3.0],
-    [0.5, 0.47, 0.008, 0.01, 28, 0.9],
-  ];
-  const sx = 0.5 + (variant % 3 - 1) * 0.01;
-  const sy = 0.53 + ((variant * 7) % 5) * 0.008;
-  const stretch = 1 + ((variant * 13) % 5) * 0.03;
-  const pts: number[][] = [];
-  for (const [cx, cy, rx, ry, n, phase] of rings) {
-    for (let i = 0; i < n && pts.length < 478; i++) {
-      const a = (i / n) * Math.PI * 2 + phase + variant * 0.11;
-      const jitter = 0.004 * Math.sin((i * 13 + phase * 7 + variant * 5) % Math.PI);
-      const radial = rx / 0.26;
-      pts.push([
-        Math.max(0.02, Math.min(0.98, sx + Math.cos(a) * rx * stretch + jitter)),
-        Math.max(0.02, Math.min(0.98, sy + Math.sin(a) * ry * 0.9 * stretch + jitter)),
-        -radial * 0.55 + 0.3 * Math.cos(a) * radial,
-      ]);
-    }
-  }
-  while (pts.length < 478) pts.push([0.5, 0.5, -0.12]);
-  return pts.slice(0, 478);
-}
-
 export function buildDemoBodyResult(person: DemoPerson): {
   result: BodyAnalysisResult;
   recommendations: OutfitRecommendation[];
