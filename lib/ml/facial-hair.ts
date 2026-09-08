@@ -728,7 +728,8 @@ export function scoreGroomingStyles(faceShape: string | undefined): GroomingScor
   const scores: GroomingScore[] = [];
 
   for (const [styleId, shapeScores] of Object.entries(BEARD_FACE_SHAPES)) {
-    const score = shapeScores[shape] ?? 7;
+    const score = shapeScores[shape];
+    if (score == null) continue;
     scores.push({
       styleId,
       type: "beard",
@@ -739,7 +740,8 @@ export function scoreGroomingStyles(faceShape: string | undefined): GroomingScor
 
   for (const [styleId, shapeScores] of Object.entries(MUSTACHE_FACE_SHAPES)) {
     if (styleId === "none") continue;
-    const score = shapeScores[shape] ?? 7;
+    const score = shapeScores[shape];
+    if (score == null) continue;
     scores.push({
       styleId,
       type: "mustache",
