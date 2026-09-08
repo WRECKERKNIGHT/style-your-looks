@@ -424,10 +424,35 @@ function buildMetric(
   spec: MetricSpec,
   raw: RawGeometry,
   profile: ReportProfile,
-  skinClarityScore: number,
+  skinClarityScore: number | null,
   photoQualityScore: number,
 ): ReportMetric | null {
   if (spec.key === 'skinClarity') {
+    // Skin clarity is gated before this point: a score only exists when the
+    // photo actually contained a face to sample. When it is null the metric
+    // is reported as unavailable instead of inventing a middle score.
+    if (skinClarityScore == null) {
+      return {
+        key: spec.key,
+        label: spec.label,
+        pillar: spec.pillar,
+        score: null,
+        percentile: null,
+        raw: null,
+        unit: RATIO_LABEL,
+        mu: null,
+        sigma: null,
+        z: null,
+        confidence: 0,
+        status: 'unavailable',
+        refRange: '—',
+        description: spec.description,
+        tip: 'Skin clarity needs a face region to sample — retake with the face centered and well lit.',
+        changeable: spec.changeable ?? false,
+        potential: 0,
+        genderSensitive: spec.genderSensitive ?? false,
+      };
+    }
     const score = Math.round(skinClarityScore * 10) / 10;
     return {
       ...SKIN_METRIC,
@@ -540,7 +565,7 @@ export function buildFaceIQReport(
   rawGeometry: RawGeometry | null,
   opts: {
     profile: ReportProfile;
-    skinClarityScore: number;
+    skinClarityScore: number | null;
     photoQualityScore: number;
     shape: string;
     shapeProbabilities: Record<string, number>;
