@@ -391,12 +391,12 @@ export default function ColorAnalysisPage() {
   useEffect(() => {
     // Face-only is enough: ITA + undertone + Monk scale fully determine the
     // seasonal palette, so don't force users through a body scan first.
-    if (faceResult && !colorAnalysis) {
+    if (faceResult && faceResult.skinToneScaleId != null && !colorAnalysis) {
       const ita = faceResult.skinToneITA ?? derivedITAFromScale(faceResult.skinToneScaleId);
       const analysis = analyzeColorSeason({
         undertone: faceResult.undertone as "Warm" | "Cool" | "Neutral",
         ita,
-        monkScaleId: faceResult.skinToneScaleId ?? 4,
+        monkScaleId: faceResult.skinToneScaleId,
       });
       setColorAnalysis(analysis);
     }
@@ -411,12 +411,12 @@ export default function ColorAnalysisPage() {
       img.onload = async () => {
         try {
           const result = await analyzeFaceFromImage(img);
-          if (result?.skinTone) {
+          if (result?.skinTone?.monkScale?.id != null) {
             const { ita, monkScale } = result.skinTone;
             const analysis = analyzeColorSeason({
               undertone: result.skinTone.undertone || "Neutral",
-              ita: ita || derivedITAFromScale(monkScale?.id),
-              monkScaleId: monkScale?.id ?? 4,
+              ita: ita || derivedITAFromScale(monkScale.id),
+              monkScaleId: monkScale.id,
             });
             setColorAnalysis(analysis);
           }
