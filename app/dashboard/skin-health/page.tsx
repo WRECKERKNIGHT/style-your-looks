@@ -23,17 +23,17 @@ interface SkincareStep {
   priority: "essential" | "recommended" | "advanced";
 }
 
-function getSkinMetrics(faceResult: { skinClarity: number | null; symmetry: number | null; overallScore: number } | null): SkinMetric[] {
+function getSkinMetrics(faceResult: { skinClarity: number | null; symmetry: number | null; overallScore: number | null } | null): SkinMetric[] {
   if (!faceResult) return [];
   // Every metric below derives from skin clarity. When clarity could not be
   // measured (e.g. no face sampled), none of them are available — we do not
   // infer an invented clarity number for them.
   if (faceResult.skinClarity == null) return [];
   const texture = Math.min(10, faceResult.skinClarity * 1.05);
-  const hydration = Math.min(10, faceResult.skinClarity * 0.9 + faceResult.overallScore * 0.1);
+  const hydration = Math.min(10, faceResult.skinClarity * 0.9 + (faceResult.overallScore ?? faceResult.skinClarity) * 0.1);
   const tone = Math.min(10, faceResult.skinClarity * 0.95 + (faceResult.symmetry ?? faceResult.skinClarity) * 0.05);
   const clarity = faceResult.skinClarity;
-  const elasticity = Math.min(10, faceResult.overallScore * 0.8 + 2);
+  const elasticity = Math.min(10, (faceResult.overallScore ?? faceResult.skinClarity) * 0.8 + 2);
   return [
     { label: "Skin Clarity", score: Math.round(clarity * 10) / 10, maxScore: 10, description: "Estimated from brightness evenness across skin regions in your photo. This is not a clinical dermatological measurement.", advice: clarity >= 7 ? "Maintain with SPF daily and gentle cleansing." : "Add BHA exfoliant 2x/week and niacinamide serum." },
     { label: "Texture Quality", score: Math.round(texture * 10) / 10, maxScore: 10, description: "Estimated proxy derived from your clarity score — not a separate pixel-level texture measurement.", advice: texture >= 7 ? "Your texture is smooth. Keep exfoliating regularly." : "Try retinol 2x/week for pore refinement and smoothness." },
