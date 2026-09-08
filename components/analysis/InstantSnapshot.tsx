@@ -44,10 +44,10 @@ export function InstantSnapshot() {
             </span>
             <div className="flex flex-wrap gap-2">
               <span className="inline-flex items-center px-2.5 py-1 border border-aurum-500/30 bg-aurum-500/5 text-xs font-mono tracking-wider text-[var(--text-primary)]">
-                {faceResult.facialShape?.toUpperCase() ?? "OVAL"} FACE
+                {faceResult.facialShape?.toUpperCase()} FACE
               </span>
               <span className="inline-flex items-center px-2.5 py-1 border border-[var(--border-primary)] bg-[var(--bg-base)]/40 text-xs font-mono tracking-wider text-[var(--text-muted)]">
-                {faceResult.styleProfile?.toUpperCase() ?? "EVERYMAN APPEAL"}
+                {faceResult.styleProfile?.toUpperCase()}
               </span>
               <span
                 className="inline-flex items-center gap-1.5 px-2.5 py-1 border border-[var(--border-primary)] bg-[var(--bg-base)]/40 text-xs font-mono tracking-wider text-[var(--text-muted)]"
@@ -108,7 +108,7 @@ export function InstantSnapshot() {
       <div className="px-6 pb-5 flex items-center gap-2">
         <Crown className="w-3.5 h-3.5 text-aurum-500" />
         <AnimatedCounter
-          target={faceResult.beautyIndex ?? 50}
+          target={faceResult.beautyIndex}
           duration={1.4}
           decimals={1}
           className="text-sm font-bold text-gradient-aurum"
