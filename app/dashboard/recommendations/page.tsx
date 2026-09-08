@@ -27,7 +27,7 @@ export default function RecommendationsPage() {
         face: faceResult?.overallRating || "N/A",
         body: bodyResult?.bodyType || (bodyResult ? "Complete" : "N/A"),
         color: colorAnalysis?.seasonalType || "N/A",
-        overall: faceResult ? faceResult.overallScore.toFixed(0) : "N/A",
+        overall: faceResult?.overallScore != null ? faceResult.overallScore.toFixed(0) : "—",
       }
     : null;
 

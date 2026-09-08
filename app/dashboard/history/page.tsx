@@ -44,7 +44,7 @@ function toRow(entry: AnalysisEntry): HistoryRow {
       ...base,
       type: "face",
       route: "/dashboard/face-analysis",
-      score: entry.faceResult.overallScore,
+      score: entry.faceResult.overallScore ?? undefined,
       result: entry.faceResult.facialShape,
     };
   }
