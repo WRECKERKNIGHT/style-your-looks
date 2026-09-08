@@ -79,8 +79,11 @@ export function percentileFromZ(z: number): number {
 
 /**
  * Map a percentile to a letter grade.
+ * Returns nulls when no valid percentile exists so a non-measured Face IQ
+ * never surfacess as a fabricated "Needs Work".
  */
-export function gradeFromPercentile(pct: number): { grade: string; label: string } {
+export function gradeFromPercentile(pct: number): { grade: string | null; label: string | null } {
+  if (!Number.isFinite(pct)) return { grade: null, label: null };
   if (pct >= 95) return { grade: "A+", label: "Exceptional" };
   if (pct >= 85) return { grade: "A", label: "Excellent" };
   if (pct >= 78) return { grade: "A-", label: "Very Good" };
@@ -93,8 +96,10 @@ export function gradeFromPercentile(pct: number): { grade: string; label: string
 
 /**
  * Convert a percentile to a descriptive comparison string.
+ * Returns null when no valid percentile exists.
  */
-export function comparisonFromPercentile(pct: number): string {
+export function comparisonFromPercentile(pct: number): string | null {
+  if (!Number.isFinite(pct)) return null;
   if (pct >= 95) return `Top ${100 - pct}% of all faces analysed`;
   if (pct >= 50) return `Above ${pct}% of all faces analysed`;
   if (pct === 50) return `At the median — exactly average`;
@@ -142,16 +147,20 @@ export function scoreToPercentile(score: number): number {
 export function computeFaceIQ(
   metricPercentiles: Record<string, number>,
   weights: Record<string, number>
-): { faceIQ: number; grade: string; label: string; comparison: string } {
+): { faceIQ: number | null; grade: string | null; label: string | null; comparison: string | null } {
   let totalWeight = 0;
   let weightedSum = 0;
   for (const [key, pct] of Object.entries(metricPercentiles)) {
     const w = weights[key] ?? 0;
-    const safe = Number.isFinite(pct) ? pct : 50;
-    weightedSum += safe * w;
+    if (!Number.isFinite(pct) || w <= 0) continue;
+    weightedSum += pct * w;
     totalWeight += w;
   }
-  const faceIQ = totalWeight > 0 ? Math.round(Math.max(0, Math.min(100, weightedSum / totalWeight))) : 50;
+  // No measurable metric → no Face IQ. We never substitute the 50th percentile.
+  if (totalWeight <= 0) {
+    return { faceIQ: null, grade: null, label: null, comparison: null };
+  }
+  const faceIQ = Math.round(Math.max(0, Math.min(100, weightedSum / totalWeight)));
   const { grade, label } = gradeFromPercentile(faceIQ);
   const comparison = comparisonFromPercentile(faceIQ);
   return { faceIQ, grade, label, comparison };
