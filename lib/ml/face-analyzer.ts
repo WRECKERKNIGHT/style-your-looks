@@ -450,7 +450,7 @@ export function getYouthfulness(
 
   // 1. Skin smoothness — average brightness variance across face zones
   const ctx = canvas.getContext('2d');
-  let skinSmoothness = 50;
+  let skinSmoothness: number | null = null;
   if (ctx) {
     const samplePoints = [lm[50], lm[101], lm[118], lm[330], lm[280]];
     let totalVariance = 0;
@@ -491,13 +491,13 @@ export function getYouthfulness(
   }
 
   // 2. Eye openness from blendshapes
-  const eyeOpenness = blendshapes ? blendshapes.eyeOpenness * 100 : 50;
+  const eyeOpenness = blendshapes ? blendshapes.eyeOpenness * 100 : null;
 
   // 3. Facial compactness (midface ratio — shorter midface reads younger)
   const browLine = U.pt(9);
   const noseBase = U.pt(2);
   const chin = U.pt(152);
-  let compactness = 50;
+  let compactness: number | null = null;
   if (browLine && noseBase && chin) {
     const upper = Math.abs(browLine.y - noseBase.y);
     const lower = Math.abs(noseBase.y - chin.y);
@@ -509,7 +509,7 @@ export function getYouthfulness(
   }
 
   // 4. Skin brightness (brighter often reads younger)
-  let brightness = 50;
+  let brightness: number | null = null;
   if (ctx) {
     const center = lm[1]; // nose tip
     if (center) {
@@ -524,15 +524,27 @@ export function getYouthfulness(
           totalBrightness += (pixels[i] + pixels[i + 1] + pixels[i + 2]) / 3;
           count++;
         }
-        brightness = count > 0 ? (totalBrightness / count / 255) * 100 : 50;
+        brightness = count > 0 ? (totalBrightness / count / 255) * 100 : null;
       } catch {
         /* ignore */
       }
     }
   }
 
-  // Weighted composite
-  const score = skinSmoothness * 0.35 + eyeOpenness * 0.2 + compactness * 0.25 + brightness * 0.2;
+  // Weighted composite — only measured components contribute; if nothing was
+  // observable the estimate is declined rather than defaulted to "average".
+  const components: { value: number; weight: number }[] = [];
+  const push = (value: number | null, weight: number) => {
+    if (value != null) components.push({ value, weight });
+  };
+  push(skinSmoothness, 0.35);
+  push(eyeOpenness, 0.2);
+  push(compactness, 0.25);
+  push(brightness, 0.2);
+  if (components.length === 0) return null;
+  const totalWeight = components.reduce((sum, c) => sum + c.weight, 0);
+  const score =
+    components.reduce((sum, c) => sum + c.value * c.weight, 0) / totalWeight;
   return Math.round(Math.max(0, Math.min(100, score)));
 }
 
@@ -932,7 +944,7 @@ const REFS: Record<string, { mu: number; sigma: number }> = {
   eyeNoseRatio: { mu: 0.88, sigma: 0.1 },
   noseProjection: { mu: 0.55, sigma: 0.07 },
   noseBridgeAngle: { mu: 0, sigma: 8 },
-  alarAngle: { mu: 85, sigma: 10 },
+  alarAngle: { mu: 0, sigma: 10 },
   lipFullness: { mu: 0.55, sigma: 0.08 },
   lipWidthRatio: { mu: 0.47, sigma: 0.05 },
   upperLipRatio: { mu: 0.38, sigma: 0.05 },
@@ -965,11 +977,28 @@ function m(
       status: 'unavailable',
     };
   }
+  const z = (raw - ref.mu) / ref.sigma;
+
+  // CALIBRATION GATE: a |z| beyond ±OUT_OF_BAND_Z means the raw value sits
+  // so far outside the reference distribution that the reference almost
+  // certainly does not describe this metric/formula combination (stale mu/sigma
+  // after a formula change, wrong units, or a degenerate face mesh). Reporting
+  // the floor score (1.5) for all such metrics produces identical, meaningless
+  // values that look fabricated. Instead we say the measurement is NOT RELIABLE
+  // and exclude it from scoring — the metric appears as "not measured" in the
+  // report instead of a fake-looking number.
+  const OUT_OF_BAND_Z = 3.2;
+  const outOfBand = Math.abs(z) > OUT_OF_BAND_Z;
+
   const status: MeasurementStatus =
-    conf <= 0 ? 'unavailable' : conf < LOW_CONFIDENCE_THRESHOLD ? 'low_confidence' : 'valid';
+    conf <= 0
+      ? 'unavailable'
+      : outOfBand || conf < LOW_CONFIDENCE_THRESHOLD
+        ? 'low_confidence'
+        : 'valid';
   return {
     raw: Math.round(raw * 10000) / 10000,
-    z: Math.round(((raw - ref.mu) / ref.sigma) * 1000) / 1000,
+    z: Math.round(z * 1000) / 1000,
     confidence: conf,
     unit,
     label,
@@ -1184,16 +1213,13 @@ export function computeRawGeometry(result: FaceLandmarkerResult): RawGeometry | 
   const rightBrowOuter = pt(276);
   const rightBrowInner = pt(334);
   const browTiltVal = (() => {
-    if (!leftBrowOuter || !leftBrowInner || !rightBrowOuter || !rightBrowInner) return 8;
-    // Positive = inner end of the brow raised above the outer end.
-    // |Δx| keeps both eyes in the [-90,90] branch (right-brow Δx is negative).
-    const innerUp = (inner: Point2D, outer: Point2D): number => {
-      const dx = Math.abs(inner.x - outer.x);
-      if (dx <= 0) return 0;
-      return -Math.atan2(inner.y - outer.y, dx) * (180 / Math.PI);
-    };
-    const left = innerUp(leftBrowInner, leftBrowOuter);
-    const right = innerUp(rightBrowInner, rightBrowOuter);
+    if (!leftBrowOuter || !leftBrowInner || !rightBrowOuter || !rightBrowInner) return 6;
+    // Reuse the eye tilt convention: positive = OUTER end of the brow raised
+    // above the inner end (the standard "alert/attractive" reading). The old
+    // code measured positive = inner raised, which flips every normal brow to
+    // a large negative angle and floors the metric against its mu=+8 reference.
+    const left = tiltToDeg(leftBrowInner, leftBrowOuter);
+    const right = tiltToDeg(rightBrowInner, rightBrowOuter);
     return (left + right) / 2;
   })();
   const browLengthRatioVal = (() => {
