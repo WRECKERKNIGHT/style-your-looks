@@ -362,7 +362,7 @@ export function AnalysisResults() {
         icon={Gauge}
         title="FACEIQ OVERVIEW"
         defaultOpen
-        badge={`${(faceResult.overallScore ?? 5).toFixed(1)}/10`}
+        badge={`${faceResult.overallScore.toFixed(1)}/10`}
       >
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           {[
@@ -417,7 +417,7 @@ export function AnalysisResults() {
             },
             {
               label: 'Skin Texture Age',
-              value: faceResult.ageEstimation ?? 25,
+              value: faceResult.ageEstimation,
               suffix: '',
               decimals: 0,
               hint: `yrs (±${Math.round((faceResult.ageConfidence ?? 0.15) * 100)}%)`,
@@ -426,9 +426,13 @@ export function AnalysisResults() {
               label: 'M/F Balance',
               value:
                 faceResult.genderProfile === 'masculine'
-                  ? Math.round((faceResult.fwhr / 2.4) * 100)
+                  ? faceResult.fwhr == null
+                    ? null
+                    : Math.round((faceResult.fwhr / 2.4) * 100)
                   : faceResult.genderProfile === 'feminine'
-                    ? Math.round((faceResult.canthalTilt / 10) * 100)
+                    ? faceResult.canthalTilt == null
+                      ? null
+                      : Math.round((faceResult.canthalTilt / 10) * 100)
                     : 50,
               suffix: '',
               decimals: 0,
@@ -500,7 +504,7 @@ export function AnalysisResults() {
             <div className="h-4 bg-light-border dark:bg-cosmic-border rounded-full overflow-hidden">
               <motion.div
                 initial={{ width: 0 }}
-                whileInView={{ width: `${faceResult.beautyIndex ?? 50}%` }}
+                whileInView={{ width: `${faceResult.beautyIndex}%` }}
                 viewport={{ once: true }}
                 transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
                 className="h-full rounded-full bg-gradient-to-r from-aurum-500 via-aurum-400 to-aurum-500"
@@ -513,7 +517,7 @@ export function AnalysisResults() {
       <CollapsibleSection
         icon={Smile}
         title="EXPRESSION ANALYSIS"
-        badge={faceResult.blendshapes?.emotion ?? 'Neutral'}
+        badge={faceResult.blendshapes?.emotion ?? '—'}
       >
         <p className="text-nexus-400 dark:text-cosmic-muted font-body text-sm mb-6 leading-relaxed">
           Detected live from 478-point facial blendshapes during analysis.
@@ -528,13 +532,13 @@ export function AnalysisResults() {
               Emotion
             </span>
             <p className="font-body font-bold text-aurum-500 text-xl mt-1">
-              {faceResult.blendshapes?.emotion ?? 'Neutral'}
+              {faceResult.blendshapes?.emotion ?? '—'}
             </p>
             <div className="h-2 bg-light-border dark:bg-cosmic-border rounded-full mt-2 overflow-hidden">
               <motion.div
                 initial={{ width: 0 }}
                 whileInView={{
-                  width: `${(faceResult.blendshapes?.emotionConfidence ?? 0.5) * 100}%`,
+                  width: `${(faceResult.blendshapes?.emotionConfidence ?? 0) * 100}%`,
                 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
@@ -542,28 +546,30 @@ export function AnalysisResults() {
               />
             </div>
             <span className="text-xs text-nexus-400 dark:text-cosmic-muted font-mono">
-              {Math.round((faceResult.blendshapes?.emotionConfidence ?? 0.5) * 100)}% confidence
+              {faceResult.blendshapes?.emotionConfidence == null
+                ? 'not measured'
+                : `${Math.round(faceResult.blendshapes.emotionConfidence * 100)}% confidence`}
             </span>
           </div>
           {[
             {
               label: 'Smile',
-              value: faceResult.blendshapes?.smileIntensity ?? 0,
+              value: faceResult.blendshapes?.smileIntensity ?? null,
               color: 'bg-aurum-500',
             },
             {
               label: 'Eye Openness',
-              value: faceResult.blendshapes?.eyeOpenness ?? 0.5,
+              value: faceResult.blendshapes?.eyeOpenness ?? null,
               color: 'bg-nexus-400',
             },
             {
               label: 'Brow Raise',
-              value: faceResult.blendshapes?.browRaise ?? 0.5,
+              value: faceResult.blendshapes?.browRaise ?? null,
               color: 'bg-aurum-600',
             },
             {
               label: 'Mouth Openness',
-              value: faceResult.blendshapes?.mouthOpenness ?? 0.3,
+              value: faceResult.blendshapes?.mouthOpenness ?? null,
               color: 'bg-nexus-500',
             },
           ].map((item, i) => (
@@ -575,12 +581,12 @@ export function AnalysisResults() {
                 {item.label}
               </span>
               <p className="font-body font-bold text-nexus-800 dark:text-white text-xl mt-1">
-                {Math.round(item.value * 100)}%
+                {item.value == null ? '—' : `${Math.round(item.value * 100)}%`}
               </p>
               <div className="h-2 bg-light-border dark:bg-cosmic-border rounded-full mt-2 overflow-hidden">
                 <motion.div
                   initial={{ width: 0 }}
-                  whileInView={{ width: `${item.value * 100}%` }}
+                  whileInView={{ width: `${(item.value ?? 0) * 100}%` }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.8, delay: 0.15 + i * 0.1, ease: [0.16, 1, 0.3, 1] }}
                   className={`h-full ${item.color} rounded-full`}
@@ -593,7 +599,9 @@ export function AnalysisResults() {
               Head Tilt
             </span>
             <p className="font-body font-bold text-nexus-800 dark:text-white text-xl mt-1">
-              {faceResult.blendshapes?.headTilt ?? 0}deg
+              {faceResult.blendshapes?.headTilt == null
+                ? '—'
+                : `${faceResult.blendshapes.headTilt}deg`}
             </p>
             <span className="text-xs text-nexus-400 dark:text-cosmic-muted font-mono">
               pose correction applied
@@ -646,7 +654,7 @@ export function AnalysisResults() {
       <CollapsibleSection
         icon={Crown}
         title="FACIAL HARMONY INDEX"
-        badge={`${faceResult.facialHarmony}/10`}
+        badge={`${faceResult.facialHarmony != null ? `${faceResult.facialHarmony}/10` : 'not measured'}`}
       >
         <p className="text-nexus-400 dark:text-cosmic-muted font-body text-sm mb-6 leading-relaxed">
           Composite of golden ratio, lip proportion, nose profile, forehead balance, and cheekbone
