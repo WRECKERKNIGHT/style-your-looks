@@ -362,7 +362,7 @@ export function AnalysisResults() {
         icon={Gauge}
         title="FACEIQ OVERVIEW"
         defaultOpen
-        badge={`${faceResult.overallScore.toFixed(1)}/10`}
+        badge={`${faceResult.overallScore != null ? faceResult.overallScore.toFixed(1) : '—'}/10`}
       >
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           {[
@@ -420,7 +420,10 @@ export function AnalysisResults() {
               value: faceResult.ageEstimation,
               suffix: '',
               decimals: 0,
-              hint: `yrs (±${Math.round((faceResult.ageConfidence ?? 0.15) * 100)}%)`,
+              hint:
+                faceResult.ageConfidence != null
+                  ? `yrs (±${Math.round(faceResult.ageConfidence * 100)}%)`
+                  : 'yrs (not measured)',
             },
             {
               label: 'M/F Balance',
@@ -482,7 +485,7 @@ export function AnalysisResults() {
         icon={BarChart3}
         title="BEAUTY INDEX"
         defaultOpen
-        badge={`${faceResult.beautyIndex}/100`}
+        badge={`${faceResult.beautyIndex != null ? `${faceResult.beautyIndex.toFixed(1)}` : '—'}/100`}
       >
         <div className="flex flex-col md:flex-row items-center gap-8">
           <div className="text-center">
@@ -504,7 +507,7 @@ export function AnalysisResults() {
             <div className="h-4 bg-light-border dark:bg-cosmic-border rounded-full overflow-hidden">
               <motion.div
                 initial={{ width: 0 }}
-                whileInView={{ width: `${faceResult.beautyIndex}%` }}
+                whileInView={{ width: `${faceResult.beautyIndex ?? 0}%` }}
                 viewport={{ once: true }}
                 transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
                 className="h-full rounded-full bg-gradient-to-r from-aurum-500 via-aurum-400 to-aurum-500"
@@ -749,7 +752,11 @@ export function AnalysisResults() {
                 <motion.div
                   initial={{ width: 0 }}
                   whileInView={{
-                    width: `${Math.min(100, (item.value / (item.hint === '%' ? 1 : 10)) * 100)}%`,
+                    width: `${
+                      item.value == null
+                        ? 0
+                        : Math.min(100, (item.value / (item.hint === '%' ? 1 : 10)) * 100)
+                    }%`,
                   }}
                   viewport={{ once: true }}
                   transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
@@ -788,16 +795,27 @@ export function AnalysisResults() {
             {[
               {
                 label: 'Brightness',
-                ok: faceResult.qualityGate.brightness >= 6,
+                ok: faceResult.qualityGate.brightness != null && faceResult.qualityGate.brightness >= 6,
                 warn:
-                  faceResult.qualityGate.brightness >= 4 && faceResult.qualityGate.brightness < 6,
-                value: `${faceResult.qualityGate.brightness.toFixed(1)}/10`,
+                  faceResult.qualityGate.brightness != null &&
+                  faceResult.qualityGate.brightness >= 4 &&
+                  faceResult.qualityGate.brightness < 6,
+                value:
+                  faceResult.qualityGate.brightness != null
+                    ? `${faceResult.qualityGate.brightness.toFixed(1)}/10`
+                    : '—',
               },
               {
                 label: 'Sharpness',
-                ok: faceResult.qualityGate.sharpness >= 6,
-                warn: faceResult.qualityGate.sharpness >= 4 && faceResult.qualityGate.sharpness < 6,
-                value: `${faceResult.qualityGate.sharpness.toFixed(1)}/10`,
+                ok: faceResult.qualityGate.sharpness != null && faceResult.qualityGate.sharpness >= 6,
+                warn:
+                  faceResult.qualityGate.sharpness != null &&
+                  faceResult.qualityGate.sharpness >= 4 &&
+                  faceResult.qualityGate.sharpness < 6,
+                value:
+                  faceResult.qualityGate.sharpness != null
+                    ? `${faceResult.qualityGate.sharpness.toFixed(1)}/10`
+                    : '—',
               },
               {
                 label: 'Face Size in Frame',
@@ -1045,7 +1063,7 @@ export function AnalysisResults() {
               </div>
             </div>
             <p className="text-xs text-nexus-400 dark:text-cosmic-muted font-body leading-relaxed px-1">
-              {faceResult.beautyIndex >= 70
+              {faceResult.beautyIndex != null && faceResult.beautyIndex >= 70
                 ? 'A large, well-rounded radar polygon — rare and striking geometry.'
                 : 'Every face has shape. Targeted styling can lift your lowest sectors fastest.'}
             </p>
@@ -1077,9 +1095,9 @@ export function AnalysisResults() {
                   </span>
                   <span
                     className={`shrink-0 text-[0.6rem] font-mono tracking-widest px-2 py-0.5 rounded-[var(--radius-xs)] ${
-                      m.score >= 70
+                      m.score >= 7
                         ? 'bg-aurum-500 text-white'
-                        : m.score >= 50
+                        : m.score >= 5
                           ? 'bg-nexus-400/20 text-nexus-400'
                           : 'bg-light-border dark:bg-cosmic-border text-nexus-400 dark:text-cosmic-muted'
                     }`}
