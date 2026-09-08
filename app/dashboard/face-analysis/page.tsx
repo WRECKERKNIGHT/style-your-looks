@@ -306,11 +306,12 @@ export default function FaceAnalysisPage() {
     return [
       'ZERVEY — FACEIQ ANALYSIS REPORT',
       '=================================',
-      `FaceIQ Score:  ${(faceResult.overallScore ?? 5).toFixed(1)}/10  (${faceResult.overallRating ?? '—'})`,
-      `Beauty Index:  ${faceResult.beautyIndex ?? 50}/100`,
-      `Face Shape:    ${faceResult.facialShape ?? 'Oval'}`,
-      `Style Profile: ${faceResult.styleProfile ?? 'Everyman Appeal'}`,
-      `Confidence:    ${faceResult.analysisConfidence ?? 80}%  (${faceResult.photoCount ?? 1} photo(s))`,
+      `FaceIQ Score:  ${faceResult.overallScore.toFixed(1)}/10  (${faceResult.overallRating ?? '—'})`,
+      `Facial Harmony: ${faceResult.facialHarmony != null ? `${faceResult.facialHarmony.toFixed(1)}/10` : 'not measured'}`,
+      `Beauty Index:  ${faceResult.beautyIndex}/100`,
+      `Face Shape:    ${faceResult.facialShape}`,
+      `Style Profile: ${faceResult.styleProfile}`,
+      `Confidence:    ${faceResult.analysisConfidence}%  (${faceResult.photoCount} photo(s))`,
       '',
       'METRIC BREAKDOWN',
       (faceResult.breakdown ?? [])
@@ -445,22 +446,28 @@ export default function FaceAnalysisPage() {
       photo: uploadedImage,
       brand: 'ZERVEY',
       brandTag: 'Measured like a tailor',
-      title: `${faceResult.facialShape ?? 'Oval'} Face`,
-      subtitle: faceResult.styleProfile ?? 'Everyman Appeal',
+      title: `${faceResult.facialShape} Face`,
+      subtitle: faceResult.styleProfile,
       overview: [
-        { label: 'Face Shape', value: faceResult.facialShape ?? 'Oval' },
-        { label: 'Style Profile', value: faceResult.styleProfile ?? 'Everyman Appeal' },
+        { label: 'Face Shape', value: faceResult.facialShape },
+        { label: 'Style Profile', value: faceResult.styleProfile },
         { label: 'Skin Tone', value: faceResult.skinTone ?? '—' },
         { label: 'Undertone', value: faceResult.undertone ?? 'Neutral' },
-        { label: 'Symmetry', value: `${(faceResult.symmetry ?? 5).toFixed(1)}/10` },
-        { label: 'Confidence', value: `${faceResult.analysisConfidence ?? 80}%` },
+        {
+          label: 'Symmetry',
+          value:
+            faceResult.symmetry != null
+              ? `${faceResult.symmetry.toFixed(1)}/10`
+              : 'not measured',
+        },
+        { label: 'Confidence', value: `${faceResult.analysisConfidence}%` },
       ],
       scoreLabel: `${faceResult.overallRating ?? '—'} · FACEIQ`,
-      score: (faceResult.overallScore ?? 5).toFixed(1),
+      score: faceResult.overallScore.toFixed(1),
       scoreSuffix: '/10 · ' + (faceResult.percentile?.bracket ?? faceResult.grade ?? '—'),
       footer: 'zervey.app · computed on-device',
-      fileName: `zervey-faceiq-${(faceResult.overallScore ?? 5).toFixed(1)}.png`,
-      shareText: `My ZERVEY FaceIQ: ${(faceResult.overallScore ?? 5).toFixed(1)}/10 (${faceResult.overallRating ?? '—'}) · ${faceResult.facialShape ?? 'Oval'} face · ${faceResult.styleProfile ?? 'Everyman Appeal'}`,
+      fileName: `zervey-faceiq-${faceResult.overallScore.toFixed(1)}.png`,
+      shareText: `My ZERVEY FaceIQ: ${faceResult.overallScore.toFixed(1)}/10 (${faceResult.overallRating ?? '—'}) · ${faceResult.facialShape} face · ${faceResult.styleProfile}`,
       demo: isDemoPhoto(uploadedImage),
     };
   }, [faceResult, uploadedImage]);
@@ -469,9 +476,9 @@ export default function FaceAnalysisPage() {
     if (!faceResult) return null;
     return buildFaceIQReport(faceResult.rawGeometry ?? null, {
       profile: (faceResult.genderProfile ?? 'neutral') as 'masculine' | 'feminine' | 'neutral',
-      skinClarityScore: faceResult.skinClarity ?? 7,
-      photoQualityScore: faceResult.photoQualityScore ?? 7,
-      shape: faceResult.facialShape ?? 'Oval',
+      skinClarityScore: faceResult.skinClarity ?? null,
+      photoQualityScore: faceResult.photoQualityScore,
+      shape: faceResult.facialShape,
       shapeProbabilities: faceResult.faceShapeProbabilities ?? {},
       confidenceOverride: faceResult.analysisConfidence,
     });
@@ -1119,7 +1126,7 @@ export default function FaceAnalysisPage() {
                     image={uploadedImage}
                     centerX={faceResult.landmarks[1]?.[0] ?? 0.5}
                     imageAspect={imageDims?.aspect}
-                    symmetryScore={faceResult.symmetry}
+                    symmetryScore={faceResult.symmetry ?? undefined}
                     axisAngleDeg={faceResult.symmetryAxis?.angleDeg ?? 0}
                   />
                 </motion.div>
