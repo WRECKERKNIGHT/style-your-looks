@@ -48,15 +48,20 @@ function ScoreTrendChart({ trends }: { trends: ScoreTrendPoint[] }) {
   const plotW = w - pad.left - pad.right;
   const plotH = h - pad.top - pad.bottom;
 
-  const toPath = (values: number[]) => {
-    if (values.length < 2) return "";
-    return values
-      .map((v, i) => {
-        const x = pad.left + (i / (values.length - 1)) * plotW;
-        const y = pad.top + plotH - (v / 10) * plotH;
-        return `${i === 0 ? "M" : "L"}${x},${y}`;
-      })
-      .join(" ");
+  const toPath = (values: (number | null)[]) => {
+    const segs: string[] = [];
+    let drawing = false;
+    values.forEach((v, i) => {
+      if (v == null) {
+        drawing = false;
+        return;
+      }
+      const x = pad.left + (i / (values.length - 1)) * plotW;
+      const y = pad.top + plotH - (v / 10) * plotH;
+      segs.push(`${drawing ? "L" : "M"}${x},${y}`);
+      drawing = true;
+    });
+    return segs.join(" ");
   };
 
   return (
@@ -89,9 +94,11 @@ function ScoreTrendChart({ trends }: { trends: ScoreTrendPoint[] }) {
 
         {trends.map((t, i) => {
           const x = pad.left + (i / (trends.length - 1)) * plotW;
-          return metrics.map((m) => {
-            const y = pad.top + plotH - (t[m.key] / 10) * plotH;
-            return (
+          return metrics.flatMap((m) => {
+            const v = t[m.key];
+            if (v == null) return [];
+            const y = pad.top + plotH - (v / 10) * plotH;
+            return [
               <circle
                 key={`${m.key}-${i}`}
                 cx={x}
@@ -101,8 +108,8 @@ function ScoreTrendChart({ trends }: { trends: ScoreTrendPoint[] }) {
                 className="transition-all duration-150 cursor-pointer"
                 onMouseEnter={() => setHoveredIdx(i)}
                 onMouseLeave={() => setHoveredIdx(null)}
-              />
-            );
+              />,
+            ];
           });
         })}
 
@@ -144,16 +151,16 @@ function ScoreTrendChart({ trends }: { trends: ScoreTrendPoint[] }) {
   );
 }
 
-function ScoreBadge({ label, score }: { label: string; score: number }) {
+function ScoreBadge({ label, score }: { label: string; score: number | null }) {
   let color = "bg-[color-mix(in_srgb,var(--accent-aurum)_15%,transparent)] text-[var(--accent-aurum)] border-[color-mix(in_srgb,var(--accent-aurum)_30%,transparent)]";
-  if (score >= 8) color = "bg-[color-mix(in_srgb,var(--accent-aurum)_20%,transparent)] text-[var(--accent-aurum)] border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)]";
-  else if (score >= 6) color = "bg-[color-mix(in_srgb,var(--accent-nexus)_15%,transparent)] text-[var(--accent-nexus)] border-[color-mix(in_srgb,var(--accent-nexus)_30%,transparent)]";
-  else if (score < 5) color = "bg-purple-500/15 text-purple-400 border-purple-500/30";
+  if (score != null && score >= 8) color = "bg-[color-mix(in_srgb,var(--accent-aurum)_20%,transparent)] text-[var(--accent-aurum)] border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)]";
+  else if (score != null && score >= 6) color = "bg-[color-mix(in_srgb,var(--accent-nexus)_15%,transparent)] text-[var(--accent-nexus)] border-[color-mix(in_srgb,var(--accent-nexus)_30%,transparent)]";
+  else if (score != null && score < 5) color = "bg-purple-500/15 text-purple-400 border-purple-500/30";
 
   return (
     <div className={`inline-flex items-center gap-1.5 px-3 py-1 border rounded-full ${color}`}>
       <span className="text-xs font-body">{label}</span>
-      <span className="text-sm font-display font-bold">{score.toFixed(1)}</span>
+      <span className="text-sm font-display font-bold">{score == null ? "—" : score.toFixed(1)}</span>
     </div>
   );
 }
@@ -193,12 +200,12 @@ export default function StyleDnaPage() {
     const s = (softness - 50) / 50;
     const b = (boldness - 50) / 50;
     return [
-      { label: "SYMMETRY", value: clamp(faceResult.symmetry + s * 0.8 + b * 0.4) },
-      { label: "JAWLINE", value: clamp(faceResult.jawline + a * 1.4) },
-      { label: "PROPORTIONS", value: clamp(faceResult.proportions + b * 1.2 + a * 0.3) },
-      { label: "GOLDEN RATIO", value: clamp(faceResult.goldenRatio + a * 0.8 + b * 0.6) },
-      { label: "SKIN", value: clamp(faceResult.skinClarity + s * 0.7) },
-      { label: "HARMONY", value: clamp(faceResult.facialHarmony + s * 1.2 + b * 0.3) },
+      { label: "SYMMETRY", value: faceResult.symmetry == null ? null : clamp(faceResult.symmetry + s * 0.8 + b * 0.4) },
+      { label: "JAWLINE", value: faceResult.jawline == null ? null : clamp(faceResult.jawline + a * 1.4) },
+      { label: "PROPORTIONS", value: faceResult.proportions == null ? null : clamp(faceResult.proportions + b * 1.2 + a * 0.3) },
+      { label: "GOLDEN RATIO", value: faceResult.goldenRatio == null ? null : clamp(faceResult.goldenRatio + a * 0.8 + b * 0.6) },
+      { label: "SKIN", value: faceResult.skinClarity == null ? null : clamp(faceResult.skinClarity + s * 0.7) },
+      { label: "HARMONY", value: faceResult.facialHarmony == null ? null : clamp(faceResult.facialHarmony + s * 1.2 + b * 0.3) },
     ];
   }, [faceResult, angularity, softness, boldness]);
 
@@ -577,8 +584,17 @@ function StyleRec({ icon, title, text }: { icon: React.ReactNode; title: string;
   );
 }
 
-function MetricTile({ label, score }: { label: string; score: number }) {
-  let borderColor = "border-[var(--border-primary)]";
+function MetricTile({ label, score }: { label: string; score: number | null }) {
+  let borderColor = "border-[var(--border-primary)] border-dashed";
+  if (score == null) {
+    return (
+      <div className={`bg-[var(--bg-tertiary)] p-4 border ${borderColor} text-center`}>
+        <span className="type-label text-[var(--text-muted)] block">{label}</span>
+        <span className="font-display font-bold text-[var(--text-muted)] text-2xl mt-1 block">—</span>
+        <span className="type-mono text-[var(--text-muted)]">not measured</span>
+      </div>
+    );
+  }
   if (score >= 8) borderColor = "border-[color-mix(in_srgb,var(--accent-aurum)_40%,transparent)]";
   else if (score >= 6) borderColor = "border-[color-mix(in_srgb,var(--accent-nexus)_30%,transparent)]";
   else if (score < 5) borderColor = "border-purple-500/30";
