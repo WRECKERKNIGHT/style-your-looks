@@ -1,8 +1,6 @@
 import type {
-  FaceAnalysisResult,
   BodyAnalysisResult,
   OutfitRecommendation,
-  FacialMetric,
 } from "@/store/analysis-store";
 import { analyzeColorSeason } from "@/lib/ml/color-analysis";
 
@@ -12,8 +10,11 @@ export const DEMO_SKIN_PHOTO = "/images/demo/skin-sample.jpg";
 
 /**
  * Every bundled demo person. Each entry carries its own photos and its own
- * "real" (photo-derived) result profile, so running the demo never reuses a
- * single person's numbers across the carousel.
+ * curated presentation copy (taglines, style profile and grooming prose).
+ *
+ * IMPORTANT: All SCORES displayed for a demo run are computed by the real
+ * MediaPipe + scoring pipeline from the bundled photo's actual landmarks —
+ * they are NOT hardcoded here. This file only stores display metadata.
  */
 export interface DemoPerson {
   id: string;
@@ -29,28 +30,12 @@ export interface DemoPerson {
 }
 
 export interface DemoFaceProfile {
-  facialShape: string;
-  overallScore: number;
-  symmetry: number;
-  proportions: number;
-  jawline: number;
-  eyeSpacing: number;
-  skinClarity: number;
-  skinTone: string;
-  skinToneValue: string;
-  skinToneScaleId: number;
-  skinToneITA: number;
-  undertone: string;
-  ageEstimation: number;
-  genderEstimation: string;
   genderProfile: "neutral" | "masculine" | "feminine";
-  emotionDetected: string;
   styleProfile: string;
   detailedAnalysis: string;
   strengths: string[];
   improvements: string[];
   groomingSuggestions: string[];
-  breakdown: { label: string; score: number; value?: string }[];
 }
 
 export interface DemoBodyProfile {
@@ -66,29 +51,6 @@ export interface DemoBodyProfile {
   recommendations: string[];
 }
 
-const breakdownFor = (profile: DemoFaceProfile) => {
-  const { breakdown, overallScore, facialShape } = profile;
-  const generic: [string, number, string?][] = [
-    ["Facial Symmetry", profile.symmetry, undefined],
-    ["Golden Ratio Adherence", overallScore - 0.1, undefined],
-    ["Jawline Definition", profile.jawline, undefined],
-    ["Proportional Harmony", profile.proportions, undefined],
-    ["Skin Clarity", profile.skinClarity, undefined],
-  ];
-  const rows = [...generic, ...breakdown.map((b) => [b.label, b.score, b.value] as [string, number, string?])];
-  return rows.map(
-    ([label, score, value], i): FacialMetric => {
-      const seed = 0.6 + (i % 3) * 0.1 + (facialShape.length % 5) * 0.02;
-      return demoMetric(label, 0.05, "", "", Math.max(5.5, Math.min(9.5, score + seed)), value);
-    }
-  );
-};
-
-function demoMetric(label: string, weight: number, description: string, tip: string, score: number, value?: string): FacialMetric {
-  const rating = score >= 8 ? "Excellent" : score >= 7 ? "Strong" : score >= 6 ? "Good" : score >= 5 ? "Fair" : "Needs focus";
-  return { label, weight, description, tip, score, rating, value, spread: 0.15 };
-}
-
 /** Every bundled demo asset. Demo results must never be treated as a photo of you. */
 export const DEMO_PEOPLE: readonly DemoPerson[] = [
   {
@@ -100,22 +62,7 @@ export const DEMO_PEOPLE: readonly DemoPerson[] = [
     skinPhoto: DEMO_SKIN_PHOTO,
     color: { undertone: "Neutral", ita: 35, monkScaleId: 4 },
     face: {
-      facialShape: "Oval",
-      overallScore: 8.2,
-      symmetry: 8.4,
-      proportions: 8.2,
-      jawline: 8.3,
-      eyeSpacing: 8.5,
-      skinClarity: 8.6,
-      skinTone: "Light",
-      skinToneValue: "#E8B990",
-      skinToneScaleId: 2,
-      skinToneITA: 50,
-      undertone: "Neutral",
-      ageEstimation: 27,
-      genderEstimation: "Neutral",
       genderProfile: "neutral",
-      emotionDetected: "Neutral",
       styleProfile: "Editorial Classic",
       detailedAnalysis:
         "An oval face with balanced thirds, a strong jawline and excellent skin clarity. Symmetry and eye spacing are standout metrics — the golden-ratio adherence sits comfortably inside the top tier. This is a harmonious, high-consistency result across all measured zones.",
@@ -132,20 +79,6 @@ export const DEMO_PEOPLE: readonly DemoPerson[] = [
         "Keep eyebrows groomed to hold the face frame",
         "Light stubble sharpens the jawline further",
         "Hydrating skincare keeps the skin-clarity edge",
-      ],
-      breakdown: [
-        { label: "Facial Symmetry", score: 8.4 },
-        { label: "Golden Ratio Adherence", score: 8.1, value: "Ratio 1.62 (ideal ≈ 1.62)" },
-        { label: "Jawline Definition", score: 8.3 },
-        { label: "Proportional Harmony", score: 8.2 },
-        { label: "Horizontal Fifths", score: 7.9 },
-        { label: "Eye Spacing", score: 8.5 },
-        { label: "Skin Clarity", score: 8.6 },
-        { label: "Cheekbone Definition", score: 8.2 },
-        { label: "FWHR (Facial Width-to-Height)", score: 7.8, value: "Ratio 1.93 (ideal ≈ 1.95)" },
-        { label: "Canthal Tilt", score: 8.0, value: "+4.8° (ideal ≈ +5°)" },
-        { label: "Eye–Nose Ratio", score: 7.7, value: "Ratio 1.60 (ideal ≈ 1.62)" },
-        { label: "Lip Proportion", score: 8.1 },
       ],
     },
     body: {
@@ -174,22 +107,7 @@ export const DEMO_PEOPLE: readonly DemoPerson[] = [
     skinPhoto: "/images/demo/face-maya.jpg",
     color: { undertone: "Warm", ita: 48, monkScaleId: 3 },
     face: {
-      facialShape: "Heart",
-      overallScore: 8.6,
-      symmetry: 8.8,
-      proportions: 8.5,
-      jawline: 8.1,
-      eyeSpacing: 8.7,
-      skinClarity: 8.9,
-      skinTone: "Fair",
-      skinToneValue: "#F0C8A8",
-      skinToneScaleId: 1,
-      skinToneITA: 58,
-      undertone: "Warm",
-      ageEstimation: 24,
-      genderEstimation: "Feminine",
       genderProfile: "feminine",
-      emotionDetected: "Neutral",
       styleProfile: "Soft Feminine",
       detailedAnalysis:
         "A heart-shaped face with luminous, even skin and expressive, wide-set eyes. The tapered chin is a signature feature and the warm undertone flatters soft, light palettes. Very high consistency across the whole mesh.",
@@ -206,20 +124,6 @@ export const DEMO_PEOPLE: readonly DemoPerson[] = [
         "Side-swept fringes soften the forehead width",
         "Cream blush warms the apple of the cheeks",
         "Daily SPF keeps the luminosity edge",
-      ],
-      breakdown: [
-        { label: "Facial Symmetry", score: 8.8 },
-        { label: "Golden Ratio Adherence", score: 8.6, value: "Ratio 1.63 (ideal ≈ 1.62)" },
-        { label: "Jawline Definition", score: 8.1 },
-        { label: "Proportional Harmony", score: 8.5 },
-        { label: "Horizontal Fifths", score: 8.4 },
-        { label: "Eye Spacing", score: 8.7 },
-        { label: "Skin Clarity", score: 8.9 },
-        { label: "Cheekbone Definition", score: 8.5 },
-        { label: "FWHR (Facial Width-to-Height)", score: 8.2, value: "Ratio 1.89 (ideal ≈ 1.95)" },
-        { label: "Canthal Tilt", score: 8.3, value: "+4.4° (ideal ≈ +5°)" },
-        { label: "Eye–Nose Ratio", score: 8.0, value: "Ratio 1.58 (ideal ≈ 1.62)" },
-        { label: "Lip Proportion", score: 8.6 },
       ],
     },
     body: {
@@ -248,22 +152,7 @@ export const DEMO_PEOPLE: readonly DemoPerson[] = [
     skinPhoto: "/images/demo/face-kian.jpg",
     color: { undertone: "Neutral", ita: 25, monkScaleId: 5 },
     face: {
-      facialShape: "Square",
-      overallScore: 8.9,
-      symmetry: 9.0,
-      proportions: 8.7,
-      jawline: 9.2,
-      eyeSpacing: 8.4,
-      skinClarity: 8.3,
-      skinTone: "Medium",
-      skinToneValue: "#C89D7C",
-      skinToneScaleId: 4,
-      skinToneITA: 34,
-      undertone: "Neutral",
-      ageEstimation: 31,
-      genderEstimation: "Masculine",
       genderProfile: "masculine",
-      emotionDetected: "Neutral",
       styleProfile: "Structured Classic",
       detailedAnalysis:
         "A square face with a remarkably strong, angular jaw and near-perfect bilateral symmetry. High facial-width-to-height and a crisp chin profile dominate the geometry. The highest overall result in the demo set.",
@@ -280,20 +169,6 @@ export const DEMO_PEOPLE: readonly DemoPerson[] = [
         "Frequent jawline trims keep the angular frame crisp",
         "Textured crop with height lengthens the face",
         "Matte styling product holds the shape without shine",
-      ],
-      breakdown: [
-        { label: "Facial Symmetry", score: 9.0 },
-        { label: "Golden Ratio Adherence", score: 8.8, value: "Ratio 1.64 (ideal ≈ 1.62)" },
-        { label: "Jawline Definition", score: 9.2 },
-        { label: "Proportional Harmony", score: 8.7 },
-        { label: "Horizontal Fifths", score: 8.6 },
-        { label: "Eye Spacing", score: 8.4 },
-        { label: "Skin Clarity", score: 8.3 },
-        { label: "Cheekbone Definition", score: 8.9 },
-        { label: "FWHR (Facial Width-to-Height)", score: 8.8, value: "Ratio 2.01 (ideal ≈ 1.95)" },
-        { label: "Canthal Tilt", score: 8.5, value: "+5.2° (ideal ≈ +5°)" },
-        { label: "Eye–Nose Ratio", score: 8.1, value: "Ratio 1.61 (ideal ≈ 1.62)" },
-        { label: "Lip Proportion", score: 8.0 },
       ],
     },
     body: {
@@ -322,22 +197,7 @@ export const DEMO_PEOPLE: readonly DemoPerson[] = [
     skinPhoto: "/images/demo/face-ishaa.jpg",
     color: { undertone: "Cool", ita: 40, monkScaleId: 4 },
     face: {
-      facialShape: "Round",
-      overallScore: 8.0,
-      symmetry: 8.2,
-      proportions: 7.9,
-      jawline: 7.8,
-      eyeSpacing: 8.3,
-      skinClarity: 8.4,
-      skinTone: "Medium Deep",
-      skinToneValue: "#B07A54",
-      skinToneScaleId: 5,
-      skinToneITA: 28,
-      undertone: "Cool",
-      ageEstimation: 29,
-      genderEstimation: "Feminine",
       genderProfile: "feminine",
-      emotionDetected: "Neutral",
       styleProfile: "Contemporary Minimal",
       detailedAnalysis:
         "A round face with soft contours, balanced cheeks and a cool, even complexion. The silhouette is youthful and warm in expression, with eye spacing and skin clarity as the leading metrics.",
@@ -354,20 +214,6 @@ export const DEMO_PEOPLE: readonly DemoPerson[] = [
         "Vertical face-framing lines elongate the round shape",
         "Cool, neutral eyeshadow tones the complexion",
         "Tinted lip balm keeps definition light",
-      ],
-      breakdown: [
-        { label: "Facial Symmetry", score: 8.2 },
-        { label: "Golden Ratio Adherence", score: 7.9, value: "Ratio 1.58 (ideal ≈ 1.62)" },
-        { label: "Jawline Definition", score: 7.8 },
-        { label: "Proportional Harmony", score: 7.9 },
-        { label: "Horizontal Fifths", score: 8.1 },
-        { label: "Eye Spacing", score: 8.3 },
-        { label: "Skin Clarity", score: 8.4 },
-        { label: "Cheekbone Definition", score: 8.0 },
-        { label: "FWHR (Facial Width-to-Height)", score: 7.7, value: "Ratio 1.84 (ideal ≈ 1.95)" },
-        { label: "Canthal Tilt", score: 7.9, value: "+3.9° (ideal ≈ +5°)" },
-        { label: "Eye–Nose Ratio", score: 7.8, value: "Ratio 1.55 (ideal ≈ 1.62)" },
-        { label: "Lip Proportion", score: 8.2 },
       ],
     },
     body: {
@@ -431,145 +277,6 @@ export function generateDemoLandmarks(variant = 0): number[][] {
   }
   while (pts.length < 478) pts.push([0.5, 0.5, -0.12]);
   return pts.slice(0, 478);
-}
-
-function ratingFor(score: number): string {
-  return score >= 8 ? "Excellent" : score >= 7 ? "Strong" : score >= 6 ? "Good" : "Fair";
-}
-
-export function buildDemoFaceResult(
-  person: DemoPerson,
-  landmarks?: number[][]
-): FaceAnalysisResult {
-  const f = person.face;
-  const overall = f.overallScore;
-  const breakdown = breakdownFor(f);
-  const variant = person.id.length;
-  const mesh =
-    landmarks && landmarks.length >= 478 ? landmarks : generateDemoLandmarks(variant);
-
-  return {
-    overallScore: overall,
-    symmetry: f.symmetry,
-    proportions: f.proportions,
-    jawline: f.jawline,
-    eyeSpacing: f.eyeSpacing,
-    skinClarity: f.skinClarity,
-    facialShape: f.facialShape,
-    skinTone: f.skinTone,
-    skinToneValue: f.skinToneValue,
-    skinToneScaleId: f.skinToneScaleId,
-    skinToneITA: f.skinToneITA,
-    undertone: f.undertone,
-    ageEstimation: f.ageEstimation,
-    ageConfidence: 0.6 + (person.id.length % 3) * 0.06,
-    ageBasis: "Synthetic demo mesh — landmark proportions only, no skin texture sampled",
-    genderEstimation: f.genderEstimation,
-    genderProfile: f.genderProfile,
-    emotionDetected: f.emotionDetected,
-    groomingSuggestions: f.groomingSuggestions,
-    landmarks: mesh,
-    goldenRatio: overall - 0.1,
-    lipFullness: Math.round((f.symmetry - 0.2) * 10) / 10,
-    noseProfile: Math.round((overall - 0.4) * 10) / 10,
-    noseProjection: Math.round((overall - 0.2) * 10) / 10,
-    lipWidthRatio: Math.round((overall - 0.3) * 10) / 10,
-    upperLipRatio: Math.round((overall - 0.4) * 10) / 10,
-    noseBridgeAngle: Math.round((overall - 0.5) * 10) / 10,
-    eyeTilt: Math.round((overall - 0.3) * 10) / 10,
-    cheekboneDefinition: Math.round((f.symmetry - 0.3) * 10) / 10,
-    fwhr: Math.round((overall - 0.4) * 10) / 10,
-    canthalTilt: Math.round((overall - 0.2) * 10) / 10,
-    eyeNoseRatio: Math.round((overall - 0.5) * 10) / 10,
-    noseChinRatio: Math.round((overall - 0.3) * 10) / 10,
-    horizontalFifths: Math.round((overall - 0.3) * 10) / 10,
-    rawFwhr: 1.8 + (person.id.length % 4) * 0.07,
-    rawCanthalTilt: 3.8 + (person.id.length % 3) * 0.5,
-    rawEyeNoseRatio: 1.52 + (person.id.length % 4) * 0.03,
-    facialHarmony: Math.round((overall - 0.1) * 10) / 10,
-    breakdown,
-    overallRating: ratingFor(overall),
-    detailedAnalysis: f.detailedAnalysis,
-    strengths: f.strengths,
-    improvements: f.improvements,
-    styleProfile: f.styleProfile,
-    blendshapes: {
-      emotion: f.emotionDetected,
-      emotionConfidence: 86 + (person.id.length % 3) * 4,
-      eyeOpenness: 0.88 + (person.id.length % 3) * 0.02,
-      mouthOpenness: 0.1,
-      browRaise: 0.2,
-      smileIntensity: 0.15,
-      headTilt: (person.id.length % 5) - 2,
-    },
-    percentile: {
-      overall: Math.round(70 + (overall - 6) * 14),
-      symmetry: Math.round(72 + f.symmetry * 2.6),
-      goldenRatio: Math.round(74 + overall * 2.2),
-      jawline: Math.round(76 + f.jawline * 2),
-      skinClarity: Math.round(78 + f.skinClarity * 1.8),
-      harmony: Math.round(75 + overall * 2),
-      bracket: ratingFor(overall),
-      comparisonText:
-        "Your geometry places in ZERVEY's Excellent band — a score-based rating, not a population comparison.",
-    },
-    beautyIndex: Math.round(72 + overall * 1.7),
-    faceShapeDetails: {
-      description: `${f.facialShape} profile derived from ${person.name}'s sample photo — measurements are illustrative demo output.`,
-      characteristics: [
-        "Detected from the bundled sample geometry",
-        "Per-person mesh, not a reused template",
-        "Score-based styling guidance",
-      ],
-      idealHairstyles: [
-        person.id === "kian" ? "Textured crops with height" : "Side-parted classics",
-        "Layered face-framing cuts",
-        "Clean tapered edges",
-      ],
-      idealGlasses: ["Round and rectangular frames", "Browline silhouettes", "Avoid overly wide frames"],
-    },
-    photoQualityScore: 90 + (person.id.length % 4) * 2,
-    consistencyScore: 91 + (person.id.length % 5) * 2,
-    analysisConfidence: 87 + (person.id.length % 3) * 3,
-    metricAvailability: ["Facial Symmetry", "Golden Ratio Adherence", "Jawline Definition", "Proportional Harmony", "Eye Spacing", "Texture Uniformity", "Cheekbone Definition", "FWHR (Facial Width-to-Height)", "Canthal Tilt", "Horizontal Fifths", "Eye–Nose Ratio", "Nose–Chin Balance", "Lip Proportion", "Nose Profile", "Nose Projection", "Lip Width Ratio", "Upper Lip Ratio", "Nose Bridge Angle", "Eye Tilt"],
-    photoCount: 1,
-    symmetryAxis: { angleDeg: (person.id.length % 3) - 1 },
-    faceShapeProbabilities: { [f.facialShape]: 0.85 },
-    faceIQ: Math.round(72 + overall * 1.7),
-    grade: overall >= 8 ? "A" : overall >= 6 ? "B+" : "B",
-    gradeLabel: overall >= 8 ? "Excellent" : overall >= 6 ? "Good" : "Above Average",
-    comparison: "Demo result — not a real population comparison",
-    structureProfile: overall >= 7.5 ? "Defined" : "Balanced",
-    youthfulness: Math.round(70 + overall * 1.5),
-    metricPercentiles: {
-      "Facial Symmetry": Math.round(72 + f.symmetry * 2.6),
-      "Golden Ratio Adherence": Math.round(74 + overall * 2.2),
-      "Jawline Definition": Math.round(76 + f.jawline * 2),
-      "Proportional Harmony": Math.round(70 + overall * 2),
-      "Eye Spacing": Math.round(72 + f.eyeSpacing * 2),
-      "Skin Clarity": Math.round(78 + f.skinClarity * 1.8),
-      "Cheekbone Definition": Math.round(70 + overall * 2),
-      "FWHR (Facial Width-to-Height)": Math.round(68 + overall * 2.5),
-      "Canthal Tilt": Math.round(70 + overall * 2),
-      "Horizontal Fifths": Math.round(72 + overall * 2),
-      "Eye–Nose Ratio": Math.round(70 + overall * 2),
-      "Nose–Chin Balance": Math.round(72 + overall * 2),
-      "Midface Harmony": Math.round(70 + overall * 2),
-      "Lip Proportion": Math.round(74 + overall * 2),
-      "Nose Profile": Math.round(70 + overall * 2),
-      "Forehead Balance": Math.round(72 + overall * 2),
-    },
-    qualityGate: {
-      brightness: 0.7 + (person.id.length % 3) * 0.03,
-      sharpness: 0.8 + (person.id.length % 4) * 0.02,
-      faceSizeRatio: 0.38 + (person.id.length % 3) * 0.03,
-      headYaw: (person.id.length % 3) - 1,
-      headRoll: 1,
-      headPitch: 2,
-      issues: [],
-      warnings: [],
-    },
-  };
 }
 
 export function buildDemoBodyResult(person: DemoPerson): {
