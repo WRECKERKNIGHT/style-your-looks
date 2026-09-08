@@ -24,11 +24,9 @@ import { DemoCarousel } from '@/components/demo/DemoCarousel';
 import { DemoBadge } from '@/components/demo/DemoBadge';
 import {
   DEMO_PEOPLE,
-  buildDemoFaceResult,
-  generateDemoLandmarks,
   isDemoPhoto,
+  type DemoPerson,
 } from '@/lib/demo/demo-analysis';
-import type { DemoPerson } from '@/lib/demo/demo-analysis';
 import { detectFaceLandmarksOnly } from '@/lib/ml/face-analyzer';
 import { buildFaceIQReport } from '@/lib/ml/report/faceiq-report';
 import { FaceSimpleResults } from '@/components/analysis/FaceSimpleResults';
@@ -251,7 +249,6 @@ export default function FaceAnalysisPage() {
     genderProfile,
     setGenderProfile,
     setProcessingPreview,
-    setFaceResult,
   } = useAnalysisStore();
   const { analyzeFacePhotos, cancelAnalysis } = useMediaPipe();
   const {
@@ -396,22 +393,50 @@ export default function FaceAnalysisPage() {
         await new Promise((r) => {
           img.onload = r;
         });
-        let landmarks: number[][] = generateDemoLandmarks(person.id.length);
-        try {
-          landmarks = await detectFaceLandmarksOnly(img);
-        } catch {
-          // Real detection unavailable — fall back to the synthetic demo mesh.
+
+        // Run the SAME algorithmic pipeline as a real upload — MediaPipe
+        // detection, geometry, z-scores, percentiles and FaceIQ are all
+        // computed from the bundled photo's real landmarks. This replaces
+        // the old buildDemoFaceResult() which returned fully synthetic
+        // hardcoded scores that ignored the detected geometry entirely.
+        await analyzeFacePhotos(
+          [img],
+          person.face.genderProfile,
+          (_i, landmarks) => setProcessingPreview({ image: person.facePhoto, landmarks }),
+          { demoMode: true },
+        );
+
+        // Overlay the demo person's curated presentation copy onto the real
+        // algorithmically-computed result. Every numeric score, percentile,
+        // FaceIQ and raw measurement comes from the real pipeline above —
+        // only the prose/metadata labels are bundled per-demo-person.
+        const current = useAnalysisStore.getState();
+        if (current.faceResult) {
+          const f = person.face;
+          useAnalysisStore.getState().setFaceResult({
+            ...current.faceResult!,
+            detailedAnalysis: f.detailedAnalysis,
+            strengths: f.strengths,
+            improvements: f.improvements,
+            styleProfile: f.styleProfile,
+            groomingSuggestions: f.groomingSuggestions,
+          });
         }
-        setProcessingPreview({ image: person.facePhoto, landmarks });
-        await new Promise((r) => setTimeout(r, 900));
+
         setProcessingPreview(null);
-        setFaceResult(buildDemoFaceResult(person, landmarks));
         markAnalyzed();
+      } catch (err) {
+        if (err instanceof AnalysisCancelledError) return;
+        setError(
+          err instanceof Error
+            ? err.message
+            : 'Demo analysis failed. The bundled sample photos may not contain a detected face in this build.',
+        );
       } finally {
         useAnalysisStore.getState().setIsAnalyzing(false);
       }
     },
-    [setPhoto, setProcessingPreview, setFaceResult, markAnalyzed],
+    [setPhoto, setProcessingPreview, analyzeFacePhotos, markAnalyzed],
   );
 
   const shareData = useMemo<ShareCardData | null>(() => {
