@@ -83,14 +83,27 @@ function deriveIdentity(faceResult: FaceScoreResult): IdentityProfile {
   // dominance) vs feminine presentation (lip fullness, positive canthal tilt,
   // eye spacing). Blended with the user's chosen analysis profile so the
   // spectrum reflects both geometry and self-identification.
-  const masculineSide =
-    ((faceResult.fwhr - 1.7) / 0.6) * 0.3 +          // wider, squarer faces
-    ((faceResult.jawline - 5) / 5) * 0.25 +           // jaw strength
-    ((faceResult.cheekboneDefinition - 5) / 5) * 0.15;
-  const feminineSide =
-    ((faceResult.lipFullness - 5) / 5) * 0.15 +
-    ((faceResult.canthalTilt - 5) / 5) * 0.1 +
-    ((faceResult.eyeSpacing - 5) / 5) * 0.05;
+  //
+  // Each marker only contributes when it was actually measured — an
+  // unavailable metric neither drags the spectrum toward neutral nor skews
+  // it. When no marker resolved at all, the spectrum stays at the balanced
+  // midpoint.
+  const markers: number[] = [];
+  if (faceResult.fwhr != null && Number.isFinite(faceResult.fwhr))
+    markers.push(((faceResult.fwhr - 1.7) / 0.6) * 0.3); // wider, squarer faces
+  if (faceResult.jawline != null && Number.isFinite(faceResult.jawline))
+    markers.push(((faceResult.jawline - 5) / 5) * 0.25); // jaw strength
+  if (faceResult.cheekboneDefinition != null && Number.isFinite(faceResult.cheekboneDefinition))
+    markers.push(((faceResult.cheekboneDefinition - 5) / 5) * 0.15);
+  if (faceResult.lipFullness != null && Number.isFinite(faceResult.lipFullness))
+    markers.push(-((faceResult.lipFullness - 5) / 5) * 0.15);
+  if (faceResult.canthalTilt != null && Number.isFinite(faceResult.canthalTilt))
+    markers.push(-((faceResult.canthalTilt - 5) / 5) * 0.1);
+  if (faceResult.eyeSpacing != null && Number.isFinite(faceResult.eyeSpacing))
+    markers.push(-((faceResult.eyeSpacing - 5) / 5) * 0.05);
+
+  const masculineSide = markers.filter((v) => v > 0).reduce((a, b) => a + b, 0);
+  const feminineSide = -markers.filter((v) => v < 0).reduce((a, b) => a + b, 0);
 
   let spectrum = 50 + (masculineSide - feminineSide) * 50;
   spectrum = Math.max(0, Math.min(100, Math.round(spectrum)));
@@ -121,7 +134,7 @@ function deriveIdentity(faceResult: FaceScoreResult): IdentityProfile {
       break;
     case "Classic Handsome":
     case "Versatile Classic":
-      archetype = symmetry >= 8 ? "The Scholar" : "The Classic";
+      archetype = symmetry != null && symmetry >= 8 ? "The Scholar" : "The Classic";
       archetypeTagline = archetype === "The Scholar"
         ? "Balanced, considered features — quiet-intelligence appeal."
         : "Timeless proportions that never argue with a trend.";
@@ -131,9 +144,14 @@ function deriveIdentity(faceResult: FaceScoreResult): IdentityProfile {
       archetypeTagline = "Soft contrast and warmth — leading-role charm.";
       break;
     default:
-      archetype = facialShape === "Oval" && jawline < 7 && cheekboneDefinition < 7
-        ? "The Boy-Next-Door"
-        : "The Classic";
+      archetype =
+        facialShape === "Oval" &&
+        jawline != null &&
+        cheekboneDefinition != null &&
+        jawline < 7 &&
+        cheekboneDefinition < 7
+          ? "The Boy-Next-Door"
+          : "The Classic";
       archetypeTagline = archetype === "The Boy-Next-Door"
         ? "Approachable, easy symmetry — the face people trust instantly."
         : "Timeless proportions that never argue with a trend.";
@@ -145,62 +163,87 @@ function deriveIdentity(faceResult: FaceScoreResult): IdentityProfile {
 export function calculatePillarAnalysis(faceResult: FaceScoreResult): PillarAnalysis {
   const identity = deriveIdentity(faceResult);
 
+  // Only measured sub-metrics enter a pillar. Their weights are renormalized
+  // inside buildPillar, so an absent measurement never fabricates a score —
+  // the pillar is simply built from the aspects the photos could resolve.
+  const pMetric = (
+    label: string,
+    score: number | null,
+    weight: number
+  ): { label: string; score: number; weight: number } | null =>
+    score != null && Number.isFinite(score) ? { label, score, weight } : null;
+
+  const pair = (a: number | null, b: number | null): number | null =>
+    a != null && b != null ? (a + b) / 2 : null;
+
   const harmony = buildPillar(
     "Harmony",
     "Feature balance: how evenly your features sit across the face — bilateral asymmetry, facial thirds, and overall proportionality against classical canons.",
     [
-      { label: "Feature Balance", score: faceResult.proportions, weight: 0.2 },
-      { label: "Left/Right Asymmetry", score: faceResult.symmetry, weight: 0.3 },
-      { label: "Nose–Lip Harmony", score: (faceResult.noseProjection + faceResult.upperLipRatio) / 2, weight: 0.2 },
-      { label: "Proportionality", score: (faceResult.goldenRatio + faceResult.horizontalFifths) / 2, weight: 0.3 },
-    ]
+      pMetric("Feature Balance", faceResult.proportions, 0.2),
+      pMetric("Left/Right Asymmetry", faceResult.symmetry, 0.3),
+      pMetric("Nose–Lip Harmony", pair(faceResult.noseProjection, faceResult.upperLipRatio), 0.2),
+      pMetric("Proportionality", pair(faceResult.goldenRatio, faceResult.horizontalFifths), 0.3),
+    ].filter((m): m is { label: string; score: number; weight: number } => m != null)
   );
 
   const structure = buildPillar(
     "Structure",
     "The architectural layer: cheekbone prominence, jaw definition, chin balance and facial width relative to height.",
     [
-      { label: "Cheekbones", score: faceResult.cheekboneDefinition, weight: 0.28 },
-      { label: "Jaw", score: faceResult.jawline, weight: 0.32 },
-      { label: "Chin Balance", score: faceResult.noseChinRatio, weight: 0.15 },
-      { label: "Nose Profile", score: faceResult.noseProfile, weight: 0.1 },
-      { label: "Facial Width", score: faceResult.fwhr, weight: 0.15 },
-    ]
+      pMetric("Cheekbones", faceResult.cheekboneDefinition, 0.28),
+      pMetric("Jaw", faceResult.jawline, 0.32),
+      pMetric("Chin Balance", faceResult.noseChinRatio, 0.15),
+      pMetric("Nose Profile", faceResult.noseProfile, 0.1),
+      pMetric("Facial Width", faceResult.fwhr, 0.15),
+    ].filter((m): m is { label: string; score: number; weight: number } => m != null)
   );
 
   const vital = buildPillar(
     "Vitality",
     "Surface signals of health and rest: skin clarity and evenness, plus expression energy around the eyes and mouth.",
     [
-      { label: "Skin Clarity", score: faceResult.skinClarity, weight: 0.35 },
-      { label: "Skin Evenness", score: Math.max(0, Math.min(10, faceResult.skinClarity * 0.9 + faceResult.blendshapes.smileIntensity * 1.5)), weight: 0.2 },
-      {
-        label: "Eye Energy",
-        score: Math.round(Math.max(0, Math.min(10, faceResult.blendshapes.eyeOpenness * 9 + 1)) * 10) / 10,
-        weight: 0.2,
-      },
-      {
-        label: "Expression Vitality",
-        score: Math.round(Math.max(0, Math.min(10, faceResult.blendshapes.smileIntensity * 7 + 3)) * 10) / 10,
-        weight: 0.15,
-      },
-      {
-        label: "Facial Fullness",
-        score: Math.round(Math.max(0, Math.min(10, faceResult.youthfulness * 0.1)) * 10) / 10,
-        weight: 0.1,
-      },
-    ]
+      pMetric("Skin Clarity", faceResult.skinClarity, 0.35),
+      pMetric(
+        "Skin Evenness",
+        faceResult.skinClarity != null && faceResult.blendshapes != null
+          ? Math.max(0, Math.min(10, faceResult.skinClarity * 0.9 + faceResult.blendshapes.smileIntensity * 1.5))
+          : null,
+        0.2
+      ),
+      pMetric(
+        "Eye Energy",
+        faceResult.blendshapes != null
+          ? Math.round(Math.max(0, Math.min(10, faceResult.blendshapes.eyeOpenness * 9 + 1)) * 10) / 10
+          : null,
+        0.2
+      ),
+      pMetric(
+        "Expression Vitality",
+        faceResult.blendshapes != null
+          ? Math.round(Math.max(0, Math.min(10, faceResult.blendshapes.smileIntensity * 7 + 3)) * 10) / 10
+          : null,
+        0.15
+      ),
+      pMetric(
+        "Facial Fullness",
+        faceResult.youthfulness != null
+          ? Math.round(Math.max(0, Math.min(10, faceResult.youthfulness * 0.1)) * 10) / 10
+          : null,
+        0.1
+      ),
+    ].filter((m): m is { label: string; score: number; weight: number } => m != null)
   );
 
   const identityPillar = buildPillar(
     "Identity",
     "Where you sit on the masculine↔feminine spectrum and which facial archetype your geometry projects.",
     [
-      { label: "Spectrum Position", score: 10 - Math.abs(identity.spectrum - 50) / 5, weight: 0.4 },
-      { label: "Lip Character", score: faceResult.lipFullness, weight: 0.2 },
-      { label: "Eye Character", score: faceResult.canthalTilt, weight: 0.2 },
-      { label: "Eye Spacing", score: faceResult.eyeSpacing, weight: 0.2 },
-    ]
+      pMetric("Spectrum Position", 10 - Math.abs(identity.spectrum - 50) / 5, 0.4),
+      pMetric("Lip Character", faceResult.lipFullness, 0.2),
+      pMetric("Eye Character", faceResult.canthalTilt, 0.2),
+      pMetric("Eye Spacing", faceResult.eyeSpacing, 0.2),
+    ].filter((m): m is { label: string; score: number; weight: number } => m != null)
   );
 
   const pillars = [harmony, structure, identityPillar, vital];
@@ -209,7 +252,7 @@ export function calculatePillarAnalysis(faceResult: FaceScoreResult): PillarAnal
 
   const improvements: ImprovementItem[] = [];
 
-  if (faceResult.skinClarity < 7) {
+  if (faceResult.skinClarity != null && faceResult.skinClarity < 7) {
     improvements.push({
       id: "skincare-basic",
       title: "Establish Daily Skincare Routine",
@@ -222,7 +265,7 @@ export function calculatePillarAnalysis(faceResult: FaceScoreResult): PillarAnal
     });
   }
 
-  if (faceResult.jawline < 7) {
+  if (faceResult.jawline != null && faceResult.jawline < 7) {
     improvements.push({
       id: "jawline-exercise",
       title: "Jawline Definition Exercises",
@@ -235,7 +278,7 @@ export function calculatePillarAnalysis(faceResult: FaceScoreResult): PillarAnal
     });
   }
 
-  if (faceResult.symmetry < 7.5) {
+  if (faceResult.symmetry != null && faceResult.symmetry < 7.5) {
     improvements.push({
       id: "eyebrow-shaping",
       title: "Professional Eyebrow Shaping",
@@ -248,7 +291,7 @@ export function calculatePillarAnalysis(faceResult: FaceScoreResult): PillarAnal
     });
   }
 
-  if (faceResult.jawline < 7) {
+  if (faceResult.jawline != null && faceResult.jawline < 7) {
     improvements.push({
       id: "beard-strategic",
       title: "Strategic Beard Styling",
@@ -261,7 +304,7 @@ export function calculatePillarAnalysis(faceResult: FaceScoreResult): PillarAnal
     });
   }
 
-  if (faceResult.skinClarity < 8) {
+  if (faceResult.skinClarity != null && faceResult.skinClarity < 8) {
     improvements.push({
       id: "skincare-advanced",
       title: "Add Retinol & Vitamin C",
@@ -285,7 +328,7 @@ export function calculatePillarAnalysis(faceResult: FaceScoreResult): PillarAnal
     pillar: "Identity",
   });
 
-  if (faceResult.proportions < 6.5) {
+  if (faceResult.proportions != null && faceResult.proportions < 6.5) {
     improvements.push({
       id: "hairstyle-balance",
       title: "Hairstyle for Facial Balance",
