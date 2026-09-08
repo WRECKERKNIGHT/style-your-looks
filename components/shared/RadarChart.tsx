@@ -4,7 +4,7 @@ import { useId } from "react";
 
 export interface RadarAxis {
   label: string;
-  value: number;
+  value: number | null;
 }
 
 interface RadarChartProps {
@@ -30,13 +30,13 @@ export function RadarChart({
   const cy = size / 2;
   const r = size * 0.36;
 
-  const pointFor = (value: number, index: number, count: number) => {
+  const pointFor = (value: number | null, index: number, count: number) => {
     const angle = (Math.PI * 2 * index) / count - Math.PI / 2;
-    const radius = r * (Math.max(0, Math.min(10, value)) / 10);
+    const radius = value == null ? 0 : r * (Math.max(0, Math.min(10, value)) / 10);
     return { x: cx + Math.cos(angle) * radius, y: cy + Math.sin(angle) * radius };
   };
 
-  const polygonPath = (values: number[]) => {
+  const polygonPath = (values: (number | null)[]) => {
     if (values.length < 3) return "";
     return values
       .map((v, i) => {
@@ -138,7 +138,7 @@ export function RadarChart({
             return (
               <g key={i}>
                 <circle cx={p.x} cy={p.y} r="4.5" fill="#CCA066" stroke="#241812" strokeWidth="1.5" />
-                <title>{`${a.label}: ${a.value.toFixed(1)}`}</title>
+                <title>{`${a.label}: ${a.value == null ? "not measured" : a.value.toFixed(1)}`}</title>
               </g>
             );
           })}

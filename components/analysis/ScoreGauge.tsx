@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 
 interface ScoreGaugeProps {
-  score: number;
+  score: number | null;
   maxScore?: number;
   size?: "sm" | "md" | "lg";
   label?: string;
@@ -29,7 +29,9 @@ export function ScoreGauge({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { width, strokeWidth, fontSize, labelSize } = sizeMap[size];
 
-  const safeScore = Number.isFinite(score) ? Math.max(0, Math.min(maxScore, score)) : 0;
+  const isNull = score == null;
+  const safeScore = isNull ? 0 : Number.isFinite(score) ? Math.max(0, Math.min(maxScore, score)) : 0;
+  const scorePercent = safeScore / maxScore;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -104,7 +106,6 @@ export function ScoreGauge({
     requestAnimationFrame(animate);
   }, [score, maxScore, width, strokeWidth]);
 
-  const scorePercent = score / maxScore;
   const glowClass = scorePercent >= 0.8 ? "shadow-aurum-lg" : "";
 
   return (
@@ -121,7 +122,7 @@ export function ScoreGauge({
         {showValue && (
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <span className={cn("font-body font-bold text-nexus-800 dark:text-white", fontSize)}>
-              {safeScore.toFixed(1)}
+              {isNull ? "—" : safeScore.toFixed(1)}
             </span>
             <span className={cn("text-nexus-400 dark:text-cosmic-muted font-body", labelSize)}>/ {maxScore}</span>
           </div>

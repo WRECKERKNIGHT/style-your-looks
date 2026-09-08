@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useInView } from "framer-motion";
 
 interface AnimatedCounterProps {
-  target: number;
+  target: number | null;
   duration?: number;
   decimals?: number;
   prefix?: string;
@@ -24,7 +24,7 @@ export function AnimatedCounter({
   const isInView = useInView(ref, { once: true });
   const [count, setCount] = useState(0);
 
-  const safeTarget = Number.isFinite(target) ? target : 0;
+  const safeTarget = target == null || !Number.isFinite(target) ? 0 : target;
 
   useEffect(() => {
     if (!isInView) return;
@@ -51,9 +51,7 @@ export function AnimatedCounter({
 
   return (
     <span ref={ref} className={className}>
-      {prefix}
-      {count.toFixed(decimals)}
-      {suffix}
+      {target == null ? "—" : prefix + count.toFixed(decimals) + suffix}
     </span>
   );
 }
