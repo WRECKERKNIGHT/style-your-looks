@@ -88,7 +88,7 @@ function wrinkleProxy(
 export function estimateAgeFromFace(
   canvas: HTMLCanvasElement,
   faceResult: FaceLandmarkerResult,
-  skinClarityScore: number
+  skinClarityScore: number | null
 ): AgeEstimate {
   const ctx = canvas.getContext("2d");
   const lm = faceResult.faceLandmarks?.[0];
@@ -100,7 +100,10 @@ export function estimateAgeFromFace(
   const h = canvas.height;
   const proxy = wrinkleProxy(ctx, lm, w, h);
 
-  const clarityFactor = (10 - Math.max(1, Math.min(10, skinClarityScore))) * 1.2;
+  // When skin clarity was not measurable it contributes nothing rather than a
+  // fabricated value — the basis text says so explicitly.
+  const clarityFactor =
+    skinClarityScore != null ? (10 - Math.max(1, Math.min(10, skinClarityScore))) * 1.2 : 0;
   const wrinkleFactor = Math.min(8, proxy * 7);
   const age = Math.round(Math.min(62, Math.max(18, 22 + clarityFactor + wrinkleFactor)));
 
@@ -110,7 +113,9 @@ export function estimateAgeFromFace(
       ? "Periocular & nasolabial texture contrast suggests mature skin (wrinkle proxy)"
       : proxy > 0.15
         ? "Mild periocular texture detected; skin-clarity variance applied"
-        : "Low facial texture contrast; estimate weighted toward skin-clarity score";
+        : skinClarityScore != null
+          ? "Low facial texture contrast; estimate weighted toward skin-clarity score"
+          : "Low facial texture contrast; skin clarity not measurable, estimate based on wrinkles alone";
 
   return {
     age,
