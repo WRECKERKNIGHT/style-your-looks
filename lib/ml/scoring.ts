@@ -34,7 +34,6 @@ import {
   comparisonFromPercentile,
   percentileFromZ,
   zScore,
-  resolveRef,
   type EthnicRegion,
 } from './calibration';
 
@@ -67,49 +66,51 @@ export interface BlendshapeAnalysis {
 
 export interface PercentileRanking {
   overall: number;
-  symmetry: number;
-  goldenRatio: number;
-  jawline: number;
-  skinClarity: number;
-  harmony: number;
+  symmetry: number | null;
+  goldenRatio: number | null;
+  jawline: number | null;
+  skinClarity: number | null;
+  harmony: number | null;
   bracket: string;
   comparisonText: string;
 }
 
 export interface FaceScoreResult {
   overallScore: number;
-  symmetry: number;
-  proportions: number;
-  jawline: number;
-  eyeSpacing: number;
-  skinClarity: number;
+  /** Per-metric 1-10 scores. `null` = the aspect could not be measured
+   *  from the supplied photos (e.g. nose projection from a frontal view). */
+  symmetry: number | null;
+  proportions: number | null;
+  jawline: number | null;
+  eyeSpacing: number | null;
+  skinClarity: number | null;
   facialShape: string;
   faceShapeProbabilities: Record<string, number>;
-  goldenRatio: number;
-  lipFullness: number;
-  noseProfile: number;
-  cheekboneDefinition: number;
-  fwhr: number;
-  canthalTilt: number;
-  eyeNoseRatio: number;
-  noseChinRatio: number;
-  horizontalFifths: number;
-  noseProjection: number;
-  lipWidthRatio: number;
-  upperLipRatio: number;
-  noseBridgeAngle: number;
-  eyeTilt: number;
-  rawFwhr: number;
-  rawCanthalTilt: number;
-  rawEyeNoseRatio: number;
-  facialHarmony: number;
+  goldenRatio: number | null;
+  lipFullness: number | null;
+  noseProfile: number | null;
+  cheekboneDefinition: number | null;
+  fwhr: number | null;
+  canthalTilt: number | null;
+  eyeNoseRatio: number | null;
+  noseChinRatio: number | null;
+  horizontalFifths: number | null;
+  noseProjection: number | null;
+  lipWidthRatio: number | null;
+  upperLipRatio: number | null;
+  noseBridgeAngle: number | null;
+  eyeTilt: number | null;
+  rawFwhr: number | null;
+  rawCanthalTilt: number | null;
+  rawEyeNoseRatio: number | null;
+  facialHarmony: number | null;
   breakdown: FacialMetric[];
   overallRating: string;
   detailedAnalysis: string;
   strengths: string[];
   improvements: string[];
   styleProfile: string;
-  blendshapes: BlendshapeAnalysis;
+  blendshapes: BlendshapeAnalysis | null;
   percentile: PercentileRanking;
   beautyIndex: number;
   faceShapeDetails: {
@@ -133,10 +134,11 @@ export interface FaceScoreResult {
   gradeLabel: string;
   /** Human-readable comparison. */
   comparison: string;
-  /** Structure profile descriptor (Soft/Balanced/Defined/Sharp). */
-  structureProfile: StructureProfileType;
-  /** Youthfulness score (0-100). */
-  youthfulness: number;
+  /** Structure profile descriptor (Soft/Balanced/Defined/Sharp) or null when
+   *  no reliable measurement was possible. */
+  structureProfile: StructureProfileType | null;
+  /** Youthfulness score (0-100). `null` when not measurable. */
+  youthfulness: number | null;
   /** Per-metric percentiles for distribution bars. */
   metricPercentiles: Record<string, number>;
   /** Face Profile — per-domain indices (0-100). */
@@ -187,7 +189,7 @@ function domainScore(measurements: Measurement[]): number {
 
 function computeDomainScores(
   geo: RawGeometry,
-  skinClarity: number,
+  skinClarity: number | null,
   photoQuality: number,
 ): FaceProfile {
   const geometry = domainScore([
@@ -293,11 +295,11 @@ export interface FaceMetricScores {
 
 export interface FaceScoreSample {
   metrics: FaceMetricScores;
-  skinClarity: number;
+  skinClarity: number | null;
   quality: PhotoQualityReport;
   sourceResult?: FaceLandmarkerResult;
-  youthfulness?: number;
-  structureProfile?: StructureProfileType;
+  youthfulness?: number | null;
+  structureProfile?: StructureProfileType | null;
 }
 
 function scoreToRating(score: number): string {
@@ -327,9 +329,9 @@ function scoreToDetailedLabel(score: number): string {
   return `A ${score.toFixed(1)}/10 result — the improvements section lists the highest-impact next steps.`;
 }
 
-function getGoldenRatio(result: FaceLandmarkerResult): number {
+function getGoldenRatio(result: FaceLandmarkerResult): number | null {
   const landmarks = result.faceLandmarks?.[0];
-  if (!landmarks || landmarks.length < 468) return 5;
+  if (!landmarks || landmarks.length < 468) return null;
 
   const U = createUprightAccessor(landmarks);
   const leftEye = U.pt(33);
@@ -338,11 +340,11 @@ function getGoldenRatio(result: FaceLandmarkerResult): number {
   const top = U.pt(10);
   const leftMouth = U.pt(61);
   const rightMouth = U.pt(291);
-  if (!leftEye || !rightEye || !chin || !top || !leftMouth || !rightMouth) return 5;
+  if (!leftEye || !rightEye || !chin || !top || !leftMouth || !rightMouth) return null;
 
   const faceWidth = Math.abs(rightEye.x - leftEye.x);
   const faceLength = Math.hypot(chin.x - top.x, chin.y - top.y);
-  if (faceWidth === 0 || faceLength === 0) return 5;
+  if (faceWidth === 0 || faceLength === 0) return null;
   const widthToLength = faceWidth / faceLength;
 
   const mouthWidth = Math.abs(rightMouth.x - leftMouth.x);
@@ -355,9 +357,9 @@ function getGoldenRatio(result: FaceLandmarkerResult): number {
   return Math.max(1, Math.min(10, Math.round((wtl * 0.65 + mtw * 0.35) * 100) / 100));
 }
 
-function getLipFullness(result: FaceLandmarkerResult): number {
+function getLipFullness(result: FaceLandmarkerResult): number | null {
   const landmarks = result.faceLandmarks?.[0];
-  if (!landmarks || landmarks.length < 468) return 5;
+  if (!landmarks || landmarks.length < 468) return null;
 
   // Vertical measurement — upright frame keeps it honest under head tilt.
   const U = createUprightAccessor(landmarks);
@@ -365,31 +367,31 @@ function getLipFullness(result: FaceLandmarkerResult): number {
   const lowerLip = U.pt(14);
   const mouthTop = U.pt(0);
   const mouthBottom = U.pt(17);
-  if (!upperLip || !lowerLip || !mouthTop || !mouthBottom) return 5;
+  if (!upperLip || !lowerLip || !mouthTop || !mouthBottom) return null;
 
   const lipHeight = Math.abs(lowerLip.y - upperLip.y);
   const mouthHeight = Math.abs(mouthBottom.y - mouthTop.y);
-  if (mouthHeight === 0) return 5;
+  if (mouthHeight === 0) return null;
   const ratio = lipHeight / mouthHeight;
 
   const idealRatio = 0.55;
   return idealScore(ratio, idealRatio, 0.08, 2, 9.5);
 }
 
-function getNoseProfile(result: FaceLandmarkerResult): number {
+function getNoseProfile(result: FaceLandmarkerResult): number | null {
   const landmarks = result.faceLandmarks?.[0];
-  if (!landmarks || landmarks.length < 478) return 5;
+  if (!landmarks || landmarks.length < 478) return null;
 
   const U = createUprightAccessor(landmarks);
   const ln = U.pt(458);
   const rn = U.pt(468);
   const lc = U.pt(234);
   const rc = U.pt(454);
-  if (!ln || !rn || !lc || !rc) return 5;
+  if (!ln || !rn || !lc || !rc) return null;
 
   const noseWidth = Math.abs(rn.x - ln.x);
   const faceWidth = Math.abs(rc.x - lc.x);
-  if (faceWidth === 0 || noseWidth === 0) return 5;
+  if (faceWidth === 0 || noseWidth === 0) return null;
   const noseToFace = noseWidth / faceWidth;
 
   const idealNoseRatio = 0.28;
@@ -420,39 +422,29 @@ function getForeheadBalance(result: FaceLandmarkerResult): number {
   return idealScore(deviation, 0, 0.035, 2, 10);
 }
 
-function getCheekboneDefinition(result: FaceLandmarkerResult): number {
+function getCheekboneDefinition(result: FaceLandmarkerResult): number | null {
   const landmarks = result.faceLandmarks?.[0];
-  if (!landmarks || landmarks.length < 468) return 5;
+  if (!landmarks || landmarks.length < 468) return null;
 
   const U = createUprightAccessor(landmarks);
   const leftCheek = U.pt(234);
   const rightCheek = U.pt(454);
   const leftJaw = U.pt(172);
   const rightJaw = U.pt(397);
-  if (!leftCheek || !rightCheek || !leftJaw || !rightJaw) return 5;
+  if (!leftCheek || !rightCheek || !leftJaw || !rightJaw) return null;
 
   const cheekWidth = Math.abs(rightCheek.x - leftCheek.x);
   const jawWidth = Math.abs(rightJaw.x - leftJaw.x);
-  if (jawWidth === 0 || cheekWidth === 0) return 5;
+  if (jawWidth === 0 || cheekWidth === 0) return null;
   const cheekToJaw = cheekWidth / jawWidth;
 
   // High cheek-to-jaw ratios read angular/editorial; mode ≈ 1.07.
   return idealScore(cheekToJaw, 1.07, 0.05, 2, 9.5);
 }
 
-function analyzeBlendshapes(result: FaceLandmarkerResult): BlendshapeAnalysis {
+function analyzeBlendshapes(result: FaceLandmarkerResult): BlendshapeAnalysis | null {
   const blendshapes = result.faceBlendshapes?.[0]?.categories;
-  if (!blendshapes || blendshapes.length === 0) {
-    return {
-      emotion: 'Neutral',
-      emotionConfidence: 0.5,
-      eyeOpenness: 0.5,
-      mouthOpenness: 0.3,
-      browRaise: 0.5,
-      smileIntensity: 0,
-      headTilt: 0,
-    };
-  }
+  if (!blendshapes || blendshapes.length === 0) return null;
 
   const findShape = (name: string) =>
     blendshapes.find((s) => s.categoryName.toLowerCase().includes(name.toLowerCase()))?.score ?? 0;
@@ -605,24 +597,6 @@ function weightsForProfile(profile: AnalysisProfile): typeof WEIGHTS {
   return WEIGHTS;
 }
 
-const WEIGHT_KEYS = Object.keys(WEIGHTS) as Exclude<keyof typeof WEIGHTS, 'skinClarity'>[];
-
-function calculateBeautyIndex(
-  metrics: FaceMetricScores,
-  skinClarityScore: number,
-  weights: typeof WEIGHTS = WEIGHTS,
-): number {
-  const weighted = WEIGHT_KEYS.reduce((acc, key) => {
-    const m = metrics[key];
-    const v =
-      m && typeof m === 'object' && 'score' in m ? ((m as MetricResult).score ?? 5) : (m as number);
-    return acc + v * weights[key];
-  }, 0);
-  const beautyIndex = weighted + skinClarityScore * weights.skinClarity;
-  const normalizedScore = Math.max(0, Math.min(100, beautyIndex * 10));
-  return Math.round(normalizedScore * 10) / 10;
-}
-
 const FACE_SHAPE_INFO: Record<
   string,
   {
@@ -704,16 +678,22 @@ const FACE_SHAPE_INFO: Record<
 
 function getStyleProfile(
   shape: string,
-  scores: { symmetry: number; jawline: number; cheekbone: number },
+  scores: { symmetry: number | null; jawline: number | null; cheekbone: number | null },
 ): string {
   const { symmetry, jawline, cheekbone } = scores;
 
-  if (jawline >= 8 && cheekbone >= 8) return 'Rugged Elegance';
-  if (symmetry >= 8.5 && jawline >= 7) return 'Classic Handsome';
-  if (cheekbone >= 8 && symmetry >= 7) return 'Editorial Sharp';
-  if (jawline >= 7 && symmetry >= 6) return 'Strong Structured';
-  if (shape === 'Heart' && symmetry >= 7) return 'Romantic Lead';
-  if (shape === 'Oval' && symmetry >= 7.5) return 'Versatile Classic';
+  // Each branch only fires on measured values — an unavailable metric never
+  // fabricates a profile, it falls through to the neutral descriptor.
+  if (jawline != null && cheekbone != null && jawline >= 8 && cheekbone >= 8)
+    return 'Rugged Elegance';
+  if (symmetry != null && jawline != null && symmetry >= 8.5 && jawline >= 7)
+    return 'Classic Handsome';
+  if (cheekbone != null && symmetry != null && cheekbone >= 8 && symmetry >= 7)
+    return 'Editorial Sharp';
+  if (jawline != null && symmetry != null && jawline >= 7 && symmetry >= 6)
+    return 'Strong Structured';
+  if (shape === 'Heart' && symmetry != null && symmetry >= 7) return 'Romantic Lead';
+  if (shape === 'Oval' && symmetry != null && symmetry >= 7.5) return 'Versatile Classic';
   if (shape === 'Square') return 'Bold Masculine';
   if (shape === 'Diamond') return 'Angular Maverick';
   return 'Everyman Appeal';
@@ -729,6 +709,7 @@ export function computeFaceMetrics(result: FaceLandmarkerResult): FaceMetricScor
     meas: import('./face-analyzer').Measurement | undefined,
   ): MetricResult => {
     if (!meas || meas.confidence <= 0) return { score: null, confidence: 0, rawValue: meas?.raw };
+    if (!Number.isFinite(meas.z)) return { score: null, confidence: 0, rawValue: meas?.raw };
     // Convert z-score to 0-10 scale using rangeScore
     const score = rangeScore(meas.z);
     return { score: Math.round(score * 10) / 10, confidence: meas.confidence, rawValue: meas.raw };
@@ -763,11 +744,13 @@ export function computeFaceMetrics(result: FaceLandmarkerResult): FaceMetricScor
     };
   }
 
-  // Fallback to legacy scorers if raw geometry fails
-  const safe = (fn: () => number): MetricResult => {
+  // Fallback to legacy scorers if raw geometry fails.
+  // These return null when a measurement genuinely can't be made, so a metric
+  // is never silently set to a middle score.
+  const safe = (fn: () => number | null): MetricResult => {
     try {
       const v = fn();
-      if (!Number.isFinite(v)) return { score: null, confidence: 0 };
+      if (v == null || !Number.isFinite(v)) return { score: null, confidence: 0 };
       return { score: v, confidence: 1 };
     } catch {
       return { score: null, confidence: 0 };
@@ -810,12 +793,12 @@ export interface BuildOptions {
 
 export function buildFaceScoreFromMetrics(
   metrics: FaceMetricScores,
-  skinClarityScore: number,
+  skinClarityScore: number | null,
   options: BuildOptions = {},
   sourceResult?: FaceLandmarkerResult,
   profile: AnalysisProfile = 'neutral',
-  youthfulnessOverride?: number,
-  structureProfileOverride?: StructureProfileType,
+  youthfulnessOverride?: number | null,
+  structureProfileOverride?: StructureProfileType | null,
 ): FaceScoreResult {
   const {
     photoQualityScore = 8,
@@ -907,24 +890,20 @@ export function buildFaceScoreFromMetrics(
     KEY_TO_LABEL[key] = label;
   }
 
+  // Only measured metrics contribute percentiles and weights. An unavailable
+  // aspect (score === null) is omitted entirely — it never gets a synthetic
+  // "50th percentile" placeholder.
   const metricPercentiles: Record<string, number> = {};
-  for (const [label, key] of Object.entries(LABEL_TO_KEY)) {
-    if (key === 'skinClarity') {
-      metricPercentiles[label] = scoreToPercentile(skinClarityScore);
-    } else {
-      const m = rawMetricScores[key];
-      metricPercentiles[label] = m.score !== null ? scoreToPercentile(m.score) : 50;
-    }
-  }
-
   const weightMap: Record<string, number> = {};
+  const metricScores: Record<string, number | null> = {};
   for (const [label, key] of Object.entries(LABEL_TO_KEY)) {
-    if (key === 'skinClarity') {
-      weightMap[label] = weights.skinClarity;
-    } else {
-      const m = rawMetricScores[key];
-      weightMap[label] = m.score !== null ? ((weights as Record<string, number>)[key] ?? 0) : 0;
-    }
+    const score =
+      key === 'skinClarity' ? skinClarityScore : ((rawMetricScores[key] as MetricResult)?.score ?? null);
+    if (score == null) continue;
+    metricPercentiles[label] = scoreToPercentile(score);
+    metricScores[label] = Math.round(score * 10) / 10;
+    weightMap[label] =
+      key === 'skinClarity' ? weights.skinClarity : ((weights as Record<string, number>)[key] ?? 0);
   }
 
   let availableWeight = 0;
@@ -947,7 +926,10 @@ export function buildFaceScoreFromMetrics(
     ? computeDomainScores(rawGeometry, skinClarityScore, photoQualityScore)
     : undefined;
 
-  // Overall score: weighted average of domain indices
+  // Overall score: weighted average of domain indices. A face that was
+  // detected but yielded no measurable facet falls back to the neutral middle
+  // of the scale — in practice this only happens when a face is present yet
+  // every measurement failed (occlusion, extreme lighting).
   const faceIQ = faceProfile
     ? Math.round(
         faceProfile.geometry * DOMAIN_WEIGHTS.geometry +
@@ -962,15 +944,15 @@ export function buildFaceScoreFromMetrics(
 
   const { grade, label: gradeLabel, comparison } = computeFaceIQ(metricPercentiles, weightMap);
 
-  const totalMetrics = Object.keys(weightMap).length;
+  // Confidence reflects how many of the measurable aspects actually resolved.
+  const totalMetrics = Object.keys(LABEL_TO_KEY).length;
   const computedMetrics = availableMetrics.length;
   const analysisConfidence =
     analysisConfidenceIn ?? Math.round((computedMetrics / totalMetrics) * 100);
 
-  const structureProfile = structureProfileOverride ?? 'Balanced';
-  const youthfulness = youthfulnessOverride ?? 50;
+  const structureProfile = structureProfileOverride ?? null;
+  const youthfulness = youthfulnessOverride ?? null;
 
-  const mScore = (m: MetricResult): number => (m.score !== null ? m.score : 5);
   const facialHarmony = (() => {
     const harmonyComponents: number[] = [];
     if (goldenRatio.score !== null) harmonyComponents.push(goldenRatio.score);
@@ -982,10 +964,15 @@ export function buildFaceScoreFromMetrics(
     if (eyeNoseRatio.score !== null && noseChinRatio.score !== null) {
       harmonyComponents.push((eyeNoseRatio.score + noseChinRatio.score) / 2);
     }
+    // No measurable harmony component → null (displayed as "not measured"),
+    // never a fabricated middle score.
     return harmonyComponents.length > 0
       ? harmonyComponents.reduce((a, b) => a + b, 0) / harmonyComponents.length
-      : 5;
+      : null;
   })();
+
+  const highTip = (m: MetricResult, good: string, bad: string): string =>
+    m.score != null && m.score >= 7 ? good : bad;
 
   const metricDefs: Omit<FacialMetric, 'score' | 'rating' | 'spread'>[] = [
     {
@@ -993,60 +980,66 @@ export function buildFaceScoreFromMetrics(
       weight: weights.symmetry,
       description:
         'Balance between left and right sides of your face. Measured by comparing 10 bilateral landmark pairs against the nose centerline.',
-      tip:
-        mScore(symmetry) >= 7
-          ? 'Your symmetry is a major asset — highlight it with centered hairstyles.'
-          : 'Strategic eyebrow grooming and asymmetric hairstyles can enhance perceived balance.',
+      tip: highTip(
+        symmetry,
+        'Your symmetry is a major asset — highlight it with centered hairstyles.',
+        'Strategic eyebrow grooming and asymmetric hairstyles can enhance perceived balance.',
+      ),
     },
     {
       label: 'Golden Ratio Adherence',
       weight: weights.goldenRatio,
       description:
         'How closely your facial proportions match the φ (1.618) ideal. Measures face width-to-length and mouth-to-face-width ratios.',
-      tip:
-        mScore(goldenRatio) >= 7
-          ? 'Your proportions are mathematically harmonious — a rare trait.'
-          : 'Most faces deviate from φ. Your unique ratios give character — lean into it.',
+      tip: highTip(
+        goldenRatio,
+        'Your proportions are mathematically harmonious — a rare trait.',
+        'Most faces deviate from φ. Your unique ratios give character — lean into it.',
+      ),
     },
     {
       label: 'Jawline Definition',
       weight: weights.jawline,
       description:
         'Multi-factor jawline analysis: jaw-to-face ratio, gonial angle sharpness, mandibular taper, chin projection, and jaw symmetry.',
-      tip:
-        mScore(jawline) >= 7
-          ? 'Your jawline is a defining feature. Keep it clean and well-groomed.'
-          : 'Angular beard styles (Van Dyke, Anchor) can create the illusion of a sharper jawline.',
+      tip: highTip(
+        jawline,
+        'Your jawline is a defining feature. Keep it clean and well-groomed.',
+        'Angular beard styles (Van Dyke, Anchor) can create the illusion of a sharper jawline.',
+      ),
     },
     {
       label: 'Proportional Harmony',
       weight: weights.proportions,
       description:
         'How evenly your face divides into upper, middle, and lower thirds. The ideal is equal thirds.',
-      tip:
-        mScore(proportions) >= 7
-          ? 'Your thirds are well-balanced — most hairstyles will suit you.'
-          : 'Hairstyles that add volume to underrepresented thirds can create better visual balance.',
+      tip: highTip(
+        proportions,
+        'Your thirds are well-balanced — most hairstyles will suit you.',
+        'Hairstyles that add volume to underrepresented thirds can create better visual balance.',
+      ),
     },
     {
       label: 'Horizontal Fifths',
       weight: weights.horizontalFifths,
       description:
         'The face ideally divides into five equal widths: two eye bands, the intercanthal gap, and two outer bands.',
-      tip:
-        mScore(horizontalFifths) >= 7
-          ? 'Your eye placement is balanced across the face width.'
-          : 'Strategic eye makeup/eyebrow shaping can optically adjust perceived eye band widths.',
+      tip: highTip(
+        horizontalFifths,
+        'Your eye placement is balanced across the face width.',
+        'Strategic eye makeup/eyebrow shaping can optically adjust perceived eye band widths.',
+      ),
     },
     {
       label: 'Eye Spacing',
       weight: weights.eyeSpacing,
       description:
         'Interpupillary distance relative to eye width. Ideal spacing is approximately one eye-width apart.',
-      tip:
-        mScore(eyeSpacing) >= 7
-          ? 'Your eye spacing is ideal for most eyewear and makeup styles.'
-          : 'Glasses with wider frames can create the illusion of more balanced spacing.',
+      tip: highTip(
+        eyeSpacing,
+        'Your eye spacing is ideal for most eyewear and makeup styles.',
+        'Glasses with wider frames can create the illusion of more balanced spacing.',
+      ),
     },
     {
       label: 'Texture Uniformity',
@@ -1054,19 +1047,22 @@ export function buildFaceScoreFromMetrics(
       description:
         'Surface smoothness and evenness of skin tone. Measured by brightness variance across 7 facial zones.',
       tip:
-        skinClarityScore >= 7
+        skinClarityScore != null && skinClarityScore >= 7
           ? 'Your skin texture is smooth — maintain with SPF and hydration.'
-          : 'A consistent skincare routine (cleanser, exfoliant, moisturizer, SPF) can significantly improve this.',
-    },
+          : skinClarityScore != null
+            ? 'A consistent skincare routine (cleanser, exfoliant, moisturizer, SPF) can significantly improve this.'
+            : 'Skin clarity could not be assessed from this photo.',
+      },
     {
       label: 'Cheekbone Definition',
       weight: weights.cheekboneDefinition,
       description:
         'Prominence of cheekbones relative to jaw width. Higher cheek-to-jaw ratios create more angular, editorial features.',
-      tip:
-        mScore(cheekboneDefinition) >= 7
-          ? 'Your cheekbones are a standout feature — contour and lighting will love them.'
-          : 'Highlighting techniques and angular hairstyles can enhance perceived cheekbone height.',
+      tip: highTip(
+        cheekboneDefinition,
+        'Your cheekbones are a standout feature — contour and lighting will love them.',
+        'Highlighting techniques and angular hairstyles can enhance perceived cheekbone height.',
+      ),
     },
     {
       label: 'FWHR (Facial Width-to-Height)',
@@ -1074,10 +1070,11 @@ export function buildFaceScoreFromMetrics(
       description:
         'Bizygomatic width over upper-lip-to-brow height. Research links a higher FWHR to perceived dominance and attractiveness in men.',
       value: rawFwhr !== undefined ? `Ratio ${rawFwhr.toFixed(2)} (ideal ≈ 1.95)` : undefined,
-      tip:
-        mScore(fwhr) >= 7
-          ? 'Your facial width-to-height ratio is in the researched attractive range.'
-          : 'The ratio is partly structural; hairstyle volume and beard width subtly affect the look.',
+      tip: highTip(
+        fwhr,
+        'Your facial width-to-height ratio is in the researched attractive range.',
+        'The ratio is partly structural; hairstyle volume and beard width subtly affect the look.',
+      ),
     },
     {
       label: 'Canthal Tilt',
@@ -1086,10 +1083,11 @@ export function buildFaceScoreFromMetrics(
         'Angle of the line between inner and outer eye corners. A positive tilt (outer corner slightly raised) reads as alert and attractive.',
       value:
         rawCanthalTilt !== undefined ? `${rawCanthalTilt.toFixed(1)}° (ideal ≈ +5°)` : undefined,
-      tip:
-        mScore(canthalTilt) >= 7
-          ? 'Your positive canthal tilt gives a naturally alert, youthful look.'
-          : 'Eye-cream hydration and gentle brow grooming help keep the eye area looking lifted.',
+      tip: highTip(
+        canthalTilt,
+        'Your positive canthal tilt gives a naturally alert, youthful look.',
+        'Eye-cream hydration and gentle brow grooming help keep the eye area looking lifted.',
+      ),
     },
     {
       label: 'Eye–Nose Ratio',
@@ -1097,20 +1095,22 @@ export function buildFaceScoreFromMetrics(
       description:
         'Average eye width relative to nose (alar) width. Typical faces sit near ≈ 0.9; you are measured against the population distribution.',
       value: rawEyeNoseRatio !== undefined ? `Ratio ${rawEyeNoseRatio.toFixed(2)}` : undefined,
-      tip:
-        mScore(eyeNoseRatio) >= 7
-          ? 'Your eye-to-nose proportions are mathematically harmonious.'
-          : 'Features work together as a whole — small deviations here read as character.',
+      tip: highTip(
+        eyeNoseRatio,
+        'Your eye-to-nose proportions are mathematically harmonious.',
+        'Features work together as a whole — small deviations here read as character.',
+      ),
     },
     {
       label: 'Nose–Chin Balance',
       weight: weights.noseChinRatio,
       description:
         'Nose length over facial height. The ideal nasofacial proportion centers the nose within the lower face.',
-      tip:
-        mScore(noseChinRatio) >= 7
-          ? 'Your nose sits in strong proportion to your face length.'
-          : 'The nose–chin balance is structural; contouring can refine its perceived length.',
+      tip: highTip(
+        noseChinRatio,
+        'Your nose sits in strong proportion to your face length.',
+        'The nose–chin balance is structural; contouring can refine its perceived length.',
+      ),
     },
     {
       label: 'Lip Proportion',
@@ -1138,20 +1138,22 @@ export function buildFaceScoreFromMetrics(
       weight: weights.lipWidthRatio,
       description:
         'Mouth width relative to face width. A wider mouth is associated with perceived attractiveness.',
-      tip:
-        mScore(lipWidthRatio) >= 7
-          ? 'Your mouth width complements your facial proportions.'
-          : 'Lip liner techniques can subtly enhance perceived mouth width.',
+      tip: highTip(
+        lipWidthRatio,
+        'Your mouth width complements your facial proportions.',
+        'Lip liner techniques can subtly enhance perceived mouth width.',
+      ),
     },
     {
       label: 'Upper Lip Ratio',
       weight: weights.upperLipRatio,
       description:
         'Upper lip height relative to total lip height. The ideal is approximately 1/3 of total lip height.',
-      tip:
-        mScore(upperLipRatio) >= 7
-          ? 'Your upper lip proportion is well-balanced.'
-          : 'Subtle lip liner on the upper lip can enhance perceived proportion.',
+      tip: highTip(
+        upperLipRatio,
+        'Your upper lip proportion is well-balanced.',
+        'Subtle lip liner on the upper lip can enhance perceived proportion.',
+      ),
     },
     {
       label: 'Nose Bridge Angle',
@@ -1165,60 +1167,46 @@ export function buildFaceScoreFromMetrics(
       weight: weights.eyeTilt,
       description:
         "Angle of the eye's long axis. A slight positive tilt (outer corner raised) reads as alert and attractive.",
-      tip:
-        mScore(eyeTilt) >= 7
-          ? 'Your eye tilt gives a naturally alert, youthful appearance.'
-          : 'Upward-sweeping eyeliner can enhance perceived eye tilt.',
+      tip: highTip(
+        eyeTilt,
+        'Your eye tilt gives a naturally alert, youthful appearance.',
+        'Upward-sweeping eyeliner can enhance perceived eye tilt.',
+      ),
     },
   ];
 
-  const metricScores: Record<string, number> = {
-    'Facial Symmetry': mScore(symmetry),
-    'Golden Ratio Adherence': mScore(goldenRatio),
-    'Jawline Definition': mScore(jawline),
-    'Proportional Harmony': mScore(proportions),
-    'Eye Spacing': mScore(eyeSpacing),
-    'Texture Uniformity': skinClarityScore,
-    'Cheekbone Definition': mScore(cheekboneDefinition),
-    'FWHR (Facial Width-to-Height)': mScore(fwhr),
-    'Canthal Tilt': mScore(canthalTilt),
-    'Horizontal Fifths': mScore(horizontalFifths),
-    'Eye–Nose Ratio': mScore(eyeNoseRatio),
-    'Nose–Chin Balance': mScore(noseChinRatio),
-    'Lip Proportion': mScore(lipFullness),
-    'Nose Profile': mScore(noseProfile),
-    'Nose Projection': mScore(noseProjection),
-    'Lip Width Ratio': mScore(lipWidthRatio),
-    'Upper Lip Ratio': mScore(upperLipRatio),
-    'Nose Bridge Angle': mScore(noseBridgeAngle),
-    'Eye Tilt': mScore(eyeTilt),
-  };
-
   const breakdown: FacialMetric[] = metricDefs
-    .filter((m) => rawMetricScores[LABEL_TO_KEY[m.label]]?.score != null)
-    .map((m) => ({
-      ...m,
-      score: Math.round(metricScores[m.label] * 10) / 10,
-      rating: scoreToRating(metricPercentiles[m.label] / 10),
-      tip: m.tip,
-    }));
+    .filter((m) => {
+      const key = LABEL_TO_KEY[m.label];
+      return key !== 'skinClarity' && (rawMetricScores[key]?.score ?? null) != null;
+    })
+    .map((m) => {
+      const score = metricScores[m.label];
+      return {
+        ...m,
+        score: Math.round((score as number) * 10) / 10,
+        rating: scoreToRating(metricPercentiles[m.label] / 10),
+        tip: m.tip,
+      };
+    });
 
   const roundedScore = Math.round(((faceIQ / 100) * 8 + 2) * 10) / 10;
 
   const strengths: string[] = [];
   const improvements: string[] = [];
 
-  breakdown.forEach((m) => {
-    const pct = metricPercentiles[m.label] ?? 50;
+  for (const m of breakdown) {
+    const pct = metricPercentiles[m.label];
+    if (pct == null) continue;
     if (pct >= 80)
       strengths.push(`${m.label} (${m.score.toFixed(1)}/10) — ${scoreToRating(pct / 10)}`);
     if (pct < 40) improvements.push(`${m.label} (${m.score.toFixed(1)}/10) — ${m.tip}`);
-  });
+  }
 
   const styleProfile = getStyleProfile(facialShape, {
-    symmetry: mScore(symmetry),
-    jawline: mScore(jawline),
-    cheekbone: mScore(cheekboneDefinition),
+    symmetry: symmetry.score,
+    jawline: jawline.score,
+    cheekbone: cheekboneDefinition.score,
   });
 
   const detailedAnalysis = scoreToDetailedLabel(roundedScore);
@@ -1235,44 +1223,47 @@ export function buildFaceScoreFromMetrics(
       };
   const percentile = {
     overall: faceIQ,
-    symmetry: metricPercentiles['Facial Symmetry'] ?? 50,
-    goldenRatio: metricPercentiles['Golden Ratio Adherence'] ?? 50,
-    jawline: metricPercentiles['Jawline Definition'] ?? 50,
-    skinClarity: metricPercentiles['Texture Uniformity'] ?? 50,
-    harmony: metricPercentiles['Proportional Harmony'] ?? 50,
+    symmetry: metricPercentiles['Facial Symmetry'] ?? null,
+    goldenRatio: metricPercentiles['Golden Ratio Adherence'] ?? null,
+    jawline: metricPercentiles['Jawline Definition'] ?? null,
+    skinClarity: metricPercentiles['Texture Uniformity'] ?? null,
+    harmony: metricPercentiles['Proportional Harmony'] ?? null,
     bracket: grade,
     comparisonText: comparison,
   };
   const beautyIndex = faceIQ;
   const faceShapeDetails = FACE_SHAPE_INFO[facialShape] || FACE_SHAPE_INFO.Oval;
 
+  const roundOrNull = (v: number | null): number | null =>
+    v == null ? null : Math.round(v * 10) / 10;
+
   return {
     overallScore: roundedScore,
-    symmetry: Math.round(mScore(symmetry) * 10) / 10,
-    proportions: Math.round(mScore(proportions) * 10) / 10,
-    jawline: Math.round(mScore(jawline) * 10) / 10,
-    eyeSpacing: Math.round(mScore(eyeSpacing) * 10) / 10,
-    skinClarity: Math.round(skinClarityScore * 10) / 10,
+    symmetry: roundOrNull(symmetry.score),
+    proportions: roundOrNull(proportions.score),
+    jawline: roundOrNull(jawline.score),
+    eyeSpacing: roundOrNull(eyeSpacing.score),
+    skinClarity: skinClarityScore == null ? null : Math.round(skinClarityScore * 10) / 10,
     facialShape,
     faceShapeProbabilities,
-    goldenRatio: Math.round(mScore(goldenRatio) * 10) / 10,
-    lipFullness: Math.round(mScore(lipFullness) * 10) / 10,
-    noseProfile: Math.round(mScore(noseProfile) * 10) / 10,
-    cheekboneDefinition: Math.round(mScore(cheekboneDefinition) * 10) / 10,
-    fwhr: Math.round(mScore(fwhr) * 10) / 10,
-    canthalTilt: Math.round(mScore(canthalTilt) * 10) / 10,
-    eyeNoseRatio: Math.round(mScore(eyeNoseRatio) * 10) / 10,
-    noseChinRatio: Math.round(mScore(noseChinRatio) * 10) / 10,
-    horizontalFifths: Math.round(mScore(horizontalFifths) * 10) / 10,
-    noseProjection: Math.round(mScore(noseProjection) * 10) / 10,
-    lipWidthRatio: Math.round(mScore(lipWidthRatio) * 10) / 10,
-    upperLipRatio: Math.round(mScore(upperLipRatio) * 10) / 10,
-    noseBridgeAngle: Math.round(mScore(noseBridgeAngle) * 10) / 10,
-    eyeTilt: Math.round(mScore(eyeTilt) * 10) / 10,
-    rawFwhr: rawFwhr ?? 0,
-    rawCanthalTilt: rawCanthalTilt ?? 0,
-    rawEyeNoseRatio: rawEyeNoseRatio ?? 0,
-    facialHarmony: Math.round(facialHarmony * 10) / 10,
+    goldenRatio: roundOrNull(goldenRatio.score),
+    lipFullness: roundOrNull(lipFullness.score),
+    noseProfile: roundOrNull(noseProfile.score),
+    cheekboneDefinition: roundOrNull(cheekboneDefinition.score),
+    fwhr: roundOrNull(fwhr.score),
+    canthalTilt: roundOrNull(canthalTilt.score),
+    eyeNoseRatio: roundOrNull(eyeNoseRatio.score),
+    noseChinRatio: roundOrNull(noseChinRatio.score),
+    horizontalFifths: roundOrNull(horizontalFifths.score),
+    noseProjection: roundOrNull(noseProjection.score),
+    lipWidthRatio: roundOrNull(lipWidthRatio.score),
+    upperLipRatio: roundOrNull(upperLipRatio.score),
+    noseBridgeAngle: roundOrNull(noseBridgeAngle.score),
+    eyeTilt: roundOrNull(eyeTilt.score),
+    rawFwhr: rawFwhr ?? null,
+    rawCanthalTilt: rawCanthalTilt ?? null,
+    rawEyeNoseRatio: rawEyeNoseRatio ?? null,
+    facialHarmony: facialHarmony == null ? null : Math.round(facialHarmony * 10) / 10,
     breakdown,
     overallRating: gradeLabel,
     detailedAnalysis,
@@ -1307,10 +1298,73 @@ export function buildFaceScoreFromMetrics(
 
 export function calculateFaceScore(
   result: FaceLandmarkerResult,
-  skinClarityScore: number,
+  skinClarityScore: number | null,
 ): FaceScoreResult {
   const metrics = computeFaceMetrics(result);
   return buildFaceScoreFromMetrics(metrics, skinClarityScore, {}, result);
+}
+
+/**
+ * Recomputes the Face IQ aggregate from stored per-metric scores using the
+ * same population kernel as the live pipeline. Used only to backfill legacy
+ * history entries that predate the FaceIQ field. Never fabricates: metrics
+ * that are missing or unmeasured are omitted from the weighted average, and
+ * the mean across the neutral weight table matches buildFaceScoreFromMetrics.
+ */
+export function recomputeFaceIQFromScores(metrics: {
+  symmetry: number | null;
+  goldenRatio: number | null;
+  jawline: number | null;
+  proportions: number | null;
+  horizontalFifths: number | null;
+  skinClarity: number | null;
+  eyeSpacing: number | null;
+  cheekboneDefinition: number | null;
+  lipFullness: number | null;
+  noseProfile: number | null;
+  fwhr: number | null;
+  canthalTilt: number | null;
+  eyeNoseRatio: number | null;
+  noseChinRatio: number | null;
+  noseProjection: number | null;
+  lipWidthRatio: number | null;
+  upperLipRatio: number | null;
+  noseBridgeAngle: number | null;
+  eyeTilt: number | null;
+}): number {
+  const entries: [string, number | null][] = [
+    ['symmetry', metrics.symmetry],
+    ['goldenRatio', metrics.goldenRatio],
+    ['jawline', metrics.jawline],
+    ['proportions', metrics.proportions],
+    ['horizontalFifths', metrics.horizontalFifths],
+    ['skinClarity', metrics.skinClarity],
+    ['eyeSpacing', metrics.eyeSpacing],
+    ['cheekboneDefinition', metrics.cheekboneDefinition],
+    ['lipFullness', metrics.lipFullness],
+    ['noseProfile', metrics.noseProfile],
+    ['fwhr', metrics.fwhr],
+    ['canthalTilt', metrics.canthalTilt],
+    ['eyeNoseRatio', metrics.eyeNoseRatio],
+    ['noseChinRatio', metrics.noseChinRatio],
+    ['noseProjection', metrics.noseProjection],
+    ['lipWidthRatio', metrics.lipWidthRatio],
+    ['upperLipRatio', metrics.upperLipRatio],
+    ['noseBridgeAngle', metrics.noseBridgeAngle],
+    ['eyeTilt', metrics.eyeTilt],
+  ];
+  let weightedSum = 0;
+  let availableWeight = 0;
+  for (const [key, score] of entries) {
+    if (score == null || !Number.isFinite(score)) continue;
+    const w = (WEIGHTS as Record<string, number>)[key] ?? 0;
+    if (w <= 0) continue;
+    weightedSum += scoreToPercentile(score) * w;
+    availableWeight += w;
+  }
+  return availableWeight > 0
+    ? Math.round(Math.max(0, Math.min(100, weightedSum / availableWeight)))
+    : 50;
 }
 
 function median(values: number[]): number {
@@ -1413,7 +1467,10 @@ export function mergeFaceScores(
   }
   merged.faceShapeProbabilities = mergedProbabilities;
 
-  const skinClarity = median(samples.map((s) => s.skinClarity));
+  const skinClarityValues = samples
+    .map((s) => s.skinClarity)
+    .filter((v): v is number => v !== null && v !== undefined && Number.isFinite(v));
+  const skinClarity = skinClarityValues.length > 0 ? median(skinClarityValues) : null;
   const photoQuality = median(samples.map((s) => s.quality.score));
 
   const cvList = MERGE_KEYS.map((key) => {
@@ -1443,18 +1500,29 @@ export function mergeFaceScores(
   const analysisConfidence =
     samples.length === 1
       ? Math.round((photoQuality * 0.6 + frontality * 0.4) * 10)
-      : Math.round(((consistencyScore ?? 7) * 0.45 + photoQuality * 0.35 + frontality * 0.2) * 10);
+      // Multiple photos were captured, so consistencyScore is always defined here.
+      : Math.round(
+          Math.max(
+            1,
+            Math.min(
+              10,
+              (consistencyScore as number) * 0.45 + photoQuality * 0.35 + frontality * 0.2,
+            ),
+          ) * 10,
+        );
 
   const bestSample = [...samples].sort((a, b) => b.quality.score - a.quality.score)[0];
 
-  // Merge youthfulness and structure profile across samples
+  // Merge youthfulness and structure profile across samples. If no sample
+  // produced a measurement, the result stays null (rendered as "not measured")
+  // instead of defaulting to a fabricated middle value.
   const youthfulnessValues = samples
     .map((s) => s.youthfulness)
     .filter((v): v is number => typeof v === 'number');
   const youthfulness =
     youthfulnessValues.length > 0
       ? Math.round(youthfulnessValues.reduce((a, b) => a + b, 0) / youthfulnessValues.length)
-      : 50;
+      : null;
 
   const structureProfiles = samples
     .map((s) => s.structureProfile)
@@ -1465,7 +1533,7 @@ export function mergeFaceScores(
           const order = { Sharp: 4, Defined: 3, Balanced: 2, Soft: 1 };
           return (order[b] ?? 2) - (order[a] ?? 2);
         })[0]
-      : 'Balanced';
+      : null;
 
   const result = buildFaceScoreFromMetrics(
     merged,
@@ -1623,20 +1691,20 @@ export function getGroomingSuggestions(
     }
   }
 
-  if (score.skinClarity < 6) {
+  if (score.skinClarity != null && score.skinClarity < 6) {
     suggestions.push('Skincare priority: Start with a daily cleanser + SPF 30 moisturizer');
     suggestions.push('Exfoliate 2x/week. Drink 2-3L water daily. Sleep 7+ hours.');
     suggestions.push('Consider niacinamide for pore refinement and vitamin C for brightening');
-  } else if (score.skinClarity < 7.5) {
+  } else if (score.skinClarity != null && score.skinClarity < 7.5) {
     suggestions.push('Good skin foundation — add retinol 2x/week for texture refinement');
   }
 
-  if (score.symmetry < 7) {
+  if (score.symmetry != null && score.symmetry < 7) {
     suggestions.push('Eyebrow shaping can dramatically improve perceived facial symmetry');
     suggestions.push('Consider professional eyebrow threading or mapping for optimal arch');
   }
 
-  if (score.jawline < 6) {
+  if (score.jawline != null && score.jawline < 6) {
     if (profile === 'feminine') {
       suggestions.push(
         'Facial massage and chin-tuck exercises can subtly refine jawline definition',
@@ -1648,7 +1716,7 @@ export function getGroomingSuggestions(
     }
   }
 
-  if (score.canthalTilt < 6) {
+  if (score.canthalTilt != null && score.canthalTilt < 6) {
     suggestions.push(
       'Eye-area hydration and gentle under-eye massage help keep the eye area looking lifted',
     );
