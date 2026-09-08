@@ -23,11 +23,15 @@ interface SkincareStep {
   priority: "essential" | "recommended" | "advanced";
 }
 
-function getSkinMetrics(faceResult: { skinClarity: number; symmetry: number; overallScore: number } | null): SkinMetric[] {
+function getSkinMetrics(faceResult: { skinClarity: number | null; symmetry: number | null; overallScore: number } | null): SkinMetric[] {
   if (!faceResult) return [];
+  // Every metric below derives from skin clarity. When clarity could not be
+  // measured (e.g. no face sampled), none of them are available — we do not
+  // infer an invented clarity number for them.
+  if (faceResult.skinClarity == null) return [];
   const texture = Math.min(10, faceResult.skinClarity * 1.05);
   const hydration = Math.min(10, faceResult.skinClarity * 0.9 + faceResult.overallScore * 0.1);
-  const tone = Math.min(10, faceResult.skinClarity * 0.95 + faceResult.symmetry * 0.05);
+  const tone = Math.min(10, faceResult.skinClarity * 0.95 + (faceResult.symmetry ?? faceResult.skinClarity) * 0.05);
   const clarity = faceResult.skinClarity;
   const elasticity = Math.min(10, faceResult.overallScore * 0.8 + 2);
   return [
@@ -39,17 +43,17 @@ function getSkinMetrics(faceResult: { skinClarity: number; symmetry: number; ove
   ];
 }
 
-function getSkincareRoutine(skinClarity: number): SkincareStep[] {
+function getSkincareRoutine(skinClarity: number | null): SkincareStep[] {
   const routine: SkincareStep[] = [];
   routine.push({ step: 1, time: "both", product: "Gentle Cleanser", description: "pH-balanced foaming or cream cleanser. Avoid harsh sulfates.", priority: "essential" });
-  if (skinClarity < 7) routine.push({ step: 2, time: "evening", product: "BHA Exfoliant (2% Salicylic Acid)", description: "Unclogs pores and reduces texture. Use 2-3x per week, build up tolerance.", priority: "essential" });
-  routine.push({ step: 3, time: "morning", product: "Vitamin C Serum (10-20%)", description: "Antioxidant protection, brightening, and collagen support. Apply to dry skin.", priority: skinClarity >= 7 ? "recommended" : "essential" });
-  if (skinClarity < 7) routine.push({ step: 4, time: "evening", product: "Niacinamide Serum (5-10%)", description: "Reduces pore appearance, controls oil, and evens skin tone.", priority: "essential" });
+  if (skinClarity != null && skinClarity < 7) routine.push({ step: 2, time: "evening", product: "BHA Exfoliant (2% Salicylic Acid)", description: "Unclogs pores and reduces texture. Use 2-3x per week, build up tolerance.", priority: "essential" });
+  routine.push({ step: 3, time: "morning", product: "Vitamin C Serum (10-20%)", description: "Antioxidant protection, brightening, and collagen support. Apply to dry skin.", priority: skinClarity != null && skinClarity >= 7 ? "recommended" : "essential" });
+  if (skinClarity != null && skinClarity < 7) routine.push({ step: 4, time: "evening", product: "Niacinamide Serum (5-10%)", description: "Reduces pore appearance, controls oil, and evens skin tone.", priority: "essential" });
   routine.push({ step: 5, time: "both", product: "Hyaluronic Acid Serum", description: "Deep hydration. Apply to damp skin, layer moisturizer on top.", priority: "essential" });
-  routine.push({ step: 6, time: "both", product: "Moisturizer", description: skinClarity >= 7 ? "Lightweight, fragrance-free moisturizer." : "Ceramide-rich moisturizer to repair skin barrier.", priority: "essential" });
+  routine.push({ step: 6, time: "both", product: "Moisturizer", description: skinClarity != null && skinClarity >= 7 ? "Lightweight, fragrance-free moisturizer." : "Ceramide-rich moisturizer to repair skin barrier.", priority: "essential" });
   routine.push({ step: 7, time: "morning", product: "SPF 30-50 Sunscreen", description: "Non-negotiable. UV is the #1 cause of skin aging. Reapply every 2 hours outdoors.", priority: "essential" });
-  if (skinClarity < 6) routine.push({ step: 8, time: "evening", product: "Retinol (0.3-0.5%)", description: "Gold standard for anti-aging and skin renewal. Start 2x/week, increase gradually.", priority: "recommended" });
-  if (skinClarity >= 7) routine.push({ step: 8, time: "evening", product: "Retinol (0.5-1%)", description: "Advanced anti-aging and texture refinement. Use 3-4x per week.", priority: "advanced" });
+  if (skinClarity != null && skinClarity < 6) routine.push({ step: 8, time: "evening", product: "Retinol (0.3-0.5%)", description: "Gold standard for anti-aging and skin renewal. Start 2x/week, increase gradually.", priority: "recommended" });
+  if (skinClarity != null && skinClarity >= 7) routine.push({ step: 8, time: "evening", product: "Retinol (0.5-1%)", description: "Advanced anti-aging and texture refinement. Use 3-4x per week.", priority: "advanced" });
   return routine;
 }
 
@@ -160,9 +164,9 @@ export default function SkinHealthPage() {
 
   useEffect(() => { document.title = "Skin Health | ZERVEY"; }, []);
   const metrics = useMemo(() => getSkinMetrics(faceResult), [faceResult]);
-  const routine = useMemo(() => faceResult ? getSkincareRoutine(faceResult.skinClarity) : [], [faceResult]);
+  const routine = useMemo(() => (faceResult ? getSkincareRoutine(faceResult.skinClarity) : []), [faceResult]);
   const products = useMemo(() => getProductRecommendations(metrics), [metrics]);
-  const avgScore = metrics.length > 0 ? Math.round(metrics.reduce((s, m) => s + m.score, 0) / metrics.length * 10) / 10 : 0;
+  const avgScore = metrics.length > 0 ? Math.round(metrics.reduce((s, m) => s + m.score, 0) / metrics.length * 10) / 10 : null;
 
   if (!faceResult) {
     return (
@@ -218,15 +222,15 @@ export default function SkinHealthPage() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <p className="type-label text-[var(--text-muted)] mb-1">OVERALL SKIN SCORE</p>
-              <div className="type-display text-gradient-aurum">{avgScore}</div>
+              <div className="type-display text-gradient-aurum">{avgScore ?? "—"}</div>
               <p className="text-sm text-[var(--text-muted)] font-body mt-1">out of 10</p>
             </div>
             <div className="sm:text-right">
               <div className="flex items-center gap-2 mb-2">
                 <Shield className="w-5 h-5 text-[var(--accent-aurum)]" />
-                <span className="text-sm font-body font-bold text-[var(--text-primary)]">{avgScore >= 7 ? "Healthy Skin" : avgScore >= 5 ? "Good Foundation" : "Needs Attention"}</span>
+                <span className="text-sm font-body font-bold text-[var(--text-primary)]">{avgScore == null ? "Not Measured" : avgScore >= 7 ? "Healthy Skin" : avgScore >= 5 ? "Good Foundation" : "Needs Attention"}</span>
               </div>
-              <p className="text-xs text-[var(--text-muted)] font-body max-w-xs">{avgScore >= 7 ? "Your skin is in great condition. Focus on maintenance and protection." : "With a consistent routine, you can significantly improve your skin health in 8-12 weeks."}</p>
+              <p className="text-xs text-[var(--text-muted)] font-body max-w-xs">{avgScore == null ? "Skin clarity could not be measured from this photo, so no skin score was computed." : avgScore >= 7 ? "Your skin is in great condition. Focus on maintenance and protection." : "With a consistent routine, you can significantly improve your skin health in 8-12 weeks."}</p>
             </div>
           </div>
         </div>
@@ -237,7 +241,7 @@ export default function SkinHealthPage() {
       <div>
         <ScrollReveal>
           <h3 className="type-label text-[var(--text-muted)] mb-4">SKIN METRICS</h3>
-          <p className="text-[var(--text-muted)] font-body text-sm mb-4">Tap any metric for detailed advice.</p>
+          <p className="text-[var(--text-muted)] font-body text-sm mb-4">{metrics.length > 0 ? "Tap any metric for detailed advice." : "No skin metrics available — skin clarity could not be measured from this photo."}</p>
         </ScrollReveal>
         <div className="space-y-3">
           {metrics.map((metric, i) => (<MetricCard key={metric.label} metric={metric} index={i} />))}
@@ -252,7 +256,7 @@ export default function SkinHealthPage() {
             <Clock className="w-6 h-6 text-[var(--accent-aurum)]" />
             <h2 className="type-heading text-[var(--text-primary)] tracking-tight">YOUR <span className="text-gradient-aurum">ROUTINE.</span></h2>
           </div>
-          <p className="text-[var(--text-muted)] font-body mb-6">Personalized based on your skin clarity score of {faceResult.skinClarity}/10.</p>
+          <p className="text-[var(--text-muted)] font-body mb-6">{faceResult.skinClarity != null ? `Personalized based on your skin clarity score of ${faceResult.skinClarity}/10.` : "Skin clarity could not be measured from this photo, so the routine below covers the core essentials only."}</p>
         </ScrollReveal>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
