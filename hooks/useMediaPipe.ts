@@ -28,6 +28,17 @@ export class AnalysisCancelledError extends Error {
   }
 }
 
+/**
+ * Options controlling how an analysis run persists its outcome.
+ * Demo mode runs the exact same MediaPipe + scoring pipeline as a real
+ * upload but never saves to history and keeps the store source as "demo"
+ * so the UI can label the result as a preview and the save button is blocked.
+ */
+export interface AnalysisRunOptions {
+  /** When true, the store source stays "demo" and the result is NOT persisted. */
+  demoMode?: boolean;
+}
+
 function computeSkinClarityScore(
   canvas: HTMLCanvasElement,
   ctx: CanvasRenderingContext2D,
@@ -216,10 +227,11 @@ export function useMediaPipe() {
     async (
       imageElement: HTMLImageElement,
       genderProfile: AnalysisProfile = "neutral",
-      onPreview?: (landmarks: number[][]) => void
+      onPreview?: (landmarks: number[][]) => void,
+      options?: AnalysisRunOptions
     ) => {
       cancelledRef.current = false;
-      useAnalysisStore.getState().setSource("real");
+      useAnalysisStore.getState().setSource(options?.demoMode ? "demo" : "real");
       setIsAnalyzing(true);
       setAnalysisProgress(0);
 
@@ -287,7 +299,7 @@ export function useMediaPipe() {
         );
 
         setAnalysisProgress(100);
-        saveCurrentAnalysis();
+        if (!options?.demoMode) saveCurrentAnalysis();
         return { faceResult, skinTone, scoreResult };
       } catch (err) {
         console.error("Face analysis error:", err);
@@ -303,10 +315,11 @@ export function useMediaPipe() {
     async (
       imageElements: HTMLImageElement[],
       genderProfile: AnalysisProfile = "neutral",
-      onPreview?: (index: number, landmarks: number[][]) => void
+      onPreview?: (index: number, landmarks: number[][]) => void,
+      options?: AnalysisRunOptions
     ) => {
       cancelledRef.current = false;
-      useAnalysisStore.getState().setSource("real");
+      useAnalysisStore.getState().setSource(options?.demoMode ? "demo" : "real");
       setIsAnalyzing(true);
       setAnalysisProgress(0);
 
@@ -402,7 +415,7 @@ export function useMediaPipe() {
         );
 
         setAnalysisProgress(100);
-        saveCurrentAnalysis();
+        if (!options?.demoMode) saveCurrentAnalysis();
         return { scoreResult, samples, rejected, photoCount: samples.length, bestIndex };
       } catch (err) {
         console.error("Multi-photo face analysis error:", err);
