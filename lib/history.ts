@@ -72,7 +72,9 @@ function normalizeFaceResult(r: FaceAnalysisResult): FaceAnalysisResult {
   // Face IQ: take the stored value when present; otherwise backfill it from
   // the genuinely measured scalars (only measured metrics contribute).
   const faceIQ = r.faceIQ ?? recomputeFaceIQFromScores(measured);
-  const { grade, label } = gradeFromPercentile(faceIQ);
+  const gradeInfo = faceIQ == null ? { grade: null, label: null } : gradeFromPercentile(faceIQ);
+  const { grade, label } = gradeInfo;
+  const comparison = faceIQ == null ? null : comparisonFromPercentile(faceIQ);
 
   return {
     ...r,
@@ -103,8 +105,10 @@ function normalizeFaceResult(r: FaceAnalysisResult): FaceAnalysisResult {
     rawEyeNoseRatio: r.rawEyeNoseRatio ?? null,
     facialHarmony: r.facialHarmony ?? null,
     breakdown: r.breakdown ?? [],
-    overallRating: r.overallRating ?? label,
-    detailedAnalysis: r.detailedAnalysis ?? `Your Face IQ is ${faceIQ}.`,
+    overallRating: r.overallRating ?? label ?? 'Not Measured',
+    detailedAnalysis:
+      r.detailedAnalysis ??
+      (faceIQ != null ? `Your Face IQ is ${faceIQ}.` : 'Your Face IQ could not be estimated from this entry.'),
     strengths: r.strengths ?? [],
     improvements: r.improvements ?? [],
     styleProfile: r.styleProfile ?? "Everyman Appeal",
@@ -117,7 +121,7 @@ function normalizeFaceResult(r: FaceAnalysisResult): FaceAnalysisResult {
       skinClarity: metricPercentiles["Texture Uniformity"] ?? null,
       harmony: metricPercentiles["Proportional Harmony"] ?? null,
       bracket: grade,
-      comparisonText: comparisonFromPercentile(faceIQ),
+      comparisonText: comparison,
     },
     beautyIndex: r.beautyIndex ?? faceIQ,
     faceShapeDetails: r.faceShapeDetails ?? { description: "Your face shape is being analysed.", characteristics: [], idealHairstyles: [], idealGlasses: [] },
@@ -131,7 +135,7 @@ function normalizeFaceResult(r: FaceAnalysisResult): FaceAnalysisResult {
     faceIQ,
     grade: r.grade ?? grade,
     gradeLabel: r.gradeLabel ?? label,
-    comparison: r.comparison ?? comparisonFromPercentile(faceIQ),
+    comparison: r.comparison ?? comparison,
     structureProfile: r.structureProfile ?? null,
     youthfulness: r.youthfulness ?? null,
     metricPercentiles,
@@ -240,7 +244,7 @@ export function getHistoryEntry(id: string): AnalysisEntry | undefined {
 export interface ScoreTrendPoint {
   date: string;
   timestamp: number;
-  overall: number;
+  overall: number | null;
   /** Per-metric trend values; `null` when that aspect was not measured in a given session. */
   symmetry: number | null;
   proportions: number | null;
