@@ -107,9 +107,9 @@ function buildStoreFaceResult(
   quality: PhotoQualityReport | null,
   genderProfile: AnalysisProfile = "neutral",
   age: ReturnType<typeof estimateAgeFromFace> = {
-    age: 25,
-    confidence: 0.15,
-    basis: "No landmarks — default estimate",
+    age: null,
+    confidence: 0,
+    basis: "Not measurable — no landmarks detected",
   }
 ) {
   return {
@@ -374,8 +374,9 @@ export function useMediaPipe() {
           const structureProfile = getStructureProfile(faceResult);
           samples.push({ metrics, skinClarity: skinClarityScore, quality, sourceResult: faceResult, youthfulness, structureProfile: structureProfile?.label ?? null });
 
-          if (quality.score > bestQuality) {
-            bestQuality = quality.score;
+          const qScore = quality.score ?? -1;
+          if (qScore > bestQuality) {
+            bestQuality = qScore;
             bestResult = faceResult;
             bestCanvas = canvas;
             bestQualityReport = quality;
