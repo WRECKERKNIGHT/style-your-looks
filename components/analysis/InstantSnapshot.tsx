@@ -6,7 +6,9 @@ import { AnimatedCounter } from "@/components/shared/AnimatedCounter";
 import { motion } from "framer-motion";
 import { Sparkles, ArrowUpRight, Crown } from "lucide-react";
 
-function plainVerdict(score: number): string {
+function plainVerdict(score: number | null): string {
+  if (score == null)
+    return "Face IQ could not be measured from these photos — no reliable data.";
   if (score >= 8.5) return "Outstanding bone structure — your strongest traits carry the whole face.";
   if (score >= 7.5) return "Very strong geometry. A few styling moves push this into striking territory.";
   if (score >= 6.5) return "Solid, well-proportioned foundation. The right grooming lifts it further.";
@@ -51,7 +53,13 @@ export function InstantSnapshot() {
               </span>
               <span
                 className="inline-flex items-center gap-1.5 px-2.5 py-1 border border-[var(--border-primary)] bg-[var(--bg-base)]/40 text-xs font-mono tracking-wider text-[var(--text-muted)]"
-                title={`Skin texture estimate from ${faceResult.ageBasis ?? "wrinkle/texture signals"}. Confidence ${Math.round((faceResult.ageConfidence ?? 0.15) * 100)}%.`}
+                title={`Skin texture estimate from ${
+                    faceResult.ageBasis ?? "wrinkle/texture signals"
+                  }. ${
+                    faceResult.ageConfidence != null
+                      ? `Confidence ${Math.round(faceResult.ageConfidence * 100)}%`
+                      : "Confidence not measured"
+                  }.`}
               >
                 ~{faceResult.ageEstimation ?? "—"} YRS
               </span>
