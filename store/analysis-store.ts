@@ -28,11 +28,11 @@ export interface BlendshapeAnalysis {
 
 export interface PercentileRanking {
   overall: number;
-  symmetry: number;
-  goldenRatio: number;
-  jawline: number;
-  skinClarity: number;
-  harmony: number;
+  symmetry: number | null;
+  goldenRatio: number | null;
+  jawline: number | null;
+  skinClarity: number | null;
+  harmony: number | null;
   bracket: string;
   comparisonText: string;
 }
@@ -50,11 +50,12 @@ export interface PhotoQualityGate {
 
 export interface FaceAnalysisResult {
   overallScore: number;
-  symmetry: number;
-  proportions: number;
-  jawline: number;
-  eyeSpacing: number;
-  skinClarity: number;
+  /** Per-metric 1-10 scores; `null` = not measurable from the supplied photos. */
+  symmetry: number | null;
+  proportions: number | null;
+  jawline: number | null;
+  eyeSpacing: number | null;
+  skinClarity: number | null;
   facialShape: string;
   faceShapeProbabilities: Record<string, number>;
   skinTone: string;
@@ -67,35 +68,35 @@ export interface FaceAnalysisResult {
   ageBasis?: string;
   genderEstimation: string;
   genderProfile: AnalysisProfile;
-  emotionDetected: string;
+  emotionDetected: string | null;
   groomingSuggestions: string[];
   landmarks: number[][];
 
-  goldenRatio: number;
-  lipFullness: number;
-  noseProfile: number;
-  noseProjection: number;
-  lipWidthRatio: number;
-  upperLipRatio: number;
-  noseBridgeAngle: number;
-  eyeTilt: number;
-  cheekboneDefinition: number;
-  fwhr: number;
-  canthalTilt: number;
-  eyeNoseRatio: number;
-  noseChinRatio: number;
-  horizontalFifths: number;
-  rawFwhr: number;
-  rawCanthalTilt: number;
-  rawEyeNoseRatio: number;
-  facialHarmony: number;
+  goldenRatio: number | null;
+  lipFullness: number | null;
+  noseProfile: number | null;
+  noseProjection: number | null;
+  lipWidthRatio: number | null;
+  upperLipRatio: number | null;
+  noseBridgeAngle: number | null;
+  eyeTilt: number | null;
+  cheekboneDefinition: number | null;
+  fwhr: number | null;
+  canthalTilt: number | null;
+  eyeNoseRatio: number | null;
+  noseChinRatio: number | null;
+  horizontalFifths: number | null;
+  rawFwhr: number | null;
+  rawCanthalTilt: number | null;
+  rawEyeNoseRatio: number | null;
+  facialHarmony: number | null;
   breakdown: FacialMetric[];
   overallRating: string;
   detailedAnalysis: string;
   strengths: string[];
   improvements: string[];
   styleProfile: string;
-  blendshapes: BlendshapeAnalysis;
+  blendshapes: BlendshapeAnalysis | null;
   percentile: PercentileRanking;
   beautyIndex: number;
   faceShapeDetails: { description: string; characteristics: string[]; idealHairstyles: string[]; idealGlasses: string[] };
@@ -115,10 +116,10 @@ export interface FaceAnalysisResult {
   gradeLabel: string;
   /** Human-readable comparison. */
   comparison: string;
-  /** Structure profile descriptor (Soft/Balanced/Defined/Sharp). */
-  structureProfile: StructureProfileType;
-  /** Youthfulness score (0-100). */
-  youthfulness: number;
+  /** Structure profile descriptor (Soft/Balanced/Defined/Sharp) or null when not measurable. */
+  structureProfile: StructureProfileType | null;
+  /** Youthfulness score (0-100); `null` when not measurable. */
+  youthfulness: number | null;
   /** Per-metric percentiles for distribution bars. */
   metricPercentiles: Record<string, number>;
   /** Raw geometry measurements (for measurement debugger). */
