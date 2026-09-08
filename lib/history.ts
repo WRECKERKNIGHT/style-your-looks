@@ -1,87 +1,139 @@
 import type { FaceAnalysisResult, BodyAnalysisResult, ColorAnalysisResult, OutfitRecommendation } from "@/store/analysis-store";
 import type { AnalysisSource } from "@/store/analysis-store";
-import type { StructureProfileType } from "@/lib/ml/face-analyzer";
 import { isDemoPhoto } from "@/lib/demo/demo-analysis";
 import { scoreToPercentile, gradeFromPercentile, comparisonFromPercentile } from "@/lib/ml/calibration";
+import { recomputeFaceIQFromScores } from "@/lib/ml/scoring";
 
+/**
+ * Type-normalizes a stored history entry into the current shape.
+ *
+ * This is a migration shim, not a data factory: numeric measurements that
+ * surface as `undefined` from older builds become `null` (never an invented
+ * middle score), and the aggregate fields (faceIQ / grade / percentiles)
+ * that predate their introduction are re-derived from the real stored
+ * scalars through the exact population kernel the live pipeline uses.
+ */
 function normalizeFaceResult(r: FaceAnalysisResult): FaceAnalysisResult {
   if (!r) return r;
-  const faceIQ = r.faceIQ ?? (r.overallScore != null ? Math.round(r.overallScore * 10) : 50);
-  const { grade, label } = gradeFromPercentile(faceIQ);
-  const metricPercentiles = r.metricPercentiles ?? {
-    "Facial Symmetry": scoreToPercentile(r.symmetry),
-    "Golden Ratio Adherence": scoreToPercentile(r.goldenRatio),
-    "Jawline Definition": scoreToPercentile(r.jawline),
-    "Proportional Harmony": scoreToPercentile(r.proportions),
-    "Eye Spacing": scoreToPercentile(r.eyeSpacing),
-    "Skin Clarity": scoreToPercentile(r.skinClarity),
-    "Cheekbone Definition": scoreToPercentile(r.cheekboneDefinition),
-    "FWHR (Facial Width-to-Height)": scoreToPercentile(r.fwhr),
-    "Canthal Tilt": scoreToPercentile(r.canthalTilt),
-    "Horizontal Fifths": scoreToPercentile(r.horizontalFifths),
-    "Eye–Nose Ratio": scoreToPercentile(r.eyeNoseRatio),
-    "Nose–Chin Balance": scoreToPercentile(r.noseChinRatio),
-    "Lip Proportion": scoreToPercentile(r.lipFullness),
-    "Nose Profile": scoreToPercentile(r.noseProfile),
-    "Nose Projection": scoreToPercentile(r.noseProjection),
-    "Lip Width Ratio": scoreToPercentile(r.lipWidthRatio),
-    "Upper Lip Ratio": scoreToPercentile(r.upperLipRatio),
-    "Nose Bridge Angle": scoreToPercentile(r.noseBridgeAngle),
-    "Eye Tilt": scoreToPercentile(r.eyeTilt),
+
+  const measured = {
+    symmetry: r.symmetry ?? null,
+    proportions: r.proportions ?? null,
+    jawline: r.jawline ?? null,
+    eyeSpacing: r.eyeSpacing ?? null,
+    skinClarity: r.skinClarity ?? null,
+    goldenRatio: r.goldenRatio ?? null,
+    lipFullness: r.lipFullness ?? null,
+    noseProfile: r.noseProfile ?? null,
+    cheekboneDefinition: r.cheekboneDefinition ?? null,
+    fwhr: r.fwhr ?? null,
+    canthalTilt: r.canthalTilt ?? null,
+    eyeNoseRatio: r.eyeNoseRatio ?? null,
+    noseChinRatio: r.noseChinRatio ?? null,
+    horizontalFifths: r.horizontalFifths ?? null,
+    noseProjection: r.noseProjection ?? null,
+    lipWidthRatio: r.lipWidthRatio ?? null,
+    upperLipRatio: r.upperLipRatio ?? null,
+    noseBridgeAngle: r.noseBridgeAngle ?? null,
+    eyeTilt: r.eyeTilt ?? null,
   };
-  const gradeValue = grade;
-  const gradeLabelValue = label;
+
+  const LABELS: [string, keyof typeof measured][] = [
+    ["Facial Symmetry", "symmetry"],
+    ["Golden Ratio Adherence", "goldenRatio"],
+    ["Jawline Definition", "jawline"],
+    ["Proportional Harmony", "proportions"],
+    ["Eye Spacing", "eyeSpacing"],
+    ["Texture Uniformity", "skinClarity"],
+    ["Cheekbone Definition", "cheekboneDefinition"],
+    ["FWHR (Facial Width-to-Height)", "fwhr"],
+    ["Canthal Tilt", "canthalTilt"],
+    ["Horizontal Fifths", "horizontalFifths"],
+    ["Eye–Nose Ratio", "eyeNoseRatio"],
+    ["Nose–Chin Balance", "noseChinRatio"],
+    ["Lip Proportion", "lipFullness"],
+    ["Nose Profile", "noseProfile"],
+    ["Nose Projection", "noseProjection"],
+    ["Lip Width Ratio", "lipWidthRatio"],
+    ["Upper Lip Ratio", "upperLipRatio"],
+    ["Nose Bridge Angle", "noseBridgeAngle"],
+    ["Eye Tilt", "eyeTilt"],
+  ];
+
+  const metricPercentiles: Record<string, number> = {};
+  for (const [label, key] of LABELS) {
+    if (key === "skinClarity") {
+      if (measured.skinClarity != null) metricPercentiles[label] = scoreToPercentile(measured.skinClarity);
+    } else if (measured[key] != null) {
+      metricPercentiles[label] = scoreToPercentile(measured[key] as number);
+    }
+  }
+
+  // Face IQ: take the stored value when present; otherwise backfill it from
+  // the genuinely measured scalars (only measured metrics contribute).
+  const faceIQ = r.faceIQ ?? recomputeFaceIQFromScores(measured);
+  const { grade, label } = gradeFromPercentile(faceIQ);
+
   return {
     ...r,
-    overallScore: r.overallScore ?? 5,
-    symmetry: r.symmetry ?? 5,
-    proportions: r.proportions ?? 5,
-    jawline: r.jawline ?? 5,
-    eyeSpacing: r.eyeSpacing ?? 5,
-    skinClarity: r.skinClarity ?? 5,
-    facialShape: r.facialShape ?? "Oval",
-    faceShapeProbabilities: r.faceShapeProbabilities ?? { Oval: 0.35, Round: 0.2, Square: 0.15 },
-    goldenRatio: r.goldenRatio ?? 5,
-    lipFullness: r.lipFullness ?? 5,
-    noseProfile: r.noseProfile ?? 5,
-    noseProjection: r.noseProjection ?? 5,
-    lipWidthRatio: r.lipWidthRatio ?? 5,
-    upperLipRatio: r.upperLipRatio ?? 5,
-    noseBridgeAngle: r.noseBridgeAngle ?? 5,
-    eyeTilt: r.eyeTilt ?? 5,
-    cheekboneDefinition: r.cheekboneDefinition ?? 5,
-    fwhr: r.fwhr ?? 5,
-    canthalTilt: r.canthalTilt ?? 5,
-    eyeNoseRatio: r.eyeNoseRatio ?? 5,
-    noseChinRatio: r.noseChinRatio ?? 5,
-    horizontalFifths: r.horizontalFifths ?? 5,
-    rawFwhr: r.rawFwhr ?? 0,
-    rawCanthalTilt: r.rawCanthalTilt ?? 0,
-    rawEyeNoseRatio: r.rawEyeNoseRatio ?? 0,
-    facialHarmony: r.facialHarmony ?? 5,
+    overallScore: r.overallScore,
+    symmetry: measured.symmetry,
+    proportions: measured.proportions,
+    jawline: measured.jawline,
+    eyeSpacing: measured.eyeSpacing,
+    skinClarity: measured.skinClarity,
+    facialShape: r.facialShape,
+    faceShapeProbabilities: r.faceShapeProbabilities,
+    goldenRatio: measured.goldenRatio,
+    lipFullness: measured.lipFullness,
+    noseProfile: measured.noseProfile,
+    noseProjection: measured.noseProjection,
+    lipWidthRatio: measured.lipWidthRatio,
+    upperLipRatio: measured.upperLipRatio,
+    noseBridgeAngle: measured.noseBridgeAngle,
+    eyeTilt: measured.eyeTilt,
+    cheekboneDefinition: measured.cheekboneDefinition,
+    fwhr: measured.fwhr,
+    canthalTilt: measured.canthalTilt,
+    eyeNoseRatio: measured.eyeNoseRatio,
+    noseChinRatio: measured.noseChinRatio,
+    horizontalFifths: measured.horizontalFifths,
+    rawFwhr: r.rawFwhr ?? null,
+    rawCanthalTilt: r.rawCanthalTilt ?? null,
+    rawEyeNoseRatio: r.rawEyeNoseRatio ?? null,
+    facialHarmony: r.facialHarmony ?? null,
     breakdown: r.breakdown ?? [],
-    overallRating: r.overallRating ?? gradeLabelValue,
+    overallRating: r.overallRating ?? label,
     detailedAnalysis: r.detailedAnalysis ?? `Your Face IQ is ${faceIQ}.`,
     strengths: r.strengths ?? [],
     improvements: r.improvements ?? [],
     styleProfile: r.styleProfile ?? "Everyman Appeal",
     blendshapes: r.blendshapes ?? { emotion: "Neutral", emotionConfidence: 0.5, eyeOpenness: 0.5, mouthOpenness: 0.3, browRaise: 0.5, smileIntensity: 0, headTilt: 0 },
-    percentile: r.percentile ?? { overall: faceIQ, symmetry: 50, goldenRatio: 50, jawline: 50, skinClarity: 50, harmony: 50, bracket: gradeValue, comparisonText: comparisonFromPercentile(faceIQ) },
+    percentile: r.percentile ?? {
+      overall: faceIQ,
+      symmetry: metricPercentiles["Facial Symmetry"] ?? null,
+      goldenRatio: metricPercentiles["Golden Ratio Adherence"] ?? null,
+      jawline: metricPercentiles["Jawline Definition"] ?? null,
+      skinClarity: metricPercentiles["Texture Uniformity"] ?? null,
+      harmony: metricPercentiles["Proportional Harmony"] ?? null,
+      bracket: grade,
+      comparisonText: comparisonFromPercentile(faceIQ),
+    },
     beautyIndex: r.beautyIndex ?? faceIQ,
     faceShapeDetails: r.faceShapeDetails ?? { description: "Your face shape is being analysed.", characteristics: [], idealHairstyles: [], idealGlasses: [] },
-    photoQualityScore: r.photoQualityScore ?? 8,
-    consistencyScore: r.consistencyScore ?? 8,
-    analysisConfidence: r.analysisConfidence ?? 80,
-    metricAvailability: r.metricAvailability ?? ["Facial Symmetry", "Golden Ratio Adherence", "Jawline Definition", "Proportional Harmony", "Eye Spacing", "Cheekbone Definition", "FWHR (Facial Width-to-Height)", "Canthal Tilt", "Horizontal Fifths", "Eye–Nose Ratio", "Nose–Chin Balance", "Lip Proportion", "Nose Profile"],
+    photoQualityScore: r.photoQualityScore,
+    consistencyScore: r.consistencyScore,
+    analysisConfidence: r.analysisConfidence,
+    metricAvailability: r.metricAvailability ?? Object.keys(metricPercentiles),
     photoCount: r.photoCount ?? 1,
     qualityGate: r.qualityGate,
     symmetryAxis: r.symmetryAxis,
     faceIQ,
-    grade: r.grade ?? gradeValue,
-    gradeLabel: r.gradeLabel ?? gradeLabelValue,
+    grade: r.grade ?? grade,
+    gradeLabel: r.gradeLabel ?? label,
     comparison: r.comparison ?? comparisonFromPercentile(faceIQ),
-    structureProfile: r.structureProfile ?? ("Balanced" as StructureProfileType),
-    youthfulness: r.youthfulness ?? 50,
+    structureProfile: r.structureProfile ?? null,
+    youthfulness: r.youthfulness ?? null,
     metricPercentiles,
   };
 }
@@ -189,12 +241,13 @@ export interface ScoreTrendPoint {
   date: string;
   timestamp: number;
   overall: number;
-  symmetry: number;
-  proportions: number;
-  jawline: number;
-  skinClarity: number;
-  goldenRatio: number;
-  harmony: number;
+  /** Per-metric trend values; `null` when that aspect was not measured in a given session. */
+  symmetry: number | null;
+  proportions: number | null;
+  jawline: number | null;
+  skinClarity: number | null;
+  goldenRatio: number | null;
+  harmony: number | null;
 }
 
 export function isDemoEntry(entry: AnalysisEntry): boolean {
