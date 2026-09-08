@@ -19,8 +19,8 @@ function buildPlan(faceResult: ReturnType<typeof useAnalysisStore.getState>["fac
 } {
   const shape = faceResult?.facialShape ?? "Oval";
   const style = faceResult?.styleProfile ?? "Classic";
-  const jaw = faceResult?.jawline ?? 7;
-  const skin = faceResult?.skinClarity ?? 7;
+  const jaw = faceResult?.jawline;
+  const skin = faceResult?.skinClarity;
   const feminine = faceResult?.genderProfile === "feminine";
   const idealHair = faceResult?.faceShapeDetails?.idealHairstyles ?? [];
 
@@ -31,7 +31,12 @@ function buildPlan(faceResult: ReturnType<typeof useAnalysisStore.getState>["fac
       text: `Book a ${idealHair[0].toLowerCase()} or ${idealHair[1].toLowerCase()} cut — built for your ${shape.toLowerCase()} face.`,
     });
   }
-  if (jaw < 6.5) {
+  if (jaw == null) {
+    barber.push({
+      id: "jaw",
+      text: "Jawline couldn't be measured from this photo — ask your barber which framing shapes suit you.",
+    });
+  } else if (jaw < 6.5) {
     barber.push({
       id: "jaw",
       text: feminine
@@ -50,7 +55,10 @@ function buildPlan(faceResult: ReturnType<typeof useAnalysisStore.getState>["fac
   });
 
   const skincare: PlanItem[] = [];
-  if (skin < 6) {
+  if (skin == null) {
+    skincare.push({ id: "spf", text: "Daily SPF 30 protection — the highest-leverage clarity move available." });
+    skincare.push({ id: "hydrate", text: "Keep the basics consistent: gentle cleanse + moisturizer, morning and night." });
+  } else if (skin < 6) {
     skincare.push({ id: "cleanse", text: "Daily cleanser + SPF 30 moisturizer, every morning." });
     skincare.push({ id: "exfoliate", text: "Exfoliate twice a week to even out texture." });
     skincare.push({ id: "actives", text: "Add niacinamide (pores) and vitamin C (brightening)." });
