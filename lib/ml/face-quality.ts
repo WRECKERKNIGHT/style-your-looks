@@ -1,9 +1,9 @@
 import type { FaceLandmarkerResult } from "@mediapipe/tasks-vision";
 
 export interface PhotoQualityReport {
-  score: number;
-  brightness: number;
-  sharpness: number;
+  score: number | null;
+  brightness: number | null;
+  sharpness: number | null;
   faceSizeRatio: number;
   headYaw: number;
   headRoll: number;
@@ -42,7 +42,9 @@ function getLuminance(
   }
 }
 
-function assessBrightness(mean: number): { score: number; issue?: string; warning?: string } {
+function assessBrightness(mean: number, hasData: boolean): { score: number | null; issue?: string; warning?: string } {
+  if (!hasData)
+    return { score: null, warning: "Photo lighting could not be assessed" };
   if (mean < 35) return { score: Math.max(0.5, (mean / 35) * 2), warning: "Photo is dark — lighting will affect accuracy" };
   if (mean > 240) return { score: 1.5, warning: "Photo is overexposed — accuracy may be reduced" };
   if (mean < 55) return { score: 3 + (mean / 55) * 3, warning: "Photo is dim — lighting will affect accuracy" };
@@ -51,8 +53,8 @@ function assessBrightness(mean: number): { score: number; issue?: string; warnin
   return { score: Math.round(score * 10) / 10 };
 }
 
-function assessSharpness(data: Uint8Array, w: number, h: number): { score: number; issue?: string; warning?: string } {
-  if (data.length === 0) return { score: 5, warning: "Could not assess sharpness" };
+function assessSharpness(data: Uint8Array, w: number, h: number): { score: number | null; issue?: string; warning?: string } {
+  if (data.length === 0) return { score: null, warning: "Photo sharpness could not be assessed" };
 
   let edge = 0;
   let count = 0;
@@ -118,9 +120,9 @@ export function assessPhotoQuality(
 
   if (numFacesDetected === 0) {
     return {
-      score: 0,
-      brightness: 0,
-      sharpness: 0,
+      score: null,
+      brightness: null,
+      sharpness: null,
       faceSizeRatio: 0,
       headYaw: 0,
       headRoll: 0,
@@ -136,13 +138,14 @@ export function assessPhotoQuality(
   }
 
   const lum = getLuminance(canvas);
+  const hasLuminance = lum.data.length > 0;
   let mean = 0;
-  if (lum.data.length > 0) {
+  if (hasLuminance) {
     for (let i = 0; i < lum.data.length; i++) mean += lum.data[i];
     mean /= lum.data.length;
   }
 
-  const brightness = assessBrightness(mean);
+  const brightness = assessBrightness(mean, hasLuminance);
   if (brightness.issue) issues.push(brightness.issue);
   if (brightness.warning) warnings.push(brightness.warning);
 
@@ -201,13 +204,29 @@ export function assessPhotoQuality(
   const poseScore = Math.max(0, 10 - (yawDev * 4 + pitchDev * 3 + rollDev * 3));
 
   const base =
-    0.45 * brightness.score + 0.27 * sharpness.score + 0.16 * sizeScore + 0.12 * poseScore;
-  const score = Math.max(0, Math.min(10, Math.round((base - issues.length * 1.2) * 10) / 10));
+    0.45 * (brightness.score ?? 0) +
+    0.27 * (sharpness.score ?? 0) +
+    0.16 * sizeScore +
+    0.12 * poseScore;
+  const availableWeight =
+    (brightness.score == null ? 0 : 0.45) +
+    (sharpness.score == null ? 0 : 0.27) +
+    0.16 +
+    0.12;
+  // Only measured components contribute; when none can be sampled the overall
+  // capture quality is unknowable and stays null (never a fabricated number).
+  const score =
+    availableWeight <= 0
+      ? null
+      : Math.max(
+          0,
+          Math.min(10, Math.round((base / availableWeight - issues.length * 1.2) * 10) / 10),
+        );
 
   return {
     score,
-    brightness: Math.round(brightness.score * 10) / 10,
-    sharpness: sharpness.score,
+    brightness: brightness.score == null ? null : Math.round(brightness.score * 10) / 10,
+    sharpness: sharpness.score == null ? null : sharpness.score,
     faceSizeRatio: Math.round(faceSizeRatio * 100) / 100,
     headYaw: Math.round(pose.yaw * 10) / 10,
     headRoll: Math.round(pose.roll * 10) / 10,
