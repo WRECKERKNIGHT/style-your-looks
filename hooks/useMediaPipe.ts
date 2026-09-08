@@ -43,8 +43,8 @@ function computeSkinClarityScore(
   canvas: HTMLCanvasElement,
   ctx: CanvasRenderingContext2D,
   numFaces: number
-): number {
-  if (numFaces === 0) return 7;
+): number | null {
+  if (numFaces === 0) return null;
 
   const zones = [
     { x: 0.3, y: 0.25, r: 0.08 },
@@ -93,7 +93,7 @@ function computeSkinClarityScore(
     }
   }
 
-  if (validZones === 0) return 7;
+  if (validZones === 0) return null;
 
   const avgVariance = totalVariance / validZones;
   const clarityScore = Math.max(1, Math.min(10, 10 - avgVariance / 12));
@@ -131,7 +131,7 @@ function buildStoreFaceResult(
     ageBasis: age.basis,
     genderEstimation: genderProfile === "neutral" ? "Neutral" : genderProfile,
     genderProfile,
-    emotionDetected: scoreResult.blendshapes.emotion,
+    emotionDetected: scoreResult.blendshapes?.emotion ?? null,
     groomingSuggestions: getGroomingSuggestions(
       scoreResult.facialShape,
       scoreResult,
@@ -280,7 +280,7 @@ export function useMediaPipe() {
         const youthfulness = getYouthfulness(canvas, faceResult, { eyeOpenness, smileIntensity });
         const structureProfile = getStructureProfile(faceResult);
         const scoreResult = mergeFaceScores(
-          [{ metrics, skinClarity: skinClarityScore, quality, youthfulness, structureProfile: structureProfile.label }],
+          [{ metrics, skinClarity: skinClarityScore, quality, youthfulness, structureProfile: structureProfile?.label ?? null }],
           genderProfile
         ).result;
 
@@ -372,7 +372,7 @@ export function useMediaPipe() {
           const smileIntensity = blendshapes ? ((blendshapes.find(s => s.categoryName === "smileLeft")?.score ?? 0) + (blendshapes.find(s => s.categoryName === "smileRight")?.score ?? 0)) / 2 : 0;
           const youthfulness = getYouthfulness(canvas, faceResult, { eyeOpenness, smileIntensity });
           const structureProfile = getStructureProfile(faceResult);
-          samples.push({ metrics, skinClarity: skinClarityScore, quality, sourceResult: faceResult, youthfulness, structureProfile: structureProfile.label });
+          samples.push({ metrics, skinClarity: skinClarityScore, quality, sourceResult: faceResult, youthfulness, structureProfile: structureProfile?.label ?? null });
 
           if (quality.score > bestQuality) {
             bestQuality = quality.score;
@@ -408,7 +408,7 @@ export function useMediaPipe() {
               ? estimateAgeFromFace(
                   bestCanvas,
                   bestResult,
-                  samples[0]?.skinClarity ?? 7
+                  samples[0]?.skinClarity ?? null
                 )
               : undefined
           )
