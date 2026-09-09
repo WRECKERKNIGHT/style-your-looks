@@ -515,6 +515,9 @@ export default function FaceAnalysisPage() {
         images,
         genderProfile,
         (index, landmarks) => setProcessingPreview({ image: photos[index], landmarks }),
+        undefined,
+        // Slot 0 = straight-on frontal, slot 1 = side profile, the rest frontal.
+        photos.map((_, i) => (i === 1 ? 'profile' : 'front')),
       );
       // Landmarks come from the best-scoring photo; show that same photo so the
       // wireframe, laser scan and symmetry overlay align with the face.
@@ -698,6 +701,32 @@ export default function FaceAnalysisPage() {
                     </span>
                   </div>
 
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+                    <div
+                      className={`border p-4 ${photos.length >= 1 && !rejectedPhotos.some((r) => r.index === 0) ? 'border-aurum-500/40 bg-aurum-500/[0.05]' : 'border-[var(--border-primary)] bg-[var(--bg-tertiary)]'}`}
+                    >
+                      <span className="type-mono text-[0.5rem] text-[var(--accent-aurum)] tracking-[0.25em] uppercase">
+                        PHOTO 1 · FRONT
+                      </span>
+                      <p className="text-xs font-body text-[var(--text-muted)] mt-1.5 leading-relaxed">
+                        Face the camera directly at eye level, neutral expression. Feeds ~18 of the
+                        21 metrics.
+                      </p>
+                    </div>
+                    <div
+                      className={`border p-4 ${photos.length >= 2 && !rejectedPhotos.some((r) => r.index === 1) ? 'border-aurum-500/40 bg-aurum-500/[0.05]' : 'border-[var(--border-primary)] bg-[var(--bg-tertiary)]'}`}
+                    >
+                      <span className="type-mono text-[0.5rem] text-[var(--accent-aurum)] tracking-[0.25em] uppercase">
+                        PHOTO 2 · SIDE PROFILE
+                      </span>
+                      <p className="text-xs font-body text-[var(--text-muted)] mt-1.5 leading-relaxed">
+                        Turn your head squarely 90° — nose bridge and nostril flare visible. This is
+                        the only angle that unlocks nose projection <span className="text-[var(--text-primary)]">(previously &ldquo;not
+                        reliable&rdquo;)</span>.
+                      </p>
+                    </div>
+                  </div>
+
                   <div className="mt-2 mb-6">
                     <span className="type-mono text-[0.6rem] text-[var(--text-muted)] tracking-widest block mb-2">
                       ANALYSIS PROFILE
@@ -778,8 +807,8 @@ export default function FaceAnalysisPage() {
                               alt={`Photo ${i + 1}`}
                               className={`w-full h-full object-cover ${isRejected ? 'opacity-40 grayscale' : ''}`}
                             />
-                            <span className="absolute top-2 left-2 w-7 h-7 bg-[color-mix(in_srgb,var(--bg-primary)_80%,transparent)] border border-[var(--border-primary)] text-[0.6rem] font-mono flex items-center justify-center">
-                              {i + 1}
+                            <span className="absolute top-2 left-2 px-2 py-1 bg-[color-mix(in_srgb,var(--bg-primary)_80%,transparent)] border border-[var(--border-primary)] type-mono text-[0.5rem] tracking-widest text-[var(--accent-aurum)]">
+                              {i === 0 ? 'FRONT' : i === 1 ? 'PROFILE' : `FRONT ${i + 1}`}
                             </span>
                             {isRejected && (
                               <div className="absolute top-2 left-10 right-9 bg-red-500/90 text-white text-[0.55rem] font-mono uppercase tracking-wider px-2 py-1 flex items-center gap-1">
@@ -813,8 +842,8 @@ export default function FaceAnalysisPage() {
 
                   {photos.length > 0 && photos.length < MIN_PHOTOS && (
                     <p className="text-sm text-[var(--text-muted)] font-body mt-4">
-                      Add {MIN_PHOTOS - photos.length} more photo(s) — a second photo makes the
-                      result far more reliable.
+                      Add {MIN_PHOTOS - photos.length} more photo(s) — make the second one a side
+                      profile so nose projection, bridge angle and alar flare can be measured.
                     </p>
                   )}
 

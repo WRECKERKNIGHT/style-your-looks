@@ -316,7 +316,8 @@ export function useMediaPipe() {
       imageElements: HTMLImageElement[],
       genderProfile: AnalysisProfile = "neutral",
       onPreview?: (index: number, landmarks: number[][]) => void,
-      options?: AnalysisRunOptions
+      options?: AnalysisRunOptions,
+      views?: Array<"front" | "profile">
     ) => {
       cancelledRef.current = false;
       useAnalysisStore.getState().setSource(options?.demoMode ? "demo" : "real");
@@ -336,6 +337,9 @@ export function useMediaPipe() {
         for (let i = 0; i < imageElements.length; i++) {
           setAnalysisProgress(Math.round((i / imageElements.length) * 75));
           const image = imageElements[i];
+          // Slot 0 = normal frontal portrait, slot 1 = side profile (when a
+          // profile photo is supplied), everything else = frontal.
+          const view: "front" | "profile" = views?.[i] ?? "front";
 
           if (!image.naturalWidth || !image.naturalHeight) {
             rejected.push({ index: i, issues: ["Could not load the photo"] });
@@ -354,7 +358,7 @@ export function useMediaPipe() {
           const faceResult = await analyzeFace(canvas);
           throwIfCancelled();
           const numFaces = faceResult.faceLandmarks?.length || 0;
-          const quality = assessPhotoQuality(canvas, faceResult, numFaces);
+          const quality = assessPhotoQuality(canvas, faceResult, numFaces, view);
 
           if (!quality.usable) {
             rejected.push({ index: i, issues: quality.issues });
@@ -366,13 +370,13 @@ export function useMediaPipe() {
             faceResult.faceLandmarks?.[0]?.map((l) => [l.x, l.y, l.z]) || []
           );
           const skinClarityScore = computeSkinClarityScore(canvas, ctx, numFaces);
-          const metrics = computeFaceMetrics(faceResult);
+          const metrics = computeFaceMetrics(faceResult, view);
           const blendshapes = faceResult.faceBlendshapes?.[0]?.categories;
           const eyeOpenness = blendshapes ? 1 - ((blendshapes.find(s => s.categoryName === "eyeBlinkLeft")?.score ?? 0) + (blendshapes.find(s => s.categoryName === "eyeBlinkRight")?.score ?? 0)) / 2 : 0.5;
           const smileIntensity = blendshapes ? ((blendshapes.find(s => s.categoryName === "smileLeft")?.score ?? 0) + (blendshapes.find(s => s.categoryName === "smileRight")?.score ?? 0)) / 2 : 0;
           const youthfulness = getYouthfulness(canvas, faceResult, { eyeOpenness, smileIntensity });
           const structureProfile = getStructureProfile(faceResult);
-          samples.push({ metrics, skinClarity: skinClarityScore, quality, sourceResult: faceResult, youthfulness, structureProfile: structureProfile?.label ?? null });
+          samples.push({ metrics, skinClarity: skinClarityScore, quality, sourceResult: faceResult, youthfulness, structureProfile: structureProfile?.label ?? null, view });
 
           const qScore = quality.score ?? -1;
           if (qScore > bestQuality) {
