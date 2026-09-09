@@ -45,12 +45,19 @@ function getLuminance(
 function assessBrightness(mean: number, hasData: boolean): { score: number | null; issue?: string; warning?: string } {
   if (!hasData)
     return { score: null, warning: "Photo lighting could not be assessed" };
-  if (mean < 35) return { score: Math.max(0.5, (mean / 35) * 2), warning: "Photo is dark — lighting will affect accuracy" };
-  if (mean > 240) return { score: 1.5, warning: "Photo is overexposed — accuracy may be reduced" };
-  if (mean < 55) return { score: 3 + (mean / 55) * 3, warning: "Photo is dim — lighting will affect accuracy" };
-  const b = mean / 255;
-  const score = Math.max(0, Math.min(10, 10 - Math.abs(b - 0.62) * 14));
-  return { score: Math.round(score * 10) / 10 };
+  // One continuous curve over the whole exposure range, peaking at the ideal
+  // ~0.62 luminance (mean ≈ 158). The old piecewise bands jumped score by 1.6
+  // the instant mean crossed 55 (5.99 at 54.9 -> 4.34 at 55.0) and collapsed
+  // to a flat 1.5 above 240 — a slightly lighter photo scored WORSE than a
+  // much lighter one. No branch here changes the curve; warnings only annotate.
+  const b = Math.max(0, Math.min(1, mean / 255));
+  const score = Math.max(0.5, Math.min(10, 10 - Math.abs(b - 0.62) * 14));
+  const rounded = Math.round(score * 10) / 10;
+  if (mean < 35) return { score: rounded, warning: "Photo is very dark — lighting will affect accuracy" };
+  if (mean < 55) return { score: rounded, warning: "Photo is dim — lighting will affect accuracy" };
+  if (mean > 240) return { score: rounded, warning: "Photo is overexposed — accuracy may be reduced" };
+  if (mean > 200) return { score: rounded, warning: "Photo is quite bright — accuracy may be slightly reduced" };
+  return { score: rounded };
 }
 
 function assessSharpness(data: Uint8Array, w: number, h: number): { score: number | null; issue?: string; warning?: string } {
