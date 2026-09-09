@@ -630,7 +630,12 @@ export function buildFaceIQReport(
     if (skin) allMetrics.push(skin);
   }
 
-  const totalAvailable = allMetrics.filter((m) => m.status !== 'unavailable').length;
+  // "Available" means actually measured and scored: low_confidence metrics are
+  // excluded from aggregate scoring and rendered as NOT RELIABLE, so counting
+  // them toward metricsAvailable inflated the headline confidence figure.
+  const totalAvailable = allMetrics.filter(
+    (m) => m.status === 'valid' && m.score !== null && m.percentile !== null,
+  ).length;
 
   // Pillar definitions with membership + relative weights.
   const pillarDefs: {
