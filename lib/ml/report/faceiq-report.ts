@@ -413,8 +413,11 @@ const SKIN_METRIC: Omit<ReportMetric, 'score' | 'percentile' | 'potential'> = {
 };
 
 export function detectView(g: RawGeometry): ViewType {
-  // Nose-project / alar / bridge measurements are gated to confidence 0 when
-  // the landmark engine decided this is a frontal face (see computeRawGeometry).
+  // Nasal projection / bridge / alar measurements are gated to confidence 0
+  // for any front-view sample (see computeRawGeometry/viewConstrainedConf), so
+  // a confidence > 0 here is the signal that the sample is a true profile. A
+  // turned frontal face used to slip past the old nose-on-midline gate and get
+  // mislabeled 'profile'; it now always reads 'frontal'.
   if (g.noseProjection.confidence > 0 && g.noseBridgeAngle.confidence > 0) return 'profile';
   return 'frontal';
 }
