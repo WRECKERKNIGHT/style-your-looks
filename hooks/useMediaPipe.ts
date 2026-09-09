@@ -437,7 +437,7 @@ export function useMediaPipe() {
               ? estimateAgeFromFace(
                   displayBest.canvas,
                   displayBest.result,
-                  samples[0]?.skinClarity ?? null
+                  samples[displayBest.index]?.skinClarity ?? null
                 )
               : undefined
           )
