@@ -273,6 +273,8 @@ export interface FaceScoreSample {
   sourceResult?: FaceLandmarkerResult;
   youthfulness?: number | null;
   structureProfile?: StructureProfileType | null;
+  /** Which pose this sample was captured in ('front' unless a profile photo). */
+  view?: 'front' | 'profile';
 }
 
 function scoreToRating(score: number): string {
@@ -561,11 +563,14 @@ function getStyleProfile(
 
 const nullResult = (): MetricResult => ({ score: null, confidence: 0 });
 
-export function computeFaceMetrics(result: FaceLandmarkerResult): FaceMetricScores {
+export function computeFaceMetrics(
+  result: FaceLandmarkerResult,
+  view: 'front' | 'profile' = 'front',
+): FaceMetricScores {
   const shapeResult = getFacialShape(result);
 
   // Try raw geometry engine first (single source of truth)
-  const rawGeo = computeRawGeometry(result);
+  const rawGeo = computeRawGeometry(result, view);
 
   const measurementToResult = (
     meas: import('./face-analyzer').Measurement | undefined,
@@ -602,8 +607,8 @@ export function computeFaceMetrics(result: FaceLandmarkerResult): FaceMetricScor
       alarAngle: measurementToResult(rawGeo.alarAngle),
       lipWidthRatio: measurementToResult(rawGeo.lipWidthRatio),
       upperLipRatio: measurementToResult(rawGeo.upperLipRatio),
-      facialShape: shapeResult.primary,
-      faceShapeProbabilities: shapeResult.probabilities,
+      facialShape: rawGeo?.faceShape.primary ?? shapeResult.primary,
+      faceShapeProbabilities: rawGeo?.faceShape.probabilities ?? shapeResult.probabilities,
     };
   }
   return {
@@ -639,6 +644,13 @@ export interface BuildOptions {
   consistencyScore?: number;
   analysisConfidence?: number;
   photoCount?: number;
+  /**
+   * Precomputed raw geometry to use verbatim. Supplied by mergeFaceScores when
+   * a multi-photo session merges a frontal sample with a side-profile sample —
+   * the merged geometry replaces frontal values with the profile nasal
+   * measurements so nasal metrics become measurable from a profile shot.
+   */
+  rawGeometry?: RawGeometry;
 }
 
 export function buildFaceScoreFromMetrics(
@@ -655,6 +667,7 @@ export function buildFaceScoreFromMetrics(
     consistencyScore: consistencyScoreIn,
     analysisConfidence: analysisConfidenceIn,
     photoCount = 1,
+    rawGeometry: rawGeometryIn,
   } = options;
 
   const weights = weightsForProfile(profile);
@@ -685,8 +698,11 @@ export function buildFaceScoreFromMetrics(
   // Compute raw geometry from landmarks (single source of truth). This must
   // happen before we derive the display raws below so we never fall back to
   // the legacy getters (getRawCanthalTilt etc.), which use an inconsistent
-  // angle convention that flips one eye into ~90° (the "89.4°" bug).
-  const rawGeometry = sourceResult ? computeRawGeometry(sourceResult) : undefined;
+  // angle convention that flips one eye into ~90° (the "89.4°" bug). When a
+  // merged rawGeometry (frontal base + profile nasal override) is passed in
+  // options, use it verbatim.
+  const rawGeometry =
+    rawGeometryIn ?? (sourceResult ? computeRawGeometry(sourceResult) : undefined);
 
   const rawFwhr = rawGeometry ? rawGeometry.fwhr.raw : undefined;
   const rawCanthalTilt = rawGeometry ? rawGeometry.canthalTilt.raw : undefined;
@@ -1293,6 +1309,43 @@ const MERGE_KEYS: (keyof Omit<FaceMetricScores, 'facialShape' | 'faceShapeProbab
  * - consistencyScore reflects how tightly the photos agree (lower CV = higher consistency).
  * - analysisConfidence combines photo quality and cross-photo consistency.
  */
+
+function bestSampleOf(
+  samples: FaceScoreSample[],
+  wantProfile: boolean,
+): FaceScoreSample | undefined {
+  return [...samples]
+    .filter((s) => ((s.view ?? 'front') === 'profile') === wantProfile)
+    .sort((a, b) => (b.quality.score ?? -1) - (a.quality.score ?? -1))[0];
+}
+
+/**
+ * Builds the merged raw geometry across views. The profile sample contributes
+ * the three 3D nasal measurements (unavailable in any frontal capture); the
+ * best frontal sample contributes everything else. When no frontal sample
+ * exists the profile geometry is the base and only its nasal metrics survive.
+ */
+function buildMergedGeometry(samples: FaceScoreSample[]): RawGeometry | undefined {
+  const frontal = bestSampleOf(samples, false);
+  const profile = bestSampleOf(samples, true);
+  const base = frontal?.sourceResult
+    ? computeRawGeometry(frontal.sourceResult)
+    : profile?.sourceResult
+      ? computeRawGeometry(profile.sourceResult, 'profile')
+      : undefined;
+  if (!base) return undefined;
+  const gated: RawGeometry = { ...base };
+  if (profile?.sourceResult) {
+    const prof = computeRawGeometry(profile.sourceResult, 'profile');
+    if (prof) {
+      gated.noseProjection = prof.noseProjection;
+      gated.noseBridgeAngle = prof.noseBridgeAngle;
+      gated.alarAngle = prof.alarAngle;
+    }
+  }
+  return gated;
+}
+
 export function mergeFaceScores(
   samples: FaceScoreSample[],
   profile: AnalysisProfile = 'neutral',
@@ -1321,6 +1374,9 @@ export function mergeFaceScores(
 
   const shapeCounts = new Map<string, number>();
   for (const s of samples) {
+    // A profile photo cannot classify face shape (returns 'Unknown') and must
+    // not dilute the vote.
+    if ((s.view ?? 'front') === 'profile') continue;
     shapeCounts.set(s.metrics.facialShape, (shapeCounts.get(s.metrics.facialShape) || 0) + 1);
   }
   let bestShape = samples[0]?.metrics.facialShape || 'Oval';
@@ -1373,8 +1429,9 @@ export function mergeFaceScores(
 
   // Confidence = capture quality + cross-photo agreement + how frontal the
   // best captures were. A turned head makes bilateral numbers unreliable even
-  // when the photo is crisp and bright — confidence has to say so.
-  const frontality = mean(samples.map((s) => frontalityScore(s.quality)));
+  // when the photo is crisp and bright — confidence has to say so. Profile
+  // captures are evaluated on pitch/roll only (their yaw is the point).
+  const frontality = mean(samples.map((s) => frontalityScore(s.quality, s.view ?? 'front')));
   const qualityComponent = photoQuality ?? 0;
   const analysisConfidence =
     samples.length === 1
@@ -1406,6 +1463,7 @@ export function mergeFaceScores(
       : null;
 
   const structureProfiles = samples
+    .filter((s) => (s.view ?? 'front') !== 'profile')
     .map((s) => s.structureProfile)
     .filter((v): v is StructureProfileType => typeof v === 'string');
   const structureProfile =
@@ -1424,6 +1482,7 @@ export function mergeFaceScores(
       consistencyScore,
       analysisConfidence,
       photoCount: samples.length,
+      rawGeometry: buildMergedGeometry(samples),
     },
     bestSample?.sourceResult,
     profile,
