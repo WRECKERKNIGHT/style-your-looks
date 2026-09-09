@@ -36,6 +36,8 @@ export interface ReportMetric {
   confidence: number;
   /** valid | low_confidence | unavailable — provenance of this measurement. */
   status: MeasurementStatus;
+  /** Human-readable WHY when status isn't 'valid' — shown under the metric. */
+  reason: string | null;
   /** Reference range the measurement is compared against. */
   refRange: string;
   description: string;
@@ -407,6 +409,7 @@ const SKIN_METRIC: Omit<ReportMetric, 'score' | 'percentile' | 'potential'> = {
   tip: 'The most changeable metric — skincare, hydration, sun protection and sleep all move it.',
   changeable: true,
   genderSensitive: false,
+  reason: null,
 };
 
 export function detectView(g: RawGeometry): ViewType {
@@ -452,6 +455,7 @@ function buildMetric(
         changeable: spec.changeable ?? false,
         potential: 0,
         genderSensitive: spec.genderSensitive ?? false,
+        reason: 'No face region to sample — skin clarity needs a face in the photo',
       };
     }
     const score = Math.round(skinClarityScore * 10) / 10;
@@ -460,6 +464,7 @@ function buildMetric(
       score,
       percentile: Math.round(scoreToPercentileLinear(score)),
       potential: Math.round((10 - score) * 10) / 10,
+      reason: null,
     };
   }
 
@@ -487,6 +492,12 @@ function buildMetric(
     changeable: spec.changeable ?? false,
     potential: 0,
     genderSensitive: spec.genderSensitive ?? false,
+    reason:
+      status === 'low_confidence'
+        ? (m?.reason ?? 'Statistically incompatible with the reference — retake the photo so this value is trustworthy.')
+        : m?.status === 'unavailable'
+          ? (m?.reason ?? 'Not measurable from this photo/view.')
+          : (m?.reason ?? 'No measurement could be made from this photo.'),
   });
 
   if (!m) return unscored('unavailable');
@@ -539,6 +550,7 @@ function buildMetric(
     changeable: spec.changeable ?? false,
     potential: Math.round(Math.min(6, absZ * 2) * 10) / 10,
     genderSensitive: spec.genderSensitive ?? false,
+    reason: null,
   };
 }
 
