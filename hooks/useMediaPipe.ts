@@ -327,12 +327,32 @@ export function useMediaPipe() {
       try {
         const samples: FaceScoreSample[] = [];
         const rejected: { index: number; issues: string[] }[] = [];
-        let bestResult: Awaited<ReturnType<typeof analyzeFace>> | null = null;
-        let bestCanvas: HTMLCanvasElement | null = null;
         let bestQuality = -1;
-        let bestQualityReport: PhotoQualityReport | null = null;
-        let bestSkinTone: ReturnType<typeof analyzeSkinTone> = null;
-        let bestIndex = 0;
+        // The displayed overlay/readouts (landmarks, pose guidance, skin tone,
+        // age, quality report) must come from a frontal capture: a profile shot
+        // cannot measure frontal metrics, so letting a high-scoring profile
+        // photo win the display slot showed a sideways face for 'symmetry' and
+        // pitched frontal-pose guidance at the user. The best frontal wins;
+        // the best profile is only a fallback when no frontal sample is usable.
+        // The profile still contributes its nasal measurements via the merge.
+        type SamplePick = {
+          quality: number;
+          result: Awaited<ReturnType<typeof analyzeFace>> | null;
+          canvas: HTMLCanvasElement | null;
+          report: PhotoQualityReport | null;
+          skinTone: ReturnType<typeof analyzeSkinTone>;
+          index: number;
+        };
+        const emptyPick = (): SamplePick => ({
+          quality: -1,
+          result: null,
+          canvas: null,
+          report: null,
+          skinTone: null,
+          index: 0,
+        });
+        const pickFrontal = emptyPick();
+        const pickProfile = emptyPick();
 
         for (let i = 0; i < imageElements.length; i++) {
           setAnalysisProgress(Math.round((i / imageElements.length) * 75));
@@ -379,14 +399,17 @@ export function useMediaPipe() {
           samples.push({ metrics, skinClarity: skinClarityScore, quality, sourceResult: faceResult, youthfulness, structureProfile: structureProfile?.label ?? null, view });
 
           const qScore = quality.score ?? -1;
-          if (qScore > bestQuality) {
-            bestQuality = qScore;
-            bestResult = faceResult;
-            bestCanvas = canvas;
-            bestQualityReport = quality;
-            bestSkinTone = analyzeSkinTone(canvas, faceResult);
-            bestIndex = i;
+          const skinTone = analyzeSkinTone(canvas, faceResult);
+          const pick = view === "front" ? pickFrontal : pickProfile;
+          if (qScore > pick.quality) {
+            pick.quality = qScore;
+            pick.result = faceResult;
+            pick.canvas = canvas;
+            pick.report = quality;
+            pick.skinTone = skinTone;
+            pick.index = i;
           }
+          if (qScore > bestQuality) bestQuality = qScore;
         }
 
         if (samples.length === 0) {
@@ -399,20 +422,21 @@ export function useMediaPipe() {
         setAnalysisProgress(88);
         const { result: scoreResult } = mergeFaceScores(samples, genderProfile);
         throwIfCancelled();
+        const displayBest = pickFrontal.result ? pickFrontal : pickProfile;
         const landmarks =
-          bestResult?.faceLandmarks?.[0]?.map((l) => [l.x, l.y, l.z]) || [];
+          displayBest.result?.faceLandmarks?.[0]?.map((l) => [l.x, l.y, l.z]) || [];
 
         setFaceResult(
           buildStoreFaceResult(
             scoreResult,
             landmarks,
-            bestSkinTone,
-            bestQualityReport,
+            displayBest.skinTone,
+            displayBest.report,
             genderProfile,
-            bestCanvas && bestResult
+            displayBest.canvas && displayBest.result
               ? estimateAgeFromFace(
-                  bestCanvas,
-                  bestResult,
+                  displayBest.canvas,
+                  displayBest.result,
                   samples[0]?.skinClarity ?? null
                 )
               : undefined
@@ -421,7 +445,7 @@ export function useMediaPipe() {
 
         setAnalysisProgress(100);
         if (!options?.demoMode) saveCurrentAnalysis();
-        return { scoreResult, samples, rejected, photoCount: samples.length, bestIndex };
+        return { scoreResult, samples, rejected, photoCount: samples.length, bestIndex: displayBest.index };
       } catch (err) {
         console.error("Multi-photo face analysis error:", err);
         throw err;
