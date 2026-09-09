@@ -1405,17 +1405,14 @@ export function computeRawGeometry(
   // View gating for 3D-projection and profile-only measurements.
   // Nasal projection, bridge angle and alar flare are fundamentally 3D /
   // profile quantities: from a frontal 2D image the plane-proxy is not an
-  // anatomical measurement. When the face is frontal-ish (nose tip near the
-  // facial midline) we report these as UNMEASURABLE (confidence 0) rather than
-  // fabricate a confident projection number. Only a genuine side/profile view
-  // (nose tip well off-midline) lets them pass — and that view overrides them
-  // with the dedicated profile formulas below.
-  const faceCenterX = (lc.x + rc.x) / 2;
-  const halfFaceW = Math.abs(rc.x - lc.x) / 2 || 1;
-  const noseMidlineOffset = Math.abs(nt.x - faceCenterX) / halfFaceW;
-  const isFrontalView = noseMidlineOffset < 0.4;
+  // anatomical measurement. They are ALWAYS unavailable from a 'front' view,
+  // regardless of how turned the head is — a half-turned front shot is not a
+  // profile, and previously it slipped past the old nose-on-midline gate and
+  // got measured (and the report re-labeled it as a 'profile' reading).
+  // Only a genuine 'profile' view measures them, with dedicated profile
+  // formulas that override below.
   const viewConstrainedConf = (indices: number[]): number => {
-    if (view === 'front' && isFrontalView) return 0;
+    if (view === 'front') return 0;
     return conf(indices);
   };
 
