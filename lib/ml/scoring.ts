@@ -704,9 +704,21 @@ export function buildFaceScoreFromMetrics(
   const rawGeometry =
     rawGeometryIn ?? (sourceResult ? computeRawGeometry(sourceResult) : undefined);
 
-  const rawFwhr = rawGeometry ? rawGeometry.fwhr.raw : undefined;
-  const rawCanthalTilt = rawGeometry ? rawGeometry.canthalTilt.raw : undefined;
-  const rawEyeNoseRatio = rawGeometry ? rawGeometry.eyeNoseRatio.raw : undefined;
+  // Raw geometry for display is gated on the measurement being VALID: an
+  // unavailable metric (e.g. every frontal metric on a profile-only run, where
+  // computeRawGeometry sets raw:0/conf:0) used to display "Ratio 0.00" as if
+  // that were a real reading. Show the raw number only when we actually made
+  // the measurement.
+  const rawFwhr =
+    rawGeometry && rawGeometry.fwhr.status === 'valid' ? rawGeometry.fwhr.raw : undefined;
+  const rawCanthalTilt =
+    rawGeometry && rawGeometry.canthalTilt.status === 'valid'
+      ? rawGeometry.canthalTilt.raw
+      : undefined;
+  const rawEyeNoseRatio =
+    rawGeometry && rawGeometry.eyeNoseRatio.status === 'valid'
+      ? rawGeometry.eyeNoseRatio.raw
+      : undefined;
 
   const rawMetricScores: Record<string, MetricResult> = {
     symmetry,
