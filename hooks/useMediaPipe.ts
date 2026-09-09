@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useEffect } from "react";
+import type { FaceLandmarkerResult } from "@mediapipe/tasks-vision";
 import { analyzeFace } from "@/lib/ml/face-analyzer";
 import { preprocessImage, quickQualityGate, prepareCanvas } from "@/lib/ml/preprocessing";
 import { useToastStore } from "@/components/shared/Toast";
@@ -39,31 +40,64 @@ export interface AnalysisRunOptions {
   demoMode?: boolean;
 }
 
+function faceBBox(result: FaceLandmarkerResult): {
+  minX: number;
+  minY: number;
+  maxX: number;
+  maxY: number;
+} | null {
+  const lm = result.faceLandmarks?.[0];
+  if (!lm || lm.length === 0) return null;
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  for (const p of lm) {
+    minX = Math.min(minX, p.x);
+    minY = Math.min(minY, p.y);
+    maxX = Math.max(maxX, p.x);
+    maxY = Math.max(maxY, p.y);
+  }
+  if (!Number.isFinite(minX)) return null;
+  return { minX, minY, maxX, maxY };
+}
+
 function computeSkinClarityScore(
   canvas: HTMLCanvasElement,
   ctx: CanvasRenderingContext2D,
-  numFaces: number
+  bbox: { minX: number; minY: number; maxX: number; maxY: number } | null
 ): number | null {
-  if (numFaces === 0) return null;
+  if (!bbox) return null;
 
+  // Zones are relative to the DETECTED face bounding box, not the whole
+  // canvas: the old absolute-{0.3,0.25} grid sampled background/hair/lighting
+  // whenever the face was off-center, and on a profile capture it sampled
+  // mostly non-face. Inside bbox space the same fractions reliably land on
+  // forehead, cheeks, nose and chin skin.
   const zones = [
-    { x: 0.3, y: 0.25, r: 0.08 },
-    { x: 0.7, y: 0.25, r: 0.08 },
-    { x: 0.5, y: 0.35, r: 0.06 },
-    { x: 0.35, y: 0.5, r: 0.07 },
-    { x: 0.65, y: 0.5, r: 0.07 },
-    { x: 0.5, y: 0.6, r: 0.06 },
-    { x: 0.5, y: 0.45, r: 0.05 },
+    { x: 0.35, y: 0.18, r: 0.1 },
+    { x: 0.65, y: 0.18, r: 0.1 },
+    { x: 0.5, y: 0.32, r: 0.08 },
+    { x: 0.22, y: 0.55, r: 0.09 },
+    { x: 0.78, y: 0.55, r: 0.09 },
+    { x: 0.5, y: 0.82, r: 0.09 },
+    { x: 0.5, y: 0.42, r: 0.06 },
   ];
+
+  const bw = (bbox.maxX - bbox.minX) * canvas.width;
+  const bh = (bbox.maxY - bbox.minY) * canvas.height;
+  const ox = bbox.minX * canvas.width;
+  const oy = bbox.minY * canvas.height;
+  const zoneScale = Math.max(8, Math.min(bw, bh));
 
   let totalVariance = 0;
   let validZones = 0;
 
   for (const zone of zones) {
     try {
-      const cx = Math.floor(zone.x * canvas.width);
-      const cy = Math.floor(zone.y * canvas.height);
-      const radius = Math.floor(zone.r * Math.min(canvas.width, canvas.height));
+      const cx = Math.floor(ox + zone.x * bw);
+      const cy = Math.floor(oy + zone.y * bh);
+      const radius = Math.max(3, Math.floor(zone.r * zoneScale));
       const imageData = ctx.getImageData(
         Math.max(0, cx - radius),
         Math.max(0, cy - radius),
@@ -273,7 +307,7 @@ export function useMediaPipe() {
 
         const skinTone = analyzeSkinTone(canvas, faceResult);
         const numFaces = faceResult.faceLandmarks?.length || 0;
-        const skinClarityScore = computeSkinClarityScore(canvas, ctx, numFaces);
+        const skinClarityScore = computeSkinClarityScore(canvas, ctx, faceBBox(faceResult));
         const quality = assessPhotoQuality(canvas, faceResult, numFaces);
         if (!quality.usable) {
           throw new Error(
@@ -399,7 +433,7 @@ export function useMediaPipe() {
             i,
             faceResult.faceLandmarks?.[0]?.map((l) => [l.x, l.y, l.z]) || []
           );
-          const skinClarityScore = computeSkinClarityScore(canvas, ctx, numFaces);
+          const skinClarityScore = computeSkinClarityScore(canvas, ctx, faceBBox(faceResult));
           const metrics = computeFaceMetrics(faceResult, view);
           const blendshapes = faceResult.faceBlendshapes?.[0]?.categories;
           const eyeOpenness = blendshapes ? 1 - ((blendshapes.find(s => s.categoryName === "eyeBlinkLeft")?.score ?? 0) + (blendshapes.find(s => s.categoryName === "eyeBlinkRight")?.score ?? 0)) / 2 : 0.5;
