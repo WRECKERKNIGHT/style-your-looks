@@ -1010,7 +1010,19 @@ function m(
         ? 'low_confidence'
         : 'valid';
 
-  const reason = status === 'valid' ? null : (reasonHint ?? 'Measurement not trustworthy');
+  // Cause-specific explanations: a caller-supplied hint (e.g. degenerate
+  // geometry, view constraint) wins; otherwise the reason names the actual
+  // failure mode so the user sees why a metric isn't rated instead of a
+  // generic "not trustworthy".
+  const reason =
+    status === 'valid'
+      ? null
+      : reasonHint ??
+        (status === 'unavailable'
+          ? 'Measurement not available from this photo — no usable signal'
+          : outOfBand
+            ? `Value falls outside the calibrated reference range (±${OUT_OF_BAND_Z}σ) — not rated`
+            : 'Camera angle, blur or lighting lowered measurement confidence below the reliable threshold');
 
   return {
     raw: Math.round(raw * 10000) / 10000,
@@ -1218,9 +1230,10 @@ export function computeRawGeometry(
   const outerBands = faceW > 0 ? (faceW - (leftEyeW2 + intercanthal + rightEyeW2)) / 2 : null;
   const ideal5 = faceW > 0 ? faceW / 5 : null;
   const fifths = [outerBands, leftEyeW2, intercanthal, rightEyeW2, outerBands];
+  const bandsPresent = fifths.filter((f): f is number => f !== null);
   const hFifths =
-    ideal5 !== null
-      ? fifths.reduce((sum, f) => sum + Math.abs((f ?? 0) - ideal5) / ideal5, 0)
+    ideal5 !== null && bandsPresent.length > 0
+      ? bandsPresent.reduce((sum, f) => sum + Math.abs(f - ideal5) / ideal5, 0)
       : null;
 
   // Golden-ratio (φ) adherence as a composite of genuinely φ-consistent,
