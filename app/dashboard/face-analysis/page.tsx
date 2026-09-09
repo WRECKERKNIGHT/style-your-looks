@@ -389,10 +389,24 @@ export default function FaceAnalysisPage() {
       setProcessingPreview({ image: person.facePhoto, landmarks: [] });
       try {
         await new Promise((r) => setTimeout(r, 900));
-        const img = new Image();
-        img.src = person.facePhoto;
-        await new Promise((r) => {
-          img.onload = r;
+        // // onload/onerror alone can hang forever if the bundled asset stalls a
+        // fetch but never errors; a watchful timeout turns that into a clear
+        // failure instead of an eternal spinner.
+        const demoImg = await new Promise<HTMLImageElement>((resolve, reject) => {
+          const img = new Image();
+          const timer = window.setTimeout(
+            () => reject(new Error('Demo photo took too long to load')),
+            8000,
+          );
+          img.onload = () => {
+            window.clearTimeout(timer);
+            resolve(img);
+          };
+          img.onerror = () => {
+            window.clearTimeout(timer);
+            reject(new Error('Could not load the demo photo'));
+          };
+          img.src = person.facePhoto;
         });
 
         // Run the SAME algorithmic pipeline as a real upload — MediaPipe
@@ -401,7 +415,7 @@ export default function FaceAnalysisPage() {
         // the old buildDemoFaceResult() which returned fully synthetic
         // hardcoded scores that ignored the detected geometry entirely.
         await analyzeFacePhotos(
-          [img],
+          [demoImg],
           person.face.genderProfile,
           (_i, landmarks) => setProcessingPreview({ image: person.facePhoto, landmarks }),
           { demoMode: true },
@@ -504,8 +518,18 @@ export default function FaceAnalysisPage() {
           (dataUrl) =>
             new Promise<HTMLImageElement>((resolve, reject) => {
               const img = new Image();
-              img.onload = () => resolve(img);
-              img.onerror = () => reject(new Error('Could not load a photo'));
+              const timer = window.setTimeout(
+                () => reject(new Error('A photo took too long to load')),
+                8000,
+              );
+              img.onload = () => {
+                window.clearTimeout(timer);
+                resolve(img);
+              };
+              img.onerror = () => {
+                window.clearTimeout(timer);
+                reject(new Error('Could not load a photo'));
+              };
               img.src = dataUrl;
             }),
         ),
