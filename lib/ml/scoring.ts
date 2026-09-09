@@ -1351,10 +1351,10 @@ export function mergeFaceScores(
   profile: AnalysisProfile = 'neutral',
 ): {
   result: FaceScoreResult;
-  metricSpread: Record<string, number>;
+  metricSpread: Record<string, number | null>;
 } {
   const merged = {} as FaceMetricScores;
-  const metricSpread: Record<string, number> = {};
+  const metricSpread: Record<string, number | null> = {};
 
   for (const key of MERGE_KEYS) {
     const vals = samples
@@ -1369,7 +1369,10 @@ export function mergeFaceScores(
       vals.length > 0
         ? { score: median(vals), confidence: vals.length / samples.length, rawValue: undefined }
         : { score: null, confidence: 0 };
-    metricSpread[key as string] = vals.length > 1 ? stddev(vals) : 0;
+    // Spread is only meaningful with 2+ measurements to compare. The old 0
+    // made a single profile-only reading (e.g. nasal metrics) look like it
+    // "perfectly agreed" with itself; null is honest.
+    metricSpread[key as string] = vals.length > 1 ? stddev(vals) : null;
   }
 
   const shapeCounts = new Map<string, number>();
@@ -1416,16 +1419,21 @@ export function mergeFaceScores(
           : (m as number);
       })
       .filter((v): v is number => v !== null && v !== undefined && Number.isFinite(v));
-    if (vals.length === 0) return 0;
+    // A metric measured in only one photo says nothing about consistency; a
+    // metric present in NO photo must not quietly count as zero agreement.
+    // Only metrics with 2+ independent readings contribute CVs, so front+profile
+    // runs (which share no overlapping measurements) no longer report a
+    // fabricated 10/10 cross-photo agreement.
+    if (vals.length < 2) return null;
     const m = mean(vals);
-    if (m === 0) return 0;
+    if (m === 0) return null;
     return stddev(vals) / m;
   });
-  const avgCv = mean(cvList);
+  const cvValues = cvList.filter((v): v is number => v !== null);
   const consistencyScore =
-    samples.length === 1
+    samples.length === 1 || cvValues.length < 2
       ? undefined
-      : Math.round(Math.max(1, Math.min(10, 10 - avgCv * 14)) * 10) / 10;
+      : Math.round(Math.max(1, Math.min(10, 10 - mean(cvValues) * 14)) * 10) / 10;
 
   // Confidence = capture quality + cross-photo agreement + how frontal the
   // best captures were. A turned head makes bilateral numbers unreliable even
@@ -1436,16 +1444,20 @@ export function mergeFaceScores(
   const analysisConfidence =
     samples.length === 1
       ? Math.round((qualityComponent * 0.6 + frontality * 0.4) * 10)
-      // Multiple photos were captured, so consistencyScore is always defined here.
-      : Math.round(
-          Math.max(
-            1,
-            Math.min(
-              10,
-              (consistencyScore as number) * 0.45 + qualityComponent * 0.35 + frontality * 0.2,
-            ),
-          ) * 10,
-        );
+      // Multiple photos were captured, but consistencyScore stays undefined
+      // when they share no 2+ measured metrics (e.g. front + profile) — fall
+      // back to capture quality + frontality instead of a forced agreement.
+      : consistencyScore === undefined
+        ? Math.round((qualityComponent * 0.6 + frontality * 0.4) * 10)
+        : Math.round(
+            Math.max(
+              1,
+              Math.min(
+                10,
+                consistencyScore * 0.45 + qualityComponent * 0.35 + frontality * 0.2,
+              ),
+            ) * 10,
+          );
 
   const bestSample = [...samples].sort(
     (a, b) => (b.quality.score ?? -1) - (a.quality.score ?? -1),
@@ -1501,7 +1513,9 @@ export function mergeFaceScores(
       return label === m.label;
     });
     if (!spreadKey) return m;
-    return { ...m, spread: Math.round(metricSpread[spreadKey] * 10) / 10 };
+    const spread = metricSpread[spreadKey];
+    if (spread === null || !Number.isFinite(spread)) return m;
+    return { ...m, spread: Math.round(spread * 10) / 10 };
   });
 
   return { result, metricSpread };
