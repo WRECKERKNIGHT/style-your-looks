@@ -2,7 +2,7 @@ import type { FaceLandmarkerResult } from '@mediapipe/tasks-vision';
 import { rangeScore, domainToIndex } from './scoring-curves';
 import { getFaceSymmetryAxis, getFacialShape, type StructureProfileType, computeRawGeometry, type Measurement, type RawGeometry } from './face-analyzer';
 import type { PhotoQualityReport } from './face-quality';
-import { frontalityScore } from './face-quality';
+import { frontalityScore, headPose } from './face-quality';
 import { scoreToPercentile, computeFaceIQ } from './calibration';
 
 export interface MetricResult {
@@ -359,10 +359,14 @@ function analyzeBlendshapes(result: FaceLandmarkerResult): BlendshapeAnalysis | 
   }
 
   const headRotation = result.facialTransformationMatrixes?.[0];
+  // Head tilt = roll about the face's viewing axis. The old code read
+  // asin(-R[0][2], column-major) — that element is a MIX of pitch/yaw/roll,
+  // so a head turned left could report a phantom 'tilt'. headPose() does the
+  // full R = Rz(pitch)·Ry(yaw)·Rx(roll) decomposition; reuse the same roll
+  // the pose/quality layer reports for a single consistent number.
   let headTilt = 0;
   if (headRotation && headRotation.data) {
-    const cols = headRotation.columns || 3;
-    headTilt = Math.asin(-headRotation.data[2 * cols + 0]) * (180 / Math.PI);
+    headTilt = headPose(result).roll;
   }
 
   return {
