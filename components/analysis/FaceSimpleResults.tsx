@@ -152,21 +152,28 @@ function heroWord(score: number): string {
 function Bar({ metric }: { metric: ReportMetric }) {
   const info = PLAIN[metric.key] ?? { label: metric.label, plain: metric.label, blurb: '' };
   if (metric.score === null) {
-    const reason =
+    const badge =
       metric.status === 'unavailable'
-        ? 'Not measurable from this photo'
-        : 'Not reliable for this photo';
+        ? 'NOT MEASURED'
+        : 'NOT RELIABLE FOR THIS PHOTO';
     return (
-      <div className="flex items-center gap-3 sm:gap-4">
-        <div className="w-28 sm:w-36 flex-shrink-0">
-          <p className="text-xs sm:text-sm font-body font-semibold text-[var(--text-primary)]">
-            {info.plain}
-          </p>
+      <div>
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="w-28 sm:w-36 flex-shrink-0">
+            <p className="text-xs sm:text-sm font-body font-semibold text-[var(--text-primary)]">
+              {info.plain}
+            </p>
+          </div>
+          <div className="flex-1 h-2.5 bg-white/[0.03] rounded-full overflow-hidden" />
+          <span className="w-28 sm:w-32 text-right text-[0.55rem] sm:text-[0.6rem] type-mono tracking-widest flex-shrink-0 text-[var(--text-muted)]">
+            {badge}
+          </span>
         </div>
-        <div className="flex-1 h-2.5 bg-white/[0.03] rounded-full overflow-hidden" />
-        <span className="w-28 sm:w-32 text-right text-[0.6rem] sm:text-xs type-mono tracking-widest flex-shrink-0 text-[var(--text-muted)]">
-          {reason.toUpperCase()}
-        </span>
+        {metric.reason && (
+          <p className="mt-1.5 text-[0.6rem] sm:text-xs font-body text-[var(--text-muted)] leading-snug">
+            {metric.reason}
+          </p>
+        )}
       </div>
     );
   }
