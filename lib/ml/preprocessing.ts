@@ -187,13 +187,17 @@ function autoGamma(canvas: HTMLCanvasElement): {
  * rejects hopeless photos before the expensive MediaPipe run.
  */
 export function quickQualityGate(canvas: HTMLCanvasElement): QuickGateReport {
-  const { mean, std, data, w, h } = sampleLuminance(canvas);
+  const { mean, data, w, h } = sampleLuminance(canvas);
   const issues: string[] = [];
 
   if (data.length > 0) {
     if (mean < 22) issues.push("Photo is too dark to analyze reliably — increase the lighting");
     else if (mean > 248) issues.push("Photo is overexposed — reduce the brightness");
-    if (std < 8) issues.push("Photo has almost no contrast — reposition the lighting");
+    // NOTE: low contrast (std < 8) is deliberately NOT a hard reject. Evenly lit
+    // studio/flash portraits are genuinely low-contrast yet perfectly usable;
+    // rejecting them on that alone blocked legitimate photos. A truly useless
+    // frame is caught by edge intensity below (a low-contrast image is also
+    // low-edge).
     const edge = edgeIntensity(data, w, h);
     if (edge < 1.1) issues.push("Photo is too blurry — steady the camera");
   }
