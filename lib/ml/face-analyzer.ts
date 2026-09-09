@@ -1044,7 +1044,9 @@ export function computeRawGeometry(
   view: FaceView = 'front',
 ): RawGeometry | null {
   const lm = result.faceLandmarks?.[0];
-  if (!lm || lm.length < 468) return null;
+  // Needs at least 469 points: this function dereferences index 468 (the
+  // right alar base) directly, and lm[468] is undefined for a 468-point mesh.
+  if (!lm || lm.length < 469) return null;
 
   const U = createUprightAccessor(lm);
   const pt = (i: number) => U.pt(i);
@@ -1110,6 +1112,11 @@ export function computeRawGeometry(
     rightMouth,
     leftTemple,
     rightTemple,
+    // Raw indices used directly by nose metrics — previously dereferenced
+    // without a guard, so a mesh missing them crashed with a TypeError
+    // instead of reporting the measurement as unavailable.
+    noseLeft,
+    noseRight,
   ];
   if (required.some((p) => !p)) return null;
 
