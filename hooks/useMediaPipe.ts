@@ -260,7 +260,14 @@ export function useMediaPipe() {
         }
 
         setAnalysisProgress(10);
-        const faceResult = await analyzeFace(canvas, setAnalysisProgress);
+        // analyzeFace reports its own 0→100 milestones through onProgress; if
+        // we passed setAnalysisProgress straight through, its final 100 fired
+        // and then the hard-set 60 below yanked the bar BACKWARD to 60. Scale
+        // the engine's milestones into the preprocessing→detection window
+        // (10→60) so the bar only ever moves forward.
+        const faceResult = await analyzeFace(canvas, (raw) =>
+          setAnalysisProgress(Math.min(60, 10 + Math.round((raw / 100) * 50)))
+        );
         throwIfCancelled();
         setAnalysisProgress(60);
 
@@ -465,7 +472,12 @@ export function useMediaPipe() {
 
       try {
         setAnalysisProgress(10);
-        const bodyResult = await analyzeBody(imageElement, setAnalysisProgress);
+        // Same forward-only scaling as the face path: analyzeBody's internal
+        // onProgress(100) used to race past the hard-set 50 and then regress
+        // back down to 50 once the await resolved.
+        const bodyResult = await analyzeBody(imageElement, (raw) =>
+          setAnalysisProgress(Math.min(50, 10 + Math.round((raw / 100) * 40)))
+        );
         throwIfCancelled();
         setAnalysisProgress(50);
 
