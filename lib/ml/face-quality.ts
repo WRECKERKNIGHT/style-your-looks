@@ -97,7 +97,7 @@ function faceBoundingBox(result: FaceLandmarkerResult): { minX: number; minY: nu
  * Yaw (head turned left/right) is the pose axis that silently distorts every
  * bilateral width metric, so it must be measured — not folded into "roll".
  */
-function headPose(result: FaceLandmarkerResult): { yaw: number; pitch: number; roll: number } {
+export function headPose(result: FaceLandmarkerResult): { yaw: number; pitch: number; roll: number } {
   const matrix = result.facialTransformationMatrixes?.[0];
   if (!matrix || !matrix.data) return { yaw: 0, pitch: 0, roll: 0 };
   const s = matrix.columns || 4;
@@ -113,11 +113,16 @@ function headPose(result: FaceLandmarkerResult): { yaw: number; pitch: number; r
 export function assessPhotoQuality(
   canvas: HTMLCanvasElement,
   result: FaceLandmarkerResult,
-  numFacesDetected: number
+  numFacesDetected: number,
+  view: 'front' | 'profile' = 'front'
 ): PhotoQualityReport {
   const issues: string[] = [];
   const warnings: string[] = [];
 
+  // A side-profile photo is INTENTIONALLY turned to the camera. Frontal-pose
+  // rules (hard yaw limits) don't apply to it, otherwise every profile shot
+  // would be rejected before it could contribute its nasal measurements.
+  const isProfile = view === 'profile';
   if (numFacesDetected === 0) {
     return {
       score: null,
@@ -176,11 +181,14 @@ export function assessPhotoQuality(
 
   // Yaw is the most damaging off-frontal axis: it compresses one side of the
   // face, which reads as fake "asymmetry" and skewed fifths/FWHR. Reject hard
-  // turns, warn on moderate ones.
-  if (Math.abs(pose.yaw) > 25) {
-    issues.push("Head is turned too far to the side — look straight at the camera");
-  } else if (Math.abs(pose.yaw) > 15) {
-    warnings.push("Head slightly turned — a frontal pose gives the most accurate read");
+  // turns, warn on moderate ones. Exempted for profile captures, where a large
+  // yaw is the entire point.
+  if (!isProfile) {
+    if (Math.abs(pose.yaw) > 25) {
+      issues.push("Head is turned too far to the side — look straight at the camera");
+    } else if (Math.abs(pose.yaw) > 15) {
+      warnings.push("Head slightly turned — a frontal pose gives the most accurate read");
+    }
   }
 
   if (Math.abs(pose.roll) > 18) {
@@ -197,8 +205,9 @@ export function assessPhotoQuality(
   const usable = issues.length === 0;
 
   // Pose contributes directly to capture quality so that confidence and
-  // best-photo selection prefer genuinely frontal frames.
-  const yawDev = Math.min(1, Math.abs(pose.yaw) / 25);
+  // best-photo selection prefer genuinely frontal frames. Profile captures
+  // score on pitch/roll only — their yaw (≈90°) is expected, not a defect.
+  const yawDev = isProfile ? 0 : Math.min(1, Math.abs(pose.yaw) / 25);
   const pitchDev = Math.min(1, Math.abs(pose.pitch) / 32);
   const rollDev = Math.min(1, Math.abs(pose.roll) / 18);
   const poseScore = Math.max(0, 10 - (yawDev * 4 + pitchDev * 3 + rollDev * 3));
@@ -243,9 +252,10 @@ export function assessPhotoQuality(
  * confidence penalty, because bilateral geometry is unreliable off-axis.
  */
 export function frontalityScore(
-  q: Pick<PhotoQualityReport, "headYaw" | "headPitch" | "headRoll">
+  q: Pick<PhotoQualityReport, "headYaw" | "headPitch" | "headRoll">,
+  view: 'front' | 'profile' = 'front'
 ): number {
-  const yawDev = Math.min(1, Math.abs(q.headYaw) / 25);
+  const yawDev = view === 'profile' ? 0 : Math.min(1, Math.abs(q.headYaw) / 25);
   const pitchDev = Math.min(1, Math.abs(q.headPitch) / 32);
   const rollDev = Math.min(1, Math.abs(q.headRoll) / 18);
   return Math.max(0, 10 - (yawDev * 4 + pitchDev * 3 + rollDev * 3));

@@ -24,6 +24,7 @@ import {
   type Point2D,
 } from './face-geometry';
 import { calibratedScore, idealScore } from './scoring-curves';
+import { headPose } from './face-quality';
 
 let faceLandmarker: FaceLandmarker | null = null;
 let landmarkerInitPromise: Promise<FaceLandmarker> | null = null;
@@ -847,6 +848,14 @@ export type MeasurementUnit = 'ratio' | 'degrees' | 'px_ratio' | 'score';
  */
 export type MeasurementStatus = 'valid' | 'low_confidence' | 'unavailable';
 
+/**
+ * Which pose the photo was captured in. Front = the standard straight-on
+ * portrait (feeds nearly every metric). Profile = a side view, which is the
+ * only angle that can measure the true 3D nasal quantities (projection,
+ * bridge angle, alar flare); a profile photo contributes ONLY those three.
+ */
+export type FaceView = 'front' | 'profile';
+
 export interface Measurement {
   raw: number;
   z: number;
@@ -862,6 +871,8 @@ export interface Measurement {
    * displayed as if it were a real value.
    */
   status: MeasurementStatus;
+  /** Human-readable WHY when this measurement isn't a valid score. */
+  reason?: string | null;
 }
 
 /** Confidence below this is too uncertain to trust for scoring. */
@@ -963,6 +974,7 @@ function m(
   ref: { mu: number; sigma: number },
   confidence: number,
   unit: MeasurementUnit = 'ratio',
+  reasonHint?: string,
 ): Measurement {
   const conf = Math.round(confidence * 100) / 100;
   if (!Number.isFinite(raw) || ref.sigma <= 0) {
@@ -975,6 +987,7 @@ function m(
       mu: ref.mu,
       sigma: ref.sigma,
       status: 'unavailable',
+      reason: 'Measurement produced an invalid value',
     };
   }
   const z = (raw - ref.mu) / ref.sigma;
@@ -996,6 +1009,9 @@ function m(
       : outOfBand || conf < LOW_CONFIDENCE_THRESHOLD
         ? 'low_confidence'
         : 'valid';
+
+  const reason = status === 'valid' ? null : (reasonHint ?? 'Measurement not trustworthy');
+
   return {
     raw: Math.round(raw * 10000) / 10000,
     z: Math.round(z * 1000) / 1000,
@@ -1005,6 +1021,7 @@ function m(
     mu: ref.mu,
     sigma: ref.sigma,
     status,
+    reason,
   };
 }
 
@@ -1022,7 +1039,10 @@ function perpDist(ax: number, ay: number, bx: number, by: number, px: number, py
  * This is the single source of truth — no other function should
  * independently compute geometry from landmarks.
  */
-export function computeRawGeometry(result: FaceLandmarkerResult): RawGeometry | null {
+export function computeRawGeometry(
+  result: FaceLandmarkerResult,
+  view: FaceView = 'front',
+): RawGeometry | null {
   const lm = result.faceLandmarks?.[0];
   if (!lm || lm.length < 468) return null;
 
@@ -1120,16 +1140,36 @@ export function computeRawGeometry(result: FaceLandmarkerResult): RawGeometry | 
   const rt = rightTemple!;
 
   // ── Raw pixel measurements ──
-  const faceWidth = Math.hypot(rc.x - lc.x, rc.y - lc.y);
+  const rawFaceWidth = Math.hypot(rc.x - lc.x, rc.y - lc.y);
   const faceLength = Math.hypot(fg.x - cn.x, fg.y - cn.y);
-  const cheekWidth = Math.abs(rc.x - lc.x);
-  const jawWidth = Math.hypot(rj.x - lj.x, rj.y - lj.y);
-  const eyeGap = Math.hypot(rei.x - lei.x, rei.y - lei.y);
-  const leftEyeW = Math.hypot(leo.x - lei.x, leo.y - lei.y);
-  const rightEyeW = Math.hypot(reo.x - rei.x, reo.y - rei.y);
-  const noseW = Math.abs(noseRight.x - noseLeft.x);
+  const rawCheekWidth = Math.abs(rc.x - lc.x);
+  const rawJawWidth = Math.hypot(rj.x - lj.x, rj.y - lj.y);
+  const rawEyeGap = Math.hypot(rei.x - lei.x, rei.y - lei.y);
+  const rawLeftEyeW = Math.hypot(leo.x - lei.x, leo.y - lei.y);
+  const rawRightEyeW = Math.hypot(reo.x - rei.x, reo.y - rei.y);
+  const rawNoseW = Math.abs(noseRight.x - noseLeft.x);
   const noseL = Math.abs(nb.y - nb2.y);
-  const mouthW = Math.abs(rm.x - lm2.x);
+  const rawMouthW = Math.abs(rm.x - lm2.x);
+
+  // ── Yaw foreshortening correction ──
+  // A mild head-turn (1–20°) compresses every horizontal distance by ≈cos(yaw),
+  // which reads as a narrower face, smaller-seeming eyes and fake asymmetry on
+  // the turned-away side. Undo it on the width axes instead of flagging the
+  // whole report. Beyond 20° the parallax error is too extreme to correct —
+  // the pose gate already down-weights those frames, and a proper fix is the
+  // side-profile capture which deliberately trades width metrics for the 3D
+  // nasal ones.
+  const { yaw, pitch, roll } = headPose(result);
+  const cosYaw = Math.cos((yaw * Math.PI) / 180);
+  const yawScale = Math.abs(yaw) >= 1 && Math.abs(yaw) <= 20 && cosYaw > 0.9 ? 1 / cosYaw : 1;
+  const faceWidth = Math.hypot((rc.x - lc.x) * yawScale, rc.y - lc.y);
+  const cheekWidth = Math.abs((rc.x - lc.x) * yawScale);
+  const jawWidth = Math.hypot((rj.x - lj.x) * yawScale, rj.y - lj.y);
+  const eyeGap = Math.hypot((rei.x - lei.x) * yawScale, rei.y - lei.y);
+  const leftEyeW = Math.hypot((leo.x - lei.x) * yawScale, leo.y - lei.y);
+  const rightEyeW = Math.hypot((reo.x - rei.x) * yawScale, reo.y - rei.y);
+  const noseW = Math.abs((noseRight.x - noseLeft.x) * yawScale);
+  const mouthW = Math.abs((rm.x - lm2.x) * yawScale);
 
   const avgEyeWidth = (leftEyeW + rightEyeW) / 2;
   const upper = Math.abs(bl.y - fg.y);
@@ -1266,8 +1306,10 @@ export function computeRawGeometry(result: FaceLandmarkerResult): RawGeometry | 
   // Alar angle: angle of nostril flare from nose tip to alar base
   const alarAngleVal = (() => {
     if (!noseBaseL || !noseBaseR) return 85;
-    const leftAlar = Math.atan2(noseBaseL.y - nt.y, noseBaseL.x - nt.x) * (180 / Math.PI);
-    const rightAlar = Math.atan2(noseBaseR.y - nt.y, noseBaseR.x - nt.x) * (180 / Math.PI);
+    const leftAlar =
+      Math.atan2(noseBaseL.y - nt.y, (noseBaseL.x - nt.x) * yawScale) * (180 / Math.PI);
+    const rightAlar =
+      Math.atan2(noseBaseR.y - nt.y, (noseBaseR.x - nt.x) * yawScale) * (180 / Math.PI);
     return Math.abs(leftAlar - rightAlar);
   })();
 
@@ -1315,12 +1357,17 @@ export function computeRawGeometry(result: FaceLandmarkerResult): RawGeometry | 
   // ── Face shape ──
   const faceShape = calculateFaceShape(lm);
 
-  // Honest per-measurement confidence. Drops to the pose factor whenever an
-  // auxiliary landmark (outside the core 24 that gate the whole function) is
-  // missing, and penalises strong head-roll where a measurement is less
-  // trustworthy. The old code hard-coded `1` for every measurement, which made
-  // the reported confidence meaningless.
-  const poseFactor = Math.max(0.4, 1 - Math.abs(U.correctedByDeg) / 30);
+  // Honest per-measurement confidence. Penalises all THREE pose axes (yaw,
+  // pitch, roll) — the old code only looked at roll via the upright frame, so
+  // a turned (yaw) head still reported full confidence. Yaw's contribution is
+  // now the largest term: it silently distorts every bilateral width metric.
+  // For a side profile, yaw ≈90° is the EXPECTED pose, so only pitch/roll
+  // penalise it (the width metrics it ruins are already gated to "unavailable"
+  // for that view).
+  const poseFactor =
+    view === 'profile'
+      ? Math.max(0.4, Math.min(1, 1 - (Math.abs(roll) / 30 + Math.abs(pitch) / 40)))
+      : Math.max(0.4, Math.min(1, 1 - (Math.abs(yaw) / 35 + Math.abs(roll) / 30 + Math.abs(pitch) / 40)));
   const conf = (indices: number[]): number => {
     if (indices.some((i) => !pt(i))) return 0;
     return Math.round(poseFactor * 100) / 100;
@@ -1333,17 +1380,18 @@ export function computeRawGeometry(result: FaceLandmarkerResult): RawGeometry | 
   // anatomical measurement. When the face is frontal-ish (nose tip near the
   // facial midline) we report these as UNMEASURABLE (confidence 0) rather than
   // fabricate a confident projection number. Only a genuine side/profile view
-  // (nose tip well off-midline) lets them pass.
+  // (nose tip well off-midline) lets them pass — and that view overrides them
+  // with the dedicated profile formulas below.
   const faceCenterX = (lc.x + rc.x) / 2;
   const halfFaceW = Math.abs(rc.x - lc.x) / 2 || 1;
   const noseMidlineOffset = Math.abs(nt.x - faceCenterX) / halfFaceW;
   const isFrontalView = noseMidlineOffset < 0.4;
   const viewConstrainedConf = (indices: number[]): number => {
-    if (isFrontalView) return 0;
+    if (view === 'front' && isFrontalView) return 0;
     return conf(indices);
   };
 
-  return {
+  const geo: RawGeometry = {
     faceWidth,
     faceLength,
     cheekWidth,
@@ -1425,6 +1473,110 @@ export function computeRawGeometry(result: FaceLandmarkerResult): RawGeometry | 
 
     faceShape,
   };
+
+  // ── Side-profile (view = 'profile') ──
+  // A profile photo cannot measure frontal 2D quantities — widths, symmetry,
+  // fifths and lip/eye ratios all foreshorten to garbage from the side. We
+  // keep only the three genuinely 3D nasal metrics, measured from the profile
+  // silhouette, and mark everything else explicitly unavailable so the report
+  // stays honest instead of scoring distorted numbers.
+  if (view === 'profile') {
+    const unavailable = (orig: Measurement): Measurement => ({
+      ...orig,
+      raw: 0,
+      z: 0,
+      confidence: 0,
+      status: 'unavailable',
+      reason: 'Not measurable from a side profile — use a straight-on front photo',
+    });
+
+    const nasal = (() => {
+      const tip = pt(1);
+      const glabella = pt(9);
+      const chinP = pt(152);
+      const bridgeRoot = pt(168);
+      if (!tip || !glabella || !chinP || !bridgeRoot) return null;
+
+      // Facial plane = glabella→chin line (the profile's vertical axis).
+      const faceVecX = chinP.x - glabella.x;
+      const faceVecY = chinP.y - glabella.y;
+      const faceLen = Math.hypot(faceVecX, faceVecY);
+
+      // Nose projection: perpendicular distance of the tip from the facial
+      // plane, normalised by the nose's vertical length — the classic profile
+      // "how far the nose sticks out" measure.
+      const pl =
+        faceLen > 0
+          ? Math.abs(
+              ((tip.x - glabella.x) * faceVecY - (tip.y - glabella.y) * faceVecX) / faceLen,
+            )
+          : 0;
+      const noseLenProf = Math.abs(bridgeRoot.y - tip.y);
+      const projection = noseLenProf > 0 ? pl / noseLenProf : 0;
+
+      // Nose bridge angle: deviation of the bridge line (root→tip) from the
+      // facial plane. 0° = bridge parallel to the face axis; larger = more
+      // droop/convex profile.
+      const dot = (bridgeRoot.x - tip.x) * faceVecX + (bridgeRoot.y - tip.y) * faceVecY;
+      const crossMag = Math.abs(
+        (bridgeRoot.x - tip.x) * faceVecY - (bridgeRoot.y - tip.y) * faceVecX,
+      );
+      const bridgeAngle = Math.atan2(crossMag, dot) * (180 / Math.PI);
+
+      // Alar flare (profile): angle between tip→wing-left and tip→wing-right.
+      // In a true profile one wing wraps toward the camera and the other
+      // flattens behind — the spread between them IS the visible sagittal flare.
+      const lw = p(94);
+      const rw = p(278);
+      if (!lw || !rw) return null;
+      const lA = Math.atan2(Math.abs(lw.y - tip.y), Math.abs(lw.x - tip.x)) * (180 / Math.PI);
+      const rA = Math.atan2(Math.abs(rw.y - tip.y), Math.abs(rw.x - tip.x)) * (180 / Math.PI);
+      const flare = Math.abs(lA - rA);
+
+      return {
+        projection: m('Nose Projection', projection, REFS.noseProjection, coreConf * 0.95),
+        bridgeAngle: m(
+          'Nose Bridge Angle',
+          bridgeAngle,
+          REFS.noseBridgeAngle,
+          coreConf * 0.95,
+          'degrees',
+        ),
+        alar: m('Alar Angle', flare, { mu: 50, sigma: 16 }, coreConf * 0.95, 'degrees'),
+      };
+    })();
+
+    const gated: RawGeometry = { ...geo };
+    for (const key of Object.keys(gated) as (keyof RawGeometry)[]) {
+      if (
+        key === 'faceShape' ||
+        key === 'noseProjection' ||
+        key === 'noseBridgeAngle' ||
+        key === 'alarAngle'
+      )
+        continue;
+      // Plain numeric display widths (faceWidth etc.) carry no status — only
+      // Measurement fields are gated to "unavailable" for a profile photo.
+      if (typeof gated[key] === 'number') continue;
+      (gated as unknown as Record<keyof RawGeometry, Measurement>)[key] = unavailable(
+        gated[key] as Measurement,
+      );
+    }
+    if (nasal) {
+      gated.noseProjection = nasal.projection;
+      gated.noseBridgeAngle = nasal.bridgeAngle;
+      gated.alarAngle = nasal.alar;
+    } else {
+      gated.noseProjection = unavailable(geo.noseProjection);
+      gated.noseBridgeAngle = unavailable(geo.noseBridgeAngle);
+      gated.alarAngle = unavailable(geo.alarAngle);
+    }
+    // A profile silhouette cannot classify face shape — report it honestly.
+    gated.faceShape = { primary: 'Unknown', probabilities: {} };
+    return gated;
+  }
+
+  return geo;
 }
 
 export function getFacialShape(result: FaceLandmarkerResult): FaceShapeClassification {
