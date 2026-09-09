@@ -1183,27 +1183,45 @@ export function computeRawGeometry(
   const middle = Math.abs(nb.y - bl.y);
   const lower = Math.abs(cn.y - nb.y);
 
+  // Degenerate-geometry handling: when a divisor collapses to zero the ratio
+  // is undefined, NOT "exactly the population mean". Substituting the reference
+  // mean as a fallback made the calibration gate pass (z = 0) and produced a
+  // fabricated 'valid' 7.5 "perfectly average" score for unmeasurable geometry.
+  // A null ratio now gates the measurement to unavailable (confidence 0).
+  const DEGENERATE_REASON =
+    'Face geometry too degenerate to measure — retake the photo with the whole face clearly in frame';
+  const gatedConf = (raw: number | null) => (raw === null ? 0 : coreConf);
+  const gatedRaw = (raw: number | null, fallback: number) => raw ?? fallback;
+
   // ── Derived ratios ──
-  const faceRatio = faceLength > 0 ? faceWidth / faceLength : 1;
-  const uThird = faceLength > 0 ? upper / faceLength : 1 / 3;
-  const mThird = faceLength > 0 ? middle / faceLength : 1 / 3;
-  const lThird = faceLength > 0 ? lower / faceLength : 1 / 3;
-  const avgThird = (uThird + mThird + lThird) / 3;
+  const faceRatio = faceLength > 0 ? faceWidth / faceLength : null;
+  const uThird = faceLength > 0 ? upper / faceLength : null;
+  const mThird = faceLength > 0 ? middle / faceLength : null;
+  const lThird = faceLength > 0 ? lower / faceLength : null;
+  const thirdsPresent = [uThird, mThird, lThird].filter(
+    (t): t is number => t !== null,
+  );
+  const avgThird =
+    thirdsPresent.length > 0
+      ? thirdsPresent.reduce((a, b) => a + b, 0) / thirdsPresent.length
+      : null;
   const vBalance =
-    avgThird > 0
-      ? (Math.abs(uThird - avgThird) + Math.abs(mThird - avgThird) + Math.abs(lThird - avgThird)) /
-        (avgThird * 3)
-      : 0;
+    avgThird !== null && thirdsPresent.length >= 2
+      ? thirdsPresent.reduce((sum, t) => sum + Math.abs(t - avgThird), 0) /
+        (avgThird * thirdsPresent.length)
+      : null;
 
   const faceW = reo.x - leo.x;
   const leftEyeW2 = lei.x - leo.x;
   const intercanthal = rei.x - lei.x;
   const rightEyeW2 = reo.x - rei.x;
-  const outerBands = faceW > 0 ? (faceW - (leftEyeW2 + intercanthal + rightEyeW2)) / 2 : 0;
-  const ideal5 = faceW > 0 ? faceW / 5 : 1;
+  const outerBands = faceW > 0 ? (faceW - (leftEyeW2 + intercanthal + rightEyeW2)) / 2 : null;
+  const ideal5 = faceW > 0 ? faceW / 5 : null;
   const fifths = [outerBands, leftEyeW2, intercanthal, rightEyeW2, outerBands];
   const hFifths =
-    ideal5 > 0 ? fifths.reduce((sum, f) => sum + Math.abs(f - ideal5) / ideal5, 0) : 0;
+    ideal5 !== null
+      ? fifths.reduce((sum, f) => sum + Math.abs((f ?? 0) - ideal5) / ideal5, 0)
+      : null;
 
   // Golden-ratio (φ) adherence as a composite of genuinely φ-consistent,
   // *independent* facial ratios. A face has many proportions; the old code
@@ -1214,15 +1232,18 @@ export function computeRawGeometry(
   //   mouth width / nose width  ≈ φ
   // Lower value = closer to the ideal; this is an honest deviation score.
   const phi = 1.618;
-  const faceLenToW = faceLength > 0 && faceWidth > 0 ? faceLength / faceWidth : phi;
-  const mouthToNose = noseW > 0 ? mouthW / noseW : phi;
-  const goldenAdherence = Math.abs(faceLenToW - phi) * 0.6 + Math.abs(mouthToNose - phi) * 0.4;
+  const faceLenToW = faceLength > 0 && faceWidth > 0 ? faceLength / faceWidth : null;
+  const mouthToNose = noseW > 0 ? mouthW / noseW : null;
+  const goldenAdherence =
+    faceLenToW !== null && mouthToNose !== null
+      ? Math.abs(faceLenToW - phi) * 0.6 + Math.abs(mouthToNose - phi) * 0.4
+      : null;
 
   const browToLip = Math.abs(ul.y - bl.y);
-  const fwhrVal = browToLip > 0 ? cheekWidth / browToLip : 1.95;
+  const fwhrVal = browToLip > 0 ? cheekWidth / browToLip : null;
 
   // ── Eyes ──
-  const eyeSpacingRatio = avgEyeWidth > 0 ? eyeGap / avgEyeWidth : 1;
+  const eyeSpacingRatio = avgEyeWidth > 0 ? eyeGap / avgEyeWidth : null;
 
   // Eye aspect ratio: vertical opening / horizontal width
   const leftEyeTop = pt(159);
@@ -1230,7 +1251,7 @@ export function computeRawGeometry(
   const rightEyeTop = pt(386);
   const rightEyeBot = pt(374);
   const eyeAspectRatioVal = (() => {
-    if (!leftEyeTop || !leftEyeBot || !rightEyeTop || !rightEyeBot || avgEyeWidth <= 0) return 0.33;
+    if (!leftEyeTop || !leftEyeBot || !rightEyeTop || !rightEyeBot || avgEyeWidth <= 0) return null;
     const leftH = Math.abs(leftEyeTop.y - leftEyeBot.y);
     const rightH = Math.abs(rightEyeTop.y - rightEyeBot.y);
     return (leftH + rightH) / 2 / avgEyeWidth;
@@ -1284,14 +1305,14 @@ export function computeRawGeometry(
   })();
 
   // ── Nose ──
-  const noseWidthRatioVal = faceWidth > 0 ? noseW / faceWidth : 0.28;
-  const noseChinRatioVal = faceLength > 0 ? noseL / faceLength : 0.3;
-  const eyeNoseRatioVal = noseW > 0 ? avgEyeWidth / noseW : 1.62;
+  const noseWidthRatioVal = faceWidth > 0 ? noseW / faceWidth : null;
+  const noseChinRatioVal = faceLength > 0 ? noseL / faceLength : null;
+  const eyeNoseRatioVal = noseW > 0 ? avgEyeWidth / noseW : null;
 
   const noseProjectionVal = (() => {
     const noseBaseWidth = Math.abs(noseRight.x - noseLeft.x);
     const noseLen = Math.abs(nt.y - nb.y);
-    if (noseLen <= 0) return 0.55;
+    if (noseLen <= 0) return null;
     return noseBaseWidth / (2 * noseLen);
   })();
 
@@ -1304,15 +1325,15 @@ export function computeRawGeometry(
     // vertical-deviation measurement.
     const root = pt(168); // bridge root (between the eyes)
     const tip = pt(1); // nose tip (lowest, most projected)
-    if (!root || !tip) return 0;
+    if (!root || !tip) return null;
     const vertical = Math.abs(root.y - tip.y);
-    if (vertical <= 0) return 0;
+    if (vertical <= 0) return null;
     return Math.atan2(tip.x - root.x, vertical) * (180 / Math.PI);
   })();
 
   // Alar angle: angle of nostril flare from nose tip to alar base
   const alarAngleVal = (() => {
-    if (!noseBaseL || !noseBaseR) return 85;
+    if (!noseBaseL || !noseBaseR) return null;
     const leftAlar =
       Math.atan2(noseBaseL.y - nt.y, (noseBaseL.x - nt.x) * yawScale) * (180 / Math.PI);
     const rightAlar =
@@ -1323,25 +1344,25 @@ export function computeRawGeometry(
   // ── Lips ──
   const lipH = Math.abs(ll.y - ul.y);
   const mouthH = Math.abs(mb.y - mt.y);
-  const lipFull = mouthH > 0 ? lipH / mouthH : 0.55;
-  const lipWR = faceWidth > 0 ? mouthW / faceWidth : 0.42;
-  const upperLR = lipH > 0 ? Math.abs(ul.y - mt.y) / lipH : 0.38;
+  const lipFull = mouthH > 0 ? lipH / mouthH : null;
+  const lipWR = faceWidth > 0 ? mouthW / faceWidth : null;
+  const upperLR = lipH > 0 ? Math.abs(ul.y - mt.y) / lipH : null;
 
   // ── Structure ──
-  const jawRatioVal = faceLength > 0 ? jawWidth / faceLength : 0.78;
+  const jawRatioVal = faceLength > 0 ? jawWidth / faceLength : null;
 
   const gonialAngleVal =
     Math.abs(Math.atan2(lj2.y - cn.y, lj2.x - cn.x) - Math.atan2(rj2.y - cn.y, rj2.x - cn.x)) *
     (180 / Math.PI);
 
-  const taperVal = cheekWidth > 0 ? (cheekWidth - jawWidth) / cheekWidth : 0.45;
+  const taperVal = cheekWidth > 0 ? (cheekWidth - jawWidth) / cheekWidth : null;
 
   const chinCenter = Math.abs(cn.x - (lj.x + rj.x) / 2);
-  const chinProj = jawWidth > 0 ? chinCenter / (jawWidth / 2) : 0;
+  const chinProj = jawWidth > 0 ? chinCenter / (jawWidth / 2) : null;
 
-  const asymmetry = faceLength > 0 ? Math.abs(lj.y - rj.y) / faceLength : 0;
+  const asymmetry = faceLength > 0 ? Math.abs(lj.y - rj.y) / faceLength : null;
 
-  const cheekDef = jawWidth > 0 ? cheekWidth / jawWidth : 1.07;
+  const cheekDef = jawWidth > 0 ? cheekWidth / jawWidth : null;
 
   // ── Symmetry ──
   const axisA = { x: (lei.x + rei.x) / 2, y: (lei.y + rei.y) / 2 };
@@ -1359,7 +1380,7 @@ export function computeRawGeometry(
         perpDist(axisA.x, axisA.y, axisB.x, axisB.y, rp.x, rp.y),
     );
   }
-  const symDev = faceLength > 0 ? symSum / (pairs.length * faceLength) : 0;
+  const symDev = faceLength > 0 ? symSum / (pairs.length * faceLength) : null;
 
   // ── Face shape ──
   const faceShape = calculateFaceShape(lm);
@@ -1410,21 +1431,23 @@ export function computeRawGeometry(
     noseLength: noseL,
     mouthWidth: mouthW,
 
-    faceRatio: m('Face Ratio (W/L)', faceRatio, REFS.faceRatio, coreConf),
-    upperThird: m('Upper Third', uThird, { mu: 1 / 3, sigma: 0.04 }, coreConf),
-    middleThird: m('Middle Third', mThird, { mu: 1 / 3, sigma: 0.04 }, coreConf),
-    lowerThird: m('Lower Third', lThird, { mu: 1 / 3, sigma: 0.04 }, coreConf),
-    verticalBalance: m('Vertical Balance', vBalance, REFS.verticalBalance, coreConf),
-    horizontalFifths: m('Horizontal Fifths', hFifths, REFS.horizontalFifths, coreConf),
-    goldenRatio: m('Golden Ratio Adherence', goldenAdherence, REFS.goldenRatio, coreConf),
-    fwhr: m('FWHR', fwhrVal, REFS.fwhr, coreConf),
+    faceRatio: m('Face Ratio (W/L)', gatedRaw(faceRatio, REFS.faceRatio.mu), REFS.faceRatio, gatedConf(faceRatio), 'ratio', faceRatio === null ? DEGENERATE_REASON : undefined),
+    upperThird: m('Upper Third', gatedRaw(uThird, 1 / 3), { mu: 1 / 3, sigma: 0.04 }, gatedConf(uThird), 'ratio', uThird === null ? DEGENERATE_REASON : undefined),
+    middleThird: m('Middle Third', gatedRaw(mThird, 1 / 3), { mu: 1 / 3, sigma: 0.04 }, gatedConf(mThird), 'ratio', mThird === null ? DEGENERATE_REASON : undefined),
+    lowerThird: m('Lower Third', gatedRaw(lThird, 1 / 3), { mu: 1 / 3, sigma: 0.04 }, gatedConf(lThird), 'ratio', lThird === null ? DEGENERATE_REASON : undefined),
+    verticalBalance: m('Vertical Balance', gatedRaw(vBalance, 0), REFS.verticalBalance, gatedConf(vBalance), 'ratio', vBalance === null ? DEGENERATE_REASON : undefined),
+    horizontalFifths: m('Horizontal Fifths', gatedRaw(hFifths, 0), REFS.horizontalFifths, gatedConf(hFifths), 'ratio', hFifths === null ? DEGENERATE_REASON : undefined),
+    goldenRatio: m('Golden Ratio Adherence', gatedRaw(goldenAdherence, 0), REFS.goldenRatio, gatedConf(goldenAdherence), 'ratio', goldenAdherence === null ? DEGENERATE_REASON : undefined),
+    fwhr: m('FWHR', gatedRaw(fwhrVal, REFS.fwhr.mu), REFS.fwhr, gatedConf(fwhrVal), 'ratio', fwhrVal === null ? DEGENERATE_REASON : undefined),
 
-    eyeSpacing: m('Eye Spacing', eyeSpacingRatio, REFS.eyeSpacing, coreConf),
+    eyeSpacing: m('Eye Spacing', gatedRaw(eyeSpacingRatio, REFS.eyeSpacing.mu), REFS.eyeSpacing, gatedConf(eyeSpacingRatio), 'ratio', eyeSpacingRatio === null ? DEGENERATE_REASON : undefined),
     eyeAspectRatio: m(
       'Eye Aspect Ratio',
-      eyeAspectRatioVal,
+      gatedRaw(eyeAspectRatioVal, REFS.eyeAspectRatio.mu),
       REFS.eyeAspectRatio,
-      conf([159, 145, 386, 374]),
+      gatedConf(eyeAspectRatioVal),
+      'ratio',
+      eyeAspectRatioVal === null ? DEGENERATE_REASON : undefined,
     ),
     canthalTilt: m('Canthal Tilt', canthal, REFS.canthalTilt, coreConf, 'degrees'),
     eyeTilt: m('Eye Tilt', eyeTiltVal, REFS.eyeTilt, coreConf, 'degrees'),
@@ -1436,47 +1459,53 @@ export function computeRawGeometry(
       conf([46, 107, 276, 334]),
     ),
 
-    noseWidthRatio: m('Nose Width Ratio', noseWidthRatioVal, REFS.noseWidthRatio, conf([458, 468])),
+    noseWidthRatio: m('Nose Width Ratio', gatedRaw(noseWidthRatioVal, REFS.noseWidthRatio.mu), REFS.noseWidthRatio, gatedConf(noseWidthRatioVal), 'ratio', noseWidthRatioVal === null ? DEGENERATE_REASON : undefined),
     eyeNoseRatio: m(
       'Eye–Nose Ratio',
-      eyeNoseRatioVal,
+      gatedRaw(eyeNoseRatioVal, REFS.eyeNoseRatio.mu),
       REFS.eyeNoseRatio,
-      conf([133, 362, 33, 263, 458, 468]),
+      gatedConf(eyeNoseRatioVal),
+      'ratio',
+      eyeNoseRatioVal === null ? DEGENERATE_REASON : undefined,
     ),
-    noseChinRatio: m('Nose–Chin Ratio', noseChinRatioVal, REFS.noseChinRatio, coreConf),
+    noseChinRatio: m('Nose–Chin Ratio', gatedRaw(noseChinRatioVal, REFS.noseChinRatio.mu), REFS.noseChinRatio, gatedConf(noseChinRatioVal), 'ratio', noseChinRatioVal === null ? DEGENERATE_REASON : undefined),
     noseProjection: m(
       'Nose Projection',
-      noseProjectionVal,
+      gatedRaw(noseProjectionVal, REFS.noseProjection.mu),
       REFS.noseProjection,
-      viewConstrainedConf([458, 468]),
+      noseProjectionVal === null ? 0 : viewConstrainedConf([458, 468]),
+      'ratio',
+      noseProjectionVal === null ? DEGENERATE_REASON : undefined,
     ),
     noseBridgeAngle: m(
       'Nose Bridge Angle',
-      noseBridgeAngleVal,
+      gatedRaw(noseBridgeAngleVal, REFS.noseBridgeAngle.mu),
       REFS.noseBridgeAngle,
-      viewConstrainedConf([1, 168]),
+      noseBridgeAngleVal === null ? 0 : viewConstrainedConf([1, 168]),
       'degrees',
+      noseBridgeAngleVal === null ? DEGENERATE_REASON : undefined,
     ),
     alarAngle: m(
       'Alar Angle',
-      alarAngleVal,
+      gatedRaw(alarAngleVal, REFS.alarAngle.mu),
       REFS.alarAngle,
-      viewConstrainedConf([94, 278]),
+      alarAngleVal === null ? 0 : viewConstrainedConf([94, 278]),
       'degrees',
+      alarAngleVal === null ? DEGENERATE_REASON : undefined,
     ),
 
-    lipFullness: m('Lip Fullness', lipFull, REFS.lipFullness, coreConf),
-    lipWidthRatio: m('Lip Width Ratio', lipWR, REFS.lipWidthRatio, coreConf),
-    upperLipRatio: m('Upper Lip Ratio', upperLR, REFS.upperLipRatio, coreConf),
+    lipFullness: m('Lip Fullness', gatedRaw(lipFull, REFS.lipFullness.mu), REFS.lipFullness, gatedConf(lipFull), 'ratio', lipFull === null ? DEGENERATE_REASON : undefined),
+    lipWidthRatio: m('Lip Width Ratio', gatedRaw(lipWR, REFS.lipWidthRatio.mu), REFS.lipWidthRatio, gatedConf(lipWR), 'ratio', lipWR === null ? DEGENERATE_REASON : undefined),
+    upperLipRatio: m('Upper Lip Ratio', gatedRaw(upperLR, REFS.upperLipRatio.mu), REFS.upperLipRatio, gatedConf(upperLR), 'ratio', upperLR === null ? DEGENERATE_REASON : undefined),
 
-    jawRatio: m('Jaw Ratio', jawRatioVal, REFS.jawRatio, coreConf),
+    jawRatio: m('Jaw Ratio', gatedRaw(jawRatioVal, REFS.jawRatio.mu), REFS.jawRatio, gatedConf(jawRatioVal), 'ratio', jawRatioVal === null ? DEGENERATE_REASON : undefined),
     gonialAngle: m('Gonial Angle', gonialAngleVal, REFS.gonialAngle, coreConf, 'degrees'),
-    mandibularTaper: m('Mandibular Taper', taperVal, REFS.mandibularTaper, coreConf),
-    chinProjection: m('Chin Projection', chinProj, REFS.chinProjection, coreConf),
-    jawSymmetry: m('Jaw Symmetry', asymmetry, REFS.jawSymmetry, coreConf),
-    cheekboneDefinition: m('Cheekbone Definition', cheekDef, REFS.cheekboneDefinition, coreConf),
+    mandibularTaper: m('Mandibular Taper', gatedRaw(taperVal, REFS.mandibularTaper.mu), REFS.mandibularTaper, gatedConf(taperVal), 'ratio', taperVal === null ? DEGENERATE_REASON : undefined),
+    chinProjection: m('Chin Projection', gatedRaw(chinProj, REFS.chinProjection.mu), REFS.chinProjection, gatedConf(chinProj), 'ratio', chinProj === null ? DEGENERATE_REASON : undefined),
+    jawSymmetry: m('Jaw Symmetry', gatedRaw(asymmetry, REFS.jawSymmetry.mu), REFS.jawSymmetry, gatedConf(asymmetry), 'ratio', asymmetry === null ? DEGENERATE_REASON : undefined),
+    cheekboneDefinition: m('Cheekbone Definition', gatedRaw(cheekDef, REFS.cheekboneDefinition.mu), REFS.cheekboneDefinition, gatedConf(cheekDef), 'ratio', cheekDef === null ? DEGENERATE_REASON : undefined),
 
-    symmetry: m('Symmetry', symDev, REFS.symmetry, coreConf),
+    symmetry: m('Symmetry', gatedRaw(symDev, 0), REFS.symmetry, gatedConf(symDev), 'ratio', symDev === null ? DEGENERATE_REASON : undefined),
 
     faceShape,
   };
