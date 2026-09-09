@@ -1453,8 +1453,13 @@ export function mergeFaceScores(
 
   // Merge youthfulness and structure profile across samples. If no sample
   // produced a measurement, the result stays null (rendered as "not measured")
-  // instead of defaulting to a fabricated middle value.
+  // instead of defaulting to a fabricated middle value. Youthfulness is a
+  // frontal assessment (skin smoothness/pigmentation brightness sampled on a
+  // 2D canvas): a side-profile sample is edge-lit and foreshortened, so its
+  // number would drag the average toward a biased value — excluded like
+  // structureProfile below.
   const youthfulnessValues = samples
+    .filter((s) => (s.view ?? 'front') !== 'profile')
     .map((s) => s.youthfulness)
     .filter((v): v is number => typeof v === 'number');
   const youthfulness =
