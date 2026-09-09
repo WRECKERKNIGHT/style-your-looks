@@ -290,6 +290,9 @@ export function useMediaPipe() {
           [{ metrics, skinClarity: skinClarityScore, quality, youthfulness, structureProfile: structureProfile?.label ?? null }],
           genderProfile
         ).result;
+        // Gate the commit point: a cancel issued during the scoring block
+        // above must stop the save, not quietly ship results the user aborted.
+        throwIfCancelled();
 
         onPreview?.(
           faceResult.faceLandmarks?.[0]?.map((l) => [l.x, l.y, l.z]) || []
