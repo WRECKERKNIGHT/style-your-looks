@@ -1003,6 +1003,36 @@ export function AnalysisResults() {
               />
             ))}
         </div>
+
+        {(faceResult.notMeasured?.length ?? 0) > 0 && (
+          <div className="mt-8 bg-light-base dark:bg-cosmic-elevated border border-light-border dark:border-cosmic-border rounded-[var(--radius-xs)] p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <Minus className="w-4 h-4 text-nexus-400" />
+              <span className="text-xs font-body font-bold text-nexus-400 tracking-wider uppercase">
+                Not measured — why
+              </span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {(faceResult.notMeasured ?? []).map((nm) => (
+                <div
+                  key={nm.label}
+                  className="flex items-start gap-2 text-sm font-body text-nexus-600 dark:text-nexus-200 leading-snug"
+                >
+                  <span className="shrink-0 mt-0.5 w-1.5 h-1.5 rounded-full bg-nexus-400/50" />
+                  <span>
+                    <span className="font-bold text-nexus-800 dark:text-white">{nm.label}</span>
+                    {" — "}
+                    {nm.reason}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-nexus-400 dark:text-cosmic-muted font-body mt-3 leading-relaxed">
+              A metric shown here was not scored at all — this is never a zero. Adding the photo
+              type it needs (usually a clear side profile) is the only way to get a real reading.
+            </p>
+          </div>
+        )}
       </CollapsibleSection>
 
       <CollapsibleSection icon={Radar} title="GEOMETRY RADAR" defaultOpen>

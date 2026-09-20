@@ -102,6 +102,9 @@ export interface FaceAnalysisResult {
   faceShapeDetails: { description: string; characteristics: string[]; idealHairstyles: string[]; idealGlasses: string[] };
   photoQualityScore: number | null;
   consistencyScore?: number;
+  /** Metrics that could not be scored, with the honest reason why. `undefined`
+   *  hides the panel entirely; an empty array is not used. */
+  notMeasured?: { label: string; reason: string }[];
   analysisConfidence: number;
   metricAvailability: string[];
   photoCount: number;
