@@ -15,7 +15,7 @@ import { AnalysisResults } from '@/components/analysis/AnalysisResults';
 import { FaceSkeletonOverlay } from '@/components/analysis/FaceSkeletonOverlay';
 import { ProcessingCinematic } from '@/components/analysis/ProcessingCinematic';
 import { PhotoGuidelines } from '@/components/analysis/PhotoGuidelines';
-import { PhotoReviewPanel, type RejectedPhoto } from '@/components/analysis/PhotoReviewPanel';
+import { PhotoReviewPanel, type RejectedPhoto, type AcceptedPhoto } from '@/components/analysis/PhotoReviewPanel';
 import { FaceCalibration } from '@/components/analysis/FaceCalibration';
 import { CalibrationModal, type CalibrationProfile } from '@/components/analysis/CalibrationModal';
 import { FaceView3D } from '@/components/analysis/FaceView3D';
@@ -267,6 +267,7 @@ export default function FaceAnalysisPage() {
   const [reportOpen, setReportOpen] = useState(false);
   const [photos, setPhotos] = useState<string[]>([]);
   const [rejectedPhotos, setRejectedPhotos] = useState<RejectedPhoto[]>([]);
+  const [acceptedPhotos, setAcceptedPhotos] = useState<AcceptedPhoto[]>([]);
   const [step, setStep] = useState<'calibrate' | 'intake' | 'capture'>('calibrate');
   const [calibOpen, setCalibOpen] = useState(false);
   const [calibration, setCalibration] = useState<CalibrationProfile | null>(null);
@@ -350,6 +351,7 @@ export default function FaceAnalysisPage() {
       setPhotos((prev) => (prev.length >= MAX_PHOTOS ? prev : [...prev, imageData]));
       setError(null);
       setRejectedPhotos([]);
+      setAcceptedPhotos([]);
     },
     [addToast, photos.length],
   );
@@ -374,6 +376,11 @@ export default function FaceAnalysisPage() {
         .filter((r) => r.index !== index)
         .map((r) => ({ ...r, index: r.index > index ? r.index - 1 : r.index })),
     );
+    setAcceptedPhotos((prev) =>
+      prev
+        .filter((a) => a.index !== index)
+        .map((a) => ({ ...a, index: a.index > index ? a.index - 1 : a.index })),
+    );
     setError(null);
   }, []);
 
@@ -386,6 +393,7 @@ export default function FaceAnalysisPage() {
       setPhoto(person.facePhoto, 'face');
       setError(null);
       setRejectedPhotos([]);
+      setAcceptedPhotos([]);
       setProcessingPreview({ image: person.facePhoto, landmarks: [] });
       try {
         await new Promise((r) => setTimeout(r, 900));
@@ -535,7 +543,7 @@ export default function FaceAnalysisPage() {
         ),
       );
 
-      const { photoCount, rejected, bestIndex } = await analyzeFacePhotos(
+      const { photoCount, rejected, accepted, bestIndex } = await analyzeFacePhotos(
         images,
         genderProfile,
         (index, landmarks) => setProcessingPreview({ image: photos[index], landmarks }),
@@ -551,6 +559,7 @@ export default function FaceAnalysisPage() {
       setPhoto(photos[bestIndex] ?? photos[0], 'face');
       markAnalyzed();
       setRejectedPhotos(rejected);
+      setAcceptedPhotos(accepted);
       if (rejected.length > 0) {
         addToast(
           `${rejected.length} photo(s) skipped: ${rejected.map((r) => r.issues.join(', ')).join(' | ')}`,
@@ -1084,8 +1093,8 @@ export default function FaceAnalysisPage() {
                 </motion.button>
               </motion.div>
 
-              {rejectedPhotos.length > 0 && (
-                <PhotoReviewPanel photos={photos} rejected={rejectedPhotos} />
+              {(rejectedPhotos.length > 0 || acceptedPhotos.length > 0) && (
+                <PhotoReviewPanel photos={photos} rejected={rejectedPhotos} accepted={acceptedPhotos} />
               )}
 
               {uploadedImage && (

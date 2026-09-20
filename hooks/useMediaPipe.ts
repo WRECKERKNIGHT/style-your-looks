@@ -430,6 +430,10 @@ export function useMediaPipe() {
       try {
         const samples: FaceScoreSample[] = [];
         const rejected: { index: number; issues: string[] }[] = [];
+        // Photos that scored but carry soft warnings (slight head turn, small
+        // face, background face, near-edge crop). They ARE part of the score,
+        // but the "photo accepted" summary must not hide the caveats.
+        const accepted: { index: number; warnings: string[] }[] = [];
         let bestQuality = -1;
         // The displayed overlay/readouts (landmarks, pose guidance, skin tone,
         // age, quality report) must come from a frontal capture: a profile shot
@@ -500,6 +504,12 @@ export function useMediaPipe() {
               : autoView;
 
           const quality = assessPhotoQuality(canvas, faceResult, numFaces, view);
+          if (quality.score === null) {
+            rejected.push({ index: i, issues: quality.issues });
+            continue;
+          }
+
+          accepted.push({ index: i, warnings: quality.warnings });
 
           if (!quality.usable) {
             rejected.push({ index: i, issues: quality.issues });
@@ -583,7 +593,7 @@ export function useMediaPipe() {
 
         setAnalysisProgress(100);
         if (!options?.demoMode) saveCurrentAnalysis();
-        return { scoreResult, samples, rejected, photoCount: samples.length, bestIndex: displayBest.index };
+        return { scoreResult, samples, rejected, accepted, photoCount: samples.length, bestIndex: displayBest.index };
       } catch (err) {
         console.error("Multi-photo face analysis error:", err);
         throw err;
