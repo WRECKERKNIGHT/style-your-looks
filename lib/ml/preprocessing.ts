@@ -198,8 +198,15 @@ export function quickQualityGate(canvas: HTMLCanvasElement): QuickGateReport {
     // rejecting them on that alone blocked legitimate photos. A truly useless
     // frame is caught by edge intensity below (a low-contrast image is also
     // low-edge).
+    //
+    // Blur is also deliberately soft here: only a photo that is essentially
+    // edge-free (a blank frame / extreme motion blur where MediaPipe has no
+    // structure to latch onto) is rejected up front. Ordinary phone "a little
+    // soft" photos pass the pre-gate and the detailed assessment scores their
+    // sharpness as a warning, never a hard denial — they still produce real
+    // geometry readings.
     const edge = edgeIntensity(data, w, h);
-    if (edge < 1.1) issues.push("Photo is too blurry — steady the camera");
+    if (edge < 0.55) issues.push("Photo is too blurry to analyze — steady the camera");
   }
 
   return { usable: issues.length === 0, issues };
