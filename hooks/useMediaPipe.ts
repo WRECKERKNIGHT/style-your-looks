@@ -18,7 +18,7 @@ import {
   type AnalysisProfile,
 } from "@/lib/ml/scoring";
 import { getYouthfulness, getStructureProfile } from "@/lib/ml/face-analyzer";
-import { assessPhotoQuality, type PhotoQualityReport } from "@/lib/ml/face-quality";
+import { assessPhotoQuality, headPose, type PhotoQualityReport } from "@/lib/ml/face-quality";
 import { generateRecommendations } from "@/lib/ml/outfit-recommender";
 import { useAnalysisStore } from "@/store/analysis-store";
 
@@ -401,9 +401,11 @@ export function useMediaPipe() {
         for (let i = 0; i < imageElements.length; i++) {
           setAnalysisProgress(Math.round((i / imageElements.length) * 75));
           const image = imageElements[i];
-          // Slot 0 = normal frontal portrait, slot 1 = side profile (when a
-          // profile photo is supplied), everything else = frontal.
-          const view: "front" | "profile" = views?.[i] ?? "front";
+          // Hint from the caller (kept for callers that know the capture's
+          // intent), but never trusted blindly: see the yaw-based correction
+          // after landmark detection below.
+          const hint: "front" | "profile" | undefined = views?.[i];
+          let view: "front" | "profile" = hint ?? "front";
 
           if (!image.naturalWidth || !image.naturalHeight) {
             rejected.push({ index: i, issues: ["Could not load the photo"] });
@@ -422,6 +424,22 @@ export function useMediaPipe() {
           const faceResult = await analyzeFace(canvas);
           throwIfCancelled();
           const numFaces = faceResult.faceLandmarks?.length || 0;
+
+          // View is auto-detected from the measured head yaw, not from photo
+          // slot. The old code forced slot 1 to "profile", so two normal
+          // frontal selfies got the side-profile metric path and its yaw
+          // gate — the single biggest cause of valid photos being rejected or
+          // mis-measured. A true profile decomposes as ~40–90°; anything a
+          // real person would upload as a selfie stays frontal. Explicit hints
+          // can only lower the profile floor (the yaw matrix is noisy near
+          // profile), never elevate a frontal photo to profile.
+          const yawMag = Math.abs(headPose(faceResult).yaw);
+          const autoView: "front" | "profile" = yawMag >= 38 ? "profile" : "front";
+          view =
+            hint === "profile" && autoView === "front" && yawMag >= 25
+              ? "profile"
+              : autoView;
+
           const quality = assessPhotoQuality(canvas, faceResult, numFaces, view);
 
           if (!quality.usable) {
