@@ -1180,7 +1180,7 @@ export function computeRawGeometry(
   // nasal ones.
   const { yaw, pitch, roll } = headPose(result);
   const cosYaw = Math.cos((yaw * Math.PI) / 180);
-  const yawScale = Math.abs(yaw) >= 1 && Math.abs(yaw) <= 20 && cosYaw > 0.9 ? 1 / cosYaw : 1;
+  const yawScale = Math.abs(yaw) >= 1 && Math.abs(yaw) <= 25 && cosYaw > 0.88 ? 1 / cosYaw : 1;
   const faceWidth = Math.hypot((rc.x - lc.x) * yawScale, rc.y - lc.y);
   const cheekWidth = Math.abs((rc.x - lc.x) * yawScale);
   const jawWidth = Math.hypot((rj.x - lj.x) * yawScale, rj.y - lj.y);
@@ -1401,14 +1401,25 @@ export function computeRawGeometry(
   // Honest per-measurement confidence. Penalises all THREE pose axes (yaw,
   // pitch, roll) — the old code only looked at roll via the upright frame, so
   // a turned (yaw) head still reported full confidence. Yaw's contribution is
-  // now the largest term: it silently distorts every bilateral width metric.
+  // the largest term: it silently distorts every bilateral width metric.
   // For a side profile, yaw ≈90° is the EXPECTED pose, so only pitch/roll
   // penalise it (the width metrics it ruins are already gated to "unavailable"
   // for that view).
+  //
+  // The penalties are tuned to the pose correction (yaw foreshortening ≤25°,
+  // roll removed by the upright frame): a normal selfie with yaw ≤15° and minor
+  // tilt still scores confidently, while wider turns and angles get
+  // down-weighted — the measurement reports "not reliable" instead of being
+  // fabricated or wildly off. The old penalties were so aggressive that a
+  // straight-on photo with a mere 10–15° head turn fell below confidence 0.5
+  // and the whole report showed "NOT RELIABLE FOR THIS PHOTO".
   const poseFactor =
     view === 'profile'
-      ? Math.max(0.4, Math.min(1, 1 - (Math.abs(roll) / 30 + Math.abs(pitch) / 40)))
-      : Math.max(0.4, Math.min(1, 1 - (Math.abs(yaw) / 35 + Math.abs(roll) / 30 + Math.abs(pitch) / 40)));
+      ? Math.max(0.4, Math.min(1, 1 - (Math.abs(roll) / 50 + Math.abs(pitch) / 50)))
+      : Math.max(
+          0.4,
+          Math.min(1, 1 - (Math.abs(yaw) / 50 + Math.abs(roll) / 50 + Math.abs(pitch) / 55)),
+        );
   const conf = (indices: number[]): number => {
     if (indices.some((i) => !pt(i))) return 0;
     return Math.round(poseFactor * 100) / 100;
