@@ -96,6 +96,38 @@ function faceBoundingBox(result: FaceLandmarkerResult): { minX: number; minY: nu
   return { minX, minY, maxX, maxY };
 }
 
+function everyFaceBoundingBox(result: FaceLandmarkerResult): Array<{
+  minX: number;
+  minY: number;
+  maxX: number;
+  maxY: number;
+  area: number;
+}> {
+  const boxes: Array<{ minX: number; minY: number; maxX: number; maxY: number; area: number }> = [];
+  for (const lm of result.faceLandmarks ?? []) {
+    if (!lm || lm.length === 0) continue;
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+    for (const p of lm) {
+      minX = Math.min(minX, p.x);
+      minY = Math.min(minY, p.y);
+      maxX = Math.max(maxX, p.x);
+      maxY = Math.max(maxY, p.y);
+    }
+    if (!Number.isFinite(minX)) continue;
+    boxes.push({
+      minX,
+      minY,
+      maxX,
+      maxY,
+      area: Math.max(0, maxX - minX) * Math.max(0, maxY - minY),
+    });
+  }
+  return boxes;
+}
+
 /**
  * Full 3-axis head pose from the MediaPipe facial transformation matrix.
  * The 4×4 transform is stored column-major, so rotation element R[row][col]
@@ -145,8 +177,25 @@ export function assessPhotoQuality(
     };
   }
 
-  if (numFacesDetected > 1) {
-    issues.push("Multiple faces detected — use a photo with only you in it");
+  // Multiple faces: MediaPipe can report several detections in a single
+  // photo — including small face-shaped objects in the background (posters,
+  // reflections, screen doppelgangers). Rejecting on ANY extra detection
+  // blocked perfectly usable selfies. Only a genuinely large second face
+  // (≈ another person in the frame) is a hard reject; a small background
+  // face becomes a warning and the largest face is kept.
+  const allFaces = everyFaceBoundingBox(result);
+  const primaryArea = allFaces[0]?.area ?? 0;
+  const largestExtra = allFaces
+    .slice(1)
+    .reduce((max, f) => Math.max(max, f.area), 0);
+  if (allFaces.length > 1) {
+    if (primaryArea > 0 && largestExtra / primaryArea >= 0.15) {
+      issues.push("Multiple faces detected — use a photo with only you in it");
+    } else {
+      warnings.push(
+        "Another face was detected in the background — keeping the largest face for analysis",
+      );
+    }
   }
 
   const lum = getLuminance(canvas);
@@ -170,15 +219,31 @@ export function assessPhotoQuality(
   let sizeScore = 10;
   if (bbox) {
     faceSizeRatio = Math.max(bbox.maxX - bbox.minX, bbox.maxY - bbox.minY);
-    if (faceSizeRatio < 0.12) {
+    // A face that reaches the very edge of the frame is almost certainly
+    // clipped (chin or forehead out of shot), which silently distorts the
+    // geometry. Flag it as a warning unless the crop is extreme.
+    const nearEdge =
+      bbox.minX < 0.03 ||
+      bbox.minY < 0.03 ||
+      bbox.maxX > 0.97 ||
+      bbox.maxY > 0.97;
+    if (nearEdge) {
+      warnings.push(
+        "Face touches the edge of the frame — results may be slightly less accurate",
+      );
+    }
+    if (faceSizeRatio < 0.09) {
       issues.push("Face is too small — move closer to the camera");
       sizeScore = 1;
-    } else if (faceSizeRatio > 0.95) {
-      issues.push("Face fills the frame — pull back a bit");
+    } else if (faceSizeRatio > 0.99) {
+      issues.push("Face fills the entire frame — pull back a bit");
       sizeScore = 2;
-    } else if (faceSizeRatio < 0.2) {
+    } else if (faceSizeRatio < 0.16) {
       warnings.push("Face is relatively small in frame");
       sizeScore = 5 + (faceSizeRatio / 0.2) * 4;
+    } else if (faceSizeRatio > 0.93) {
+      warnings.push("Face is very close to the camera — results may be slightly less accurate");
+      sizeScore = Math.min(10, 6 + (faceSizeRatio - 0.2) * 8) * 0.9;
     } else {
       sizeScore = Math.min(10, 6 + (faceSizeRatio - 0.2) * 8);
     }
@@ -187,25 +252,28 @@ export function assessPhotoQuality(
   const pose = headPose(result);
 
   // Yaw is the most damaging off-frontal axis: it compresses one side of the
-  // face, which reads as fake "asymmetry" and skewed fifths/FWHR. Reject hard
-  // turns, warn on moderate ones. Exempted for profile captures, where a large
-  // yaw is the entire point.
+  // face, which reads as fake "asymmetry" and skewed fifths/FWHR. Normal
+  // person-captured selfies routinely have a head turn of 15–30° without
+  // being unusable — the geometry engine corrects yaw foreshortening up to
+  // ~25° and only scores measurements within the reliable band, so we reject
+  // hard turns only when they are clearly a side-on or profile frame.
+  // Exempted for profile captures, where a large yaw is the entire point.
   if (!isProfile) {
-    if (Math.abs(pose.yaw) > 25) {
-      issues.push("Head is turned too far to the side — look straight at the camera");
-    } else if (Math.abs(pose.yaw) > 15) {
+    if (Math.abs(pose.yaw) > 55) {
+      issues.push("Head is turned fully to the side — face the camera directly");
+    } else if (Math.abs(pose.yaw) > 20) {
       warnings.push("Head slightly turned — a frontal pose gives the most accurate read");
     }
   }
 
-  if (Math.abs(pose.roll) > 18) {
+  if (Math.abs(pose.roll) > 24) {
     warnings.push("Face is tilted — hold your head straight for the sharpest results");
-  } else if (Math.abs(pose.roll) > 10) {
+  } else if (Math.abs(pose.roll) > 12) {
     warnings.push("Slight head tilt detected — try to face the camera directly");
   }
-  if (Math.abs(pose.pitch) > 32) {
+  if (Math.abs(pose.pitch) > 55) {
     issues.push("Camera angle too extreme — face the camera directly");
-  } else if (Math.abs(pose.pitch) > 22) {
+  } else if (Math.abs(pose.pitch) > 28) {
     warnings.push("Camera is shooting at an angle — accuracy may be reduced");
   }
 
@@ -214,9 +282,9 @@ export function assessPhotoQuality(
   // Pose contributes directly to capture quality so that confidence and
   // best-photo selection prefer genuinely frontal frames. Profile captures
   // score on pitch/roll only — their yaw (≈90°) is expected, not a defect.
-  const yawDev = isProfile ? 0 : Math.min(1, Math.abs(pose.yaw) / 25);
-  const pitchDev = Math.min(1, Math.abs(pose.pitch) / 32);
-  const rollDev = Math.min(1, Math.abs(pose.roll) / 18);
+  const yawDev = isProfile ? 0 : Math.min(1, Math.abs(pose.yaw) / 55);
+  const pitchDev = Math.min(1, Math.abs(pose.pitch) / 55);
+  const rollDev = Math.min(1, Math.abs(pose.roll) / 30);
   const poseScore = Math.max(0, 10 - (yawDev * 4 + pitchDev * 3 + rollDev * 3));
 
   const base =
@@ -262,8 +330,8 @@ export function frontalityScore(
   q: Pick<PhotoQualityReport, "headYaw" | "headPitch" | "headRoll">,
   view: 'front' | 'profile' = 'front'
 ): number {
-  const yawDev = view === 'profile' ? 0 : Math.min(1, Math.abs(q.headYaw) / 25);
-  const pitchDev = Math.min(1, Math.abs(q.headPitch) / 32);
-  const rollDev = Math.min(1, Math.abs(q.headRoll) / 18);
+  const yawDev = view === 'profile' ? 0 : Math.min(1, Math.abs(q.headYaw) / 55);
+  const pitchDev = Math.min(1, Math.abs(q.headPitch) / 55);
+  const rollDev = Math.min(1, Math.abs(q.headRoll) / 30);
   return Math.max(0, 10 - (yawDev * 4 + pitchDev * 3 + rollDev * 3));
 }
