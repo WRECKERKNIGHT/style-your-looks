@@ -40,6 +40,65 @@ export interface AnalysisRunOptions {
   demoMode?: boolean;
 }
 
+const PHOTO_FIX_INSIGHTS: Record<string, { insight: string; fix: string }> = {
+  dark: {
+    insight: "Photo too dark",
+    fix: "Retake in brighter, even lighting.",
+  },
+  blur: {
+    insight: "Photo too blurry",
+    fix: "Steady the camera and refocus before snapping.",
+  },
+  overexposed: {
+    insight: "Overexposed",
+    fix: "Reduce brightness or move out of direct glare.",
+  },
+  "no-face": {
+    insight: "No face found",
+    fix: "Retake with the face clearly centered and facing the camera.",
+  },
+  "multiple-faces": {
+    insight: "More than one face",
+    fix: "Retake with only you in frame.",
+  },
+  small: {
+    insight: "Face too small",
+    fix: "Move closer so the face fills more of the frame.",
+  },
+  fill: {
+    insight: "Face fills the frame",
+    fix: "Pull the camera back a little.",
+  },
+  pose: {
+    insight: "Head fully to the side / extreme angle",
+    fix: "Face the camera straight on at eye level.",
+  },
+  lowquality: {
+    insight: "Extremely low quality",
+    fix: "Retake with a newer, higher-resolution photo.",
+  },
+};
+
+function suggestPhotoFix(issue: string): { insight: string; fix: string } {
+  const norm = issue.toLowerCase();
+  const hit = Object.entries(PHOTO_FIX_INSIGHTS).find(([key]) =>
+    ["dark", "blur", "overexposed", "no-face", "multiple-faces", "small", "fill", "pose", "lowquality"].includes(key)
+      ? {
+          dark: /too dark|brightness|lighting/.test(norm),
+          blur: /blurr/.test(norm),
+          overexposed: /overexpos|brightness/.test(norm),
+          "no-face": /no face|couldn't find|no face found/.test(norm),
+          "multiple-faces": /multiple faces/.test(norm),
+          small: /too small/.test(norm),
+          fill: /fills|entire frame/.test(norm),
+          pose: /to the side|extreme|turn/.test(norm),
+          lowquality: /load the photo|low quality/.test(norm),
+        }[key]
+      : false
+  );
+  return hit ? PHOTO_FIX_INSIGHTS[hit[0]] : { insight: "Unclear photo", fix: "Retake with a clearer, front-facing photo in even lighting." };
+}
+
 function faceBBox(result: FaceLandmarkerResult): {
   minX: number;
   minY: number;
@@ -475,9 +534,26 @@ export function useMediaPipe() {
         }
 
         if (samples.length === 0) {
-          const details = rejected.map((r) => r.issues.join("; ")).join(" | ");
+          // Aggregate every rejection/issue across photos, dedupe by text, then
+          // explain what to fix for each: just "We couldn't analyze any photo"
+          // gave the user no way to know WHICH of the six checks their upload
+          // was failing. The message is also honest — it counts how many photos
+          // hit each reason instead of pretending to be a single diagnosis.
+          const counts = new Map<string, { n: number; fix: string }>();
+          for (const r of rejected) {
+            for (const issue of r.issues) {
+              const { insight, fix } = suggestPhotoFix(issue);
+              const key = insight;
+              counts.set(key, { n: (counts.get(key)?.n ?? 0) + 1, fix });
+            }
+          }
+          const lines = Array.from(counts.entries()).map(
+            ([insight, { n, fix }]) =>
+              `${insight}${n > 1 ? ` (${n} photos)` : ""} — ${fix}`
+          );
+          const detail = lines.length > 0 ? lines.join(" ") : "";
           throw new Error(
-            `We couldn't analyze any photo.${details ? ` ${details}` : ""} Use a clearer, front-facing photo with your face centered and well-lit.`
+            `We couldn't analyze any of your photos. ${detail || "Use a clearer, front-facing photo with your face centered and well-lit."}`
           );
         }
 
