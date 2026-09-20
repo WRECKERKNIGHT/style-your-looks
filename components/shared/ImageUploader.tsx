@@ -69,6 +69,45 @@ function downscaleDataUrl(dataUrl: string): Promise<string> {
   });
 }
 
+/**
+ * Black/blank-frame guard. Downscale the data URL to an 8x8 canvas, sample
+ * the brightest pixel = 0, i.e. the whole frame is essentially black; any
+ * real photo (even dark) has enough luminance variance to cross that line.
+ * Catches webcam captures taken before the shutter opens and miscopied /
+ * corrupted frames that MediaPipe would otherwise waste a run on.
+ */
+function isBlankFrame(dataUrl: string): Promise<boolean> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = 8;
+        canvas.height = 8;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          resolve(false);
+          return;
+        }
+        ctx.drawImage(img, 0, 0, 8, 8);
+        const data = ctx.getImageData(0, 0, 8, 8).data;
+        let maxLuma = 0;
+        for (let i = 0; i < data.length; i += 4) {
+          const r = data[i];
+          const g = data[i + 1];
+          const b = data[i + 2];
+          maxLuma = Math.max(maxLuma, 0.299 * r + 0.587 * g + 0.114 * b);
+        }
+        resolve(maxLuma < 12);
+      } catch {
+        resolve(false);
+      }
+    };
+    img.onerror = () => resolve(false);
+    img.src = dataUrl;
+  });
+}
+
 export function ImageUploader({
   onImageUpload,
   onImageSelect,
@@ -109,6 +148,13 @@ export function ImageUploader({
         const result = e.target?.result as string;
         try {
           const optimized = await downscaleDataUrl(result);
+          if (await isBlankFrame(optimized)) {
+            addToast(
+              "The image reads as blank or black — retake it with the face lit and visible.",
+              "error"
+            );
+            return;
+          }
           setPreview(optimized);
           onImageUpload?.(optimized);
         } catch (err) {
