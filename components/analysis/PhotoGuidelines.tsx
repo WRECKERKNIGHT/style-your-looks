@@ -7,13 +7,13 @@ import { ChevronDown, Sun, Eye, Maximize, User, ScanFace, Layers, HelpCircle } f
 const guidelines = [
   {
     icon: Maximize,
-    title: "Fill the frame",
-    text: "Face should take up roughly 40–60% of the photo width. Not a distant blur, not cropped at the chin.",
+    title: "Frame the face",
+    text: "Face should take up roughly 15–90% of the photo width. Small or close-up faces get accuracy warnings — only extreme crops are rejected.",
   },
   {
     icon: Eye,
     title: "Shoot at eye level",
-    text: "No low-angle or selfie-cam distortion. Hold the phone level with your face, straight on.",
+    text: "No low-angle or selfie-cam distortion. Hold the phone level with your face. Strong upward/downward camera angles are rejected.",
   },
   {
     icon: Sun,
@@ -22,8 +22,8 @@ const guidelines = [
   },
   {
     icon: User,
-    title: "Head straight",
-    text: "Both eyes on the same line, no tilt. A neutral expression helps symmetry scoring the most.",
+    title: "Head straight-ish",
+    text: "Both eyes roughly level and a mild head turn is fine (up to ~30°). Only full side-on frames are rejected — unless it's your profile photo.",
   },
   {
     icon: ScanFace,
@@ -33,7 +33,7 @@ const guidelines = [
   {
     icon: Layers,
     title: "Only you in frame",
-    text: "One subject. Multiple faces confuse the detector and get the photo rejected.",
+    text: "A person-sized second face is rejected. Small background faces are kept with a warning — the largest face wins.",
   },
 ];
 
