@@ -22,6 +22,7 @@ import {
   Crown,
   TrendingUp,
   AlertTriangle,
+  Minus,
   Target,
   Percent,
   Smile,
@@ -795,6 +796,7 @@ export function AnalysisResults() {
             {[
               {
                 label: 'Brightness',
+                skip: faceResult.qualityGate.brightness == null,
                 ok: faceResult.qualityGate.brightness != null && faceResult.qualityGate.brightness >= 6,
                 warn:
                   faceResult.qualityGate.brightness != null &&
@@ -807,6 +809,7 @@ export function AnalysisResults() {
               },
               {
                 label: 'Sharpness',
+                skip: faceResult.qualityGate.sharpness == null,
                 ok: faceResult.qualityGate.sharpness != null && faceResult.qualityGate.sharpness >= 6,
                 warn:
                   faceResult.qualityGate.sharpness != null &&
@@ -845,7 +848,7 @@ export function AnalysisResults() {
                 value: `yaw ${faceResult.qualityGate.headYaw.toFixed(1)}° · roll ${faceResult.qualityGate.headRoll.toFixed(1)}° · pitch ${faceResult.qualityGate.headPitch.toFixed(1)}°`,
               },
             ].map((check) => {
-              const status = check.ok ? 'pass' : check.warn ? 'warn' : 'fail';
+              const status = check.skip ? 'skip' : check.ok ? 'pass' : check.warn ? 'warn' : 'fail';
               return (
                 <div
                   key={check.label}
@@ -857,13 +860,17 @@ export function AnalysisResults() {
                         ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-500'
                         : status === 'warn'
                           ? 'bg-amber-500/10 border-amber-500/40 text-amber-500'
-                          : 'bg-red-500/10 border-red-500/40 text-red-500'
+                          : status === 'skip'
+                            ? 'bg-nexus-400/10 border-nexus-400/30 text-nexus-400'
+                            : 'bg-red-500/10 border-red-500/40 text-red-500'
                     }`}
                   >
                     {status === 'pass' ? (
                       <Check className="w-4 h-4" />
                     ) : status === 'warn' ? (
                       <AlertTriangle className="w-4 h-4" />
+                    ) : status === 'skip' ? (
+                      <Minus className="w-4 h-4" />
                     ) : (
                       <X className="w-4 h-4" />
                     )}
@@ -882,10 +889,12 @@ export function AnalysisResults() {
                         ? 'text-emerald-500 border-emerald-500/30'
                         : status === 'warn'
                           ? 'text-amber-500 border-amber-500/30'
-                          : 'text-red-500 border-red-500/30'
+                          : status === 'skip'
+                            ? 'text-nexus-400 border-nexus-400/30'
+                            : 'text-red-500 border-red-500/30'
                     }`}
                   >
-                    {status === 'pass' ? 'PASS' : status === 'warn' ? 'WARN' : 'FLAG'}
+                    {status === 'pass' ? 'PASS' : status === 'warn' ? 'WARN' : status === 'skip' ? 'N/A' : 'FLAG'}
                   </span>
                 </div>
               );
