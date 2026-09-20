@@ -73,6 +73,11 @@ export interface FaceScoreResult {
   rawEyeNoseRatio: number | null;
   facialHarmony: number | null;
   breakdown: FacialMetric[];
+  /** Metrics that could not be scored from the supplied photos, with the
+   *  honest reason why (e.g. "needs a side profile"). `undefined` (the
+   *  normal case) hides the explanation panel; an array only appears when
+   *  at least one metric was genuinely not measured. */
+  notMeasured?: { label: string; reason: string }[];
   overallRating: string;
   detailedAnalysis: string;
   strengths: string[];
@@ -1143,6 +1148,33 @@ export function buildFaceScoreFromMetrics(
   const roundOrNull = (v: number | null): number | null =>
     v == null ? null : Math.round(v * 10) / 10;
 
+  // Honest explanations for metrics that were not scored. A missing score is
+  // NOT a zero or a "you failed" — it means the supplied photos physically
+  // cannot feed that measurement (usually: needs a side profile). Listing the
+  // metric with its specific reason keeps the "unavailable" state transparent
+  // instead of letting users wonder why a row is absent.
+  const NOT_MEASURED_REASONS: Record<string, string> = {
+    noseProjection: 'Needs a clear side-profile photo — none was scored.',
+    noseBridgeAngle: 'Needs a clear side-profile photo — none was scored.',
+    eyeAspectRatio: 'Needs clear frontal landmarks with both eyes fully visible.',
+    browTilt: 'Needs clear brow landmarks without hair obscuring the eyebrows.',
+    browLengthRatio: 'Needs clear frontal landmarks with both eyebrows visible.',
+  };
+  const notMeasured: { label: string; reason: string }[] = [];
+  for (const [label, key] of Object.entries(LABEL_TO_KEY)) {
+    if (key === 'skinClarity') continue;
+    const score =
+      ((rawMetricScores[key] as MetricResult | undefined)?.score ?? null);
+    if (score == null) {
+      notMeasured.push({
+        label,
+        reason:
+          NOT_MEASURED_REASONS[key] ??
+          'Not reliably measurable from the supplied photos (pose or photo confidence too low).',
+      });
+    }
+  }
+
   return {
     overallScore: roundedScore,
     symmetry: roundOrNull(symmetry.score),
@@ -1175,6 +1207,7 @@ export function buildFaceScoreFromMetrics(
     detailedAnalysis,
     strengths,
     improvements,
+    notMeasured: notMeasured.length > 0 ? notMeasured : undefined,
     styleProfile,
     blendshapes,
     percentile,
