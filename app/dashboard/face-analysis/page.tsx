@@ -96,7 +96,7 @@ const fadeUp = {
 };
 
 const MAX_PHOTOS = 3;
-const MIN_PHOTOS = 2;
+const MIN_PHOTOS = 1;
 
 function DiagnosticStrip({
   photoQuality,
@@ -540,8 +540,11 @@ export default function FaceAnalysisPage() {
         genderProfile,
         (index, landmarks) => setProcessingPreview({ image: photos[index], landmarks }),
         undefined,
-        // Slot 0 = straight-on frontal, slot 1 = side profile, the rest frontal.
-        photos.map((_, i) => (i === 1 ? 'profile' : 'front')),
+        // Views are auto-detected from the measured head yaw per photo, so a
+        // single straight-on frontal photo is fully scored. Pass no slot-based
+        // mapping: forcing slot 1 to "profile" made two normal selfies run the
+        // side-profile path and its yaw gate.
+        undefined,
       );
       // Landmarks come from the best-scoring photo; show that same photo so the
       // wireframe, laser scan and symmetry overlay align with the face.
@@ -555,7 +558,7 @@ export default function FaceAnalysisPage() {
         );
       }
       if (photoCount === 1) {
-        addToast('Only one usable photo — results will be less reliable', 'info');
+        addToast('Scored from one photo — add a side profile to unlock nose projection metrics', 'info');
       }
     } catch (err) {
       if (err instanceof AnalysisCancelledError) return;
@@ -733,20 +736,19 @@ export default function FaceAnalysisPage() {
                         PHOTO 1 · FRONT
                       </span>
                       <p className="text-xs font-body text-[var(--text-muted)] mt-1.5 leading-relaxed">
-                        Face the camera directly at eye level, neutral expression. Feeds ~18 of the
-                        21 metrics.
+                        One front-facing photo is enough for a full read. Face the camera at eye
+                        level with a neutral expression.
                       </p>
                     </div>
                     <div
                       className={`border p-4 ${photos.length >= 2 && !rejectedPhotos.some((r) => r.index === 1) ? 'border-aurum-500/40 bg-aurum-500/[0.05]' : 'border-[var(--border-primary)] bg-[var(--bg-tertiary)]'}`}
                     >
                       <span className="type-mono text-[0.5rem] text-[var(--accent-aurum)] tracking-[0.25em] uppercase">
-                        PHOTO 2 · SIDE PROFILE
+                        PHOTO 2 · PROFILE (OPTIONAL)
                       </span>
                       <p className="text-xs font-body text-[var(--text-muted)] mt-1.5 leading-relaxed">
-                        Turn your head squarely 90° — nose bridge and nostril flare visible. This is
-                        the only angle that unlocks nose projection <span className="text-[var(--text-primary)]">(previously &ldquo;not
-                        reliable&rdquo;)</span>.
+                        Optional: turn your head squarely 90° to unlock nose projection, bridge
+                        angle and alar flare measurements.
                       </p>
                     </div>
                   </div>
@@ -866,8 +868,8 @@ export default function FaceAnalysisPage() {
 
                   {photos.length > 0 && photos.length < MIN_PHOTOS && (
                     <p className="text-sm text-[var(--text-muted)] font-body mt-4">
-                      Add {MIN_PHOTOS - photos.length} more photo(s) — make the second one a side
-                      profile so nose projection, bridge angle and alar flare can be measured.
+                      One clear front-facing photo is enough. A side profile unlocks nose
+                      projection, bridge angle and alar flare — but is never required.
                     </p>
                   )}
 
@@ -901,7 +903,7 @@ export default function FaceAnalysisPage() {
                     <p className="text-sm text-[var(--text-muted)] font-body leading-relaxed">
                       <span className="font-bold text-[var(--text-primary)]">Accuracy: </span>
                       scores come from 2D geometry and are sensitive to pose, lens distortion, and
-                      lighting. Use multiple photos, face the camera directly, and take photos at
+                      lighting. Use one or more photos, face the camera directly, and take photos at
                       eye level. Scores are styling guidance — not a measure of worth.
                     </p>
                   </div>
