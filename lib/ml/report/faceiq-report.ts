@@ -539,10 +539,14 @@ function buildMetric(
   // population reference only, ignoring the benchmark shown to the user.
   const absZ = sigma > 0 ? Math.abs(z) : 0;
 
-  // Same calibration gate as the measurement layer: when a value falls so far
-  // outside the reference band that the reference/diagram combination is
-  // clearly incompatible, report "not reliable" instead of flooring at 1.5.
-  if (absZ > 3.2) return unscored('low_confidence');
+  // Out-of-band handling. Beyond ±3.2σ the value is still a real measurement
+  // and the reference range shown to the user is still the right context, so it
+  // gets a graded score like any other reading — but it is flagged
+  // low_confidence and excluded from the aggregate, because a z that large
+  // usually means the reference and the formula disagree rather than that the
+  // person is genuinely extreme. Dropping the number entirely (the old
+  // behaviour) threw away real information; trusting it silently is worse.
+  const outOfBand = absZ > 3.2;
 
   const score = Math.round(rangeScore(absZ) * 10) / 10;
   const percentile = spec.twoSided ? percentileFromZ(-absZ * 1.2) : percentileFromZ(-absZ);
@@ -563,14 +567,16 @@ function buildMetric(
     sigma,
     z: Math.round(z * 1000) / 1000,
     confidence: m.confidence,
-    status: 'valid',
+    status: outOfBand ? 'low_confidence' : 'valid',
     refRange,
     description: spec.description,
     tip: spec.tip,
     changeable: spec.changeable ?? false,
     potential: Math.round(Math.min(6, absZ * 2) * 10) / 10,
     genderSensitive: spec.genderSensitive ?? false,
-    reason: null,
+    reason: outOfBand
+      ? `Sits ${absZ.toFixed(1)}σ outside the calibrated reference range — shown, but too far out to trust or to average into your score`
+      : null,
   };
 }
 
