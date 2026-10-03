@@ -294,13 +294,13 @@ const SPECS: MetricSpec[] = [
   },
   {
     key: 'chinProjection',
-    label: 'Chin Projection',
+    label: 'Chin Centring',
     pillar: 'angularity',
     get: (g) => g.chinProjection,
     twoSided: true,
     description:
-      'Horizontal projection of the chin relative to the lower face. Balanced projection completes the jaw.',
-    tip: 'Chin projection is structural; facial hair styling can visually extend a weak chin.',
+      'How far the chin sits off the centre line of the jaw, as a share of half the jaw width. A centred chin reads balanced. (A 2D photo cannot measure how far the chin projects forward — that needs a true side profile.)',
+    tip: 'Chin shape is largely bone structure; a strong jawline makes the chin read more centred.',
   },
   {
     key: 'jawSymmetry',
@@ -321,7 +321,7 @@ const SPECS: MetricSpec[] = [
     get: (g) => g.browTilt,
     genderSensitive: true,
     description:
-      'Angle of the brow line. A sharper, more angled brow reads masculine; a softer arch reads feminine.',
+      'Angle of the brow line, measured as how far the outer end is raised above the inner end. A normal brow sits slightly below 0° (the inner end is a little higher); a raised outer tail reads sharper and more angular.',
     tip: 'Brow shaping is the most controllable dimorphic feature — grooming can shift perceived gender expression.',
     changeable: true,
   },
@@ -513,7 +513,8 @@ function buildMetric(
     genderSensitive: spec.genderSensitive ?? false,
     reason:
       status === 'low_confidence'
-        ? (m?.reason ?? 'Statistically incompatible with the reference — retake the photo so this value is trustworthy.')
+        ? (m?.reason ??
+          'Statistically incompatible with the reference — retake the photo so this value is trustworthy.')
         : m?.status === 'unavailable'
           ? (m?.reason ?? 'Not measurable from this photo/view.')
           : (m?.reason ?? 'No measurement could be made from this photo.'),
