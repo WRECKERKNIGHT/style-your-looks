@@ -102,27 +102,43 @@ export interface FaceIQReport {
   softScore: number | null;
 }
 
-/** Gender-specific reference overrides for dimorphic metrics. */
-const GENDER_REFS: Record<ReportProfile, Partial<Record<string, { mu: number; sigma: number }>>> = {
+/**
+ * Gender-specific offsets for dimorphic metrics.
+ *
+ * These are DELTAS applied to the measurement's own calibrated mu, never
+ * standalone mu/sigma pairs. The previous absolute values (fwhr 2.0/1.8,
+ * gonialAngle 110/115, jawRatio 0.64/0.58, lipFullness 0.5/0.62, browTilt
+ * +6/+9 …) were textbook anthropometry, which describes different landmarks
+ * than the mesh-derived formulas in face-analyzer. Overriding a calibrated
+ * measurement with them re-introduced the exact systematic offset that was just
+ * removed — and browTilt's positive sign guaranteed a floored score, because
+ * the formula measures "outer raised" and a normal brow is negative.
+ *
+ * A delta cannot drift out of sync with REFS: if the base reference is
+ * recalibrated, both profiles follow automatically.
+ */
+const GENDER_MU_OFFSETS: Record<ReportProfile, Partial<Record<string, number>>> = {
   masculine: {
-    fwhr: { mu: 2.0, sigma: 0.15 },
-    gonialAngle: { mu: 110, sigma: 9 },
-    jawRatio: { mu: 0.64, sigma: 0.05 },
-    browTilt: { mu: 6, sigma: 4 },
-    upperLipRatio: { mu: 0.34, sigma: 0.05 },
-    lipFullness: { mu: 0.5, sigma: 0.08 },
-    canthalTilt: { mu: 4, sigma: 3 },
-    cheekboneDefinition: { mu: 1.16, sigma: 0.06 },
+    // Broader/lower faces, squarer jaw, straighter brow, thicker skin/lip drag.
+    fwhr: 0.06,
+    gonialAngle: -3,
+    jawRatio: 0.04,
+    browTilt: 1.5,
+    upperLipRatio: 0.02,
+    lipFullness: -0.03,
+    canthalTilt: 0.8,
+    cheekboneDefinition: -0.03,
   },
   feminine: {
-    fwhr: { mu: 1.8, sigma: 0.12 },
-    gonialAngle: { mu: 115, sigma: 8 },
-    jawRatio: { mu: 0.58, sigma: 0.05 },
-    browTilt: { mu: 9, sigma: 4 },
-    upperLipRatio: { mu: 0.42, sigma: 0.05 },
-    lipFullness: { mu: 0.62, sigma: 0.08 },
-    canthalTilt: { mu: 5.5, sigma: 3 },
-    cheekboneDefinition: { mu: 1.2, sigma: 0.06 },
+    // Narrower/lower faces, more pointed jaw, arched brow, fuller lips.
+    fwhr: -0.06,
+    gonialAngle: 3,
+    jawRatio: -0.04,
+    browTilt: -1.5,
+    upperLipRatio: -0.02,
+    lipFullness: 0.05,
+    canthalTilt: -0.8,
+    cheekboneDefinition: 0.04,
   },
   neutral: {},
 };
@@ -511,16 +527,17 @@ function buildMetric(
     return unscored('low_confidence');
   }
 
-  // Gender-adjusted reference for dimorphic metrics.
-  const genderRef = GENDER_REFS[profile][spec.key];
-  const mu = genderRef?.mu ?? m.mu;
-  const sigma = genderRef?.sigma ?? m.sigma;
-  const z = m.sigma > 0 ? (m.raw - mu) / sigma : 0;
+  // Gender-adjusted reference for dimorphic metrics, expressed as a delta on
+  // the measurement's own calibrated mu so the two can never drift apart.
+  const muOffset = GENDER_MU_OFFSETS[profile][spec.key];
+  const mu = muOffset === undefined ? m.mu : m.mu + muOffset;
+  const sigma = m.sigma;
+  const z = sigma > 0 ? (m.raw - mu) / sigma : 0;
 
   // Score against the same (gender-adjusted) reference used for the reported
   // z — previously non-gender-sensitive metrics were compared against the raw
   // population reference only, ignoring the benchmark shown to the user.
-  const absZ = m.sigma > 0 ? Math.abs(z) : 0;
+  const absZ = sigma > 0 ? Math.abs(z) : 0;
 
   // Same calibration gate as the measurement layer: when a value falls so far
   // outside the reference band that the reference/diagram combination is
