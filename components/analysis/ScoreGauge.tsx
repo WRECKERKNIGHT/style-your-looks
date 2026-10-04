@@ -104,7 +104,7 @@ export function ScoreGauge({
     };
 
     requestAnimationFrame(animate);
-  }, [score, maxScore, width, strokeWidth]);
+  }, [safeScore, maxScore, width, strokeWidth]);
 
   const glowClass = scorePercent >= 0.8 ? "shadow-aurum-lg" : "";
 
