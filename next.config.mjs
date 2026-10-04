@@ -1,3 +1,20 @@
+const isDev = process.env.NODE_ENV !== "production";
+
+/**
+ * `'unsafe-eval'` is needed ONLY by `next dev`: React Fast Refresh evaluates
+ * module code with `eval()` on every reload. With it missing, the refresh
+ * runtime throws `EvalError`, React never hydrates, and every client-side
+ * interaction on the page — including rendering analysis results — silently
+ * does nothing. Production bundles never call `eval`, so it stays out there.
+ */
+const scriptSrc = [
+  "'self'",
+  "'unsafe-inline'",
+  "'wasm-unsafe-eval'", // WebAssembly compile — required by the MediaPipe engines.
+  ...(isDev ? ["'unsafe-eval'"] : []),
+  "https://cdn.jsdelivr.net",
+].join(" ");
+
 /** @type {import('next').NextConfig} */
 const securityHeaders = [
   { key: "X-Frame-Options", value: "DENY" },
@@ -23,15 +40,15 @@ const securityHeaders = [
       key: "Content-Security-Policy",
       value: [
         "default-src 'self'",
-        // 'wasm-unsafe-eval' is required for WebAssembly compilation — without
-        // it the MediaPipe engines (face/pose/segmentation) cannot instantiate
-        // and every analysis reports "unable to load".
-        "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://cdn.jsdelivr.net",
+        `script-src ${scriptSrc}`,
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
         "font-src 'self' https://fonts.gstatic.com data:",
         "img-src 'self' data: blob: https:",
         "media-src 'self' blob: data:",
-        "connect-src 'self' https://*.supabase.co https://**.supabase.co https://cdn.jsdelivr.net https://storage.googleapis.com",
+        // `https://**.supabase.co` is not a valid CSP source — a host wildcard
+        // is a single `*` label, so the browser dropped the whole directive and
+        // warned. `https://*.supabase.co` is already the correct form.
+        "connect-src 'self' https://*.supabase.co https://cdn.jsdelivr.net https://storage.googleapis.com",
         "worker-src 'self' blob:",
         "frame-ancestors 'none'",
         "base-uri 'self'",
