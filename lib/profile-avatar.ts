@@ -31,11 +31,17 @@ export function clearProfileAvatar(): void {
 
 /** Keeps every avatar-consuming component in sync across tabs and mounts. */
 export function subscribeProfileAvatar(cb: () => void): () => void {
+  // The `storage` event fires for *any* localStorage key on the origin, so
+  // saving history or a quiz result would otherwise re-render every avatar for
+  // no reason. Filter to the one key this module owns.
+  const onStorage = (e: StorageEvent) => {
+    if (e.key === null || e.key === AVATAR_STORAGE_KEY) cb();
+  };
   window.addEventListener(AVATAR_CHANGED_EVENT, cb);
-  window.addEventListener("storage", cb);
+  window.addEventListener("storage", onStorage);
   return () => {
     window.removeEventListener(AVATAR_CHANGED_EVENT, cb);
-    window.removeEventListener("storage", cb);
+    window.removeEventListener("storage", onStorage);
   };
 }
 
@@ -45,23 +51,36 @@ const AVATAR_SIZE = 256;
 export function fileToAvatar(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const img = new Image();
+    // The blob stays pinned in memory for the page's lifetime unless the object
+    // URL is released, so revoke it on every exit path.
+    const objectUrl = URL.createObjectURL(file);
+    const release = () => URL.revokeObjectURL(objectUrl);
     img.onload = () => {
-      const side = Math.max(img.naturalWidth, img.naturalHeight);
-      const scale = AVATAR_SIZE / side;
-      const canvas = document.createElement("canvas");
-      canvas.width = AVATAR_SIZE;
-      canvas.height = AVATAR_SIZE;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) {
-        reject(new Error("Canvas not supported"));
-        return;
+      try {
+        const side = Math.max(img.naturalWidth, img.naturalHeight);
+        const scale = Math.min(1, AVATAR_SIZE / side);
+        const canvas = document.createElement("canvas");
+        canvas.width = AVATAR_SIZE;
+        canvas.height = AVATAR_SIZE;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          release();
+          reject(new Error("Canvas not supported"));
+          return;
+        }
+        const dw = img.naturalWidth * scale;
+        const dh = img.naturalHeight * scale;
+        // Centre-crop rather than letterbox so a non-square photo fills the frame.
+        ctx.drawImage(img, (AVATAR_SIZE - dw) / 2, (AVATAR_SIZE - dh) / 2, dw, dh);
+        resolve(canvas.toDataURL("image/jpeg", 0.85));
+      } finally {
+        release();
       }
-      const dw = img.naturalWidth * scale;
-      const dh = img.naturalHeight * scale;
-      ctx.drawImage(img, (AVATAR_SIZE - dw) / 2, (AVATAR_SIZE - dh) / 2, dw, dh);
-      resolve(canvas.toDataURL("image/jpeg", 0.85));
     };
-    img.onerror = () => reject(new Error("Could not read that image"));
-    img.src = URL.createObjectURL(file);
+    img.onerror = () => {
+      release();
+      reject(new Error("Could not read that image"));
+    };
+    img.src = objectUrl;
   });
 }
