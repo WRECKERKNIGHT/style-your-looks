@@ -153,7 +153,10 @@ export function AurumThread() {
       ctx.lineDashOffset = -((scrollY % 16) + t * 6);
       ctx.beginPath();
       ctx.moveTo(pts[0].x, pts[0].y);
-      for (let i = 1; i < N; i++) {
+      // Midpoint interpolation needs the *next* point, so the loop must stop at
+      // N-2. Running it to N-1 dereferenced pts[N], which threw on every frame
+      // and left the dashed thread undrawn.
+      for (let i = 1; i < N - 1; i++) {
         const xc = (pts[i].x + pts[i + 1].x) / 2;
         const yc = (pts[i].y + pts[i + 1].y) / 2;
         ctx.quadraticCurveTo(pts[i].x, pts[i].y, xc, yc);
