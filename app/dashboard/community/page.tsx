@@ -6,6 +6,10 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { Users, Star, MessageCircle, ArrowRight, RefreshCw, Wifi, WifiOff, ExternalLink, Heart, Share2 } from "lucide-react";
 import { ScrollParallax, ScrollBlur, SectionScrollProgress } from "@/components/shared/ScrollEffects";
+import {
+  CommunityDevelopmentState,
+  type CommunityStatus,
+} from "@/components/community/CommunityDevelopmentState";
 import { getHistory, isDemoEntry } from "@/lib/history";
 
 interface Post {
@@ -105,9 +109,11 @@ export default function CommunityPage() {
   const [activeTab, setActiveTab] = useState<"feed" | "members" | "tags">("feed");
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [feed, setFeed] = useState<Post[]>([]);
-  const [live, setLive] = useState(false);
+  const [status, setStatus] = useState<CommunityStatus>("developing");
   const [loading, setLoading] = useState(true);
   const [realAnalyses, setRealAnalyses] = useState(0);
+
+  const live = status === "live";
 
   useEffect(() => {
     setRealAnalyses(getHistory().filter((e) => !isDemoEntry(e)).length);
@@ -120,22 +126,38 @@ export default function CommunityPage() {
         activeCategory === "all" ? "" : `&category=${encodeURIComponent(activeCategory)}`;
       const res = await fetch(`/api/community/feed?limit=20${categoryParam}`, { signal });
       if (signal?.aborted) return;
+      // 401 is the visitor's state, not a fault: the feed is members-only, so
+      // it gets an invitation to sign in rather than an "offline" banner.
+      // 503 means no Supabase credentials at all, which is a local-dev case.
       if (res.status === 401) {
-        setLive(false);
+        setStatus("signedOut");
+        setFeed([]);
         return;
       }
-      if (res.status === 503 || !res.ok) {
-        setLive(false);
+      if (res.status === 503) {
+        setStatus("unconfigured");
+        setFeed([]);
+        return;
+      }
+      if (!res.ok) {
+        setStatus("developing");
+        setFeed([]);
         return;
       }
       const data = await res.json();
       if (signal?.aborted) return;
       if (Array.isArray(data.posts)) {
-        setFeed(data.posts.length ? data.posts.map(mapPost) : []);
-        setLive(true);
+        const posts = data.posts.map(mapPost);
+        setFeed(posts);
+        // A reachable backend with zero posts is a real, working feed that
+        // nobody has posted in yet — not a missing feature.
+        setStatus(posts.length > 0 ? "live" : "developing");
       }
     } catch {
-      if (!signal?.aborted) setLive(false);
+      if (!signal?.aborted) {
+        setStatus("unconfigured");
+        setFeed([]);
+      }
     } finally {
       if (!signal?.aborted) setLoading(false);
     }
@@ -165,11 +187,6 @@ export default function CommunityPage() {
       </motion.div>
       </ScrollParallax>
 
-      <div className="w-full px-4 py-2.5 border border-amber-400/40 bg-amber-400/10 flex items-center justify-center gap-2">
-        <WifiOff className="w-3.5 h-3.5 text-amber-400" />
-        <span className="type-mono text-[0.6rem] tracking-widest text-amber-400">DEMO — FEED OFFLINE</span>
-      </div>
-
       <ScrollBlur blur={0} minOpacity={0.95}>
       <motion.div variants={fadeUp} initial="hidden" animate="show" className="flex flex-wrap gap-2 items-center">
         {(["feed", "members", "tags"] as const).map((tab) => (
@@ -192,11 +209,17 @@ export default function CommunityPage() {
         >
           <RefreshCw className={`w-3 h-3 ${loading ? "animate-spin" : ""}`} />
           {live ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
-          {loading ? "LOADING" : live ? "LIVE FEED" : "FEED OFFLINE"}
+          {loading ? "LOADING" : live ? "LIVE FEED" : "CHECKING"}
         </button>
       </motion.div>
 
-      {activeTab === "feed" && (
+      {/* Anything short of a feed with posts in it gets the designed state
+          instead of a bare empty list. */}
+      {!live && !loading && activeTab === "feed" && (
+        <CommunityDevelopmentState status={status} realAnalyses={realAnalyses} />
+      )}
+
+      {live && activeTab === "feed" && (
         <div className="flex flex-wrap gap-2 items-center">
           <button
             onClick={() => setActiveCategory("all")}
@@ -228,23 +251,6 @@ export default function CommunityPage() {
         <div className="lg:col-span-2 space-y-4">
           {activeTab === "feed" && (
             <motion.div variants={stagger} initial="hidden" animate="show" className="space-y-4">
-              {feed.length === 0 && !loading && (
-                <div className="glass-card p-10 text-center">
-                  {!live && (
-                    <span className="inline-block px-2.5 py-1 mb-3 border border-amber-400/40 bg-amber-400/10 type-mono text-[0.55rem] tracking-widest text-amber-400">
-                      DEMO — FEED OFFLINE
-                    </span>
-                  )}
-                  <p className="text-[var(--text-muted)] font-body text-sm mb-2">
-                    {activeCategory === "all"
-                      ? "No posts yet."
-                      : `No ${activeCategory} posts yet.`}
-                  </p>
-                  <p className="text-xs text-[var(--text-muted)]">
-                    Run an analysis, then share your results to start the feed.
-                  </p>
-                </div>
-              )}
               {feed.map((post) => (
                 <motion.div
                   key={post.id}
@@ -306,17 +312,6 @@ export default function CommunityPage() {
         </div>
 
         <motion.div variants={fadeUp} initial="hidden" animate="show" className="space-y-4">
-          <div className="glass-card p-4 sm:p-5">
-            <h3 className="type-label text-[var(--text-primary)] mb-3">CONNECT</h3>
-            <p className="text-xs text-[var(--text-muted)] mb-2">
-              Friend discovery and search are not built yet. They will be
-              released before we pretend they exist.
-            </p>
-            <span className="inline-block type-mono text-[0.55rem] text-[var(--accent-mocha)] tracking-widest bg-aurum-400/15 px-2.5 py-1 rounded">
-              COMING SOON
-            </span>
-          </div>
-
           <div className="glass-card p-4 sm:p-5">
             <h3 className="type-label text-[var(--text-primary)] mb-3">YOUR STATS</h3>
             {realAnalyses === 0 ? (
