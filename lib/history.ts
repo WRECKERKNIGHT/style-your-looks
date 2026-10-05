@@ -229,7 +229,14 @@ export function saveToHistory(entry: Omit<AnalysisEntry, "id" | "timestamp" | "d
 export function deleteFromHistory(id: string): void {
   if (typeof window === "undefined") return;
   const history = getHistory().filter((e) => e.id !== id);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+  } catch {
+    // Storage blocked or over quota. Removing an entry only ever shrinks the
+    // payload, so an unwritable store here means the quota is already
+    // exhausted elsewhere — swallow rather than throw an uncaught error out of
+    // a click handler and take the whole page down with it.
+  }
 }
 
 export function clearHistory(): void {

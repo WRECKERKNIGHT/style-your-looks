@@ -1011,7 +1011,7 @@ export default function FaceAnalysisPage() {
                 {isDemoPhoto(uploadedImage) && <DemoBadge />}
                 <motion.button
                   whileTap={{ scale: 0.97 }}
-                  onClick={() => {
+                  onClick={async () => {
                     if (useAnalysisStore.getState().source === 'demo') {
                       addToast(
                         'Demo results are previews only — upload a real photo to save to history.',
@@ -1019,7 +1019,7 @@ export default function FaceAnalysisPage() {
                       );
                       return;
                     }
-                    const entry = useAnalysisStore.getState().saveCurrentAnalysis();
+                    const entry = await useAnalysisStore.getState().saveCurrentAnalysis();
                     if (entry) {
                       setSaved(true);
                       addToast('Analysis saved to history', 'success');

@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { saveToHistory, type AnalysisEntry } from "@/lib/history";
+import { makeThumbnail } from "@/lib/image-thumbnail";
 import type { AnalysisProfile } from "@/lib/ml/scoring";
 import type { StructureProfileType } from "@/lib/ml/face-analyzer";
 import type { RawGeometry } from "@/lib/ml/face-analyzer";
@@ -229,7 +230,7 @@ interface AnalysisState {
   setPhoto: (photo: string, kind: "face" | "body") => void;
   /** Marks current results as fresh against the active photo. */
   markAnalyzed: () => void;
-  saveCurrentAnalysis: (label?: string) => AnalysisEntry | null;
+  saveCurrentAnalysis: (label?: string) => Promise<AnalysisEntry | null>;
   reset: () => void;
 }
 
@@ -278,13 +279,23 @@ export const useAnalysisStore = create<AnalysisState>((set, get) => ({
 
   markAnalyzed: () => set({ photoDirty: false }),
 
-  saveCurrentAnalysis: (label?: string) => {    const state = get();
+  saveCurrentAnalysis: async (label?: string) => {
+    const state = get();
     if (state.source === "demo") {
       return null;
     }
-    const thumbnailUrl = state.bodyResult
+    // The thumbnail must be the photo that was actually analysed. Preferring
+    // the face upload whenever there is a face result means a saved face entry
+    // is no longer captioned by an unrelated body shot from an earlier run.
+    const sourcePhoto = state.faceResult
+      ? state.uploadedImage
+      : state.bodyResult
       ? state.fullBodyImage
-      : state.uploadedImage;
+      : (state.uploadedImage ?? state.fullBodyImage);
+    // Persisting the full analysis photo (hundreds of KB as a data URL) per
+    // entry exhausts the localStorage quota and history stops saving entirely,
+    // so entries carry a small thumbnail instead.
+    const thumbnailUrl = await makeThumbnail(sourcePhoto);
     try {
       const entry = saveToHistory({
         faceResult: state.faceResult,
@@ -325,6 +336,10 @@ export const useAnalysisStore = create<AnalysisState>((set, get) => ({
       selectedBeardStyle: "clean-shaven",
       selectedMustacheStyle: "none",
       lastSavedEntry: null,
+      // The intake profile calibrates scores to a specific person's region and
+      // age band. Carrying it across a reset would silently score the next
+      // person against the previous one's calibration.
+      intakeProfile: null,
       pipelineRev: state.pipelineRev + 1,
       photoDirty: false,
     })),

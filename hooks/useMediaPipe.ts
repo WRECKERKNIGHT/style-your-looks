@@ -402,7 +402,7 @@ export function useMediaPipe() {
         );
 
         setAnalysisProgress(100);
-        if (!options?.demoMode) saveCurrentAnalysis();
+        if (!options?.demoMode) await saveCurrentAnalysis();
         return { faceResult, skinTone, scoreResult };
       } catch (err) {
         console.error("Face analysis error:", err);
@@ -592,7 +592,7 @@ export function useMediaPipe() {
         );
 
         setAnalysisProgress(100);
-        if (!options?.demoMode) saveCurrentAnalysis();
+        if (!options?.demoMode) await saveCurrentAnalysis();
         return { scoreResult, samples, rejected, accepted, photoCount: samples.length, bestIndex: displayBest.index };
       } catch (err) {
         console.error("Multi-photo face analysis error:", err);
@@ -689,7 +689,7 @@ export function useMediaPipe() {
         }
 
         setAnalysisProgress(100);
-        saveCurrentAnalysis();
+        await saveCurrentAnalysis();
         return { bodyType, skinTone, measurements };
       } catch (err) {
         console.error("Body analysis error:", err);
