@@ -98,12 +98,25 @@ export function gradeFromPercentile(pct: number): { grade: string | null; label:
  * Convert a percentile to a descriptive comparison string.
  * Returns null when no valid percentile exists.
  */
+/**
+ * Describe where a calibrated index sits relative to its reference
+ * distribution.
+ *
+ * Every phrase here is about the reference corpus in face-analyzer.ts, never
+ * about real users. There is no population of "faces analysed" to compare
+ * against — ZERVEY keeps no such dataset — so the previous wording ("Top 5% of
+ * all faces analysed") asserted a ranking against an audience that does not
+ * exist. The reference median is a real quantity: it is the mu that the
+ * shipped ratios were fitted over.
+ */
 export function comparisonFromPercentile(pct: number): string | null {
   if (!Number.isFinite(pct)) return null;
-  if (pct >= 95) return `Top ${100 - pct}% of all faces analysed`;
-  if (pct >= 50) return `Above ${pct}% of all faces analysed`;
-  if (pct === 50) return `At the median — exactly average`;
-  return `Below the median — in the bottom ${pct}%`;
+  if (pct >= 95) return 'Top band of the calibrated reference range';
+  if (pct >= 75) return 'Upper range of the calibrated reference';
+  if (pct > 50) return 'Above the reference median';
+  if (pct === 50) return 'At the reference median — average';
+  if (pct >= 25) return 'Below the reference median';
+  return 'Lower range of the calibrated reference';
 }
 
 export interface MetricCalibration {
@@ -117,11 +130,15 @@ export interface MetricCalibration {
 }
 
 /**
- * Convert a 1-10 metric score to a population percentile.
+ * Convert a 1-10 metric score to a percentile of the REFERENCE population.
  *
  * Mapping: score 5 = average (50th percentile), 7 ≈ 84th, 9 ≈ 98th.
  * Uses a calibrated z-mapping (score − 5) / 2 through the normal CDF, the
  * same shape used across scoring, history backfill, and reporting.
+ *
+ * "Reference population" is the anthropometric literature and the fitted photo
+ * corpus cited at the top of this module. It is never ZERVEY's own users, and
+ * the UI must not present these numbers as a ranking against them.
  *
  * Per-metric raw distributions are NOT modelled here — they live with the
  * measurements in lib/ml/face-analyzer.ts (Measurement.mu/sigma) and are
@@ -137,12 +154,17 @@ export function scoreToPercentile(score: number): number {
 }
 
 /**
- * Compute the Face IQ: a 0-100 percentile-based score composed of weighted
- * metric percentiles.
+ * Compute the Face IQ: a 0-100 index composed of weighted metric indexes.
  *
  * Each metric's percentile is weighted, summed, and clamped to 0-100.
- * The result IS a population percentile, so "Face IQ: 78" literally means
- * "better than 78% of faces".
+ *
+ * The number is a modelled index, not a measured population percentile. ZERVEY
+ * holds no dataset of real analysed faces, so "Face IQ: 78" means "78 on this
+ * calibrated curve" — it locates the face against the mu/sigma fitted over the
+ * reference photo corpus, and says nothing about how it compares to users. The
+ * UI presents it as an index for that reason. The docstring previously claimed
+ * the result "IS a population percentile", which is the overclaim this note
+ * exists to prevent being repeated.
  */
 export function computeFaceIQ(
   metricPercentiles: Record<string, number>,
