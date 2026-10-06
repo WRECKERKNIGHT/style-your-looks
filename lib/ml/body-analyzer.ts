@@ -103,8 +103,30 @@ export function extractBodyMeasurements(
   };
 }
 
-export function classifyBodyType(measurements: BodyMeasurements): string {
+/**
+ * Classify a body type from three widths.
+ *
+ * Returns null when the widths cannot support a classification. Every decision
+ * below is a ratio comparison, so a zero or negative width makes the ratios
+ * Infinity or NaN — and NaN compares false against every threshold, which means
+ * the caller would silently receive whichever label happens to be last
+ * ("Ectomorph") with full confidence, for a body that was never measured.
+ */
+export function classifyBodyType(measurements: BodyMeasurements): string | null {
   const { shoulderWidth, waistWidth, hipWidth } = measurements;
+
+  // A real width is strictly positive and finite. Anything else means a
+  // landmark was missing or the pose was read wrong.
+  if (
+    !Number.isFinite(shoulderWidth) ||
+    !Number.isFinite(waistWidth) ||
+    !Number.isFinite(hipWidth) ||
+    shoulderWidth <= 0 ||
+    waistWidth <= 0 ||
+    hipWidth <= 0
+  ) {
+    return null;
+  }
 
   const shoulderToHip = shoulderWidth / hipWidth;
   const shoulderToWaist = shoulderWidth / waistWidth;

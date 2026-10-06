@@ -56,6 +56,9 @@ export function rangeScore(z: number, floor = 1.5, ceil = 10): number {
  * Convert a domain's rangeScore (3-10) to a 0-100 index for Face Profile.
  */
 export function domainToIndex(score: number): number {
+  // A NaN domain score would reach the UI as a NaN percentile bar rather than
+  // an absent one, so refuse it and let the caller decide what to omit.
+  if (!Number.isFinite(score)) return 0;
   return Math.round(Math.max(0, Math.min(100, ((score - 3) / 7) * 100)));
 }
 

@@ -165,22 +165,40 @@ export function getSeasonEmoji(season: string): string {
   }
 }
 
+/**
+ * Score how close a colour is to the wearer's best palette, 0-10.
+ *
+ * Returns null when there is nothing to compare against. A malformed hex
+ * would otherwise poison the whole calculation: parseInt("GG", 16) is NaN, NaN
+ * survives Math.min/Math.max, and the caller renders the result verbatim — so a
+ * typo in a catalogue entry or a user-entered swatch would put literal "NaN" on
+ * screen.
+ */
 export function getColorHarmonyScore(
   colorHex: string,
   bestColors: string[]
-): number {
+): number | null {
   const hexToRgb = (hex: string) => {
-    const r = parseInt(hex.slice(1, 3), 16);
-    const g = parseInt(hex.slice(3, 5), 16);
-    const b = parseInt(hex.slice(5, 7), 16);
-    return { r, g, b };
+    if (!/^#[0-9a-fA-F]{6}$/.test(hex)) return null;
+    return {
+      r: parseInt(hex.slice(1, 3), 16),
+      g: parseInt(hex.slice(3, 5), 16),
+      b: parseInt(hex.slice(5, 7), 16),
+    };
   };
 
   const rgb1 = hexToRgb(colorHex);
+  if (!rgb1) return null;
+
+  // No palette means no distance to measure. Reporting the worst possible score
+  // would assert a conclusion the data does not support.
+  if (!Array.isArray(bestColors) || bestColors.length === 0) return null;
+
   let minDist = Infinity;
 
   for (const c of bestColors) {
     const rgb2 = hexToRgb(c);
+    if (!rgb2) continue;
     const dist = Math.sqrt(
       (rgb1.r - rgb2.r) ** 2 +
       (rgb1.g - rgb2.g) ** 2 +
@@ -188,6 +206,9 @@ export function getColorHarmonyScore(
     );
     minDist = Math.min(minDist, dist);
   }
+
+  // Every entry in the palette was unparseable — same as having none.
+  if (!Number.isFinite(minDist)) return null;
 
   // Max Euclidean distance in RGB is ~441
   const score = Math.max(0, Math.min(10, 10 - (minDist / 44) * 10));

@@ -629,7 +629,9 @@ export function useMediaPipe() {
 
         let bodyType = "Unknown";
         if (measurements) {
-          bodyType = classifyBodyType(measurements);
+          // classifyBodyType returns null when a width is missing or degenerate
+          // — a body that was never measured must not be handed a confident type.
+          bodyType = classifyBodyType(measurements) ?? "Unknown";
         }
 
         const shoulderWidth = measurements?.shoulderWidth || 0;

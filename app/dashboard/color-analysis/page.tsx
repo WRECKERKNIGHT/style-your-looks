@@ -531,8 +531,11 @@ export default function ColorAnalysisPage() {
     }
   }, [colorAnalysis]);
 
-  const testHarmonyScore =
-    colorAnalysis ? getColorHarmonyScore(testColor, colorAnalysis.bestColors) : 0;
+  // null when the swatch is malformed or there is no palette to judge it
+  // against — the readout then has nothing to claim rather than a false score.
+  const testHarmonyScore = colorAnalysis
+    ? getColorHarmonyScore(testColor, colorAnalysis.bestColors)
+    : null;
 
   return (
     <div className="space-y-8">
@@ -757,19 +760,28 @@ export default function ColorAnalysisPage() {
                   />
                   <div>
                     <span className="text-sm font-body text-[var(--text-muted)]">Harmony Score</span>
-                    <p className="font-display font-bold text-3xl text-[var(--text-primary)]">
-                      {testHarmonyScore.toFixed(1)}
-                      <span className="text-lg text-[var(--text-muted)]">/10</span>
-                    </p>
+                    {testHarmonyScore === null ? (
+                      <p className="font-display font-bold text-xl text-[var(--text-muted)]">
+                        NOT MEASURED
+                      </p>
+                    ) : (
+                      <p className="font-display font-bold text-3xl text-[var(--text-primary)]">
+                        {testHarmonyScore.toFixed(1)}
+                        <span className="text-lg text-[var(--text-muted)]">/10</span>
+                      </p>
+                    )}
                   </div>
                 </div>
                 <div className="h-2 bg-[var(--bg-primary)] rounded-full overflow-hidden mb-3">
                   <div
                     className="h-full rounded-full transition-all duration-500"
                     style={{
-                      width: `${testHarmonyScore * 10}%`,
+                      // An absent score draws no bar rather than an empty one.
+                      width: testHarmonyScore === null ? "0%" : `${testHarmonyScore * 10}%`,
                       backgroundColor:
-                        testHarmonyScore >= 7
+                        testHarmonyScore === null
+                          ? "transparent"
+                          : testHarmonyScore >= 7
                           ? "var(--accent-aurum)"
                           : testHarmonyScore >= 5
                           ? "var(--accent-honey)"
@@ -778,7 +790,9 @@ export default function ColorAnalysisPage() {
                   />
                 </div>
                 <p className="text-sm text-[var(--text-muted)] font-body">
-                  {testHarmonyScore >= 8
+                  {testHarmonyScore === null
+                    ? "This colour cannot be scored against your palette — pick a valid hex colour."
+                    : testHarmonyScore >= 8
                     ? "Excellent match — this color harmonizes beautifully with your skin tone."
                     : testHarmonyScore >= 6
                     ? "Good match — this color works well with your palette."
