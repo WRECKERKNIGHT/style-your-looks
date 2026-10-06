@@ -4,12 +4,15 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "prebuild": "node scripts/verify-assets.mjs && node scripts/verify-face-geometry.mjs",
+    "prebuild": "node scripts/verify-assets.mjs && node scripts/verify-face-geometry.mjs && node scripts/verify-analyzers.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "verify:analyzers": "node scripts/verify-analyzers.mjs",
+    "verify:assets": "node scripts/verify-assets.mjs",
+    "verify:face": "node scripts/verify-face-geometry.mjs"
   },
   "dependencies": {
     "@gsap/react": "^2.1.0",
