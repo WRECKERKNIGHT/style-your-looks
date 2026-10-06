@@ -35,6 +35,7 @@ globalThis.navigator ??= { userAgent: 'node' };
 
 let classifyBodyType, analyzeColorSeason, getColorHarmonyScore, getSeasonEmoji;
 let rangeScore, toZScore, idealScore, calibratedScore, domainToIndex;
+let comparisonFromPercentile, computeFaceIQ;
 try {
   const jiti = require(path.join(ROOT, 'node_modules/jiti'))(import.meta.url, {
     interopDefault: true,
@@ -47,6 +48,7 @@ try {
   ({ rangeScore, toZScore, idealScore, calibratedScore, domainToIndex } = jiti(
     path.join(ROOT, 'lib/ml/scoring-curves.ts'),
   ));
+  ({ comparisonFromPercentile, computeFaceIQ } = jiti(path.join(ROOT, 'lib/ml/calibration.ts')));
 } catch (err) {
   // Never block a deploy over an optional dev-only guard.
   console.warn(`verify:analyzers — skipped (cannot load analyzer modules): ${err.message}`);
@@ -242,10 +244,50 @@ function curveChecks() {
   );
 }
 
+/**
+ * The scoring numbers are indexes on a curve fitted to a reference corpus, not
+ * percentiles of real users. ZERVEY holds no dataset of analysed faces, so any
+ * generated string implying a ranking against them is a fabricated claim — and
+ * one that shipped, as "Above 78% of all faces analysed".
+ *
+ * This scans every value the copy generator can produce rather than spot-
+ * checking the current bands, so editing the thresholds cannot reintroduce a
+ * claim without failing the build.
+ */
+function claimChecks() {
+  section("reference framing — comparisonFromPercentile");
+
+  const forbidden = /faces analysed|all faces|real users|other users|people|users/i;
+  for (let p = 0; p <= 100; p++) {
+    const copy = comparisonFromPercentile(p);
+    check(
+      `index ${p} makes no population claim`,
+      copy === null || !forbidden.test(copy),
+      `got "${copy}"`
+    );
+  }
+
+  check("non-finite index declines to describe itself", comparisonFromPercentile(NaN) === null);
+  check(
+    "every band yields copy",
+    [10, 30, 50, 75, 90, 99].every((p) => typeof comparisonFromPercentile(p) === 'string')
+  );
+
+  // The top band must not restate the number as a headcount of users.
+  const top = comparisonFromPercentile(99) ?? '';
+  check("top band does not report a headcount", !/\d+\s*%/.test(top), `got "${top}"`);
+
+  // With nothing measured there is no index and no comparison to show.
+  const none = computeFaceIQ({}, {});
+  check("no measurable metric yields no index", none.faceIQ === null);
+  check("no measurable metric yields no comparison", none.comparison === null);
+}
+
 console.log("verify:analyzers");
 bodyChecks();
 colorChecks();
 curveChecks();
+claimChecks();
 
 console.log(`\n${checks - failures}/${checks} passed`);
 if (failures > 0) {

@@ -182,7 +182,7 @@ function PillarCard({ pillar, index }: { pillar: Pillar; index: number }) {
           </span>
           <span className="type-mono text-[0.45rem] text-[var(--text-muted)]">
             {pillar.score !== null
-              ? `/10 · p${pillar.percentile !== null ? pillar.percentile.toFixed(0) : '—'}`
+              ? `/10 · idx ${pillar.percentile !== null ? pillar.percentile.toFixed(0) : '—'}`
               : 'not measured'}
           </span>
         </div>
@@ -293,8 +293,8 @@ export function FaceIQReportView({ report }: { report: FaceIQReport }) {
             </h2>
             <p className="text-sm text-[var(--text-muted)] font-body mt-2 max-w-xl mx-auto lg:mx-0 leading-relaxed">
               {hero.percentile !== null
-                ? `Better than ~${hero.percentile}% of faces analysed. ${hero.comparison}.`
-                : 'Insufficient measurable data from this photo to rank against others.'}
+                ? `${hero.percentile}/100 on the calibrated harmony index. ${hero.comparison}.`
+                : 'Insufficient measurable data from this photo to score.'}
             </p>
 
             <div className="grid grid-cols-3 gap-3 mt-5 max-w-md mx-auto lg:mx-0">

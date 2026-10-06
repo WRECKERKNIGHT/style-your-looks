@@ -99,13 +99,21 @@ function CollapsibleSection({
   );
 }
 
-function PercentileBar({ label, percentile }: { label: string; percentile: number }) {
+/**
+ * A single metric's calibrated index on a 0-100 scale.
+ *
+ * `index` is a modelled position on the curve fitted to the reference corpus,
+ * not a measured population percentile — see computeFaceIQ in
+ * lib/ml/calibration.ts. The bar is labelled "/100" rather than naming a
+ * percentile for that reason.
+ */
+function MetricIndexBar({ label, index }: { label: string; index: number }) {
   const color =
-    percentile >= 85
+    index >= 85
       ? '#C8963E'
-      : percentile >= 70
+      : index >= 70
         ? '#B98B56'
-        : percentile >= 50
+        : index >= 50
           ? '#8A5F3D'
           : '#6F4A30';
   return (
@@ -113,10 +121,10 @@ function PercentileBar({ label, percentile }: { label: string; percentile: numbe
       <span className="text-sm font-body text-nexus-800 dark:text-white min-w-[100px] sm:min-w-[140px] truncate">
         {label}
       </span>
-      <div className="flex-1 h-3 bg-light-border dark:bg-cosmic-border rounded-full overflow-hidden">
+      <div className="flex-1 h-3 bg-light-border dark:border-cosmic-border rounded-full overflow-hidden">
         <motion.div
           initial={{ width: 0 }}
-          whileInView={{ width: `${percentile}%` }}
+          whileInView={{ width: `${index}%` }}
           viewport={{ once: true }}
           transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
           className="h-full rounded-full"
@@ -124,7 +132,7 @@ function PercentileBar({ label, percentile }: { label: string; percentile: numbe
         />
       </div>
       <span className="text-sm font-mono font-bold text-nexus-800 dark:text-white min-w-[50px] text-right">
-        {percentile}/100
+        {index}/100
       </span>
     </div>
   );
@@ -650,8 +658,12 @@ export function AnalysisResults() {
         <div className="space-y-3">
           {faceResult.metricPercentiles &&
             Object.entries(faceResult.metricPercentiles).map(([label, pct]) => (
-              <PercentileBar key={label} label={label} percentile={pct} />
+              <MetricIndexBar key={label} label={label} index={pct} />
             ))}
+          <p className="text-xs font-body text-nexus-500 dark:text-cosmic-muted leading-relaxed">
+            Each bar is a calibrated index from the reference photo set ZERVEY was fitted
+            over — not a ranking against other users.
+          </p>
         </div>
       </CollapsibleSection>
 
